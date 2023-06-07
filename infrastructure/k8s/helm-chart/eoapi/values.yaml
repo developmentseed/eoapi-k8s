@@ -1,0 +1,175 @@
+# default values for eoapi
+
+comment: >
+  some postgres variables are basically secrets that should be passed in via os environment variables.
+  For example, to pass username or password information during `helm template` or `helm install` do:
+
+  $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
+  $ export PGUSER=s00pers3cr3t
+  $ export POSTGRES_USER=s00pers3cr3t
+  $ export POSTGRES_PASSWORD=superuserfoobar
+  $ export PGPASSWORD=foobar
+
+  $ helm install \
+      --namespace eoapi \
+      --create-namespace \
+      --set gitSha=$GITSHA \
+    --set db.settings.secrets.PGUSER=$PGUSER \
+    --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+    --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+    --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+      eoapi \
+      ./eoapi
+
+  $ helm template . \
+      -s template/db/manifest.yaml
+      -f values.yaml \
+      --set gitSha=$GITSHA \
+    --set db.settings.secrets.PGUSER=$PGUSER \
+    --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+    --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+    --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+db:
+  # environment options: "rds" || "k8s"
+  environment: "k8s"
+  enabled: true
+  settings:
+    resources:
+      requests:
+        storage: "100Mi"
+    secrets:
+      POSTGRES_DB: "postgis"
+      POSTGRES_USER: ""
+      POSTGRES_PASSWORD: ""
+      POSTGRES_PORT: "5432"
+      POSTGRES_HOST: "pgstac"
+      POSTGRES_HOST_READER: "pgstac"
+      POSTGRES_HOST_WRITER: "pgstac"
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "10"
+      # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+      PGUSER: ""
+      PGPASSWORD: ""
+      PGDATABASE: "postgis"
+
+gitSha: ""
+
+service:
+  port: 8080
+  # port_type: "NodePort" || "LoadBalancer"
+  # NodePort: will create an Ingress and ALB
+  # LoadBalancer: will create an NLB
+  port_type: "NodePort"
+
+ingress:
+  className: "alb"
+  # AWS EKS:
+  # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/ingress/annotations/
+  # GCP GKE:
+  # https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
+  enable_shared_ingress: false
+  annotations:
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/scheme: internet-facing
+
+raster:
+  enabled: true
+  image:
+    name: ghcr.io/developmentseed/eoapi-raster
+    tag: latest
+  # nothing definitive about this, just plumbed in after quick survey of `eoAPI/infrastructure/aws/cdk/config.py`
+  settings:
+    timeout: 10
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    resources:
+      limits:
+        cpu: "512m"
+        memory: "4096Mi"
+      requests:
+        cpu: "256m"
+        memory: "3072Mi"
+    envVars:
+      ##############
+      # uvicorn
+      ##############
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      # https://www.uvicorn.org/settings/#production
+      WEB_CONCURRENCY: "10"
+      ##############
+      # titiler
+      ##############
+      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: ".tif,.TIF,.tiff"
+      GDAL_CACHEMAX: "200"  # 200 mb
+      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      PYTHONWARNINGS: "ignore"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "5000000"  # 5 MB (per file-handle)
+
+stac:
+  enabled: true
+  image:
+    name: ghcr.io/developmentseed/eoapi-stac
+    tag: latest
+  # nothing definitive about this, just plumbed in after quick survey of `eoAPI/infrastructure/aws/cdk/config.py`
+  settings:
+    timeout: 10
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    resources:
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+      requests:
+        cpu: "256m"
+        memory: "256Mi"
+    envVars:
+      ##############
+      # uvicorn
+      ##############
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      # https://www.uvicorn.org/settings/#production
+      WEB_CONCURRENCY: "10"
+      #############
+      # titiler
+      ##############
+      # https://github.com/developmentseed/eoAPI/issues/16
+      TITILER_ENDPOINT: "raster:8080"
+
+vector:
+  enabled: true
+  image:
+    name: ghcr.io/developmentseed/eoapi-vector
+    tag: latest
+  # nothing definitive about this, just plumbed in after quick survey of `eoAPI/infrastructure/aws/cdk/config.py`
+  settings:
+    timeout: 10
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    resources:
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+      requests:
+        cpu: "256m"
+        memory: "256Mi"
+    envVars:
+      ##############
+      # tipg
+      ##############
+      TIPG_CATALOG_TTL: "0"
+      ##############
+      # uvicorn
+      ##############
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      # https://www.uvicorn.org/settings/#production
+      WEB_CONCURRENCY: "10"
+
+
+
+
