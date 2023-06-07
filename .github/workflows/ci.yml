@@ -19,6 +19,6 @@ jobs:
           helm-version: v3.8.2
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          cd infrastructure/k8s/helm-chart
+          cd infrastructure/helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/required-test-values.yaml
 
