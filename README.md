@@ -20,13 +20,15 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
 
     ```python
       ##########
-      # first, create os environment variables for required secrets
+      # create os environment variables for required secrets
       ##########
       $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
       $ export PGUSER=s00pers3cr3t
       $ export POSTGRES_USER=s00pers3cr3t
       $ export POSTGRES_PASSWORD=superuserfoobar
       $ export PGPASSWORD=foobar
+   
+      $ cd ./helm-chart
 
       $ helm install \
           --namespace eoapi \
@@ -43,7 +45,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
 2. or `helm install` from the https://artifacthub.io:
 
     ```python
-    TBD
+    $ TBD
     ```
 
 
