@@ -14,11 +14,11 @@ If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide be
  
 ## Helm Installation 
 
-Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
+Once you have a k8s cluster set up you can `helm install` eoAPI as follows
 
-`helm install` from this repo's `helm-chart/` folder:
+1. `helm install` from this repo's `helm-chart/` folder:
 
-    ```bash
+    ```python
       ##########
       # first, create os environment variables for required secrets
       ##########
@@ -40,9 +40,9 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
           ./eoapi
     ```
 
-or `helm install` from the https://artifacthub.io:
+2. or `helm install` from the https://artifacthub.io:
 
-    ```bash
+    ```python
     TBD
     ```
 
