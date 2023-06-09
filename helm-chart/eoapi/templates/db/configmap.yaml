@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: initdb-sql-config
+data:
+  initdb.sql: |
+    {{- range $path, $bytes := $.Files.Glob "initdb-data/*.sql"  -}}
+    {{ $.Files.Get $path | nindent 4 }}
+    {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: initdb-json-config
+data:
+  {{- range $path, $bytes := $.Files.Glob "initdb-data/*.json"  -}}
+  {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
+  {{- end -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: initdb-sh-config
+data:
+  load.sh: |
+    pypgstac pgready --dsn postgresql://username:password@pgstac/postgis
+    pypgstac load items /opt/initdb/json-data/noaa-eri-nashville2020.json --dsn postgresql://username:password@pgstac/postgis --method insert_ignore
+    pypgstac load collections /opt/initdb/json-data/noaa-emergency-response.json --dsn postgresql://username:password@pgstac/postgis --method insert_ignore
+    psql postgresql://username:password@pgstac/postgis -f /opt/initdb/sql-data/initdb.sql
+    # run it forever like a docker process should
+    tail -f /dev/null

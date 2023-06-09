@@ -34,6 +34,8 @@ db:
   # environment options: "rds" || "k8s"
   environment: "k8s"
   enabled: true
+  # toggle to true if you want the db test fixtures loaded
+  enable_data_fixtures: false
   settings:
     resources:
       requests:
@@ -79,7 +81,6 @@ raster:
   image:
     name: ghcr.io/developmentseed/eoapi-raster
     tag: latest
-  # nothing definitive about this, just plumbed in after quick survey of `eoAPI/infrastructure/aws/cdk/config.py`
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -117,7 +118,6 @@ stac:
   image:
     name: ghcr.io/developmentseed/eoapi-stac
     tag: latest
-  # nothing definitive about this, just plumbed in after quick survey of `eoAPI/infrastructure/aws/cdk/config.py`
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -147,7 +147,6 @@ vector:
   image:
     name: ghcr.io/developmentseed/eoapi-vector
     tag: latest
-  # nothing definitive about this, just plumbed in after quick survey of `eoAPI/infrastructure/aws/cdk/config.py`
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
