@@ -1,4 +1,3 @@
-
 suite: db defaults deployment
 templates:
   - templates/db/deployment.yaml
@@ -6,7 +5,6 @@ tests:
   - it: "db deploy defaults"
     set:
       db.enabled: true
-      gitSha: "ABC123"
     asserts:
       - isKind:
           of: Deployment
@@ -24,8 +22,7 @@ tests:
   - it: "db deploy with fixtures"
     set:
       db.enabled: true
-      db.enable_init_data_fixtures: true
-      gitSha: "ABC123"
+      db.enable_data_fixtures: true
     asserts:
       - isKind:
           of: Deployment
@@ -39,5 +36,5 @@ tests:
           path: spec.template.spec.containers[0].name
           value: "pgstac"
       - equal:
-          path: spec.template.spec.containers[0].name
+          path: spec.template.spec.containers[1].name
           value: "loader"

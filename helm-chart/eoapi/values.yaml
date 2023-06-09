@@ -35,7 +35,7 @@ db:
   environment: "k8s"
   enabled: true
   # toggle to true if you want the db test fixtures loaded
-  enable_init_data_fixtures: false
+  enable_data_fixtures: false
   settings:
     resources:
       requests:

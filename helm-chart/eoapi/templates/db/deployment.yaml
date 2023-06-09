@@ -32,7 +32,7 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: pgstac-claim
-        {{- if .Values.db.settings.enable_init_data_fixtures -}}
+        {{- if .Values.db.enable_data_fixtures }}
         - name: loader
           image: ghcr.io/stac-utils/pgstac:v0.7.1
           command:
@@ -53,7 +53,7 @@ spec:
               name: initdb-json-volume
             - mountPath: /opt/initdb/
               name: initdb-sh-volume
-        {{- end -}}
+        {{- end }}
       volumes:
         - name: pgstac-claim
           persistentVolumeClaim:
