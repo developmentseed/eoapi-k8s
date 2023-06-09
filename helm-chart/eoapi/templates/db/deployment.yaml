@@ -25,9 +25,6 @@ spec:
             - "-N"
             - "500"
           envFrom:
-            # NOTE: there's no reason we need to use a `ConfigMap` or `Secret` here to get os env vars into the pod.
-            # we could just template them out here immediately with `value: $_` but this allows us
-            # to store them in k8s intermediately and change them and then bounce deploys if needed
           - secretRef:
               name: pgstac-secrets
           ports:
@@ -35,7 +32,38 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: pgstac-claim
+        {{- if .Values.db.settings.enable_init_data_fixtures -}}
+        - name: loader
+          image: ghcr.io/stac-utils/pgstac:v0.7.1
+          command:
+            - "sh"
+          args:
+            - "/opt/initdb/load.sh"
+          envFrom:
+            - secretRef:
+                name: pgstac-secrets
+          ports:
+            - containerPort: 6543
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: pgstac-claim
+            - mountPath: /opt/initdb/sql-data
+              name: initdb-sql-volume
+            - mountPath: /opt/initdb/json-data
+              name: initdb-json-volume
+            - mountPath: /opt/initdb/
+              name: initdb-sh-volume
+        {{- end -}}
       volumes:
         - name: pgstac-claim
           persistentVolumeClaim:
             claimName: pgstac-claim
+        - name: initdb-sql-volume
+          configMap:
+            name: initdb-sql-config
+        - name: initdb-json-volume
+          configMap:
+            name: initdb-json-config
+        - name: initdb-sh-volume
+          configMap:
+            name: initdb-sh-config

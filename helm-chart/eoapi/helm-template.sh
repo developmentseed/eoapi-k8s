@@ -5,6 +5,7 @@ export PGPASSWORD=password
 export POSTGRES_PASSWORD=password
 export GITSHA=$(git rev-parse HEAD | cut -c1-10)
 
+mkdir -p tmp
 MANIFEST=./tmp/eoapi-manfests.yaml
 
 echo "" > $MANIFEST
