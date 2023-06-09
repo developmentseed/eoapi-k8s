@@ -5,6 +5,7 @@ tests:
   - it: "db deploy defaults"
     set:
       db.enabled: true
+      db.enable_data_fixtures: false
     asserts:
       - isKind:
           of: Deployment
