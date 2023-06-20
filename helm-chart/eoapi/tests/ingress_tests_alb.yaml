@@ -1,9 +1,10 @@
 suite: service defaults ingress
 templates:
-  - templates/services/ingress.yaml
+  - templates/services/ingress-alb.yaml
 tests:
   - it: "vector ingress defaults"
     set:
+      ingress.className: "alb"
       raster.enabled: false
       stac.enabled: false
       vector.enabled: true
@@ -23,6 +24,7 @@ tests:
           value: "alb"
   - it: "raster ingress defaults"
     set:
+      ingress.className: "alb"
       raster.enabled: true
       stac.enabled: false
       vector.enabled: false
@@ -42,6 +44,7 @@ tests:
           value: "alb"
   - it: "stac ingress defaults"
     set:
+      ingress.className: "alb"
       raster.enabled: false
       stac.enabled: true
       vector.enabled: false
@@ -59,28 +62,3 @@ tests:
       - equal:
           path: spec.ingressClassName
           value: "alb"
-  - it: "vector enabled_shared_ingress override"
-    set:
-      raster.enabled: false
-      stac.enabled: false
-      vector.enabled: true
-      ingress.enable_shared_ingress: true
-    asserts:
-      - isKind:
-          of: Ingress
-      - matchRegex:
-          path: metadata.name
-          pattern: ^vector$
-      - equal:
-          path: metadata.annotations
-          value:
-            alb.ingress.kubernetes.io/group.name: shared-ingress
-            alb.ingress.kubernetes.io/scheme: internet-facing
-            alb.ingress.kubernetes.io/target-type: instance
-      - equal:
-          path: spec.rules[0].http.paths[0].path
-          value: "/vector"
-      - equal:
-          path: spec.ingressClassName
-          value: "alb"
-

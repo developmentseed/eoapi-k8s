@@ -58,17 +58,24 @@
     "service": {
       "type": "object",
       "required": [
-        "port",
-        "port_type"
+        "port"
       ],
       "properties": {
         "port": {
           "type": "integer",
           "pattern": "^[0-9]{4}$"
-        },
-        "port_type": {
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "required": [
+        "className"
+      ],
+      "properties": {
+        "className": {
           "type": "string",
-          "pattern": "^(NodePort|LoadBalancer)$"
+          "pattern": "^(alb|nginx)$"
         }
       }
     },

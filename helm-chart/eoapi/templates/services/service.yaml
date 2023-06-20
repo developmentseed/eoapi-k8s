@@ -8,7 +8,9 @@ metadata:
     app: {{ $serviceName }}
   name: {{ $serviceName }}
 spec:
-  type: {{ $.Values.service.port_type }}
+  {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "alb")) }}
+  type: "NodePort"
+  {{- end }}
   ports:
   - name: '{{ $.Values.service.port }}'
     port: {{ $.Values.service.port }}

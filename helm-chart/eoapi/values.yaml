@@ -60,21 +60,11 @@ gitSha: ""
 
 service:
   port: 8080
-  # port_type: "NodePort" || "LoadBalancer"
-  # NodePort: will create an Ingress and ALB
-  # LoadBalancer: will create an NLB
-  port_type: "NodePort"
 
 ingress:
-  className: "alb"
-  # AWS EKS:
-  # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/ingress/annotations/
-  # GCP GKE:
-  # https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
-  enable_shared_ingress: false
-  annotations:
-    alb.ingress.kubernetes.io/target-type: instance
-    alb.ingress.kubernetes.io/scheme: internet-facing
+  # if `ingress.className: "alb"` then it will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
+  # if `ingress.className: "nginx"` then it will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB
+  className: "nginx"
 
 raster:
   enabled: true
