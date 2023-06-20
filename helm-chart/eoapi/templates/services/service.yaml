@@ -10,6 +10,8 @@ metadata:
 spec:
   {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "alb")) }}
   type: "NodePort"
+  {{- else if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx")) }}
+  type: "ClusterIP"
   {{- end }}
   ports:
   - name: '{{ $.Values.service.port }}'

@@ -27,6 +27,14 @@ spec:
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
+        {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") (eq $serviceName "vector")) }}{{/* needed for proxies and path rewrites on NLB */}}
+        command:
+          - "uvicorn"
+          - "tipg.main:app"
+          - "--host=$(HOST)"
+          - "--port=$(PORT)"
+          - "--root-path=/{{ $serviceName }}"
+        {{- end }}
         ports:
           - containerPort: {{ $.Values.service.port }}
         resources:

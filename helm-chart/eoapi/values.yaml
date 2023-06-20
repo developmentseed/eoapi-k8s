@@ -135,8 +135,8 @@ stac:
 vector:
   enabled: true
   image:
-    name: ghcr.io/developmentseed/eoapi-vector
-    tag: latest
+    name: ghcr.io/developmentseed/tipg
+    tag: uvicorn-latest
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
