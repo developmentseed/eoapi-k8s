@@ -13,12 +13,12 @@ tests:
           of: Ingress
       - matchRegex:
           path: spec.rules[0].http.paths[0].path
-          pattern: ^/vector\(\/\|\$\)$
+          pattern: ^/vector\(\/\|\$\)\(\.\*\)$
       - equal:
           path: metadata.annotations
           value:
             nginx.ingress.kubernetes.io/use-regex: "true"
-            nginx.ingress.kubernetes.io/rewrite-target: /
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
       - equal:
           path: spec.ingressClassName
           value: "nginx"
@@ -33,12 +33,12 @@ tests:
           of: Ingress
       - matchRegex:
           path: spec.rules[0].http.paths[0].path
-          pattern: ^/raster\(\/\|\$\)$
+          pattern: ^/raster\(\/\|\$\)\(\.\*\)$
       - equal:
           path: metadata.annotations
           value:
             nginx.ingress.kubernetes.io/use-regex: "true"
-            nginx.ingress.kubernetes.io/rewrite-target: /
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
       - equal:
           path: spec.ingressClassName
           value: "nginx"
@@ -53,12 +53,12 @@ tests:
           of: Ingress
       - matchRegex:
           path: spec.rules[0].http.paths[0].path
-          pattern: ^/stac\(\/\|\$\)$
+          pattern: ^/stac\(\/\|\$\)\(\.\*\)$
       - equal:
           path: metadata.annotations
           value:
             nginx.ingress.kubernetes.io/use-regex: "true"
-            nginx.ingress.kubernetes.io/rewrite-target: /
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
       - equal:
           path: spec.ingressClassName
           value: "nginx"
