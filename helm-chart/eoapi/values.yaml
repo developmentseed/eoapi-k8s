@@ -69,7 +69,7 @@ ingress:
 raster:
   enabled: true
   image:
-    name: ghcr.io/developmentseed/eoapi-raster
+    name: ghcr.io/developmentseed/titiler
     tag: latest
   settings:
     timeout: 10

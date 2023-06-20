@@ -27,14 +27,18 @@ spec:
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
-        {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") (eq $serviceName "vector")) }}{{/* needed for proxies and path rewrites on NLB */}}
         command:
           - "uvicorn"
+        {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") (eq $serviceName "vector")) }}
           - "tipg.main:app"
+        {{- else if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") (eq $serviceName "raster")) }}
+          - "titiler.application.main:app"
+        {{- else if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") (eq $serviceName "stac")) }}
+          - "eoapi.stac.app:app"
+        {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
           - "--host=$(HOST)"
           - "--port=$(PORT)"
           - "--root-path=/{{ $serviceName }}"
-        {{- end }}
         ports:
           - containerPort: {{ $.Values.service.port }}
         resources:
