@@ -8,7 +8,7 @@ IAC for AWS/GCP and k8s helm chart
 
 If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide below that is relevant to you:
 
-> &#9432; The helm chart in this repo assumes your cluster has a few third-party addons and controllers installed. So
+> &#9432; The helm chart in this repo assumes your cluster has a few third-party add-ons and controllers installed. So
 > it's in your best interest to read through the IAC guides to make sure your cluster has those defaults set up
 
 * [AWS EKS Cluster IAC Setup](./docs/aws-eks.md)
