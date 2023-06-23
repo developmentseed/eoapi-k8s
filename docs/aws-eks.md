@@ -1,6 +1,6 @@
 # AWS EKS Cluster Walk-through
 
-This walk-through uses `eksctl` and assumes you already have an AWS account and have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl`.
+This walk-through uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and also `helm` installed.
 After creating the cluster we'll walk through installing the following add-ons and controllers:
 
 * `aws-ebs-csi-driver` 
@@ -219,7 +219,7 @@ helm upgrade \
     # these next two annotations are the most important otherwise nginx controller will create an "internal" NLB
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb"  \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-scheme"="internet-facing" \
-    --namespace <the-same-namespace-where-your-services-are-deployed>
+    --namespace <the-same-namespace-where-your-services-will-be-deployed>
 ```
 
 Assert that things are set up correctly:
