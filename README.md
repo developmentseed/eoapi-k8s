@@ -1,19 +1,18 @@
 # k8s-eoapi
 
-IAC for AWS/GCP and k8s helm chart
-
 ---
 
 ## Getting Started
 
-If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide below that is relevant to you:
+If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide below that is relevant to you. This helm chart hasn't been
+tested on [minikube](https://github.com/kubernetes/minikube) yet:
 
 > &#9432; The helm chart in this repo assumes your cluster has a few third-party add-ons and controllers installed. So
-> it's in your best interest to read through the IAC guides to make sure your cluster has those defaults set up
+> it's in your best interest to read through the IAC guides to understand what those defaults are
 
-* [AWS EKS Cluster IAC Setup](./docs/aws-eks.md)
+* [AWS EKS Cluster Setup](./docs/aws-eks.md)
 
-* [GCP GKE Cluster IAC Setup](./docs/gcp-gke.md)
+* [GCP GKE Cluster Setup](./docs/gcp-gke.md)
  
 ## Helm Installation 
 

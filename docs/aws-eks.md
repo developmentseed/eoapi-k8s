@@ -1,6 +1,6 @@
 # AWS EKS Cluster Walk-through
 
-This walk-through uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and also `helm` installed.
+This walk-through uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.
 After creating the cluster we'll walk through installing the following add-ons and controllers:
 
 * `aws-ebs-csi-driver` 
@@ -43,7 +43,7 @@ $ eksctl delete cluster --name=sandbox --region us-west-2
 
 For k8s `ServiceAccount`(s) to do things on behalf of pods in AWS you need an OIDC provider set up. Best to walk through 
 the [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html) for this
-but below is the relevant bits. Note that `eksctl` "should" create set up an OIDC provider for you by default
+but below are the relevant bits. Note that `eksctl` "should" set up an OIDC provider for you by default
 
 ```python
 export CLUSTER_NAME=my-cluster
