@@ -1,0 +1,38 @@
+{{- if (eq .Values.ingress.className "nginx") }}
+{{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" $.Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: nginx-service-ingress-shared
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  {{- if (and (.Values.ingress.className) (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion)) }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - http:
+        paths:
+          {{- range $serviceName, $v := .Values }}
+          {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+          {{- if index $v "enabled" }}
+          - pathType: Prefix
+            path: "/{{ $serviceName }}(/|$)(.*)"
+            backend:
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}{{/* END: if index $v "enabled" */}}
+          {{- end }}{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
+          {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
+---
+{{/* END: if .Values.ingress.className "alb" */}}
+{{- end }}

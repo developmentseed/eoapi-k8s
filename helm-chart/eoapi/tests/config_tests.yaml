@@ -42,5 +42,5 @@ tests:
           path: metadata.name
           pattern: ^stac-envvar-configmap$
       - equal:
-          path: data.TITILER_ENDPOINT
-          value: "raster:8080"
+          path: data.WEB_CONCURRENCY
+          value: "10"
