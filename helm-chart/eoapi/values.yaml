@@ -31,11 +31,10 @@ comment: >
       --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
 
 db:
-  # environment options: "rds" || "k8s"
   environment: "k8s"
   enabled: true
   # toggle to true if you want the db test fixtures loaded
-  enable_data_fixtures: false
+  enable_data_fixtures: true
   settings:
     resources:
       requests:
@@ -62,15 +61,15 @@ service:
   port: 8080
 
 ingress:
-  # if `ingress.className: "alb"` then it will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
-  # if `ingress.className: "nginx"` then it will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB
+  # `ingress.className: "alb"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
+  # `ingress.className: "nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites
   className: "nginx"
 
 raster:
   enabled: true
   image:
-    name: ghcr.io/developmentseed/titiler
-    tag: latest
+    name: ghcr.io/stac-utils/titiler-pgstac
+    tag: uvicorn-latest
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -106,8 +105,8 @@ raster:
 stac:
   enabled: true
   image:
-    name: ghcr.io/developmentseed/eoapi-stac
-    tag: latest
+    name: ghcr.io/stac-utils/stac-fastapi-pgstac
+    tag: 2.4.9
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -126,11 +125,6 @@ stac:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "10"
-      #############
-      # titiler
-      ##############
-      # https://github.com/developmentseed/eoAPI/issues/16
-      TITILER_ENDPOINT: "raster:8080"
 
 vector:
   enabled: true
