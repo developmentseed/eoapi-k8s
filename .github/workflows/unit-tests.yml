@@ -15,7 +15,6 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
-    name: minicube unit tests
     steps:
       - uses: actions/checkout@v3
 
