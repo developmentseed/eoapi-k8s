@@ -33,6 +33,9 @@ comment: >
 db:
   environment: "k8s"
   enabled: true
+  image:
+    name: ghcr.io/stac-utils/pgstac
+    tag: v0.7.1
   # toggle to true if you want the db test fixtures loaded
   enable_data_fixtures: true
   settings:
