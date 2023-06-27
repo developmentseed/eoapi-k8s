@@ -2,6 +2,7 @@
 
 ingress:
   enabled: false
+  className: "minikube"
 db:
   enabled: true
 raster:
