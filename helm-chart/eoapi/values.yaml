@@ -30,6 +30,7 @@ comment: >
       --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
       --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
 
+
 db:
   environment: "k8s"
   enabled: true
