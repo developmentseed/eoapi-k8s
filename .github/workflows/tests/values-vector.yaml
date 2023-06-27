@@ -1,0 +1,10 @@
+# used in GH Actions `unit-tests.yml`
+
+db:
+  enabled: true
+raster:
+  enabled: false
+stac:
+  enabled: false
+vector:
+  enabled: vector

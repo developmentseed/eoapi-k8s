@@ -1,0 +1,13 @@
+# used in GH Actions `unit-tests.yml`
+
+db:
+  enabled: true
+raster:
+  enabled: true
+  image:
+    name: local/titiler
+    tag: latest
+stac:
+  enabled: false
+vector:
+  enabled: false
