@@ -75,7 +75,7 @@
       "properties": {
         "className": {
           "type": "string",
-          "pattern": "^(alb|nginx)$"
+          "pattern": "^(alb|nginx|minikube)$"
         }
       }
     },
