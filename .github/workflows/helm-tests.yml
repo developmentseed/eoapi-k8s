@@ -7,9 +7,9 @@ on:
     - '*'
     tags:
     - '*'
-    paths:
+    paths: []
     # only run jobs if some code have changed
-    - 'helm-chart/eoapi/**'
+    #- 'helm-chart/eoapi/**'
   pull_request:
 
 jobs:
@@ -24,4 +24,65 @@ jobs:
       - run: |
           cd helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/required-test-values.yaml
+  unittests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: azure/setup-helm@v3
+
+      - name: start minikube
+        uses: medyagh/setup-minikube@master
+
+      - name: test the cluster
+        run: kubectl get pods -A
+
+      - name: build images for unit tests
+        run: |
+          export SHELL=/bin/bash
+          eval $(minikube -p minikube docker-env)
+          docker build -f ./dockerfiles/Dockerfile.pgstac -t local/pgstac .
+          docker build -f ./dockerfiles/Dockerfile.stac -t local/stac .
+          docker build -f ./dockerfiles/Dockerfile.titiler -t local/titiler .
+          docker build -f ./dockerfiles/Dockerfile.tipg -t local/tipg .
+          echo -n "verifying images:"
+          docker images
+
+      - name: render raster templates
+        run: |
+          export PGUSER=username
+          export POSTGRES_USER=username
+          export PGPASSWORD=password
+          export POSTGRES_PASSWORD=password
+          export GITSHA=12345
+
+          cd helm-chart/eoapi
+
+          MANIFEST=eoapi-manfests.yaml
+          echo "" > $MANIFEST
+          MANIFESTS=$(find ./templates/* -name "*.yaml")
+          while read MFILE; do
+            path_without_dot_prefix=$(echo "$MFILE" | sed 's/^\.\///g')
+            printf "[ RENDERING ]: %s\n" "$path_without_dot_prefix"
+            helm template . \
+              -s $path_without_dot_prefix \
+              --set gitSha=$GITSHA \
+              --set db.settings.secrets.PGUSER=$PGUSER \
+              --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+              --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+              --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+              -f values.yaml \
+              -f .github/workflows/tests/values-raster.yaml >> $MANIFEST
+          done < <(echo "$MANIFESTS")
+
+      - name: deploy to minikube
+        run:
+          kubectl apply -f eoapi-manfests.yaml
+
+      - name: test service urls
+        run: |
+          minikube service list
+          minikube service raster --url
+          echo "------------------opening the service------------------"
+          curl $(minikube service raster --url)
 
