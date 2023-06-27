@@ -1,4 +1,4 @@
-{{- if (and (eq .Values.ingress.enabled) (eq .Values.ingress.className "alb")) }}
+{{- if (and (.Values.ingress.enabled) (eq .Values.ingress.className "alb")) }}
 {{- range $serviceName, $v := .Values -}}
 {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
 {{- if index $v "enabled" }}
