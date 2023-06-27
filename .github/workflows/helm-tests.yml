@@ -29,9 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: setup upterm session
-        uses: lhotari/action-upterm@v1
-
       - uses: azure/setup-helm@v3
 
       - name: start minikube
@@ -82,6 +79,9 @@ jobs:
         run: |
           cd helm-chart/eoapi
           kubectl apply -f eoapi-manfests.yaml
+
+      - name: setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - name: test service urls
         run: |
