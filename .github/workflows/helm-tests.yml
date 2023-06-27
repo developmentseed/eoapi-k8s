@@ -83,7 +83,7 @@ jobs:
       - name: test service urls
         run: |
           minikube service list
-          minikube service stac --url
           echo "------------------opening the service------------------"
-          curl $(minikube service stac --url)
+          URL=$(minikube service vector --url)
+          curl -XGET "$URL/collections"
 
