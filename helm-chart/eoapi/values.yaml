@@ -67,6 +67,7 @@ service:
 ingress:
   # `ingress.className: "alb"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
   # `ingress.className: "nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites
+  enabled: true
   className: "nginx"
 
 raster:

@@ -1,4 +1,4 @@
-{{- if (eq .Values.ingress.className "nginx") }}
+{{- if (and (eq .Values.ingress.enabled) (eq .Values.ingress.className "nginx")) }}
 {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" $.Capabilities.KubeVersion.GitVersion -}}

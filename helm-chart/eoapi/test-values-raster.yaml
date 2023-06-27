@@ -1,5 +1,7 @@
 # used in GH Actions `unit-tests.yml`
 
+ingress:
+  enabled: false
 db:
   enabled: true
 raster:

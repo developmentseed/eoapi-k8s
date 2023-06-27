@@ -60,7 +60,7 @@ jobs:
 
           MANIFEST=eoapi-manfests.yaml
           echo "" > $MANIFEST
-          MANIFESTS=$(find ./templates/* -name "*.yaml")
+          MANIFESTS=$(find ./templates/* -name "*.yaml" -not -name "ingress*.yaml")
           while read MFILE; do
             path_without_dot_prefix=$(echo "$MFILE" | sed 's/^\.\///g')
             printf "[ RENDERING ]: %s\n" "$path_without_dot_prefix"

@@ -1,7 +1,7 @@
+{{- if (and (eq .Values.ingress.enabled) (eq .Values.ingress.className "alb")) }}
 {{- range $serviceName, $v := .Values -}}
 {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
 {{- if index $v "enabled" }}
-{{- if (eq $.Values.ingress.className "alb") }}
 {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" $.Capabilities.KubeVersion.GitVersion -}}
@@ -34,11 +34,11 @@ spec:
                 port:
                   number: {{ $.Values.service.port }}
 ---
-{{/* END: if .Values.ingress.className "alb" */}}
-{{- end }}
 {{/* END: if index $v "enabled" */}}
 {{- end }}
 {{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
 {{- end }}
 {{/* END: range $serviceName, $v := .Values*/}}
+{{- end }}
+{{/* END: if .Values.ingress.className "alb" */}}
 {{- end }}
