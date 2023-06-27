@@ -72,7 +72,7 @@ jobs:
               --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
               --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
               -f values.yaml \
-              -f test-values-raster.yaml >> $MANIFEST
+              -f test-unittest-values.yaml >> $MANIFEST
           done < <(echo "$MANIFESTS")
 
       - name: deploy to minikube

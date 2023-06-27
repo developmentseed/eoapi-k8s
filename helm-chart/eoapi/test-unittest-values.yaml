@@ -10,6 +10,12 @@ raster:
     name: local/titiler
     tag: latest
 stac:
-  enabled: false
+  enabled: true
+  image:
+    name: local/stac
+    tag: latest
 vector:
-  enabled: false
+  enabled: true
+  image:
+    name: local/tipg
+    tag: latest
