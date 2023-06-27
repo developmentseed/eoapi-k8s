@@ -54,7 +54,7 @@ jobs:
           export POSTGRES_USER=username
           export PGPASSWORD=password
           export POSTGRES_PASSWORD=password
-          export GITSHA=12345
+          export GITSHA='A12345'
 
           cd helm-chart/eoapi
 
