@@ -23,7 +23,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           cd helm-chart
-          helm unittest eoapi -f 'tests/*.yaml' -v eoapi/required-test-values.yaml
+          helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
   unittests:
     runs-on: ubuntu-latest
     steps:
@@ -72,7 +72,7 @@ jobs:
               --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
               --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
               -f values.yaml \
-              -f .github/workflows/tests/values-raster.yaml >> $MANIFEST
+              -f test-values-raster.yaml >> $MANIFEST
           done < <(echo "$MANIFESTS")
 
       - name: deploy to minikube
