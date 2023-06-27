@@ -76,7 +76,7 @@ jobs:
           done < <(echo "$MANIFESTS")
 
       - name: deploy to minikube
-        run:
+        run: |
           cd helm-chart/eoapi
           kubectl apply -f eoapi-manfests.yaml
 
