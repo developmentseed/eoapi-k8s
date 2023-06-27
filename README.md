@@ -12,7 +12,7 @@ tested on [minikube](https://github.com/kubernetes/minikube) yet:
 
 * [AWS EKS Cluster Setup](./docs/aws-eks.md)
 
-* [GCP GKE Cluster Setup](./docs/gcp-gke.md)
+* [TBD: GCP GKE Cluster Setup](./docs/gcp-gke.md)
  
 ## Helm Installation 
 
