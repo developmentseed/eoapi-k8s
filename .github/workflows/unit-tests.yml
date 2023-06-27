@@ -7,9 +7,9 @@ on:
     - '*'
     tags:
     - '*'
-    paths:
+    paths: []
     # only run jobs if some code have changed
-    - 'helm-chart/eoapi/**'
+    #- 'helm-chart/eoapi/**'
   pull_request:
 
 jobs:
