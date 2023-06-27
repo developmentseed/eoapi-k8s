@@ -83,7 +83,7 @@ jobs:
       - name: test service urls
         run: |
           minikube service list
-          minikube service raster --url
+          minikube service stac --url
           echo "------------------opening the service------------------"
-          curl $(minikube service raster --url)
+          curl $(minikube service stac --url)
 
