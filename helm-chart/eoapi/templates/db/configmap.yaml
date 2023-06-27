@@ -24,9 +24,11 @@ metadata:
   name: initdb-sh-config
 data:
   load.sh: |
-    pypgstac pgready --dsn postgresql://username:password@pgstac/postgis
-    pypgstac load items /opt/initdb/json-data/noaa-eri-nashville2020.json --dsn postgresql://username:password@pgstac/postgis --method insert_ignore
-    pypgstac load collections /opt/initdb/json-data/noaa-emergency-response.json --dsn postgresql://username:password@pgstac/postgis --method insert_ignore
-    psql postgresql://username:password@pgstac/postgis -f /opt/initdb/sql-data/initdb.sql
+    #!/bin/bash
+    DSN="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB"
+    pypgstac pgready --dsn $DSN
+    pypgstac load collections /opt/initdb/json-data/noaa-emergency-response.json --dsn $DSN --method insert_ignore
+    pypgstac load items /opt/initdb/json-data/noaa-eri-nashville2020.json --dsn $DSN --method insert_ignore
+    psql $DSN -f /opt/initdb/sql-data/initdb.sql
     # run it forever like a docker process should
     tail -f /dev/null
