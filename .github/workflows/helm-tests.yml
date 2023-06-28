@@ -83,9 +83,9 @@ jobs:
           cd helm-chart/eoapi
           kubectl apply -f eoapi-manfests.yaml
 
-      - name: sleep for 10s seconds while services boot
-        run: sleep 10s
+      - name: sleep for 20s seconds while services boot
         shell: bash
+        run: sleep 20s
 
       - name: restart the services
         run: |
@@ -97,9 +97,21 @@ jobs:
           #kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
           kubectl rollout restart deploy/raster
 
-      - name: sleep for 20s seconds while services restart
-        run: sleep 20s
-        shell: bash
+      - name: sleep until services ready
+        run: |
+          sleep 10s
+          while [[ -z $(kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl log {} | grep "startup complete" | head -n 1) ]]; do
+            echo "still waiting for raster service to start...
+            sleep 1
+          done
+          while [[ -z $(kubectl get pod  | grep '^vector-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl log {} | grep "startup complete" | head -n 1) ]]; do
+            echo "still waiting for vector service to start...
+            sleep 1
+          done
+          while [[ -z $(kubectl get pod  | grep '^stac-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl log {} | grep "startup complete" | head -n 1) ]]; do
+            echo "still waiting for stac service to start...
+            sleep 1
+          done
 
       - name: test service urls
         run: |
@@ -108,9 +120,6 @@ jobs:
 #          curl -XGET "$(minikube service vector --url)"
 #          curl -XGET "$(minikube service stac --url)"
 #          curl -XGET "$(minikube service raster --url)"
-
-      - name: setup upterm session
-        uses: lhotari/action-upterm@v1
 
       - name: install python unit-test dependencies
         run: |
