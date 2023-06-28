@@ -115,6 +115,8 @@ jobs:
           done
           echo "all services have started, moving on..."
 
+          sleep 10s
+
       - name: test service urls
         run: |
           minikube service list
