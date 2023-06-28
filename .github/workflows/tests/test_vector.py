@@ -2,7 +2,7 @@
 
 import httpx
 
-vector_endpoint = "http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/vector/"
+vector_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/vector/"
 
 
 def test_vector_api():

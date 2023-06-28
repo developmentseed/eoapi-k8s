@@ -2,7 +2,7 @@
 
 import httpx
 
-raster_endpoint = "http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/raster"
+raster_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/raster"
 
 
 def test_raster_api():
