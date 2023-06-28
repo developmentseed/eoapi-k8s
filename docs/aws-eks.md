@@ -222,6 +222,14 @@ helm upgrade \
     --namespace <the-same-namespace-where-your-services-will-be-deployed>
 ```
 
+Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/). 
+Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
+
+```python
+$ kubectl get cm | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
+$ kubectl get deploy | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
+```
+
 Assert that things are set up correctly:
 
 ```python
