@@ -100,15 +100,15 @@ jobs:
       - name: sleep until services ready
         run: |
           sleep 10s
-          while [[ -z $(kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl log {} | grep "startup complete" | head -n 1) ]]; do
+          while [[ -z $(kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1) ]]; do
             echo "still waiting for raster service to start...
             sleep 1
           done
-          while [[ -z $(kubectl get pod  | grep '^vector-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl log {} | grep "startup complete" | head -n 1) ]]; do
+          while [[ -z $(kubectl get pod  | grep '^vector-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1) ]]; do
             echo "still waiting for vector service to start...
             sleep 1
           done
-          while [[ -z $(kubectl get pod  | grep '^stac-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl log {} | grep "startup complete" | head -n 1) ]]; do
+          while [[ -z $(kubectl get pod  | grep '^stac-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1) ]]; do
             echo "still waiting for stac service to start...
             sleep 1
           done
