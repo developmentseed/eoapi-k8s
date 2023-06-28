@@ -80,12 +80,11 @@ jobs:
 
       - name: restart the services
         run: |
-          # usually if a pod fails b/c the DB isn't up yet it will go into CrashLoopBackOff state, so bounce them
-          #kubectl get pod  | grep '^vector-.*$' | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
+          # usually if a pod fails b/c the DB isn't up yet it will go into CrashLoopBackOff state and then restart
+          # and then the service is fine but minikube doesn't seem to restart things for some reason, could be
+          # that the underlying CMD(s) don't fully exit so we need to restart the services here
           kubectl rollout restart deploy/vector
-          #kubectl get pod  | grep '^stac-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
           kubectl rollout restart deploy/stac
-          #kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
           kubectl rollout restart deploy/raster
 
           sleep 10s
