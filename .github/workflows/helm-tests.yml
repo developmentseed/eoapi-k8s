@@ -109,8 +109,8 @@ jobs:
 #          curl -XGET "$(minikube service stac --url)"
 #          curl -XGET "$(minikube service raster --url)"
 
-#      - name: setup upterm session
-#        uses: lhotari/action-upterm@v1
+      - name: setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - name: install python unit-test dependencies
         run: |
