@@ -97,9 +97,8 @@ jobs:
           #kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
           kubectl rollout restart deploy/raster
 
-      - name: sleep until services ready
-        run: |
           sleep 10s
+
           while [[ -z "$(kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
