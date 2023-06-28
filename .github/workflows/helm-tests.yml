@@ -101,6 +101,9 @@ jobs:
         run: sleep 15s
         shell: bash
 
+      - name: setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: test service urls
         run: |
           minikube service list
@@ -108,9 +111,6 @@ jobs:
           curl -XGET "$(minikube service vector --url)"
           curl -XGET "$(minikube service stac --url)"
           curl -XGET "$(minikube service raster --url)"
-
-#      - name: setup upterm session
-#        uses: lhotari/action-upterm@v1
 
       - name: install python unit-test dependencies
         run: |
