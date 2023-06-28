@@ -29,9 +29,11 @@ spec:
               name: pgstac-secrets
           ports:
             - containerPort: 5432
+          {{- if not (eq $.Values.ingress.className "minikube")) }}
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: pgstac-claim
+          {{ end }}
         {{- if .Values.db.enable_data_fixtures }}
         - name: loader
           image: {{ .Values.db.image.name }}:{{ .Values.db.image.tag }}
@@ -45,8 +47,10 @@ spec:
           ports:
             - containerPort: 6543
           volumeMounts:
+            {{- if not (eq $.Values.ingress.className "minikube")) }}
             - mountPath: /var/lib/postgresql/data
               name: pgstac-claim
+            {{ end }}
             - mountPath: /opt/initdb/sql-data
               name: initdb-sql-volume
             - mountPath: /opt/initdb/json-data
@@ -55,9 +59,11 @@ spec:
               name: initdb-sh-volume
         {{- end }}
       volumes:
+        {{- if not (eq $.Values.ingress.className "minikube")) }}
         - name: pgstac-claim
           persistentVolumeClaim:
             claimName: pgstac-claim
+        {{- end }}
         - name: initdb-sql-volume
           configMap:
             name: initdb-sql-config

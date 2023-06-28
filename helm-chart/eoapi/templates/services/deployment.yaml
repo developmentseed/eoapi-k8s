@@ -30,7 +30,6 @@ spec:
         imagePullPolicy: Never
         {{- end }}
         name: {{ $serviceName }}
-        {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx")) }}
         command:
           - "uvicorn"
         {{ if (eq $serviceName "vector") }}
@@ -42,6 +41,7 @@ spec:
         {{- end }}
           - "--host=$(HOST)"
           - "--port=$(PORT)"
+        {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx")) }}
           - "--root-path=/{{ $serviceName }}"
         {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         ports:
