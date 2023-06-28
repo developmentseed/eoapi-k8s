@@ -2,6 +2,8 @@
 providerContext: "minikube"
 ingress:
   enabled: false
+  # used to set up NodePort in CI unittests on minikube
+  className: "neither"
 db:
   enabled: true
 raster:

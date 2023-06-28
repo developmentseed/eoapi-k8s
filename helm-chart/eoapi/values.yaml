@@ -79,7 +79,7 @@ raster:
   enabled: true
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: uvicorn-latest
+    tag: uvicorn-0.4.1
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -140,7 +140,7 @@ vector:
   enabled: true
   image:
     name: ghcr.io/developmentseed/tipg
-    tag: uvicorn-latest
+    tag: uvicorn-0.2.0
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
