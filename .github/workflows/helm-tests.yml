@@ -61,7 +61,7 @@ jobs:
 
           cd helm-chart
 
-          helm upgrade \
+          helm install \
                 --namespace eoapi \
                 --create-namespace \
                 --set gitSha=$GITSHA \
