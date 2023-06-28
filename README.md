@@ -1,5 +1,7 @@
 # k8s-eoapi
 
+---
+
 <p align="center">
   <a href="https://github.com/developmentseed/k8s-eoapi/actions?query=workflow%3Ahelm-tests" target="_blank">
       <img src="https://github.com/developmentseed/k8s-eoapi/actions/workflows/helm-tests.yml/badge.svg" alt="Test">
@@ -9,7 +11,6 @@
   </a>
 </p>
 
----
 
 ## Getting Started
 

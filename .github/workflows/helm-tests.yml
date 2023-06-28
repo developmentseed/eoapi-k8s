@@ -51,7 +51,7 @@ jobs:
           echo -n "verifying images:"
           docker images
 
-      - name: render raster templates
+      - name: helm render/install eoapi templates
         run: |
           export PGUSER=username
           export POSTGRES_USER=username
@@ -73,28 +73,6 @@ jobs:
                 -f ./eoapi/test-unittest-values.yaml \
                 eoapi \
                 ./eoapi
-
-#          MANIFEST=eoapi-manfests.yaml
-#          echo "" > $MANIFEST
-#          MANIFESTS=$(find ./templates/* -name "*.yaml" -not -name "ingress*.yaml")
-#          while read MFILE; do
-#            path_without_dot_prefix=$(echo "$MFILE" | sed 's/^\.\///g')
-#            printf "[ RENDERING ]: %s\n" "$path_without_dot_prefix"
-#            helm template . \
-#              -s $path_without_dot_prefix \
-#              --set gitSha=$GITSHA \
-#              --set db.settings.secrets.PGUSER=$PGUSER \
-#              --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-#              --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-#              --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-#              -f values.yaml \
-#              -f test-unittest-values.yaml >> $MANIFEST
-#          done < <(echo "$MANIFESTS")
-
-      - name: deploy to minikube
-        run: |
-          cd helm-chart/eoapi
-          kubectl apply -f eoapi-manfests.yaml
 
       - name: sleep for 20s seconds while services boot
         shell: bash
