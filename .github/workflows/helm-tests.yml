@@ -59,7 +59,7 @@ jobs:
           export POSTGRES_PASSWORD=password
           export GITSHA='A12345'
 
-          cd helm-chart/eoapi
+          cd helm-chart
 
           helm upgrade \
                 --namespace eoapi \
@@ -69,10 +69,10 @@ jobs:
                 --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
                 --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
                 --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-                -f values.yml \
-                -f test-unittest-values.yaml \
+                -f ./eoapi/values.yaml \
+                -f ./eoapi/test-unittest-values.yaml \
                 eoapi \
-                .
+                ./eoapi
 
 #          MANIFEST=eoapi-manfests.yaml
 #          echo "" > $MANIFEST
