@@ -62,7 +62,7 @@ jobs:
           cd helm-chart
 
           helm install \
-                --namespace eoapi \
+                --namespace default \
                 --create-namespace \
                 --set gitSha=$GITSHA \
                 --set db.settings.secrets.PGUSER=$PGUSER \
@@ -74,9 +74,9 @@ jobs:
                 eoapi \
                 ./eoapi
 
-      - name: sleep for 20s seconds while services boot
+      - name: sleep for 10s seconds while services boot
         shell: bash
-        run: sleep 20s
+        run: sleep 10s
 
       - name: restart the services
         run: |
