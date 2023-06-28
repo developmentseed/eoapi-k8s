@@ -31,7 +31,6 @@ jobs:
 
       - uses: azure/setup-helm@v3
         with:
-          helm-version: v3.8.2
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: start minikube
