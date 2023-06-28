@@ -16,7 +16,7 @@ metadata:
 data:
   {{- range $path, $bytes := $.Files.Glob "initdb-data/*.json"  -}}
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
-  {{- end -}}
+  {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap

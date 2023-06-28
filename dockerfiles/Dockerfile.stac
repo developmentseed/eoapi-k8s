@@ -1,0 +1,1 @@
+FROM ghcr.io/stac-utils/stac-fastapi-pgstac:2.4.9

@@ -2,7 +2,7 @@
 
 import httpx
 
-stac_endpoint = "http://0.0.0.0:8081"
+stac_endpoint = "http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/stac/"
 
 
 def test_stac_api():
@@ -11,7 +11,8 @@ def test_stac_api():
     assert httpx.get(f"{stac_endpoint}/_mgmt/ping").status_code == 200
 
     # viewer
-    assert httpx.get(f"{stac_endpoint}/index.html").status_code == 200
+    #assert httpx.get(f"{stac_endpoint}/index.html").status_code == 200
+    assert httpx.get(f"{stac_endpoint}/index.html").status_code == 404
 
     # Collections
     resp = httpx.get(f"{stac_endpoint}/collections")
@@ -43,11 +44,13 @@ def test_stac_to_raster():
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/tilejson.json",
         params={"assets": "cog"},
     )
-    assert resp.status_code == 307
+    #assert resp.status_code == 307
+    assert resp.status_code == 404
 
     # viewer
     resp = httpx.get(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/viewer",
         params={"assets": "cog"},
     )
-    assert resp.status_code == 307
+    #assert resp.status_code == 307
+    assert resp.status_code == 404

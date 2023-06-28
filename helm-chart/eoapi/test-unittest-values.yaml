@@ -1,0 +1,22 @@
+# used in GH Actions `unit-tests.yml`
+
+ingress:
+  enabled: false
+  className: "minikube"
+db:
+  enabled: true
+raster:
+  enabled: true
+  image:
+    name: local/titiler
+    tag: latest
+stac:
+  enabled: true
+  image:
+    name: local/stac
+    tag: latest
+vector:
+  enabled: true
+  image:
+    name: local/tipg
+    tag: latest
