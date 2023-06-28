@@ -11,13 +11,37 @@ raster:
   image:
     name: local/titiler
     tag: latest
+  settings:
+    resources:
+      limits:
+        cpu: "256m"
+        memory: "512Mi"
+      requests:
+        cpu: "256m"
+        memory: "512Mi"
 stac:
   enabled: true
   image:
     name: local/stac
     tag: latest
+  settings:
+    resources:
+      limits:
+        cpu: "256m"
+        memory: "512Mi"
+      requests:
+        cpu: "256m"
+        memory: "512Mi"
 vector:
   enabled: true
   image:
     name: local/tipg
     tag: latest
+  settings:
+    resources:
+      limits:
+        cpu: "256m"
+        memory: "512Mi"
+      requests:
+        cpu: "256m"
+        memory: "512Mi"

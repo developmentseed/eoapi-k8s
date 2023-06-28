@@ -89,7 +89,7 @@ jobs:
 
       - name: restart the services
         run: |
-          # usually if a pod fails b/c the DB isn't up yet it will go into CrashLoopBack state
+          # usually if a pod fails b/c the DB isn't up yet it will go into CrashLoopBackOff state
           # and try to restart itself then on the second try be able to connect
           # minikube doesn't seem to do this by default so we force it to happen by deleting the `/pod`
           # and therefore the deployment will restart the pod
@@ -97,12 +97,9 @@ jobs:
           kubectl get pod  | grep '^stac-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
           kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl delete pod/{}
 
-      - name: sleep for 15s seconds while services restart
-        run: sleep 15s
+      - name: sleep for 20s seconds while services restart
+        run: sleep 20s
         shell: bash
-
-      - name: setup upterm session
-        uses: lhotari/action-upterm@v1
 
       - name: test service urls
         run: |
@@ -111,6 +108,9 @@ jobs:
           curl -XGET "$(minikube service vector --url)"
           curl -XGET "$(minikube service stac --url)"
           curl -XGET "$(minikube service raster --url)"
+
+#      - name: setup upterm session
+#        uses: lhotari/action-upterm@v1
 
       - name: install python unit-test dependencies
         run: |
