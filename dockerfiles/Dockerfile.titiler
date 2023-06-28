@@ -1,1 +1,1 @@
-FROM ghcr.io/stac-utils/titiler-pgstac:uvicorn-latest
+FROM ghcr.io/stac-utils/titiler-pgstac:uvicorn-0.4.1

@@ -1,11 +1,19 @@
 # k8s-eoapi
 
+<p align="center">
+  <a href="https://github.com/developmentseed/k8s-eoapi/actions?query=workflow%3Ahelm-tests" target="_blank">
+      <img src="https://github.com/developmentseed/k8s-eoapi/actions/workflows/helm-tests.yml/badge.svg" alt="Test">
+  </a>
+  <a href="https://github.com/developmentseed/k8s-eoapi/blob/main/LICENSE" target="_blank">
+      <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="Downloads">
+  </a>
+</p>
+
 ---
 
 ## Getting Started
 
-If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide below that is relevant to you. This helm chart hasn't been
-tested on [minikube](https://github.com/kubernetes/minikube) yet:
+If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide below that is relevant to you
 
 > &#9432; The helm chart in this repo assumes your cluster has a few third-party add-ons and controllers installed. So
 > it's in your best interest to read through the IAC guides to understand what those defaults are
