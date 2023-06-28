@@ -59,24 +59,37 @@ jobs:
           export POSTGRES_PASSWORD=password
           export GITSHA='A12345'
 
-          cd helm-chart/eoapi
+          cd helm-chart
 
-          MANIFEST=eoapi-manfests.yaml
-          echo "" > $MANIFEST
-          MANIFESTS=$(find ./templates/* -name "*.yaml" -not -name "ingress*.yaml")
-          while read MFILE; do
-            path_without_dot_prefix=$(echo "$MFILE" | sed 's/^\.\///g')
-            printf "[ RENDERING ]: %s\n" "$path_without_dot_prefix"
-            helm template . \
-              -s $path_without_dot_prefix \
-              --set gitSha=$GITSHA \
-              --set db.settings.secrets.PGUSER=$PGUSER \
-              --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-              --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-              --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-              -f values.yaml \
-              -f test-unittest-values.yaml >> $MANIFEST
-          done < <(echo "$MANIFESTS")
+          helm upgrade \
+                --namespace eoapi \
+                --create-namespace \
+                --set gitSha=$GITSHA \
+                --set db.settings.secrets.PGUSER=$PGUSER \
+                --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+                --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+                --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+                -f ./eoapi/values.yml \
+                -f ./eoapi/test-unittest-values.yaml \
+                eoapi \
+                ./eoapi
+
+#          MANIFEST=eoapi-manfests.yaml
+#          echo "" > $MANIFEST
+#          MANIFESTS=$(find ./templates/* -name "*.yaml" -not -name "ingress*.yaml")
+#          while read MFILE; do
+#            path_without_dot_prefix=$(echo "$MFILE" | sed 's/^\.\///g')
+#            printf "[ RENDERING ]: %s\n" "$path_without_dot_prefix"
+#            helm template . \
+#              -s $path_without_dot_prefix \
+#              --set gitSha=$GITSHA \
+#              --set db.settings.secrets.PGUSER=$PGUSER \
+#              --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+#              --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+#              --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+#              -f values.yaml \
+#              -f test-unittest-values.yaml >> $MANIFEST
+#          done < <(echo "$MANIFESTS")
 
       - name: deploy to minikube
         run: |
