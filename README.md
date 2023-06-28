@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/developmentseed/k8s-eoapi/actions?query=workflow%3Ahelm-tests" target="_blank">
-      <img src="https://github.com/developmentseed/k8s-eoapi/workflows/helm-tests.yml/badge.svg" alt="Test">
+      <img src="https://github.com/developmentseed/k8s-eoapi/actions/workflows/helm-tests.yml/badge.svg" alt="Test">
   </a>
   <a href="https://github.com/developmentseed/k8s-eoapi/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="Downloads">
