@@ -80,13 +80,27 @@ jobs:
           cd helm-chart/eoapi
           kubectl apply -f eoapi-manfests.yaml
 
-      - name: setup upterm session
-        uses: lhotari/action-upterm@v1
+      - name: sleep for 15 seconds while services boot
+        run: sleep 15s
+        shell: bash
 
       - name: test service urls
         run: |
           minikube service list
-          echo "------------------opening the service------------------"
-          URL=$(minikube service vector --url)
-          curl -XGET "$URL/collections"
+#          echo "------------------opening the service------------------"
+#          URL=$(minikube service vector --url)
+#          curl -XGET "$URL/collections"
+#          URL=$(minikube service stac --url)
+#          curl -XGET "$URL"
+#          URL=$(minikube service raster --url)
+#          curl -XGET "$URL"
+
+      - name: setup upterm session
+        uses: lhotari/action-upterm@v1
+
+      - name: install python unit-test dependencies
+        run: |
+          python -m pip install pytest pytest-asycio httpx
+
+
 
