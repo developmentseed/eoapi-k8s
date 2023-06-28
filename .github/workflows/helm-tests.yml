@@ -109,8 +109,8 @@ jobs:
 #          URL=$(minikube service raster --url)
 #          curl -XGET "$URL"
 
-      - name: setup upterm session
-        uses: lhotari/action-upterm@v1
+#      - name: setup upterm session
+#        uses: lhotari/action-upterm@v1
 
       - name: install python unit-test dependencies
         run: |
@@ -122,17 +122,17 @@ jobs:
           # TODO: pytest should be able to have a pattern for injection here but htis is quicker
           URL=$(minikube service vector --url)
           sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$URL/vector'|g" .github/workflows/tests/test_vector.py
-          head -n 5 github/workflows/tests/test_vector.py
-          pytest github/workflows/tests/test_vector.py
+          head -n 5 .github/workflows/tests/test_vector.py
+          pytest .github/workflows/tests/test_vector.py
 
           URL=$(minikube service stac --url)
           sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$URL/stac'|g" .github/workflows/tests/test_stac.py
-          head -n 5 github/workflows/tests/test_stac.py
-          pytest github/workflows/tests/test_stac.py
+          head -n 5 .github/workflows/tests/test_stac.py
+          pytest .github/workflows/tests/test_stac.py
 
           URL=$(minikube service raster --url)
           sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$URL/raster'|g" .github/workflows/tests/test_raster.py
-          head -n 5 github/workflows/tests/test_raster.py
-          pytest github/workflows/tests/test_raster.py
+          head -n 5 .github/workflows/tests/test_raster.py
+          pytest .github/workflows/tests/test_raster.py
 
 
