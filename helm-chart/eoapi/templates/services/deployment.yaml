@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
-        {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "minikube")) }}
+        {{- if (eq $.Values.providerContext "minikube") }}
         imagePullPolicy: Never
         {{- end }}
         name: {{ $serviceName }}

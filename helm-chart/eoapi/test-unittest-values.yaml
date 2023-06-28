@@ -1,8 +1,7 @@
 # used in GH Actions `unit-tests.yml`
-
+providerContext: "minikube"
 ingress:
   enabled: false
-  className: "minikube"
 db:
   enabled: true
 raster:

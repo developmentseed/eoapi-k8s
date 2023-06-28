@@ -59,6 +59,11 @@ db:
       PGPASSWORD: ""
       PGDATABASE: "postgis"
 
+providerContext: "aws"
+# 'aws' is only supported at the moment.
+# our CI pipelines test against 'minikube' yet it hasn't been fully evaluated.
+# 'gcp' will be coming shortly in the future
+
 gitSha: ""
 
 service:
