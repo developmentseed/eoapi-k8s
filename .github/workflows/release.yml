@@ -23,6 +23,6 @@ jobs:
 
       - uses: helm/chart-releaser-action@v1.2.1
         with:
-          charts_dir: helm-chart/eoapi
+          charts_dir: helm-chart
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
