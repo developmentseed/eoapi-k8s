@@ -25,9 +25,9 @@ jobs:
                   git rev-list --max-parents=0 --first-parent HEAD
               fi
           }
-          local commit=$(lookup_latest_tag)
-          local changed_files
-          local charts_dir="helm-chart"
+          commit=$(lookup_latest_tag)
+          changed_files
+          charts_dir="helm-chart"
 
           git diff --find-renames --name-only "$commit" -- "$charts_dir"
           changed_files=$(git diff --find-renames --name-only "$commit" -- "$charts_dir")
@@ -36,8 +36,11 @@ jobs:
 
           tr "/" "\n" <<< "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l
 
-          local depth=$(( $(tr "/" "\n" <<< "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l) + 1 ))
-          local fields="1-${depth}"
+          depth=$(( $(tr "/" "\n" <<< "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l) + 1 ))
+          echo "DEPTH=$depth"
+          fields="1-${depth}"
+          echo "FIELDS=$fields"
+
           cut -d '/' -f "$fields" <<< "$changed_files" | uniq | filter_charts
 
       - uses: azure/setup-helm@v3
