@@ -1,4 +1,4 @@
-name: CI
+name: tests
 
 # On every pull request, but only on push to main
 on:

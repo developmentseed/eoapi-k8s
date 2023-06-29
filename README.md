@@ -11,6 +11,9 @@
   </a>
 </p>
 
+## What is eoAPI?
+
+https://eoapi.dev/
 
 ## Getting Started
 

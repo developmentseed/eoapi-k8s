@@ -1,0 +1,27 @@
+name: release
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: configure git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - uses: azure/setup-helm@v3
+        with:
+          helm-version: v3.8.2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: helm/char-releaser-action@v1.2.1
+        with:
+          charts_dir: helm-chart/eoapi
+          github-token: ${{ secrets.GITHUB_TOKEN }}
