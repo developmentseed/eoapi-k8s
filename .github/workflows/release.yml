@@ -26,7 +26,6 @@ jobs:
               fi
           }
           commit=$(lookup_latest_tag)
-          changed_files
           charts_dir="helm-chart"
 
           git diff --find-renames --name-only "$commit" -- "$charts_dir"
