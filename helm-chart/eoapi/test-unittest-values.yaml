@@ -14,11 +14,11 @@ raster:
   settings:
     resources:
       limits:
-        cpu: "256m"
-        memory: "512Mi"
+        cpu: "512m"
+        memory: "1024Mi"
       requests:
-        cpu: "256m"
-        memory: "512Mi"
+        cpu: "512m"
+        memory: "1024Mi"
 stac:
   enabled: true
   image:
