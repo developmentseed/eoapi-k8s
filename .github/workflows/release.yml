@@ -21,7 +21,7 @@ jobs:
           helm-version: v3.8.2
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: helm/char-releaser-action@v1.2.1
+      - uses: helm/chart-releaser-action@v1.2.1
         with:
           charts_dir: helm-chart/eoapi
           github-token: ${{ secrets.GITHUB_TOKEN }}
