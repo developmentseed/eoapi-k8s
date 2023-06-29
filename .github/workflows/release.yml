@@ -30,6 +30,7 @@ jobs:
 
           git diff --find-renames --name-only "$commit" -- "$charts_dir"
           changed_files=$(git diff --find-renames --name-only "$commit" -- "$charts_dir")
+          echo "CHANGED_FILES=$changed_files"
 
           "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l
 
@@ -40,7 +41,7 @@ jobs:
           fields="1-${depth}"
           echo "FIELDS=$fields"
 
-          cut -d '/' -f "$fields" <<< "$changed_files" | uniq | filter_charts
+          cut -d '/' -f "$fields" <<< "$changed_files" | uniq
 
       - uses: azure/setup-helm@v3
         with:
