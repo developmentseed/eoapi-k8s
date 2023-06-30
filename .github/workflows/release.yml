@@ -33,10 +33,12 @@ jobs:
         run: |
           git fetch --tags > /dev/null 2>&1
           latest_tag=$(git tag | sort -g | tail -1)
+          echo "LATEST_TAG=$latest_tag"
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
           chart="helm-chart/eoapi/Chart.yaml"
-          chart_changes_prev_commit=$(git diff --find-renames --name-only "$latest_tag" -- "$chart")
+          chart_changes_by_tag=$(git diff --find-renames --name-only "$latest_tag" -- "$chart")
+          echo "CHANGES=$chart_changes_by_tag"
           if [[ -n "$chart_changes_prev_commit" ]]; then
             echo "[ CHANGES FOUND ]:"
             echo "###############################"
