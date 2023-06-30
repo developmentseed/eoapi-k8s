@@ -7,6 +7,7 @@ on:
 
 jobs:
   release:
+    if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,9 +20,10 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - uses: azure/setup-helm@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           helm-version: v3.8.2
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: helm/chart-releaser-action@v1.2.1
         env:
@@ -33,6 +35,17 @@ jobs:
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          ########### INSTALL
+          install_dir="crinstall"
+          mkdir -p $install_dir
+          echo "Installing chart-releaser on $install_dir..."
+          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.0/chart-releaser_1.6.0_linux_amd64.tar.gz"
+          tar -xzf cr.tar.gz -C "$install_dir"
+          rm -f cr.tar.gz
+          echo 'Adding cr directory to PATH...'
+          export PATH="$install_dir:$PATH"
+
+          ########### CHANGE COMPARISON
           git fetch --tags > /dev/null 2>&1
           previous_tag=$(git tag | sort -g | tail -n 2 | head -n 1)
           latest_tag=$(git tag | sort -g | tail -n 1)
