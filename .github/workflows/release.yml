@@ -40,7 +40,7 @@ jobs:
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
           chart="helm-chart/eoapi/Chart.yaml"
-          chart_changes_by_tag=$(git diff --find-renames --name-only "$previous_tag $latest_tag" -- "$chart")
+          chart_changes_by_tag=$(git diff --find-renames --name-only $previous_tag -- "$chart")
           if [[ -n "$chart_changes_prev_commit" ]]; then
             echo "[ CHANGES FOUND ]:"
             echo "###############################"
