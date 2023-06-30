@@ -26,6 +26,10 @@ jobs:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           install_only: true
+
+      - name: sniff if we need to release helm chart
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
