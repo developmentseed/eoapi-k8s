@@ -16,49 +16,6 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: debug
-        run: |
-          lookup_latest_tag() {
-              git fetch --tags > /dev/null 2>&1
-
-              if ! git describe --tags --abbrev=0 HEAD~ 2> /dev/null; then
-                  git rev-list --max-parents=0 --first-parent HEAD
-              fi
-          }
-          commit=$(lookup_latest_tag)
-          charts_dir="helm-chart"
-
-          first=$(git diff --find-renames --name-only "$commit")
-          echo "CHANGED_FIRST=$first"
-          second=$(git diff --find-renames --name-only "$commit" -- "$charts_dir")
-          echo "SECOND=$second"
-          changed_files=$(git diff --find-renames --name-only "$commit" -- "$charts_dir")
-          echo "CHANGED_FILES=$changed_files"
-
-          "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l
-
-          tr "/" "\n" <<< "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l
-
-          depth=$(( $(tr "/" "\n" <<< "$charts_dir" | sed '/^\(\.\)*$/d' | wc -l) + 1 ))
-          echo "DEPTH=$depth"
-          fields="1-${depth}"
-          echo "FIELDS=$fields"
-
-          filter_charts() {
-              while read -r chart; do
-                  echo "CHART=$chart"
-                  [[ ! -d "$chart" ]] && continue
-                  local file="$chart/Chart.yaml"
-                  if [[ -f "$file" ]]; then
-                      echo "$chart"
-                  else
-                     echo "WARNING: $file is missing, assuming that '$chart' is not a Helm chart. Skipping." 1>&2
-                  fi
-              done
-          }
-
-          cut -d '/' -f "$fields" <<< "$changed_files" | uniq | filter_charts
-
       - uses: azure/setup-helm@v3
         with:
           helm-version: v3.8.2
@@ -67,9 +24,36 @@ jobs:
       - uses: helm/chart-releaser-action@v1.2.1
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          install_only: true
         run: |
-          if [[ -z "$(git diff --find-renames --name-only $(git rev-parse HEAD) -- helm-chart)" ]]; then
-            
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          chart="helm-chart/eoapi/Chart.yaml"
+          chart_changes_prev_commit=$(git diff --find-renames --name-only HEAD~ -- "$chart")
+          if [[ -n "$chart_changes_prev_commit" ]]; then
+            echo "[ CHANGES FOUND ]:"
+            echo "###############################"
+            echo $chart_changes_prev_commit
+            echo "###############################"
+
+            rm -rf .cr-release-packages
+            mkdir -p .cr-release-packages
+
+            rm -rf .cr-index
+            mkdir -p .cr-index
+
+            ############ PACKAGE
+            cr package "$chart" --package-path .cr-release-packages
+
+            ############ RELEASE
+            cr upload -o "$owner" -r "$repo" -c "$(git rev-parse HEAD)"
+
+            ############ INDEX
+            cr index -o "$owner" -r "$repo" --push
+          else
+            echo "Nothing to do, nothing changed in the chart dir..."
           fi
+
 
 
