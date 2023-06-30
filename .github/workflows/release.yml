@@ -32,13 +32,13 @@ jobs:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git fetch --tags > /dev/null 2>&1
-          previous_tag=$(git tag | sort -g | tail -2)
-          echo "PREV_TAG=$previous_tag"
+          previous_tag=$(git tag | sort -g | tail -n 2 | head -n 1)
+          latest_tag=$(git tag | sort -g | tail -n 1)
+          echo "TAGS_TO_COMPARE='$previous_tag $latest_tag'"
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
           chart="helm-chart/eoapi/Chart.yaml"
-          chart_changes_by_tag=$(git diff --find-renames --name-only "$previous_tag" -- "$chart")
-          echo "CHANGES=$chart_changes_by_tag"
+          chart_changes_by_tag=$(git diff --find-renames --name-only "$previous_tag $latest_tag" -- "$chart")
           if [[ -n "$chart_changes_prev_commit" ]]; then
             echo "[ CHANGES FOUND ]:"
             echo "###############################"
