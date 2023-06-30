@@ -29,54 +29,54 @@ jobs:
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          install_only: true
+          chart_dir: helm-chart
 
-      - name: sniff if we need to release helm chart
-        env:
-          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ########### INSTALL
-          install_dir="crinstall"
-          mkdir -p $install_dir
-          echo "Installing chart-releaser on $install_dir..."
-          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.0/chart-releaser_1.6.0_linux_amd64.tar.gz"
-          tar -xzf cr.tar.gz -C "$install_dir"
-          rm -f cr.tar.gz
-          echo 'Adding cr directory to PATH...'
-          export PATH="$install_dir:$PATH"
-
-          ########### CHANGE COMPARISON
-          git fetch --tags > /dev/null 2>&1
-          previous_tag=$(git tag | sort -g | tail -n 2 | head -n 1)
-          latest_tag=$(git tag | sort -g | tail -n 1)
-          echo "TAGS_TO_COMPARE='$previous_tag $latest_tag'"
-          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
-          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-          chart="helm-chart/eoapi/Chart.yaml"
-          #chart_changes_by_tag=$(git diff --find-renames --name-only $previous_tag -- "$chart")
-          #if [[ -n "$chart_changes_prev_commit" ]]; then
-          echo "[ CHANGES FOUND ]:"
-          echo "###############################"
-          echo $chart_changes_prev_commit
-          echo "###############################"
-
-          rm -rf .cr-release-packages
-          mkdir -p .cr-release-packages
-
-          rm -rf .cr-index
-          mkdir -p .cr-index
-
-          ############ PACKAGE
-          cr package "$chart" --package-path .cr-release-packages
-
-          ############ RELEASE
-          cr upload -o "$owner" -r "$repo" -c "$(git rev-parse HEAD)"
-
-          ############ INDEX
-          cr index -o "$owner" -r "$repo" --push
-          #else
-          #  echo "Nothing to do, nothing changed in the chart dir..."
-          #fi
+#      - name: sniff if we need to release helm chart
+#        env:
+#          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          ########### INSTALL
+#          install_dir="crinstall"
+#          mkdir -p $install_dir
+#          echo "Installing chart-releaser on $install_dir..."
+#          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.0/chart-releaser_1.6.0_linux_amd64.tar.gz"
+#          tar -xzf cr.tar.gz -C "$install_dir"
+#          rm -f cr.tar.gz
+#          echo 'Adding cr directory to PATH...'
+#          export PATH="$install_dir:$PATH"
+#
+#          ########### CHANGE COMPARISON
+#          git fetch --tags > /dev/null 2>&1
+#          previous_tag=$(git tag | sort -g | tail -n 2 | head -n 1)
+#          latest_tag=$(git tag | sort -g | tail -n 1)
+#          echo "TAGS_TO_COMPARE='$previous_tag $latest_tag'"
+#          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+#          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+#          chart="helm-chart/eoapi/Chart.yaml"
+#          #chart_changes_by_tag=$(git diff --find-renames --name-only $previous_tag -- "$chart")
+#          #if [[ -n "$chart_changes_prev_commit" ]]; then
+#          echo "[ CHANGES FOUND ]:"
+#          echo "###############################"
+#          echo $chart_changes_prev_commit
+#          echo "###############################"
+#
+#          rm -rf .cr-release-packages
+#          mkdir -p .cr-release-packages
+#
+#          rm -rf .cr-index
+#          mkdir -p .cr-index
+#
+#          ############ PACKAGE
+#          cr package "$chart" --package-path .cr-release-packages
+#
+#          ############ RELEASE
+#          cr upload -o "$owner" -r "$repo" -c "$(git rev-parse HEAD)"
+#
+#          ############ INDEX
+#          cr index -o "$owner" -r "$repo" --push
+#          #else
+#          #  echo "Nothing to do, nothing changed in the chart dir..."
+#          #fi
 
 
 
