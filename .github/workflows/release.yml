@@ -40,30 +40,30 @@ jobs:
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
           chart="helm-chart/eoapi/Chart.yaml"
-          chart_changes_by_tag=$(git diff --find-renames --name-only $previous_tag -- "$chart")
-          if [[ -n "$chart_changes_prev_commit" ]]; then
-            echo "[ CHANGES FOUND ]:"
-            echo "###############################"
-            echo $chart_changes_prev_commit
-            echo "###############################"
+#          chart_changes_by_tag=$(git diff --find-renames --name-only $previous_tag -- "$chart")
+#          if [[ -n "$chart_changes_prev_commit" ]]; then
+          echo "[ CHANGES FOUND ]:"
+          echo "###############################"
+          echo $chart_changes_prev_commit
+          echo "###############################"
 
-            rm -rf .cr-release-packages
-            mkdir -p .cr-release-packages
+          rm -rf .cr-release-packages
+          mkdir -p .cr-release-packages
 
-            rm -rf .cr-index
-            mkdir -p .cr-index
+          rm -rf .cr-index
+          mkdir -p .cr-index
 
-            ############ PACKAGE
-            cr package "$chart" --package-path .cr-release-packages
+          ############ PACKAGE
+          cr package "$chart" --package-path .cr-release-packages
 
-            ############ RELEASE
-            cr upload -o "$owner" -r "$repo" -c "$(git rev-parse HEAD)"
+          ############ RELEASE
+          cr upload -o "$owner" -r "$repo" -c "$(git rev-parse HEAD)"
 
-            ############ INDEX
-            cr index -o "$owner" -r "$repo" --push
-          else
-            echo "Nothing to do, nothing changed in the chart dir..."
-          fi
+          ############ INDEX
+          cr index -o "$owner" -r "$repo" --push
+#          else
+#            echo "Nothing to do, nothing changed in the chart dir..."
+#          fi
 
 
 
