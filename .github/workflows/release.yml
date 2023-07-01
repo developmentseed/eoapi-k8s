@@ -33,7 +33,7 @@ jobs:
           mkdir -p $release_dir
 
           # remove old packages
-          rm $release_dir/*tgz
+          ls -1 $release_dir/*tgz | xargs -I{} rm -f {}
 
           # package recent chart
           chart="helm-chart/eoapi"
