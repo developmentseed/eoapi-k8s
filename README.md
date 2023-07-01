@@ -11,7 +11,7 @@
 
 ## What is eoAPI?
 
-https://eoapi.dev/
+[https://eoapi.dev/](https://eoapi.dev/)
 
 ## Getting Started
 
