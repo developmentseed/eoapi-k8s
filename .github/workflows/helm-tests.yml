@@ -3,6 +3,8 @@ name: CI
 # On every pull request, but only on push to main
 on:
   push:
+    branches-ignore:
+    - gh-pages
     branches:
     - '*'
     tags:

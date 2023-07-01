@@ -52,6 +52,12 @@ jobs:
           token: ${{ secrets.PUSH_TO_PROTECTED_BRANCH }}
           branch: main
 
-
+      - name: update gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git checkout gh-pages
+          git merge main
+          git push origin gh-pages
 
 
