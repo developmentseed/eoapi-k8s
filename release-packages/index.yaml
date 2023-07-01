@@ -3,14 +3,14 @@ entries:
   eoapi:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2023-07-01T15:11:11.798879778Z"
+    created: "2023-07-01T15:15:26.474996941Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
-    digest: 1996af0ad14dcd376d4b73f3907559b41b8d6fbfcaf59c76ca983e126380bad3
+    digest: f481f0e727cca29a4a5a7b773d5dbc52180f205dcf603a093a10a6faaf38859c
     kubeVersion: '>=1.23.0-0'
     name: eoapi
     type: application
     urls:
     - eoapi-0.1.1.tgz
     version: 0.1.1
-generated: "2023-07-01T15:11:11.796497061Z"
+generated: "2023-07-01T15:15:26.47368892Z"
