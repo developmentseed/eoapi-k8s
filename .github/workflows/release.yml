@@ -25,58 +25,33 @@ jobs:
         with:
           helm-version: v3.8.2
 
-      - uses: helm/chart-releaser-action@v1.2.1
+      - name: helm release packages
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          chart_dir: helm-chart
+        run: |
+          release_dir="release-packages"
+          mkdir -p $release_dir
 
-#      - name: sniff if we need to release helm chart
-#        env:
-#          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          ########### INSTALL
-#          install_dir="crinstall"
-#          mkdir -p $install_dir
-#          echo "Installing chart-releaser on $install_dir..."
-#          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.0/chart-releaser_1.6.0_linux_amd64.tar.gz"
-#          tar -xzf cr.tar.gz -C "$install_dir"
-#          rm -f cr.tar.gz
-#          echo 'Adding cr directory to PATH...'
-#          export PATH="$install_dir:$PATH"
-#
-#          ########### CHANGE COMPARISON
-#          git fetch --tags > /dev/null 2>&1
-#          previous_tag=$(git tag | sort -g | tail -n 2 | head -n 1)
-#          latest_tag=$(git tag | sort -g | tail -n 1)
-#          echo "TAGS_TO_COMPARE='$previous_tag $latest_tag'"
-#          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
-#          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
-#          chart="helm-chart/eoapi/Chart.yaml"
-#          #chart_changes_by_tag=$(git diff --find-renames --name-only $previous_tag -- "$chart")
-#          #if [[ -n "$chart_changes_prev_commit" ]]; then
-#          echo "[ CHANGES FOUND ]:"
-#          echo "###############################"
-#          echo $chart_changes_prev_commit
-#          echo "###############################"
-#
-#          rm -rf .cr-release-packages
-#          mkdir -p .cr-release-packages
-#
-#          rm -rf .cr-index
-#          mkdir -p .cr-index
-#
-#          ############ PACKAGE
-#          cr package "$chart" --package-path .cr-release-packages
-#
-#          ############ RELEASE
-#          cr upload -o "$owner" -r "$repo" -c "$(git rev-parse HEAD)"
-#
-#          ############ INDEX
-#          cr index -o "$owner" -r "$repo" --push
-#          #else
-#          #  echo "Nothing to do, nothing changed in the chart dir..."
-#          #fi
+          # remove old packages
+          rm $release_dir/*tgz
+
+          # package recent chart
+          chart="helm-chart/eoapi"
+          helm package $chart --destination $release_dir
+
+          # create the index file
+          helm repo index $release_dir
+
+          git add -A
+          chart_version=$(cat $chart/Chart.yaml| grep version: | cut -d' ' -f2)
+          git commit -m 'changes for chart release = $chart_version'
+
+      - name: commit release and push
+        uses: CasperWA/push-protected@v2
+        with:
+          token: ${{ secrets.PUSH_TO_PROTECTED_BRANCH }}
+          branch: main
+
 
 
 
