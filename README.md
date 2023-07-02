@@ -54,7 +54,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
           ./eoapi
     ```
 
-2. or `helm install` from the https://artifacthub.io:
+2. or `helm install` from https://devseed.com/k8s-eoapi/:
 
     ```python
       # add the eoapi helm repo locally
