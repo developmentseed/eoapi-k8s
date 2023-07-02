@@ -3,7 +3,7 @@ name: release
 on:
   workflow_dispatch:
     branches:
-      - main
+      - gh-pages
 
 jobs:
   release:
@@ -29,18 +29,12 @@ jobs:
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          release_dir="release-packages"
-          mkdir -p $release_dir
-
-          # remove old packages
-          ls -1 $release_dir/*tgz | xargs -I{} rm -f {}
-
           # package recent chart
           chart="helm-chart/eoapi"
-          helm package $chart --destination $release_dir
+          helm package $chart --destination .
 
           # create the index file
-          helm repo index $release_dir
+          helm repo index .
 
           git add -A
           chart_version=$(cat $chart/Chart.yaml| grep version: | cut -d' ' -f2)
@@ -50,14 +44,4 @@ jobs:
         uses: CasperWA/push-protected@v2
         with:
           token: ${{ secrets.PUSH_TO_PROTECTED_BRANCH }}
-          branch: main
-
-      - name: update gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git checkout gh-pages
-          git merge main
-          git push origin gh-pages
-
-
+          branch: gh-pages
