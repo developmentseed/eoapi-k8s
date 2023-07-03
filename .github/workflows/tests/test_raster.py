@@ -2,20 +2,24 @@
 
 import httpx
 
+# better timeouts
+timeout = httpx.Timeout(15.0, connect=60.0)
+client = httpx.Client(timeout=timeout)
+
 raster_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/raster"
 
 
 def test_raster_api():
     """test api."""
     # health
-    resp = httpx.get(
+    resp = client.get(
         f"{raster_endpoint}/healthz", headers={"Accept-Encoding": "br, gzip"}
     )
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     #assert resp.headers["content-encoding"] == "gzip"
 
-    resp = httpx.get(f"{raster_endpoint}/healthz", headers={"Accept-Encoding": "br"})
+    resp = client.get(f"{raster_endpoint}/healthz", headers={"Accept-Encoding": "br"})
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     #assert resp.headers["content-encoding"] == "br"
@@ -24,7 +28,7 @@ def test_raster_api():
 def test_mosaic_api():
     """test mosaic."""
     query = {"collections": ["noaa-emergency-response"], "filter-lang": "cql-json"}
-    resp = httpx.post(f"{raster_endpoint}/mosaic/register", json=query)
+    resp = client.post(f"{raster_endpoint}/mosaic/register", json=query)
     assert resp.headers["content-type"] == "application/json"
     assert resp.status_code == 200
     assert resp.json()["searchid"]
@@ -32,20 +36,20 @@ def test_mosaic_api():
 
     searchid = resp.json()["searchid"]
 
-    resp = httpx.get(f"{raster_endpoint}/mosaic/{searchid}/-85.6358,36.1624/assets")
+    resp = client.get(f"{raster_endpoint}/mosaic/{searchid}/-85.6358,36.1624/assets")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
     assert list(resp.json()[0]) == ["id", "bbox", "assets", "collection"]
     assert resp.json()[0]["id"] == "20200307aC0853900w361030"
 
-    # resp = httpx.get(f"{raster_endpoint}/mosaic/{searchid}/15/8589/12849/assets")
-    # assert resp.status_code == 200
-    # assert len(resp.json()) == 1
-    # assert list(resp.json()[0]) == ["id", "bbox", "assets", "collection"]
-    # assert resp.json()[0]["id"] == "20200307aC0853900w361030"
+    resp = client.get(f"{raster_endpoint}/mosaic/{searchid}/15/8589/12849/assets")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+    assert list(resp.json()[0]) == ["id", "bbox", "assets", "collection"]
+    assert resp.json()[0]["id"] == "20200307aC0853900w361030"
 
     z, x, y = 15, 8589, 12849
-    resp = httpx.get(
+    resp = client.get(
         f"{raster_endpoint}/mosaic/{searchid}/tiles/{z}/{x}/{y}",
         params={"assets": "cog"},
         headers={"Accept-Encoding": "br, gzip"},
@@ -110,11 +114,11 @@ def test_mosaic_search():
         },
     ]
     for search in searches:
-        resp = httpx.post(f"{raster_endpoint}/mosaic/register", json=search)
+        resp = client.post(f"{raster_endpoint}/mosaic/register", json=search)
         assert resp.status_code == 200
         assert resp.json()["searchid"]
 
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list")
+    resp = client.get(f"{raster_endpoint}/mosaic/list")
     assert resp.headers["content-type"] == "application/json"
     assert resp.status_code == 200
     assert (
@@ -132,7 +136,7 @@ def test_mosaic_search():
     assert links[1]["rel"] == "next"
     assert links[1]["href"] == f"{raster_endpoint}/mosaic/list?limit=10&offset=10"
 
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list", params={"limit": 1, "offset": 1})
+    resp = client.get(f"{raster_endpoint}/mosaic/list", params={"limit": 1, "offset": 1})
     assert resp.status_code == 200
     assert resp.json()["context"]["matched"] > 10
     assert resp.json()["context"]["limit"] == 1
@@ -148,40 +152,40 @@ def test_mosaic_search():
     assert links[2]["href"] == f"{raster_endpoint}/mosaic/list?limit=1&offset=0"
 
     # Filter on mosaic metadata
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list", params={"owner": "vincent"})
+    resp = client.get(f"{raster_endpoint}/mosaic/list", params={"owner": "vincent"})
     assert resp.status_code == 200
     assert resp.json()["context"]["matched"] == 7
     assert resp.json()["context"]["limit"] == 10
     assert resp.json()["context"]["returned"] == 7
 
     # sortBy
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "lastused"})
+    resp = client.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "lastused"})
     assert resp.status_code == 200
 
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "usecount"})
+    resp = client.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "usecount"})
     assert resp.status_code == 200
 
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "-owner"})
+    resp = client.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "-owner"})
     assert resp.status_code == 200
     assert (
         "owner" not in resp.json()["searches"][0]["search"]["metadata"]
     )  # some mosaic don't have owners
 
-    resp = httpx.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "owner"})
+    resp = client.get(f"{raster_endpoint}/mosaic/list", params={"sortby": "owner"})
     assert resp.status_code == 200
     assert "owner" in resp.json()["searches"][0]["search"]["metadata"]
 
 
 def test_item():
     """test stac endpoints."""
-    resp = httpx.get(
+    resp = client.get(
         f"{raster_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/assets",
     )
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     assert resp.json() == ["cog"]
 
-    resp = httpx.get(
+    resp = client.get(
         f"{raster_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/tilejson.json",
         params={
             "assets": "cog",
