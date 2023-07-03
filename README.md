@@ -54,10 +54,31 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
           ./eoapi
     ```
 
-2. or `helm install` from the https://artifacthub.io:
+2. or `helm install` from https://devseed.com/k8s-eoapi/:
 
     ```python
-    $ TBD
+      # add the eoapi helm repo locally
+      $ helm repo add eoapi https://devseed.com/k8s-eoapi/
+    
+      # list out the eoapi chart versions
+      $ helm search repo eoapi 
+      NAME            CHART VERSION   APP VERSION     DESCRIPTION                                       
+      eoapi/eoapi     0.1.1           0.1.0           Create a full Earth Observation API with Metada...
+      eoapi/eoapi     0.1.2           0.1.0           Create a full Earth Observation API with Metada...
+   
+      # add the required secret overrides to an arbitrarily named `.yaml` file (`config.yaml` below)
+      $ cat config.yaml 
+      gitSha: "AB123"
+      db:
+        settings:
+          secrets:
+            PGUSER: "username"
+            POSTGRES_USER: "username"
+            PGPASSWORD: "password"
+            POSTGRES_PASSWORD: "password"
+    
+      # then run `helm install` with those overrides 
+      helm install eoapi eoapi/eoapi --version 0.1.1 -f config.yaml
     ```
 
 
