@@ -7,20 +7,24 @@ vector_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us
 
 def test_vector_api():
     """test vector."""
+    # better timeouts
+    timeout = httpx.Timeout(15.0, connect=60.0)
+    client = httpx.Client(timeout=timeout)
+
     # landing
-    resp = httpx.get(f"{vector_endpoint}/")
+    resp = client.get(f"{vector_endpoint}/")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     assert resp.json()["links"]
 
     # conformance
-    resp = httpx.get(f"{vector_endpoint}/conformance")
+    resp = client.get(f"{vector_endpoint}/conformance")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     assert resp.json()["conformsTo"]
 
     # collections
-    resp = httpx.get(f"{vector_endpoint}/collections")
+    resp = client.get(f"{vector_endpoint}/collections")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
 
@@ -43,14 +47,14 @@ def test_vector_api():
     assert "public.my_data" in ids
 
     # collection
-    resp = httpx.get(f"{vector_endpoint}/collections/public.my_data")
+    resp = client.get(f"{vector_endpoint}/collections/public.my_data")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/json"
     assert resp.json()["links"]
     assert resp.json()["itemType"] == "feature"
 
     # items
-    resp = httpx.get(
+    resp = client.get(
         f"{vector_endpoint}/collections/public.my_data/items"
     )
     assert resp.status_code == 200
@@ -59,7 +63,7 @@ def test_vector_api():
     assert len(items) == 6
 
     # limit
-    resp = httpx.get(
+    resp = client.get(
         f"{vector_endpoint}/collections/public.my_data/items",
         params={"limit": 1},
     )
@@ -68,7 +72,7 @@ def test_vector_api():
     assert len(items) == 1
 
     # intersects
-    resp = httpx.get(
+    resp = client.get(
         f"{vector_endpoint}/collections/public.my_data/items",
         params={"bbox": "-180,0,0,90"},
     )
@@ -77,7 +81,7 @@ def test_vector_api():
     assert len(items) == 6
 
     # item
-    resp = httpx.get(
+    resp = client.get(
         f"{vector_endpoint}/collections/public.my_data/items/1"
     )
     assert resp.status_code == 200
@@ -85,16 +89,16 @@ def test_vector_api():
     assert item["id"] == 1
 
     # OGC Tiles
-    resp = httpx.get(f"{vector_endpoint}/collections/public.my_data/tiles/0/0/0")
+    resp = client.get(f"{vector_endpoint}/collections/public.my_data/tiles/0/0/0")
     assert resp.status_code == 200
 
-    resp = httpx.get(
+    resp = client.get(
         f"{vector_endpoint}/collections/public.my_data/tilejson.json"
     )
     assert resp.status_code == 200
 
-    resp = httpx.get(f"{vector_endpoint}/tileMatrixSets")
+    resp = client.get(f"{vector_endpoint}/tileMatrixSets")
     assert resp.status_code == 200
 
-    resp = httpx.get(f"{vector_endpoint}/tileMatrixSets/WebMercatorQuad")
+    resp = client.get(f"{vector_endpoint}/tileMatrixSets/WebMercatorQuad")
     assert resp.status_code == 200
