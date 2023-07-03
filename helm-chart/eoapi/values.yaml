@@ -64,7 +64,9 @@ db:
 # "gcp" will be an option available in the future
 providerContext: "aws"
 
-gitSha: ""
+# if running `helm install` from repo directory you'll have to provide this
+# otherwise the chart on the gh-pages branch will provide the correct updated value
+gitSha: "gitshaABC123"
 
 service:
   port: 8080

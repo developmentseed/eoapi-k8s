@@ -68,7 +68,6 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
    
       # add the required secret overrides to an arbitrarily named `.yaml` file (`config.yaml` below)
       $ cat config.yaml 
-      gitSha: "AB123"
       db:
         settings:
           secrets:
