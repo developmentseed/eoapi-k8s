@@ -155,4 +155,4 @@ jobs:
           git checkout gh-pages
           git pull origin gh-pages
           git rebase main
-          git push origin gh-pages
+          git push -f origin gh-pages
