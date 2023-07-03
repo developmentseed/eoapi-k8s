@@ -4,18 +4,21 @@ import httpx
 
 stac_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/stac/"
 
+# better timeouts
+timeout = httpx.Timeout(15.0, connect=60.0)
+client = httpx.Client(timeout=timeout)
 
 def test_stac_api():
     """test stac."""
     # Ping
-    assert httpx.get(f"{stac_endpoint}/_mgmt/ping").status_code == 200
+    assert client.get(f"{stac_endpoint}/_mgmt/ping").status_code == 200
 
     # viewer
-    #assert httpx.get(f"{stac_endpoint}/index.html").status_code == 200
-    assert httpx.get(f"{stac_endpoint}/index.html").status_code == 404
+    #assert client.get(f"{stac_endpoint}/index.html").status_code == 200
+    assert client.get(f"{stac_endpoint}/index.html").status_code == 404
 
     # Collections
-    resp = httpx.get(f"{stac_endpoint}/collections")
+    resp = client.get(f"{stac_endpoint}/collections")
     assert resp.status_code == 200
     collections = resp.json()["collections"]
     assert len(collections) > 0
@@ -23,13 +26,13 @@ def test_stac_api():
     assert "noaa-emergency-response" in ids
 
     # items
-    resp = httpx.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
+    resp = client.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
     assert resp.status_code == 200
     items = resp.json()["features"]
     assert len(items) == 10
 
     # item
-    resp = httpx.get(
+    resp = client.get(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200"
     )
     assert resp.status_code == 200
@@ -40,7 +43,7 @@ def test_stac_api():
 def test_stac_to_raster():
     """test link to raster api."""
     # tilejson
-    resp = httpx.get(
+    resp = client.get(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/tilejson.json",
         params={"assets": "cog"},
     )
@@ -48,7 +51,7 @@ def test_stac_to_raster():
     assert resp.status_code == 404
 
     # viewer
-    resp = httpx.get(
+    resp = client.get(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/viewer",
         params={"assets": "cog"},
     )
