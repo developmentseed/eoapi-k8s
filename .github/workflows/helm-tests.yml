@@ -154,5 +154,5 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git checkout gh-pages
           git pull origin gh-pages
-          git rebase main
-          git push -f origin gh-pages
+          git merge main
+          git push origin gh-pages
