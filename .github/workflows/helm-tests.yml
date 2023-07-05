@@ -122,8 +122,8 @@ jobs:
 
       - name: run the tests
         run: |
-          # first substitute test enpoints in the test files
-          # TODO: pytest should be able to have a pattern for injection here but htis is quicker
+          # first substitute test endpoints in the test files
+          # TODO: pytest should be able to have a pattern for injection here but moving fast
           URL=$(minikube service vector --url)
           sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$URL'|g" .github/workflows/tests/test_vector.py
           head -n 5 .github/workflows/tests/test_vector.py
@@ -153,5 +153,6 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git checkout gh-pages
-          git rebase main
+          git pull origin gh-pages
+          git merge main
           git push origin gh-pages
