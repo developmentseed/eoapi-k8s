@@ -45,13 +45,7 @@ jobs:
           git add -A
           chart_version=$(cat $chart/Chart.yaml| grep version: | cut -d' ' -f2)
           git commit -m $chart_version
-
-
-#      - name: commit release and push
-#        uses: CasperWA/push-protected@v2
-#        with:
-#          token: ${{ secrets.PUSH_TO_PROTECTED_BRANCH }}
-#          branch: gh-pages
+          git push origin gh-pages
 
 
 
