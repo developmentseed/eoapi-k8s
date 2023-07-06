@@ -56,7 +56,7 @@ jobs:
         run: |
           export SHELL=/bin/bash
           eval $(minikube -p minikube docker-env)
-          docker build -f ./dockerfiles/ -t "local/${{ matrix.dockerfile }}" Dockerfile.${{ matrix.dockerfile }}
+          docker build -f dockerfiles/Dockerfile.${{ matrix.dockerfile }} -t local/${{ matrix.dockerfile }} .
           echo -n "verifying images:"
           docker images
 
