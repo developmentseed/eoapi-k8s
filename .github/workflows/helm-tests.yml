@@ -32,13 +32,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: set-matrix
-        run: echo "::set-output name=files::$(ls dockerfiles/Dockerfile.* | sed 's/^dockerfiles\/Dockerfile\.//')"
+        run: echo "::set-output name=matrix::{\"include\":[$(ls dockerfiles/Dockerfile.* | sed 's/^dockerfiles\/Dockerfile\.//' | awk '{ printf "{\"dockerfile\":\"%s\"},", $1 }' | head -c -1)]}"
   unit-tests:
     needs: [helm-tests, get-dockerfiles]
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        dockerfile: ${{fromJson(needs.get-dockerfiles.outputs.matrix).dockerfile}}
+      matrix: ${{fromJson(needs.get-dockerfiles.outputs.matrix)}}
     steps:
       - uses: actions/checkout@v3
 
@@ -57,7 +56,7 @@ jobs:
         run: |
           export SHELL=/bin/bash
           eval $(minikube -p minikube docker-env)
-          docker build -f ./dockerfiles/Dockerfile.${{ matrix.dockerfile }} -t local/${{ matrix.dockerfile }} .
+          docker build -f ./dockerfiles/Dockerfile.${{ matrix.dockerfile }} -t local/${{ matrix.dockerfile }}
           echo -n "verifying images:"
           docker images
 
