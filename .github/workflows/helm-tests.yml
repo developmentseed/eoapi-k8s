@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: set-matrix
-        run: echo "::set-output name=matrix::{\"dockerfile\":$(ls -1 dockerfiles | jq -R -s -c 'split("\n")[:-1]')}"
+        run: echo "::set-output name=files::$(ls dockerfiles/Dockerfile.* | sed 's/^dockerfiles\/Dockerfile\.//')"
   unit-tests:
     needs: [helm-tests, get-dockerfiles]
     runs-on: ubuntu-latest
