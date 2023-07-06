@@ -24,9 +24,21 @@ jobs:
       - run: |
           cd helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
-  unit-tests:
+  get-dockerfiles:
     needs: helm-tests
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-matrix
+        run: echo "::set-output name=matrix::{\"dockerfile\":$(ls -1 dockerfiles | jq -R -s -c 'split("\n")[:-1]')}"
+  unit-tests:
+    needs: [helm-tests, get-dockerfiles]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerfile: ${{fromJson(needs.get-dockerfiles.outputs.matrix).dockerfile}}
     steps:
       - uses: actions/checkout@v3
 
@@ -45,10 +57,7 @@ jobs:
         run: |
           export SHELL=/bin/bash
           eval $(minikube -p minikube docker-env)
-          docker build -f ./dockerfiles/Dockerfile.pgstac -t local/pgstac .
-          docker build -f ./dockerfiles/Dockerfile.stac -t local/stac .
-          docker build -f ./dockerfiles/Dockerfile.titiler -t local/titiler .
-          docker build -f ./dockerfiles/Dockerfile.tipg -t local/tipg .
+          docker build -f ./dockerfiles/Dockerfile.${{ matrix.dockerfile }} -t local/${{ matrix.dockerfile }} .
           echo -n "verifying images:"
           docker images
 
