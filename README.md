@@ -1,10 +1,10 @@
-# k8s-eoapi
+# eoapi-k8s
 
 <p align="center">
-  <a href="https://github.com/developmentseed/k8s-eoapi/actions?query=workflow%3ACI" target="_blank">
-      <img src="https://github.com/developmentseed/k8s-eoapi/actions/workflows/helm-tests.yml/badge.svg" alt="Test">
+  <a href="https://github.com/developmentseed/eoapi-k8s/actions?query=workflow%3ACI" target="_blank">
+      <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/helm-tests.yml/badge.svg" alt="Test">
   </a>
-  <a href="https://github.com/developmentseed/k8s-eoapi/blob/main/LICENSE" target="_blank">
+  <a href="https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="Downloads">
   </a>
 </p>
@@ -54,11 +54,11 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
           ./eoapi
     ```
 
-2. or `helm install` from https://devseed.com/k8s-eoapi/:
+2. or `helm install` from https://devseed.com/eoapi-k8s/:
 
     ```python
       # add the eoapi helm repo locally
-      $ helm repo add eoapi https://devseed.com/k8s-eoapi/
+      $ helm repo add eoapi https://devseed.com/eoapi-k8s/
     
       # list out the eoapi chart versions
       $ helm search repo eoapi 

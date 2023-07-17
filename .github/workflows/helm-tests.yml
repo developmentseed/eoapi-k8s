@@ -3,14 +3,14 @@ name: CI
 # On every pull request, but only on push to main
 on:
   push:
-    branches-ignore:
-    - gh-pages
-    tags:
-    - '*'
+    branches:
+    - main
     paths: []
     # only run jobs if some code have changed
     #- 'helm-chart/eoapi/**'
   pull_request:
+    branches:
+      - main
 
 jobs:
   helm-tests:
