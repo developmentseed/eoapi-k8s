@@ -3,14 +3,14 @@ name: CI
 # On every pull request, but only on push to main
 on:
   push:
-    branches-ignore:
-    - gh-pages
-    tags:
-    - '*'
+    branches:
+    - main
     paths: []
     # only run jobs if some code have changed
     #- 'helm-chart/eoapi/**'
   pull_request:
+    branches:
+      - main
 
 jobs:
   helm-tests:
@@ -138,21 +138,4 @@ jobs:
           sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$URL'|g" .github/workflows/tests/test_raster.py
           head -n 5 .github/workflows/tests/test_raster.py
           pytest .github/workflows/tests/test_raster.py
-  update-gh-pages:
-    needs: unit-tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: update gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git checkout gh-pages
-          git pull origin gh-pages
-          git merge main
-          git push origin gh-pages
