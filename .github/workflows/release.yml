@@ -32,6 +32,7 @@ jobs:
           git checkout main
           git pull origin main
           git checkout gh-pages
+          git pull origin gh-pages
           git merge main
 
       - name: helm release packages
