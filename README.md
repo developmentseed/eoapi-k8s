@@ -80,7 +80,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
       # NOTE: nginx in the default ingress so if you are using that make sure your nginx controller 
       # is in the same namespace beforehand or services won't be exposed
       # https://github.com/developmentseed/eoapi-k8s/blob/main/docs/aws-eks.md#nginx-ingress
-      $ helm install eoapi --create-namespace eoapi/eoapi --version 0.1.2 -f config.yaml
+      $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
     ```
 
 
