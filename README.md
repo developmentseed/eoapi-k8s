@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/developmentseed/eoapi-k8s/actions?query=workflow%3ACI" target="_blank">
-      <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/helm-tests.yml/badge.svg" alt="Test">
+      <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/helm-tests.yml/badge.svg?branch=main" alt="Test">
   </a>
   <a href="https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="Downloads">
@@ -77,7 +77,10 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
             POSTGRES_PASSWORD: "password"
     
       # then run `helm install` with those overrides 
-      helm install eoapi eoapi/eoapi --version 0.1.1 -f config.yaml
+      # NOTE: nginx in the default ingress so if you are using that make sure your nginx controller 
+      # is in the same namespace beforehand or services won't be exposed
+      # https://github.com/developmentseed/eoapi-k8s/blob/main/docs/aws-eks.md#nginx-ingress
+      $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
     ```
 
 
