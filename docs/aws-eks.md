@@ -211,10 +211,10 @@ aws-load-balancer-controller   2/2     2            2           36d
 Please look through the [Nginx Docs](https://docs.nginx.com/nginx-ingress-controller/) to verify nothing has changed below. There are multiple ways to provision and configure. Below is the simplest we found:
 
 ```python
-helm upgrade \
-     --cleanup-on-fail \
-    -i nginx \
-    ingress-nginx/ingress-nginx \
+$ helm repo add nginx https://helm.nginx.com/stable
+$ helm install \
+    nginx \
+    nginx/nginx-ingress \
     --set controller.service.type=LoadBalancer \
     # these next two annotations are the most important otherwise nginx controller will create an "internal" NLB
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb"  \
