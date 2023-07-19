@@ -15,10 +15,10 @@
 
 ## Getting Started
 
-If you don't have a k8s cluster set up on AWS or GCP then follow an IAC guide below that is relevant to you
+If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide below that is relevant to you
 
 > &#9432; The helm chart in this repo assumes your cluster has a few third-party add-ons and controllers installed. So
-> it's in your best interest to read through the IAC guides to understand what those defaults are
+> it's in your best interest to read through the IaC guides to understand what those defaults are
 
 * [AWS EKS Cluster Setup](./docs/aws-eks.md)
 
@@ -77,9 +77,6 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
             POSTGRES_PASSWORD: "password"
     
       # then run `helm install` with those overrides 
-      # NOTE: nginx in the default ingress so if you are using that make sure your nginx controller 
-      # is in the same namespace beforehand or services won't be exposed
-      # https://github.com/developmentseed/eoapi-k8s/blob/main/docs/aws-eks.md#nginx-ingress
       $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
     ```
 
