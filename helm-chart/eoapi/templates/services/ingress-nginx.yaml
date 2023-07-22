@@ -33,6 +33,13 @@ spec:
           {{- end }}{{/* END: if index $v "enabled" */}}
           {{- end }}{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
           {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
+          - pathType: Prefix
+            path: /(/|$)
+            backend:
+              service:
+                name: doc-server
+                port:
+                  number: 80
 ---
-{{/* END: if .Values.ingress.className "alb" */}}
+{{/* END: if .Values.ingress.className "nginx" */}}
 {{- end }}
