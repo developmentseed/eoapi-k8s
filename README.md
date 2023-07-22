@@ -61,7 +61,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
       $ helm repo add eoapi https://devseed.com/eoapi-k8s/
     
       # list out the eoapi chart versions
-      $ helm search repo eoapi 
+      $ helm search repo eoapi --versions
       NAME            CHART VERSION   APP VERSION     DESCRIPTION                                       
       eoapi/eoapi     0.1.1           0.1.0           Create a full Earth Observation API with Metada...
       eoapi/eoapi     0.1.2           0.1.0           Create a full Earth Observation API with Metada...
