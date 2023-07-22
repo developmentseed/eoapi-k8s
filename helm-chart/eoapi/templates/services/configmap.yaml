@@ -16,3 +16,23 @@ data:
 {{- end }}
 {{/* END: range $serviceName, $v := .Values*/}}
 {{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-root-html
+data:
+  index.html: |
+    <html>
+    <head>
+        <title>eoAPI</title>
+    </head>
+    <body>
+        <h2>This is the root path /</h2>
+        <p>Your service configuration is using ingress-nginx with path rewrites. So use these paths for each service:</p>
+        <ul>
+          <li><a href="/raster" target="_blank" rel="noopener noreferrer">/raster</a></li>
+          <li><a href="/vector" target="_blank" rel="noopener noreferrer">/vector</a></li>
+          <li><a href="/stac" target="_blank" rel="noopener noreferrer">/stac</a></li>
+        </ul>
+    </body>
+    </html>

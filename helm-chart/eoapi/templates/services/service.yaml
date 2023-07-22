@@ -28,3 +28,16 @@ spec:
 {{- end }}
 {{/* END: range $serviceName, $v := .Values*/}}
 {{- end }}
+{{- if (and (.Values.ingress.className) (eq .Values.ingress.className "nginx")) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: doc-server
+spec:
+  selector:
+    app: doc-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+{{- end }}
