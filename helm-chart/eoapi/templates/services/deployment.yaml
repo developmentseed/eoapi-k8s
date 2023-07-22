@@ -68,32 +68,3 @@ spec:
 {{- end }}
 {{/* END: range $serviceName, $v := .Values*/}}
 {{- end }}
-{{- if (and (.Values.ingress.className) (eq .Values.ingress.className "nginx")) }}
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: doc-server
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: doc-server
-  template:
-    metadata:
-      labels:
-        app: doc-server
-    spec:
-      containers:
-      - name: doc-server
-        image: nginx:alpine
-        volumeMounts:
-        - name: doc-html
-          mountPath: /usr/share/nginx/html
-        ports:
-        - containerPort: 80
-      volumes:
-      - name: doc-html
-        configMap:
-          name: nginx-root-html
-{{- end }}
-

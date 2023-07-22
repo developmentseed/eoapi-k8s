@@ -1,0 +1,62 @@
+{{- if (and (.Values.ingress.className) (eq .Values.ingress.className "nginx")) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-root-html
+data:
+  index.html: |
+    <html>
+    <head>
+        <title>eoAPI</title>
+    </head>
+    <body>
+        <h2>This is the root path /</h2>
+        <p>Your service configuration is using ingress-nginx with path rewrites. So use these paths for each service:</p>
+        <ul>
+          <li><a href="/raster" target="_blank" rel="noopener noreferrer">/raster</a></li>
+          <li><a href="/vector" target="_blank" rel="noopener noreferrer">/vector</a></li>
+          <li><a href="/stac" target="_blank" rel="noopener noreferrer">/stac</a></li>
+        </ul>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doc-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doc-server
+  template:
+    metadata:
+      labels:
+        app: doc-server
+    spec:
+      containers:
+      - name: doc-server
+        image: nginx:alpine
+        volumeMounts:
+        - name: doc-html
+          mountPath: /usr/share/nginx/html
+        ports:
+        - containerPort: 80
+      volumes:
+      - name: doc-html
+        configMap:
+          name: nginx-root-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doc-server
+spec:
+  selector:
+    app: doc-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+{{- end }}
