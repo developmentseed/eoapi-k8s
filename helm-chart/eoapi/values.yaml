@@ -76,50 +76,13 @@ ingress:
   # `"alb"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
   # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites for /vector, /stac, /raster
   enabled: true
-  className: "nginx"
+  className: "alb"
 
-raster:
+vector:
   enabled: true
   image:
-    name: ghcr.io/stac-utils/titiler-pgstac
-    tag: uvicorn-0.4.1
-  settings:
-    timeout: 10
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-    resources:
-      limits:
-        cpu: "512m"
-        memory: "4096Mi"
-      requests:
-        cpu: "256m"
-        memory: "3072Mi"
-    envVars:
-      ##############
-      # uvicorn
-      ##############
-      HOST: "0.0.0.0"
-      PORT: "8080"
-      # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "10"
-      ##############
-      # titiler
-      ##############
-      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: ".tif,.TIF,.tiff"
-      GDAL_CACHEMAX: "200"  # 200 mb
-      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
-      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
-      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
-      GDAL_HTTP_MULTIPLEX: "YES"
-      GDAL_HTTP_VERSION: "2"
-      PYTHONWARNINGS: "ignore"
-      VSI_CACHE: "TRUE"
-      VSI_CACHE_SIZE: "5000000"  # 5 MB (per file-handle)
-
-stac:
-  enabled: true
-  image:
-    name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 2.4.9
+    name: ghcr.io/developmentseed/tipg
+    tag: uvicorn-0.2.0
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -132,6 +95,10 @@ stac:
         memory: "256Mi"
     envVars:
       ##############
+      # tipg
+      ##############
+      TIPG_CATALOG_TTL: "0"
+      ##############
       # uvicorn
       ##############
       HOST: "0.0.0.0"
@@ -139,7 +106,7 @@ stac:
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "10"
 
-vector:
+vector2:
   enabled: true
   image:
     name: ghcr.io/developmentseed/tipg
