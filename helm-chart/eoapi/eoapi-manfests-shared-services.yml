@@ -120,7 +120,7 @@ stringData:
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "username"
   TIPG_DB_SCHEMAS: '["public","vector1","vector2"]'
-  TIPG_MULTI_MAPPING: '{"vector1":["public","vector1"],"vector2":["public","vector2"]}'
+  TIPG_MULTI_MAPPING: '{"vector1":{"include": ["public","vector1"], "exclude": ["vector2"]},"vector2":{"include": ["public","vector2"], "exclude": ["vector1"]}}'
 ---
 # Source: eoapi/templates/db/service.yaml
 apiVersion: v1
@@ -393,7 +393,7 @@ spec:
         app: vector
     spec:
       containers:
-      - image: ghcr.io/ranchodeluxe/tipg:multitenantv11
+      - image: ghcr.io/ranchodeluxe/tipg:multitenantv15
         name: vector
         command:
           - "uvicorn"
