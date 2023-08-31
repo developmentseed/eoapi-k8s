@@ -6,7 +6,7 @@ import httpx
 timeout = httpx.Timeout(15.0, connect=60.0)
 client = httpx.Client(timeout=timeout)
 
-raster_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/raster"
+raster_endpoint="http://k8s-eoapi-ingressn-cd16d0ed58-580a04972ec20c3c.elb.us-west-1.amazonaws.com/raster"
 
 
 def test_raster_api():
