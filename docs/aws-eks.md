@@ -1,6 +1,6 @@
-# AWS EKS Cluster Walk-through
+# AWS EKS Cluster Walkthrough
 
-This walk-through uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.
+This walkthrough uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.
 After creating the cluster we'll walk through installing the following add-ons and controllers:
 
 * `aws-ebs-csi-driver` 

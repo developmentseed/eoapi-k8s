@@ -37,6 +37,10 @@ db:
   image:
     name: ghcr.io/stac-utils/pgstac
     tag: v0.7.1
+  command:
+      - "postgres"
+      - "-N"
+      - "500"
   # toggle to true||false if you want the db test fixtures loaded
   enable_data_fixtures: true
   settings:
@@ -83,6 +87,11 @@ raster:
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-0.4.1
+  command:
+    - "uvicorn"
+    - "titiler.pgstac.main:app"
+    - "--host=$(HOST)"
+    - "--port=$(PORT)"
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -120,6 +129,11 @@ stac:
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
+  command:
+    - "uvicorn"
+    - "stac_fastapi.pgstac.app:app"
+    - "--host=$(HOST)"
+    - "--port=$(PORT)"
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -144,6 +158,11 @@ vector:
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.2.0
+  command:
+    - "uvicorn"
+    - "tipg.main:app"
+    - "--host=$(HOST)"
+    - "--port=$(PORT)"
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
