@@ -22,13 +22,39 @@ If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide be
 
 * [AWS EKS Cluster Setup](./docs/aws-eks.md)
 
-* [TBD: GCP GKE Cluster Setup](./docs/gcp-gke.md)
+* [GCP GKE Cluster Setup](./docs/gcp-gke.md)
  
 ## Helm Installation 
 
 Once you have a k8s cluster set up you can `helm install` eoAPI as follows
 
-1. `helm install` from this repo's `helm-chart/` folder:
+1. `helm install` from https://devseed.com/eoapi-k8s/:
+
+    ```python
+      # add the eoapi helm repo locally
+      $ helm repo add eoapi https://devseed.com/eoapi-k8s/
+    
+      # list out the eoapi chart versions
+      $ helm search repo eoapi --versions
+      NAME            CHART VERSION   APP VERSION     DESCRIPTION                                       
+      eoapi/eoapi     0.1.1           0.1.0           Create a full Earth Observation API with Metada...
+      eoapi/eoapi     0.1.2           0.1.0           Create a full Earth Observation API with Metada...
+   
+      # add the required secret overrides to an arbitrarily named `.yaml` file (`config.yaml` below)
+      $ cat config.yaml 
+      db:
+        settings:
+          secrets:
+            PGUSER: "username"
+            POSTGRES_USER: "username"
+            PGPASSWORD: "password"
+            POSTGRES_PASSWORD: "password"
+    
+      # then run `helm install` with those overrides 
+      $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
+    ```
+
+2. or `helm install` from this repo's `helm-chart/` folder:
 
     ```python
       ######################################################
@@ -53,31 +79,3 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
           eoapi \
           ./eoapi
     ```
-
-2. or `helm install` from https://devseed.com/eoapi-k8s/:
-
-    ```python
-      # add the eoapi helm repo locally
-      $ helm repo add eoapi https://devseed.com/eoapi-k8s/
-    
-      # list out the eoapi chart versions
-      $ helm search repo eoapi 
-      NAME            CHART VERSION   APP VERSION     DESCRIPTION                                       
-      eoapi/eoapi     0.1.1           0.1.0           Create a full Earth Observation API with Metada...
-      eoapi/eoapi     0.1.2           0.1.0           Create a full Earth Observation API with Metada...
-   
-      # add the required secret overrides to an arbitrarily named `.yaml` file (`config.yaml` below)
-      $ cat config.yaml 
-      db:
-        settings:
-          secrets:
-            PGUSER: "username"
-            POSTGRES_USER: "username"
-            PGPASSWORD: "password"
-            POSTGRES_PASSWORD: "password"
-    
-      # then run `helm install` with those overrides 
-      $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
-    ```
-
-

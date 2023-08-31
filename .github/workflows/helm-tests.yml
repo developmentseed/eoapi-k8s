@@ -120,6 +120,9 @@ jobs:
         run: |
           python -m pip install pytest httpx
 
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
+
       - name: run the tests
         run: |
           # first substitute test endpoints in the test files

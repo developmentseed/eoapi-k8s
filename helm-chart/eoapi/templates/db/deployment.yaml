@@ -21,9 +21,7 @@ spec:
         - name: pgstac
           image: {{ .Values.db.image.name }}:{{ .Values.db.image.tag }}
           args:
-            - "postgres"
-            - "-N"
-            - "500"
+            {{- toYaml .Values.db.command | nindent 12 }}
           envFrom:
           - secretRef:
               name: pgstac-secrets
