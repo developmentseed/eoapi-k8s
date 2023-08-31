@@ -31,10 +31,22 @@ spec:
         {{- end }}
         name: {{ $serviceName }}
         command:
-          {{- toYaml index $v "command" | nindent 10 }}
+          {{- toYaml (index $v "command") | nindent 10 }}
         {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx")) }}
           - "--root-path=/{{ $serviceName }}"
         {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
+        livenessProbe:
+          httpGet:
+            {{- if (eq $serviceName "stac") }}
+            path: /_mgmt/ping
+            {{- else }}
+            path: /healthz
+            {{- end }}
+            port: {{ $.Values.service.port }}
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          successThreshold: 1
         ports:
           - containerPort: {{ $.Values.service.port }}
         resources:

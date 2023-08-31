@@ -21,7 +21,17 @@ spec:
         - name: pgstac
           image: {{ .Values.db.image.name }}:{{ .Values.db.image.tag }}
           args:
-            {{ toYaml .Values.db.command | nindex 12 }}
+            {{- toYaml .Values.db.command | nindent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - DSN="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB" pypgstac pgready --dsn $DSN
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            successThreshold: 1
           envFrom:
           - secretRef:
               name: pgstac-secrets
