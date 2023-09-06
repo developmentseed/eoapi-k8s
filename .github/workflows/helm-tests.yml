@@ -141,5 +141,5 @@ jobs:
 
       - name: helm uinstall eoapi templates
         run: |
-          helm uninstall eoapi
-          kubectl delete ns $BRANCH_NAME
+          helm uninstall eoapi-$NS_NAME
+          kubectl delete ns $NS_NAME
