@@ -38,6 +38,9 @@ jobs:
           helm-version: v3.8.2
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: get the branch name
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
@@ -63,12 +66,12 @@ jobs:
           export POSTGRES_USER=username
           export PGPASSWORD=password
           export POSTGRES_PASSWORD=password
-          export GITSHA='A12345'
+          export GITSHA='${GITHUB_SHA}'
 
           cd helm-chart
 
           helm install \
-                --namespace eoapitest \
+                --namespace $BRANCH_NAME \
                 --create-namespace \
                 --set gitSha=$GITSHA \
                 --set db.settings.secrets.PGUSER=$PGUSER \
@@ -86,7 +89,7 @@ jobs:
 
       - name: restart the services
         run: |
-          kubectl config set-context --current --namespace=eoapitest
+          kubectl config set-context --current --namespace=$BRANCH_NAME
           while [[ -z "$(kubectl get pod  | grep '^raster-.*$'  | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
@@ -112,7 +115,7 @@ jobs:
 
       - name: run the tests
         run: |
-          kubectl config set-context --current --namespace=eoapitest
+          kubectl config set-context --current --namespace=$BRANCH_NAME
           PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
           echo '#################################'
           echo $PUBLICIP
@@ -135,3 +138,4 @@ jobs:
       - name: helm uinstall eoapi templates
         run: |
           helm uninstall eoapi
+          kubectl delete ns $BRANCH_NAME
