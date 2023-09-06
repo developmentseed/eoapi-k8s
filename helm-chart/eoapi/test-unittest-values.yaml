@@ -1,29 +1,21 @@
 # used in GH Actions `unit-tests.yml`
-providerContext: "minikube"
 ingress:
-  enabled: false
-  # used to set up NodePort in CI unittests on minikube
-  className: "testing123"
+  enabled: true
+  className: "nginx"
 db:
   enabled: true
 raster:
   enabled: true
-  image:
-    name: local/titiler
-    tag: latest
   settings:
     resources:
       limits:
         cpu: "512m"
-        memory: "1024Mi"
+        memory: "4096Mi"
       requests:
-        cpu: "512m"
-        memory: "1024Mi"
+        cpu: "256m"
+        memory: "1048Mi"
 stac:
   enabled: true
-  image:
-    name: local/stac
-    tag: latest
   settings:
     resources:
       limits:
@@ -34,9 +26,6 @@ stac:
         memory: "512Mi"
 vector:
   enabled: true
-  image:
-    name: local/tipg
-    tag: latest
   settings:
     resources:
       limits:
