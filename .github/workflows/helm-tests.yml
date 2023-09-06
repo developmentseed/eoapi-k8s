@@ -43,7 +43,8 @@ jobs:
           random_number="${RANDOM}${RANDOM}${RANDOM}"
           # Limit it to 10 digits
           RANDOMNESS=$(echo $random_number | cut -c 1-10)
-          echo "NS_NAME=unittest-$RANDOMNESS" >> $GITHUB_ENV
+          #echo "NS_NAME=unittest-$RANDOMNESS" >> $GITHUB_ENV
+          echo "NS_NAME=eoapitest" >> $GITHUB_ENV
 
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
@@ -84,7 +85,7 @@ jobs:
                 --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
                 -f ./eoapi/values.yaml \
                 -f ./eoapi/test-unittest-values.yaml \
-                eoapi-$NS_NAME \
+                eoapi \
                 ./eoapi
 
       - name: sleep for 10s seconds while services boot
@@ -141,5 +142,5 @@ jobs:
 
       - name: helm uinstall eoapi templates
         run: |
-          helm uninstall eoapi-$NS_NAME
+          helm uninstall eoapi
           kubectl delete ns $NS_NAME
