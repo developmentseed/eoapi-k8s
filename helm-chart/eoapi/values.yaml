@@ -1,7 +1,7 @@
 # default values for eoapi
 
 comment: >
-  some postgres variables are basically secrets that should be passed in via os environment variables.
+  some postgres variables are secrets that should be passed in via os environment variables.
   for example, to pass username or password information during `helm template` or `helm install` do:
 
   $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
@@ -63,21 +63,18 @@ db:
       PGPASSWORD: ""
       PGDATABASE: "postgis"
 
-# `providerContext`: "aws" || "minikube"
-# currently only support for "aws" even though CI tests use "minikube"
-# "gcp" will be an option available in the future
-providerContext: "aws"
+# deprecated: helm templates are only sniffing for "minikube" as of now
+providerContext: "ignore"
 
-# if running `helm install` from repo directory you'll have to provide this
-# otherwise the chart on the gh-pages branch will provide the correct updated value
+# the chart on the gh-pages branch will provide the correct updated value otherwise it's defaulted
 gitSha: "gitshaABC123"
 
 service:
   port: 8080
 
 ingress:
-  # `ingress.className`: "alb" || "nginx"
-  # `"alb"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
+  # `ingress.className`: "alb" || "gce" || "nginx"
+  # `"alb || gce"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
   # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites for /vector, /stac, /raster
   enabled: true
   className: "nginx"

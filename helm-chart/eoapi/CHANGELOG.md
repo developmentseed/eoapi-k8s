@@ -1,5 +1,11 @@
 version numbers below correspond to helm chart `appVersion`: see ./helm-chart/eoapi/Chart.yaml
 ---
+# 0.1.3 (2023-09-05)
+
+* test on GKE and add documentation where needed for [GKE template changes](https://github.com/developmentseed/eoapi-k8s/issues/29)
+* CI/CD should run on GKE so we debug less test failures on minikube for [move CI/CD away from minikube](https://github.com/developmentseed/eoapi-k8s/issues/36)
+* documentation about default configuration and additional options for [documentation](https://github.com/developmentseed/eoapi-k8s/issues/19)
+
 # 0.1.2 (2023-08-31)
 
 * move `command` blocks out to `values.yml` for [generalizing ticket](https://github.com/developmentseed/eoapi-k8s/issues/31)
