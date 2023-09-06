@@ -26,7 +26,7 @@ If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide be
  
 ## Helm Installation 
 
-Once you have a k8s cluster set up you can `helm install` eoAPI as follows
+Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
 
 1. `helm install` from https://devseed.com/eoapi-k8s/:
 
@@ -79,3 +79,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows
           eoapi \
           ./eoapi
     ```
+   
+## Configuration Options and Defaults
+Read about [Default Configuration](./docs/configuration.md#default-configuration) and 
+other [Configuration Options](./docs/configuration.md#additional-options) in the documentation

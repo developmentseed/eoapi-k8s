@@ -52,7 +52,7 @@
         },
         "environment": {
           "type": "string",
-          "pattern": "^(k8s|rds)$"
+          "pattern": "^(k8s|rds|cloudsql)$"
         }
       }
     },
@@ -76,7 +76,7 @@
       "properties": {
         "className": {
           "type": "string",
-          "pattern": "^(alb|nginx|testing123)$"
+          "pattern": "^(alb|nginx|gce|testing123)$"
         }
       }
     },
@@ -86,7 +86,7 @@
     },
     "providerContext": {
       "type": "string",
-      "pattern": "^(aws|minikube)$"
+      "pattern": "^(aws|gcp|minikube|ignore)$"
     }
   }
 }
