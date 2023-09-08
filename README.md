@@ -10,10 +10,10 @@
 </p>
 
 ## Table of Contents
-[What is eoAPI](#whatitis)
-[Getting Started](#gettingstarted)
-[Helm Installation](#helminstall)
-[Default Configuration and Options](#options)
+* [What is eoAPI](#whatitis)
+* [Getting Started](#gettingstarted)
+* [Helm Installation](#helminstall)
+* [Default Configuration and Options](#options)
 
 <a name="whatitis"/>
 ## What is eoAPI?
