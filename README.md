@@ -16,11 +16,13 @@
 * [Default Configuration and Options](#options)
 
 <a name="whatitis"/>
+
 ## What is eoAPI?
 
 [https://eoapi.dev/](https://eoapi.dev/)
 
 <a name="gettingstarted"/>
+
 ## Getting Started
 
 If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide below that is relevant to you
@@ -33,6 +35,7 @@ If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide be
 * [GCP GKE Cluster Setup](./docs/gcp-gke.md)
  
 <a name="helminstall"/>
+
 ## Helm Installation 
 
 Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
@@ -90,6 +93,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
     ```
    
 <a name="options"/>
+
 ## Configuration Options and Defaults
 Read about [Default Configuration](./docs/configuration.md#default-configuration) and 
 other [Configuration Options](./docs/configuration.md#additional-options) in the documentation
