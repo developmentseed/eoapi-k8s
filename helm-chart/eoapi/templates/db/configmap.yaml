@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: initdb-sql-config
+  name: initdb-sql-config-{{ $.Release.Name }}
 data:
   initdb.sql: |
     {{- range $path, $bytes := $.Files.Glob "initdb-data/*.sql"  -}}
@@ -12,7 +12,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: initdb-json-config
+  name: initdb-json-config-{{ $.Release.Name }}
 data:
   {{- range $path, $bytes := $.Files.Glob "initdb-data/*.json"  -}}
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
@@ -21,7 +21,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: initdb-sh-config
+  name: initdb-sh-config-{{ $.Release.Name }}
 data:
   load.sh: |
     #!/bin/bash

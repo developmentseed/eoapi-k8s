@@ -1,5 +1,10 @@
 version numbers below correspond to helm chart `appVersion`: see ./helm-chart/eoapi/Chart.yaml
 ---
+# 0.1.4 (2023-09-09)
+
+* adds a `testing: false` value to `values.yaml`
+* plumb through `{{ $.Release.Name }}` into all the right templates so our CI can `helm install` into a single namespace and run tests in parallel
+
 # 0.1.3 (2023-09-05)
 
 * test on GKE and add documentation where needed for [GKE template changes](https://github.com/developmentseed/eoapi-k8s/issues/29)
