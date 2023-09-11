@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pgstac-claim
+  name: pgstac-claim-{{ $.Release.Name }}
 spec:
   accessModes:
     - ReadWriteOnce

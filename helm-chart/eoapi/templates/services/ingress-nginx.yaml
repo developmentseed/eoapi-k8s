@@ -8,7 +8,7 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: nginx-service-ingress-shared
+  name: nginx-service-ingress-shared-{{ $.Release.Name }}
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -22,7 +22,7 @@ spec:
         paths:
           {{- range $serviceName, $v := .Values }}
           {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
-          {{- if index $v "enabled" }}
+          {{- if (and (index $v "enabled") (not $.Values.testing)) }}
           - pathType: Prefix
             path: "/{{ $serviceName }}(/|$)(.*)"
             backend:
@@ -30,9 +30,18 @@ spec:
                 name: {{ $serviceName }}
                 port:
                   number: {{ $.Values.service.port }}
+          {{- else if (and (index $v "enabled") ($.Values.testing)) }}
+          - pathType: Prefix
+            path: "/{{ $serviceName }}{{ $.Release.Name }}(/|$)(.*)"
+            backend:
+              service:
+                name: {{ $serviceName }}-{{ $.Release.Name }}
+                port:
+                  number: {{ $.Values.service.port }}
           {{- end }}{{/* END: if index $v "enabled" */}}
           {{- end }}{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
           {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
+          {{- if not $.Values.testing }}
           - pathType: Prefix
             path: /(/|$)
             backend:
@@ -40,6 +49,7 @@ spec:
                 name: doc-server
                 port:
                   number: 80
+          {{- end }}
 ---
 {{/* END: if .Values.ingress.className "nginx" */}}
 {{- end }}

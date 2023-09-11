@@ -11,7 +11,7 @@ tests:
           of: Secret
       - matchRegex:
           path: metadata.name
-          pattern: ^pgstac-secrets$
+          pattern: ^pgstac-secrets-RELEASE-NAME$
       - equal:
           path: stringData.PGPASSWORD
           value: "foobar"
