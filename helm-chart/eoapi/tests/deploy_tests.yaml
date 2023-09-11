@@ -12,7 +12,7 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^vector$
+          pattern: ^vector-RELEASE-NAME$
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
@@ -41,7 +41,7 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^raster$
+          pattern: ^raster-RELEASE-NAME$
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
@@ -70,7 +70,7 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^stac$
+          pattern: ^stac-RELEASE-NAME$
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"

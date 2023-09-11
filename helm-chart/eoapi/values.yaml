@@ -63,6 +63,9 @@ db:
       PGPASSWORD: ""
       PGDATABASE: "postgis"
 
+# only used in CI for running parallel helm installs
+testing: false
+
 # deprecated: helm templates are only sniffing for "minikube" as of now
 providerContext: "ignore"
 

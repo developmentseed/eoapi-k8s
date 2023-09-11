@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pgstac
+  name: {{ include "eoapi.pgstacHostName" . | nindent 8 }}
   labels:
-    app: pgstac
+    app: {{ include "eoapi.pgstacHostName" . | nindent 10 }}
 spec:
   selector:
     matchLabels:
-      app: pgstac
+      app: {{ include "eoapi.pgstacHostName" . | nindent 12 }}
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: pgstac
+        app: {{ include "eoapi.pgstacHostName" . | nindent 14 }}
     spec:
       restartPolicy: Always
       containers:
@@ -24,13 +24,13 @@ spec:
             {{- toYaml .Values.db.command | nindent 12 }}
           envFrom:
           - secretRef:
-              name: pgstac-secrets
+              name: pgstac-secrets-{{ $.Release.Name }}
           ports:
             - containerPort: 5432
           {{- if not (eq .Values.providerContext "minikube") }}
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: pgstac-claim
+              name: pgstac-claim-{{ $.Release.Name }}
           {{ end }}
         {{- if .Values.db.enable_data_fixtures }}
         - name: loader
@@ -41,33 +41,33 @@ spec:
             - "/opt/initdb/load.sh"
           envFrom:
             - secretRef:
-                name: pgstac-secrets
+                name: pgstac-secrets-{{ $.Release.Name }}
           ports:
             - containerPort: 6543
           volumeMounts:
             {{- if not (eq .Values.providerContext "minikube") }}
             - mountPath: /var/lib/postgresql/data
-              name: pgstac-claim
+              name: pgstac-claim-{{ $.Release.Name }}
             {{ end }}
             - mountPath: /opt/initdb/sql-data
-              name: initdb-sql-volume
+              name: initdb-sql-volume-{{ $.Release.Name }}
             - mountPath: /opt/initdb/json-data
-              name: initdb-json-volume
+              name: initdb-json-volume-{{ $.Release.Name }}
             - mountPath: /opt/initdb/
-              name: initdb-sh-volume
+              name: initdb-sh-volume-{{ $.Release.Name }}
         {{- end }}
       volumes:
         {{- if not (eq .Values.providerContext "minikube") }}
-        - name: pgstac-claim
+        - name: pgstac-claim-{{ $.Release.Name }}
           persistentVolumeClaim:
-            claimName: pgstac-claim
+            claimName: pgstac-claim-{{ $.Release.Name }}
         {{- end }}
-        - name: initdb-sql-volume
+        - name: initdb-sql-volume-{{ $.Release.Name }}
           configMap:
-            name: initdb-sql-config
-        - name: initdb-json-volume
+            name: initdb-sql-config-{{ $.Release.Name }}
+        - name: initdb-json-volume-{{ $.Release.Name }}
           configMap:
-            name: initdb-json-config
-        - name: initdb-sh-volume
+            name: initdb-json-config-{{ $.Release.Name }}
+        - name: initdb-sh-volume-{{ $.Release.Name }}
           configMap:
-            name: initdb-sh-config
+            name: initdb-sh-config-{{ $.Release.Name }}

@@ -12,7 +12,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: metadata.name
-          pattern: ^vector-envvar-configmap$
+          pattern: ^vector-envvar-configmap-RELEASE-NAME$
       - equal:
           path: data.TIPG_CATALOG_TTL
           value: "0"
@@ -26,7 +26,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: metadata.name
-          pattern: ^raster-envvar-configmap$
+          pattern: ^raster-envvar-configmap-RELEASE-NAME$
       - equal:
           path: data.GDAL_HTTP_MULTIPLEX
           value: "YES"
@@ -40,7 +40,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: metadata.name
-          pattern: ^stac-envvar-configmap$
+          pattern: ^stac-envvar-configmap-RELEASE-NAME$
       - equal:
           path: data.WEB_CONCURRENCY
           value: "10"
