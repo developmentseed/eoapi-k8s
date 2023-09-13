@@ -1,3 +1,4 @@
+{{- if (eq .Values.db.environment "k8s") }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -71,3 +72,4 @@ spec:
         - name: initdb-sh-volume-{{ $.Release.Name }}
           configMap:
             name: initdb-sh-config-{{ $.Release.Name }}
+{{- end }}

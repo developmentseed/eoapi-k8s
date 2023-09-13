@@ -1,3 +1,4 @@
+{{- if (eq .Values.db.environment "k8s") }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -32,3 +33,4 @@ data:
     psql $DSN -f /opt/initdb/sql-data/initdb.sql
     # run it forever like a docker process should
     tail -f /dev/null
+{{- end }}
