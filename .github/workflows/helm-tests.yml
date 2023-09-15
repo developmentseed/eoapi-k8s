@@ -53,8 +53,10 @@ jobs:
 
       - name: set k8s .release.name suffix
         run: |
-          RANDOMNESS=$(echo $LAST_COMMIT_SHA | cut -c 1-6)
-          echo "RELEASE_NAME=eoapi$RANDOMNESS" >> $GITHUB_ENV
+          # salt for randomness per test run
+          COMMITSHA=$(echo $LAST_COMMIT_SHA | cut -c 1-6)
+          SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
+          echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
 
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
@@ -84,18 +86,18 @@ jobs:
           cd helm-chart
 
           helm install $RELEASE_NAME \
-                  --namespace eoapitest \
-                  --create-namespace \
-                  --set db.settings.secrets.POSTGRES_HOST=pgstac-$RELEASE_NAME \
-                  --set db.settings.secrets.POSTGRES_HOST_READER=pgstac-$RELEASE_NAME \
-                  --set db.settings.secrets.POSTGRES_HOST_WRITER=pgstac-$RELEASE_NAME \
-                  --set db.settings.secrets.PGUSER=$PGUSER \
-                  --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-                  --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-                  --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-                  -f ./eoapi/values.yaml \
-                  -f ./eoapi/test-unittest-values.yaml \
-                  ./eoapi
+            --namespace eoapitest \
+            --create-namespace \
+            --set db.settings.secrets.POSTGRES_HOST=pgstac-$RELEASE_NAME \
+            --set db.settings.secrets.POSTGRES_HOST_READER=pgstac-$RELEASE_NAME \
+            --set db.settings.secrets.POSTGRES_HOST_WRITER=pgstac-$RELEASE_NAME \
+            --set db.settings.secrets.PGUSER=$PGUSER \
+            --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+            --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+            --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+            -f ./eoapi/values.yaml \
+            -f ./eoapi/test-unittest-values.yaml \
+            ./eoapi
 
       - name: sleep for 10s seconds while services boot
         shell: bash
@@ -104,17 +106,17 @@ jobs:
       - name: restart the services
         run: |
           kubectl config set-context --current --namespace=eoapitest
-          while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
           done
           echo "raster service has started, moving on..."
-          while [[ -z "$(kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
             echo "still waiting for vector service to start..."
             sleep 1
           done
           echo "vector service has started, moving on..."
-          while [[ -z "$(kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "startup complete" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /_mgmt/ping" | head -n 1)" ]]; do
             echo "still waiting for stac service to start..."
             sleep 1
           done
