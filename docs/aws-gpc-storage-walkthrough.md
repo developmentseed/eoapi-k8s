@@ -1,7 +1,7 @@
 # Production Storage
 
 Most folks will want to use a cloud provider's PasS database service for production situations. Below 
-we walkthrough the chnages to make that doable
+we walkthrough the changes to make that doable
 
 ---
 
