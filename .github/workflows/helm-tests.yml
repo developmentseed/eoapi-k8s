@@ -104,6 +104,7 @@ jobs:
         run: sleep 10s
 
       - name: restart the services
+        timeout-minutes: 10
         run: |
           kubectl config set-context --current --namespace=eoapitest
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
