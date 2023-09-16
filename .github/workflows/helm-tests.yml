@@ -103,7 +103,8 @@ jobs:
         shell: bash
         run: sleep 10s
 
-      - name: restart the services
+
+      - id: watchservices
         timeout-minutes: 10
         run: |
           kubectl config set-context --current --namespace=eoapitest
@@ -122,6 +123,12 @@ jobs:
             sleep 1
           done
           echo "all services have started, moving on..."
+
+      - name: cleanup if services fail to boot
+        if: steps.watchservices.outcome == 'failure'
+        run: |
+          echo "The previous step failed or timed out. Running cleanup logic..."
+          helm uninstall $RELEASE_NAME
 
       - name: install python unit-test dependencies
         run: |
