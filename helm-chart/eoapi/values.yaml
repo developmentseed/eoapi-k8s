@@ -47,6 +47,11 @@ db:
     resources:
       requests:
         storage: "100Mi"
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
     secrets:
       POSTGRES_DB: "postgis"
       POSTGRES_USER: ""
@@ -56,7 +61,7 @@ db:
       POSTGRES_HOST_READER: "pgstac"
       POSTGRES_HOST_WRITER: "pgstac"
       DB_MIN_CONN_SIZE: "1"
-      DB_MAX_CONN_SIZE: "10"
+      DB_MAX_CONN_SIZE: "15"
       # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
       PGDATA: "/var/lib/postgresql/data/pgdata"
       PGUSER: ""
@@ -143,7 +148,7 @@ stac:
         memory: "1024Mi"
       requests:
         cpu: "256m"
-        memory: "256Mi"
+        memory: "1024Mi"
     envVars:
       ##############
       # uvicorn
