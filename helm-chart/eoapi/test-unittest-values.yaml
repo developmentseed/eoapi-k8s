@@ -5,6 +5,15 @@ ingress:
   className: "nginx"
 db:
   enabled: true
+  settings:
+    resources:
+      requests:
+        storage: "100Mi"
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
 raster:
   enabled: true
   settings:
@@ -14,17 +23,17 @@ raster:
         memory: "4096Mi"
       requests:
         cpu: "256m"
-        memory: "1048Mi"
+        memory: "1024Mi"
 stac:
   enabled: true
   settings:
     resources:
       limits:
-        cpu: "256m"
-        memory: "512Mi"
+        cpu: "512m"
+        memory: "1024Mi"
       requests:
-        cpu: "256m"
-        memory: "512Mi"
+        cpu: "512m"
+        memory: "1024Mi"
 vector:
   enabled: true
   settings:
