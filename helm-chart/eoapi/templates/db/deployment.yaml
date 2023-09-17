@@ -27,6 +27,13 @@ spec:
               name: pgstac-secrets-{{ $.Release.Name }}
           ports:
             - containerPort: 5432
+          resources:
+            limits:
+              cpu: {{ .Values.db.settings.resources.limits.cpu }}
+              memory: {{ .Values.db.settings.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.db.settings.resources.requests.cpu }}
+              memory: {{ .Values.db.settings.resources.requests.memory }}
           {{- if not (eq .Values.providerContext "minikube") }}
           volumeMounts:
             - mountPath: /var/lib/postgresql/data

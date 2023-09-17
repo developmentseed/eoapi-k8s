@@ -103,9 +103,10 @@ jobs:
         shell: bash
         run: sleep 10s
 
-
       - id: watchservices
+        name: watch services boot
         timeout-minutes: 10
+        continue-on-error: true
         run: |
           kubectl config set-context --current --namespace=eoapitest
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
@@ -129,6 +130,8 @@ jobs:
         run: |
           echo "The previous step failed or timed out. Running cleanup logic..."
           helm uninstall $RELEASE_NAME
+          # force GH action to show failed result
+          exit 128
 
       - name: install python unit-test dependencies
         run: |

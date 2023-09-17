@@ -85,7 +85,7 @@ tests:
           value: "1024Mi"
       - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
-          value: "256Mi"
+          value: "1024Mi"
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"
