@@ -64,9 +64,9 @@ db:
       DB_MAX_CONN_SIZE: "15"
       # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
       PGDATA: "/var/lib/postgresql/data/pgdata"
-      PGUSER: "postgis"
+      PGUSER: ""
       PGPASSWORD: ""
-      PGDATABASE: ""
+      PGDATABASE: "postgis"
 
 # only used in CI for running parallel helm installs
 testing: false
