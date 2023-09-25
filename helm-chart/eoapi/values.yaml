@@ -54,8 +54,8 @@ db:
         memory: "1024Mi"
     secrets:
       POSTGRES_DB: "postgis"
-      POSTGRES_USER: "postgis"
-      POSTGRES_PASSWORD: "postgis"
+      POSTGRES_USER: ""
+      POSTGRES_PASSWORD: ""
       POSTGRES_PORT: "5432"
       POSTGRES_HOST: "pgstac"
       POSTGRES_HOST_READER: "pgstac"
@@ -65,8 +65,8 @@ db:
       # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
       PGDATA: "/var/lib/postgresql/data/pgdata"
       PGUSER: "postgis"
-      PGPASSWORD: "postgis"
-      PGDATABASE: "postgis"
+      PGPASSWORD: ""
+      PGDATABASE: ""
 
 # only used in CI for running parallel helm installs
 testing: false
