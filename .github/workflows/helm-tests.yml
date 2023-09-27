@@ -26,6 +26,7 @@ jobs:
           cd helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
   unit-tests:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: 'read'
       id-token: 'write'
