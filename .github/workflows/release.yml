@@ -33,7 +33,7 @@ jobs:
           git pull origin main
           git checkout gh-pages
           git pull origin gh-pages
-          git merge main
+          git merge -X theirs main
 
       - name: helm release packages
         env:

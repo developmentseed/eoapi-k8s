@@ -1,7 +1,7 @@
 # default values for eoapi
 
 comment: >
-  some postgres variables are basically secrets that should be passed in via os environment variables.
+  some postgres variables are secrets that should be passed in via os environment variables.
   for example, to pass username or password information during `helm template` or `helm install` do:
 
   $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
@@ -37,12 +37,21 @@ db:
   image:
     name: ghcr.io/stac-utils/pgstac
     tag: v0.7.1
+  command:
+      - "postgres"
+      - "-N"
+      - "500"
   # toggle to true||false if you want the db test fixtures loaded
   enable_data_fixtures: true
   settings:
     resources:
       requests:
         storage: "100Mi"
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
     secrets:
       POSTGRES_DB: "postgis"
       POSTGRES_USER: ""
@@ -52,28 +61,28 @@ db:
       POSTGRES_HOST_READER: "pgstac"
       POSTGRES_HOST_WRITER: "pgstac"
       DB_MIN_CONN_SIZE: "1"
-      DB_MAX_CONN_SIZE: "10"
+      DB_MAX_CONN_SIZE: "15"
       # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
       PGDATA: "/var/lib/postgresql/data/pgdata"
       PGUSER: ""
       PGPASSWORD: ""
       PGDATABASE: "postgis"
 
-# `providerContext`: "aws" || "minikube"
-# currently only support for "aws" even though CI tests use "minikube"
-# "gcp" will be an option available in the future
-providerContext: "aws"
+# only used in CI for running parallel helm installs
+testing: false
 
-# if running `helm install` from repo directory you'll have to provide this
-# otherwise the chart on the gh-pages branch will provide the correct updated value
+# deprecated: helm templates are only sniffing for "minikube" as of now
+providerContext: "ignore"
+
+# the chart on the gh-pages branch will provide the correct updated value otherwise it's defaulted
 gitSha: "gitshaABC123"
 
 service:
   port: 8080
 
 ingress:
-  # `ingress.className`: "alb" || "nginx"
-  # `"alb"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
+  # `ingress.className`: "alb" || "gce" || "nginx"
+  # `"alb || gce"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
   # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites for /vector, /stac, /raster
   enabled: true
   className: "alb"
@@ -92,7 +101,7 @@ vector:
         memory: "1024Mi"
       requests:
         cpu: "256m"
-        memory: "256Mi"
+        memory: "1024Mi"
     envVars:
       ##############
       # tipg
@@ -111,6 +120,11 @@ vector2:
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.2.0
+  command:
+    - "uvicorn"
+    - "tipg.main:app"
+    - "--host=$(HOST)"
+    - "--port=$(PORT)"
   settings:
     timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
@@ -133,7 +147,8 @@ vector2:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "10"
-
+docServer:
+  enabled: true
 
 
 

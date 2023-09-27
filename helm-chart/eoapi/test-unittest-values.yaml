@@ -1,42 +1,41 @@
-# used in GH Actions `unit-tests.yml`
-providerContext: "minikube"
+# used in GH Actions `.github/workflows/helm-tests.yml.jobs.unit-tests`
+testing: true
 ingress:
-  enabled: false
-  # used to set up NodePort in CI unittests on minikube
-  className: "testing123"
+  enabled: true
+  className: "nginx"
 db:
   enabled: true
+  settings:
+    resources:
+      requests:
+        storage: "100Mi"
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
 raster:
   enabled: true
-  image:
-    name: local/titiler
-    tag: latest
   settings:
     resources:
       limits:
         cpu: "512m"
-        memory: "1024Mi"
+        memory: "4096Mi"
       requests:
-        cpu: "512m"
+        cpu: "256m"
         memory: "1024Mi"
 stac:
   enabled: true
-  image:
-    name: local/stac
-    tag: latest
   settings:
     resources:
       limits:
-        cpu: "256m"
-        memory: "512Mi"
+        cpu: "512m"
+        memory: "1024Mi"
       requests:
-        cpu: "256m"
-        memory: "512Mi"
+        cpu: "512m"
+        memory: "1024Mi"
 vector:
   enabled: true
-  image:
-    name: local/tipg
-    tag: latest
   settings:
     resources:
       limits:

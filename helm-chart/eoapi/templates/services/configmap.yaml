@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $serviceName }}-envvar-configmap
+  name: {{ $serviceName }}-envvar-configmap-{{ $.Release.Name }}
 data:
   {{- range $envKey, $envValue := index $v "settings" "envVars" }}
   {{ upper $envKey }}: "{{ $envValue }}"

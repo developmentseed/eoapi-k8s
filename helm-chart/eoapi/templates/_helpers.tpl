@@ -60,3 +60,17 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+
+Create pgstac host string depending if .Values.testing
+*/}}
+{{- define "eoapi.pgstacHostName" -}}
+{{- if .Values.testing }}
+{{- printf "%s-%s" "pgstac" .Release.Name }}
+{{- else }}
+{{/* need to match what is default in values.yamls */}}
+{{- printf "%s" "pgstac" }}
+{{- end }}
+{{- end }}
+
