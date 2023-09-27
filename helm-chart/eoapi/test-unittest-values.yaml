@@ -1,5 +1,5 @@
 # used in GH Actions `.github/workflows/helm-tests.yml.jobs.unit-tests`
-testing: true
+testing: false
 ingress:
   enabled: true
   className: "nginx"
@@ -29,10 +29,10 @@ stac:
   settings:
     resources:
       limits:
-        cpu: "512m"
+        cpu: "256m"
         memory: "1024Mi"
       requests:
-        cpu: "512m"
+        cpu: "256m"
         memory: "1024Mi"
 vector:
   enabled: true
