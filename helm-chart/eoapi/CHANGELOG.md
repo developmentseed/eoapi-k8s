@@ -1,5 +1,13 @@
 version numbers below correspond to helm chart `appVersion`: see ./helm-chart/eoapi/Chart.yaml
 ---
+# 0.1.6 (2023-09-27)
+
+* adds `docServer.enable` flag to the `values.yaml` and service templates
+
+# 0.1.5 (2023-09-16)
+
+* adds a cpu and memory limits/requests to the `db` config block
+
 # 0.1.4 (2023-09-09)
 
 * adds a `testing: false` value to `values.yaml`
