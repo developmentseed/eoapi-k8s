@@ -190,7 +190,8 @@ vector:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "10"
-
+docServer:
+  enabled: true
 
 
 
