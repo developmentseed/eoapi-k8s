@@ -1,0 +1,6 @@
+workflow:
+  name:
+  description:
+  settings:
+    parallelism: 5
+  steps:

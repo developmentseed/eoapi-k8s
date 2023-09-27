@@ -1,0 +1,19 @@
+{
+    "stac_version": "1.0.0",
+    "type": "Catalog",
+    "id": "maxar-opendata",
+    "license": "CC-BY-NC-4.0",
+    "description": "Maxar ARD Open Data Catalog",
+    "links": [
+        {
+            "rel": "child",
+            "href": "https://maxar-opendata.s3.amazonaws.com/events/yellowstone-flooding22/collection.json",
+            "type": "application/json"
+        },
+        {
+            "rel": "root",
+            "href": "./catalog.json",
+            "type": "application/json"
+        }
+    ]
+}

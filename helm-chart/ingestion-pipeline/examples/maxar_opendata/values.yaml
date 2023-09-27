@@ -1,0 +1,36 @@
+workflow:
+  name: maxar-opendata
+  description: Maxar Open Data (https://www.maxar.com/open-data)
+  settings:
+    parallelism: 5
+  steps:
+    - name: generate-collections
+      image: eoapi-ingest:local-helm
+      description: Generate STAC Collections
+      command: "python /src/generate_collections.py"
+      outputs:
+        parameters:
+        - name: items
+          path: /data/items-paths.json
+        - name: collections
+          path: /data/collection-ids.json
+    - name: generate-items
+      image: eoapi-ingest:local-helm
+      description: Generate STAC Items
+      command: "python /src/generate_items.py {{item}}"
+      paramFrom: "steps.generate-collections.outputs.parameters.collections"
+      outputs:
+        parameters:
+        - name: items
+          path: /data/items-paths.json
+        - name: collections
+          path: /data/collection-ids.json
+    - name: load-collections
+      image: ghcr.io/stac-utils/pgstac:v0.7.9
+      description: Load STAC Collection into Postgres
+      command: "pypgstac load collections /data/collections.json --method insert_ignore"
+    - name: load-items
+      image: ghcr.io/stac-utils/pgstac:v0.7.9
+      description: Load STAC Items into Postgres
+      command: "pypgstac load items {{item}} --method insert_ignore"
+      paramFrom: "steps.generate-collections.outputs.parameters.items"
