@@ -41,7 +41,7 @@ spec:
           {{- end }}{{/* END: if index $v "enabled" */}}
           {{- end }}{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
           {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
-          {{- if not $.Values.testing }}
+          {{- if (and (not $.Values.testing) (.Values.docServer.enabled)) }}
           - pathType: Prefix
             path: /(/|$)
             backend:
