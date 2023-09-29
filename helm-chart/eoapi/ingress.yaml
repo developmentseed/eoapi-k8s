@@ -1,0 +1,69 @@
+---
+# Source: eoapi/templates/services/ingress-alb.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vector-ingresses
+  # AWS EKS:
+  # https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/ingress/annotations/
+  # GCP GKE:
+  # https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
+  annotations:
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    #alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    #alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-1:444055461661:certificate/41579498-2e29-4d7d-b59e-2048ee81fbb4
+spec:
+  ingressClassName: alb
+  rules:
+#    - http:
+#        paths:
+#          - path: /*
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: ssl-redirect
+#                port:
+#                  name: use-annotation
+    - host: vector1.wfs3labs.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: vector
+                port:
+                  number: 8080
+    - host: vector2.wfs3labs.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: vector
+                port:
+                  number: 8080
+    - host: vector11.wfs3labs.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: vector11
+                port:
+                  number: 8080
+    - host: vector12.wfs3labs.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: vector12
+                port:
+                  number: 8080
