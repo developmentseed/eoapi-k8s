@@ -173,7 +173,7 @@ stac:
 vector:
   enabled: true
   autoscaling:
-    enabled: fals
+    enabled: false
     minReplicas: 1
     maxReplicas: 10
     utilizationTarget:
