@@ -142,6 +142,8 @@ jobs:
 #        uses: lhotari/action-upterm@v1
 
       - name: run the tests
+        id: testrunner
+        continue-on-error: true
         run: |
           kubectl config set-context --current --namespace=eoapitest
           PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
@@ -164,6 +166,14 @@ jobs:
           sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
           head -n 5 .github/workflows/tests/test_raster.py
           pytest .github/workflows/tests/test_raster.py
+
+      - name: cleanup if tests faile
+        if: steps.testrunner.outcome == 'failure'
+        run: |
+          echo "The previous step failed or timed out. Running cleanup logic..."
+          helm uninstall $RELEASE_NAME
+          # force GH action to show failed result
+          exit 128
 
       - name: helm uinstall eoapi templates
         run: |
