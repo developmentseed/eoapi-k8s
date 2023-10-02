@@ -12,13 +12,18 @@ spec:
     name: {{ $serviceName }}-{{ $.Release.Name }}
   minReplicas: {{ index $v "autoscaling" "minReplicas" }}
   maxReplicas: {{ index $v "autoscaling" "maxReplicas" }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 180
+    scaleUp:
+      stabilizationWindowSeconds: 30
   metrics:
   - type: Resource
     resource:
-      name: memory
+      name: cpu
       target:
         type: Utilization
-        averageUtilization: {{ index $v "autoscaling" "utilizationTarget" "memory" }}
+        averageUtilization: {{ index $v "autoscaling" "utilizationTarget" "cpu" }}
 ---
 {{/* END: if index $v "autoscaling" "enabled" */}}
 {{- end }}

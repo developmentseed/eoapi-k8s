@@ -94,7 +94,7 @@ raster:
     minReplicas: 1
     maxReplicas: 10
     utilizationTarget:
-      memory: 65
+      cpu: 50
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-0.4.1
@@ -142,7 +142,7 @@ stac:
     minReplicas: 1
     maxReplicas: 10
     utilizationTarget:
-      memory: 65
+      cpu: 50
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
@@ -173,11 +173,11 @@ stac:
 vector:
   enabled: true
   autoscaling:
-    enabled: false
+    enabled: fals
     minReplicas: 1
     maxReplicas: 10
     utilizationTarget:
-      memory: 65
+      cpu: 50
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.2.0
