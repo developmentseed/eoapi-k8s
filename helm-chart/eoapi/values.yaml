@@ -108,7 +108,7 @@ raster:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
-        cpu: "512m"
+        cpu: "768m"
         memory: "4096Mi"
       requests:
         cpu: "256m"
@@ -156,7 +156,7 @@ stac:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
-        cpu: "512m"
+        cpu: "768m"
         memory: "1024Mi"
       requests:
         cpu: "256m"
@@ -191,7 +191,7 @@ vector:
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
-        cpu: "512m"
+        cpu: "768m"
         memory: "1024Mi"
       requests:
         cpu: "256m"

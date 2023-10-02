@@ -1,6 +1,10 @@
 ##### version numbers below correspond to helm chart `appVersion`: see ./helm-chart/eoapi/Chart.yaml
 ---
-### 0.1.7 (2023-10-01)
+### 0.1.8 (2023-10-02)
+
+* adjust cpu limits so if autoscaling is enabled it doesn't immediately scaleup
+
+### 0.1.7 (2023-10-02)
 
 * adds `autoscaling` options to each service for HPA
 
