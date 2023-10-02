@@ -19,7 +19,7 @@ raster:
   settings:
     resources:
       limits:
-        cpu: "512m"
+        cpu: "768m"
         memory: "4096Mi"
       requests:
         cpu: "256m"
@@ -29,8 +29,8 @@ stac:
   settings:
     resources:
       limits:
-        cpu: "512m"
-        memory: "1024Mi"
+        cpu: "1280m"
+        memory: "1536Mi"
       requests:
         cpu: "512m"
         memory: "1024Mi"
@@ -39,8 +39,8 @@ vector:
   settings:
     resources:
       limits:
-        cpu: "256m"
-        memory: "768Mi"
+        cpu: "768m"
+        memory: "1536Mi"
       requests:
         cpu: "256m"
-        memory: "768Mi"
+        memory: "1024Mi"

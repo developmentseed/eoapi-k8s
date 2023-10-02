@@ -1,0 +1,33 @@
+{{- range $serviceName, $v := .Values -}}
+{{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+{{- if index $v "autoscaling" "enabled" }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-{{ $serviceName }}-{{ $.Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $serviceName }}-{{ $.Release.Name }}
+  minReplicas: {{ index $v "autoscaling" "minReplicas" }}
+  maxReplicas: {{ index $v "autoscaling" "maxReplicas" }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 180
+    scaleUp:
+      stabilizationWindowSeconds: 60
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ index $v "autoscaling" "utilizationTarget" "cpu" }}
+---
+{{/* END: if index $v "autoscaling" "enabled" */}}
+{{- end }}
+{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
+{{- end }}
+{{/* END: range $serviceName, $v := .Values*/}}
+{{- end }}
