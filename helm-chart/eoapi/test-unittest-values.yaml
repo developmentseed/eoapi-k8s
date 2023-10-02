@@ -16,10 +16,6 @@ db:
         memory: "1024Mi"
 raster:
   enabled: true
-  autoscaling:
-    enabled: true
-    utilizationTarget:
-      cpu: 65
   settings:
     resources:
       limits:
@@ -30,10 +26,6 @@ raster:
         memory: "1024Mi"
 stac:
   enabled: true
-  autoscaling:
-    enabled: true
-    utilizationTarget:
-      cpu: 65
   settings:
     resources:
       limits:
@@ -44,10 +36,6 @@ stac:
         memory: "1024Mi"
 vector:
   enabled: true
-  autoscaling:
-    enabled: true
-    utilizationTarget:
-      cpu: 65
   settings:
     resources:
       limits:
