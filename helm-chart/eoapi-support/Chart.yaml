@@ -1,0 +1,30 @@
+apiVersion: "0.1.0"
+name: eoapi-support
+version: "0.1.0"
+# most of this was cribbed from https://github.com/2i2c-org/infrastructure/blob/master/helm-charts/support/
+# so giving props where props are due to Yuvi Panda :sparkles:
+description: observability, monitoring and some custom metrics for autoscaling
+
+dependencies:
+  # Prometheus for collection of metrics.
+  # https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus
+  #
+  - name: prometheus
+    # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus` values
+    version: 24.5.0
+    repository: https://prometheus-community.github.io/helm-charts
+
+  # used to create custom metrics to autoscale on
+  #
+  - name: prometheus-adpater
+    # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus-adapter` values
+    version: 4.6.0
+    repository: https://prometheus-community.github.io/helm-charts
+
+  # Grafana for dashboarding of metrics
+  # https://github.com/grafana/helm-charts/tree/main/charts/grafana
+  #
+  - name: grafana
+    # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.grafana` values
+    version: 6.60.1
+    repository: https://grafana.github.io/helm-charts
