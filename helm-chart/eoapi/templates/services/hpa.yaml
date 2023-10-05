@@ -1,3 +1,4 @@
+{{- include "eoapi.validateAutoscaleRules" . -}}
 {{- range $serviceName, $v := .Values -}}
 {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
 {{- if index $v "autoscaling" "enabled" }}
@@ -13,17 +14,29 @@ spec:
   minReplicas: {{ index $v "autoscaling" "minReplicas" }}
   maxReplicas: {{ index $v "autoscaling" "maxReplicas" }}
   behavior:
-    scaleDown:
-      stabilizationWindowSeconds: 180
-    scaleUp:
-      stabilizationWindowSeconds: 60
+    {{- toYaml (index $v "autoscaling" "behavior") | nindent 4 }}
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
+#  # NOTE: 'Resource' are default metrics using k8s metrics-server
+#  # SEE: ../../../docs/autoscaling.md
+#  - type: Resource
+#    resource:
+#      name: cpu
+#      target:
+#        type: Utilization
+#        averageUtilization: {{ index $v "autoscaling" "utilizationTargets" "cpu" }}
+  # NOTE: 'Object' are custom metrics using third-party plugins such as prometheus + prometheus-adapter
+  # SEE: ../../../docs/autoscaling.md
+  - type: Object
+    object:
+      metric:
+        name: nginx_ingress_controller_requests_rate_{{ $serviceName }}_{{ $.Release.Name }}
+      describedObject:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        name: nginx-service-ingress-shared-{{ $.Release.Name }}
       target:
-        type: Utilization
-        averageUtilization: {{ index $v "autoscaling" "utilizationTarget" "cpu" }}
+        type: AverageValue
+        averageValue: {{ index $v "autoscaling" "utilizationTargets" "requestRate" }}
 ---
 {{/* END: if index $v "autoscaling" "enabled" */}}
 {{- end }}

@@ -1,5 +1,5 @@
 # used in GH Actions `.github/workflows/helm-tests.yml.jobs.unit-tests`
-testing: true
+testing: false
 ingress:
   enabled: true
   className: "nginx"

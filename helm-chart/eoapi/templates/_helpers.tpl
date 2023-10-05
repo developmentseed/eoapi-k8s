@@ -62,7 +62,6 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-
 Create pgstac host string depending if .Values.testing
 */}}
 {{- define "eoapi.pgstacHostName" -}}
@@ -73,4 +72,14 @@ Create pgstac host string depending if .Values.testing
 {{- printf "%s" "pgstac" }}
 {{- end }}
 {{- end }}
+
+{{/*
+values.schema.json doesn't play nice combined value checks
+so we use this helper function to check autoscaling rules
+*/}}
+{{- define "eoapi.validateAutoscaleRules" -}}
+{{- if and .Values.ingress.enabled (ne .Values.ingress.className "nginx") (or (.Values.raster.autoscaling.enabled) (.Values.stac.autoscaling.enabled) (.Values.vector.autoscaling.enabled)) }}
+{{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's soley an nginx metric" }}
+{{- end }}
+{{- end -}}
 

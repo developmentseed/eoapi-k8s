@@ -10,7 +10,6 @@ $ head -n 9 <eoapi-k8s-repo>/values.schema.json
   "$schema": "http://json-schema.org/schema#",
   "type": "object",
   "required": [
-    "providerContext",
     "db",
     "service",
     "gitSha"
@@ -24,7 +23,6 @@ The table below and the `values.yaml` comments should explain what the options a
 |:-------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------|:------------|:------------------------|
 | `db.settings.secrets.PGUSER`<br>`db.settings.secrets.PGPASSWORD`              | username and password used by application for connections<br>https://www.postgresql.org/docs/current/libpq-envars.html                    |              |                        |
 | `db.settings.secrets.POSTGRES_USER`<br>`db.settings.secrets.POSTGRES_PASSWORD` | username and password used by<br>base postgresl image for admin purposes<br>see https://www.postgresql.org/docs/current/libpq-envars.html |              |                        |
-| `providerContext `                                                          | deprecated: used as a switch in helm templates for <br>provider-specific logic if needed                                                   |    minikube  |    minikube           |
 | `service.port`                                                              | the port that all vector/raster/stac services run on<br>used in `kind: Service` and `kind: Ingress`                                       |     8080     |   your favorite port   |
 | `gitSha`                                                                    | sha attached to a `kind: Deployment` key `metadata.labels`                                                                                | gitshaABC123 | your favorite sha      |
 

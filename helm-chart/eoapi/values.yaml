@@ -71,9 +71,6 @@ db:
 # only used in CI for running parallel helm installs
 testing: false
 
-# deprecated: helm templates are only sniffing for "minikube" as of now
-providerContext: "ignore"
-
 # the chart on the gh-pages branch will provide the correct updated value otherwise it's defaulted
 gitSha: "gitshaABC123"
 
@@ -93,8 +90,13 @@ raster:
     enabled: false
     minReplicas: 1
     maxReplicas: 10
-    utilizationTarget:
-      cpu: 50
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+    utilizationTargets:
+      requestRate: 10000
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-0.4.1
@@ -141,8 +143,13 @@ stac:
     enabled: false
     minReplicas: 1
     maxReplicas: 10
-    utilizationTarget:
-      cpu: 50
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+    utilizationTargets:
+      requestRate: 15000
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
@@ -176,8 +183,13 @@ vector:
     enabled: false
     minReplicas: 1
     maxReplicas: 10
-    utilizationTarget:
-      cpu: 50
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+    utilizationTargets:
+      requestRate: 15000
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.2.0

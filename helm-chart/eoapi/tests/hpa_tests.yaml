@@ -1,0 +1,15 @@
+suite: service defaults deployment
+templates:
+  - templates/services/hpa.yaml
+tests:
+  - it: "vector hpa fail state"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: true
+      ingress.className: "gce"
+      vector.autoscaling.enabled: true
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - hasError: When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's soley an nginx metric
