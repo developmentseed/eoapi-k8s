@@ -10,7 +10,5 @@ tests:
       ingress.className: "gce"
       vector.autoscaling.enabled: true
     asserts:
-      - isKind:
-          of: HorizontalPodAutoscaler
       - failedTemplate:
           errorMessage: When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's soley an nginx metric
