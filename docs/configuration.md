@@ -74,4 +74,10 @@ Here's a simplified high-level diagram to grok:
 #### Given `ingress.className=alb||gce` 
 ![](./images/alb_architecture.png)
 
+---
 
+### Key `autoscaling.type`
+
+|   **Values Key**  |                                                                 **Description**                                                                 | **Default** | **Choices**  |
+|:-----------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|:-----------|:--------------|
+| `autoscaling.type` | a simple example of a default metric (`cpu`) and custom metric (`requestRate`) to scale by. NOTE: `requestRate` is based on nginx metrics and currently isn't supported for `ingress.className: alb/gce` options yet. It will throw an error during install if you attemp this  | requestRate       | requestRate<br>cpu<br>both<br> |

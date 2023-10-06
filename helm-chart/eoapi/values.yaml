@@ -90,12 +90,16 @@ raster:
     enabled: false
     minReplicas: 1
     maxReplicas: 10
+    # `type`: "cpu" || "requestRate" || "both"
+    type: "requestRate"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
         stabilizationWindowSeconds: 0
-    utilizationTargets:
+    targets:
+      # matches `type` value above unless `type: "both"` is selected
+      cpu: 85
       requestRate: 10000
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
@@ -143,12 +147,16 @@ stac:
     enabled: false
     minReplicas: 1
     maxReplicas: 10
+    # `type`: "cpu" || "requestRate" || "both"
+    type: "requestRate"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
         stabilizationWindowSeconds: 0
-    utilizationTargets:
+    targets:
+      # matches `type` value above unless `type: "both"` is selected
+      cpu: 85
       requestRate: 15000
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
@@ -183,12 +191,16 @@ vector:
     enabled: false
     minReplicas: 1
     maxReplicas: 10
+    # `type`: "cpu" || "requestRate" || "both"
+    type: "requestRate"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
         stabilizationWindowSeconds: 0
-    utilizationTargets:
+    targets:
+      # matches `type` value above unless `type: "both"` is selected
+      cpu: 85
       requestRate: 15000
   image:
     name: ghcr.io/developmentseed/tipg

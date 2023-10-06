@@ -1,0 +1,684 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 9,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
+          },
+          "editorMode": "code",
+          "expr": "rate(container_cpu_usage_seconds_total{pod=~\"$podprefix$\", image!=\"\", container!=\"POD\", name!=\"\", container!=\"\"}[2m])",
+          "instant": false,
+          "legendFormat": "{{pod}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage Rate by Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 13,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
+          },
+          "editorMode": "code",
+          "expr": "rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$podprefix$\", container!=\"POD\", image!=\"\"}[2m])",
+          "instant": false,
+          "legendFormat": "{{pod}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Throttling Rate by Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 11,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(nginx_ingress_controller_requests{host=~'eoapi.*'}[2m])) by(service)",
+          "instant": false,
+          "legendFormat": "{{service}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Nginx Request Rate by Service @ 2m",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 3,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "container limits"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "container requests"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "container usage"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "throttling"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "{beta_kubernetes_io_arch=\"amd64\",beta_kubernetes_io_fluentd_ds_ready=\"true\",beta_kubernetes_io_instance_type=\"n1-standard-2\",beta_kubernetes_io_os=\"linux\",cloud_google_com_gke_nodepool=\"default-pool\",cloud_google_com_gke_os_distribution=\"cos\",container=\"compute\",container_name=\"compute\",cpu=\"total\",failure_domain_beta_kubernetes_io_region=\"europe-west3\",failure_domain_beta_kubernetes_io_zone=\"europe-west3-b\",id=\"/kubepods/burstable/podb65d5b3b-b991-434e-8e80-2815bac17b61/04f0310038f5341c88206af01bbff9eb604365a5448432e3eab6ac2bbd3a96e1\",image=\"vish/stress@sha256:b6456a3df6db5e063e1783153627947484a3db387be99e49708c70a9a15e7177\",instance=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",job=\"kubernetes-cadvisor\",kubernetes_io_arch=\"amd64\",kubernetes_io_hostname=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",kubernetes_io_os=\"linux\",name=\"k8s_compute_compute-67b4c4c44f-2c8gj_default_b65d5b3b-b991-434e-8e80-2815bac17b61_0\",namespace=\"default\",pod=\"compute-67b4c4c44f-2c8gj\",pod_name=\"compute-67b4c4c44f-2c8gj\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "{beta_kubernetes_io_arch=\"amd64\",beta_kubernetes_io_fluentd_ds_ready=\"true\",beta_kubernetes_io_instance_type=\"n1-standard-2\",beta_kubernetes_io_os=\"linux\",cloud_google_com_gke_nodepool=\"default-pool\",cloud_google_com_gke_os_distribution=\"cos\",container=\"compute\",container_name=\"compute\",failure_domain_beta_kubernetes_io_region=\"europe-west3\",failure_domain_beta_kubernetes_io_zone=\"europe-west3-b\",id=\"/kubepods/burstable/podb65d5b3b-b991-434e-8e80-2815bac17b61/04f0310038f5341c88206af01bbff9eb604365a5448432e3eab6ac2bbd3a96e1\",image=\"vish/stress@sha256:b6456a3df6db5e063e1783153627947484a3db387be99e49708c70a9a15e7177\",instance=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",job=\"kubernetes-cadvisor\",kubernetes_io_arch=\"amd64\",kubernetes_io_hostname=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",kubernetes_io_os=\"linux\",name=\"k8s_compute_compute-67b4c4c44f-2c8gj_default_b65d5b3b-b991-434e-8e80-2815bac17b61_0\",namespace=\"default\",pod=\"compute-67b4c4c44f-2c8gj\",pod_name=\"compute-67b4c4c44f-2c8gj\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "{beta_kubernetes_io_arch=\"amd64\",beta_kubernetes_io_fluentd_ds_ready=\"true\",beta_kubernetes_io_instance_type=\"n1-standard-2\",beta_kubernetes_io_os=\"linux\",cloud_google_com_gke_nodepool=\"default-pool\",cloud_google_com_gke_os_distribution=\"cos\",cpu=\"total\",failure_domain_beta_kubernetes_io_region=\"europe-west3\",failure_domain_beta_kubernetes_io_zone=\"europe-west3-b\",id=\"/kubepods/burstable/podb65d5b3b-b991-434e-8e80-2815bac17b61\",instance=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",job=\"kubernetes-cadvisor\",kubernetes_io_arch=\"amd64\",kubernetes_io_hostname=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",kubernetes_io_os=\"linux\",namespace=\"default\",pod=\"compute-67b4c4c44f-2c8gj\",pod_name=\"compute-67b4c4c44f-2c8gj\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "{beta_kubernetes_io_arch=\"amd64\",beta_kubernetes_io_fluentd_ds_ready=\"true\",beta_kubernetes_io_instance_type=\"n1-standard-2\",beta_kubernetes_io_os=\"linux\",cloud_google_com_gke_nodepool=\"default-pool\",cloud_google_com_gke_os_distribution=\"cos\",failure_domain_beta_kubernetes_io_region=\"europe-west3\",failure_domain_beta_kubernetes_io_zone=\"europe-west3-b\",id=\"/kubepods/burstable/podb65d5b3b-b991-434e-8e80-2815bac17b61\",instance=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",job=\"kubernetes-cadvisor\",kubernetes_io_arch=\"amd64\",kubernetes_io_hostname=\"gke-resources-test-default-pool-9c0bbcbe-4lgj\",kubernetes_io_os=\"linux\",namespace=\"default\",pod=\"compute-67b4c4c44f-2c8gj\",pod_name=\"compute-67b4c4c44f-2c8gj\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
+          },
+          "editorMode": "code",
+          "expr": "container_memory_usage_bytes{pod=~\"$podprefix$\", image!=\"\", container!=\"POD\", container!=\"\"}",
+          "hide": false,
+          "legendFormat": "usage-{{pod}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
+          },
+          "editorMode": "code",
+          "expr": "kube_pod_container_resource_limits{resource=\"memory\", pod=~\"$podprefix$\", container!=\"\"}",
+          "hide": false,
+          "legendFormat": "limit-{{pod}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Memory Usage & Limits By Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
+          },
+          "editorMode": "code",
+          "expr": "sum(kube_pod_status_scheduled{pod=~'$podprefix$'})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{service}}",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "eoAPI Pod Count",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": ".*-eoapi-.*",
+          "value": ".*-eoapi-.*"
+        },
+        "hide": 0,
+        "label": "Pod Prefix",
+        "name": "podprefix",
+        "options": [
+          {
+            "selected": true,
+            "text": ".*-eoapi-.*",
+            "value": ".*-eoapi-.*"
+          }
+        ],
+        "query": ".*-eoapi-.*",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "eoAPI Dashboard",
+  "uid": "2cXq0H8Zz",
+  "version": 36,
+  "weekStart": ""
+}

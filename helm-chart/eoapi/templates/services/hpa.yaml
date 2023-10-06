@@ -16,14 +16,16 @@ spec:
   behavior:
     {{- toYaml (index $v "autoscaling" "behavior") | nindent 4 }}
   metrics:
-#  # NOTE: 'Resource' are default metrics using k8s metrics-server
-#  # SEE: ../../../docs/autoscaling.md
-#  - type: Resource
-#    resource:
-#      name: cpu
-#      target:
-#        type: Utilization
-#        averageUtilization: {{ index $v "autoscaling" "utilizationTargets" "cpu" }}
+  {{- if or (eq (index $v "autoscaling" "type") "cpu") (eq (index $v "autoscaling" "type") "both") }}
+  # NOTE: 'Resource' are default metrics using k8s metrics-server
+  # SEE: ../../../docs/autoscaling.md
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ index $v "autoscaling" "targets" "cpu" }}
+  {{- else if or (eq (index $v "autoscaling" "type") "requestRate") (eq (index $v "autoscaling" "type") "both") }}
   # NOTE: 'Object' are custom metrics using third-party plugins such as prometheus + prometheus-adapter
   # SEE: ../../../docs/autoscaling.md
   - type: Object
@@ -36,7 +38,8 @@ spec:
         name: nginx-service-ingress-shared-{{ $.Release.Name }}
       target:
         type: AverageValue
-        averageValue: {{ index $v "autoscaling" "utilizationTargets" "requestRate" }}
+        averageValue: {{ index $v "autoscaling" "targets" "requestRate" }}
+  {{- end }}
 ---
 {{/* END: if index $v "autoscaling" "enabled" */}}
 {{- end }}

@@ -5,7 +5,7 @@ prometheus-adapter:
     # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
     # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
     # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
-    url: http://prometheus-server.eoapi.svc.cluster.local
+    url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
     port: 80
     path: ""
   rules:
@@ -130,7 +130,7 @@ grafana:
           # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
           # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
           # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
-          url: http://prometheus-server.eoapi.svc.cluster.local
+          url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
           access: proxy
           isDefault: true
           editable: false
