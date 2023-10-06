@@ -16,7 +16,7 @@ dependencies:
 
   # used to create custom metrics to autoscale on
   #
-  - name: prometheus-adpater
+  - name: prometheus-adapter
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus-adapter` values
     version: 4.6.0
     repository: https://prometheus-community.github.io/helm-charts
