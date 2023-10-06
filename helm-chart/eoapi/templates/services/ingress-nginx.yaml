@@ -20,8 +20,7 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
   rules:
-    - host: "eoapi.35.239.254.92.nip.io"
-      http:
+    - http:
         paths:
           {{- range $serviceName, $v := .Values }}
           {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
