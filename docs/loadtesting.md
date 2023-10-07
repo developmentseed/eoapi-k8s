@@ -21,4 +21,6 @@ that you're deploying using `ingress.className: "nginx"`.
     hey -n 2000000 -q 150 -c 20 http://eoapi-35.234.254.12.nip.io/stac/
     ```
    
-3. Go to Grafana again and watch your services autoscale
+3. Go to Grafana again and watch your services autoscaling for services you are actually hitting
+
+![](./images/grafanaautoscale.png)
