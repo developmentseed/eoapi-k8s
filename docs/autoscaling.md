@@ -347,9 +347,7 @@ one of the Grafana default charts filters on hostname it's probably best to keep
      http:
        paths:
        ...
-   ``` 
-   
-4. Now go
+   ```
 
 ---
 
