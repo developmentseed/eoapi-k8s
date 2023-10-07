@@ -18,41 +18,73 @@ By default, the installation of Prometheus includes node_exporter. This exporter
 
 `cAdvisor` (Container Advisor) is an open-source monitoring tool for containers. it provides detailed information about resource usage and performance characteristics of running containers.
 
-## Installing  Prometheus, Grafana and exporters: 
-
-Clone the repo: https://github.com/Rub21/k8s-monitoring
-
-To access the Grafana dashboard, you'll need to set up an environment variable. For example, use the command `export GRAFANA_ADMIN_PASSWORD=abcd`. By default, the password is set to 1234.
+## Installing  Prometheus, Grafana and exporters
 
 
 ```sh
+# Create prometheus namespace
+kubectl create namespace prometheus
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
 
-./deploy.sh create
-# tab1
-kubectl port-forward svc/prometheus-operated 9090 --namespace prometheus
-# tab2
-kubectl port-forward deployment/prometheus-grafana 3000 --namespace prometheus
+# Installing prometheus & Grafana & node-exporter
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+--namespace prometheus \
+--set grafana.enabled=true \
+--set-string grafana.adminPassword=1234 
+
+# Installing cAdvisor
+helm repo add ckotzbauer https://ckotzbauer.github.io/helm-charts/
+helm repo update
+helm search repo cadvisor
+helm upgrade --install cadvisor ckotzbauer/cadvisor --namespace prometheus
+
+cat <<EOF | kubectl apply -f -
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    jobLabel: cadvisor
+    release: prometheus
+  name: cadvisor
+  namespace: prometheus
+spec:
+  attachMetadata:
+    node: false
+  endpoints:
+  - port: http
+    scheme: http
+  jobLabel: jobLabel
+  selector:
+    matchLabels:
+      release: prometheus
+EOF
+```
+## Remove Prometheus, Grafana and exporters
+
+```sh
+helm delete prometheus --namespace prometheus
+helm delete cadvisor --namespace prometheus
 ```
 
-
-Once the UI dashboards are exported, you can open them.
-
+## Enable UI dashboards
 
 ### Prometheus dashboard
 
+```sh
+kubectl port-forward svc/prometheus-operated 9090 --namespace prometheus
+```
+
+
 http://localhost:9090/targets?search=
 
-<img width="1323" alt="image" src="https://github.com/developmentseed/eoapi-k8s/assets/1152236/b3134e1a-8253-4221-8646-63e989fe9b3e">
 
 ### Grafana dashboard
 
--  Node exporter
-http://localhost:3000/d/rYdddlPWk/node-exporter-full?orgId=1
-<img width="1232" alt="image" src="https://github.com/developmentseed/eoapi-k8s/assets/1152236/bc7557bd-8d19-4492-acac-4415d69bb188">
-
-- cAdvisor
-<img width="1322" alt="image" src="https://github.com/developmentseed/eoapi-k8s/assets/1152236/593bfe59-3e7e-40df-8ba4-13a31c391581">
-
+```sh
+kubectl port-forward deployment/prometheus-grafana 3000 --namespace prometheus
+```
+http://localhost:3000
 
 
 The dashboards can be customized for each specific use case. There are still more metrics to explore that could be useful or necessary for the EOAPI scenario.
