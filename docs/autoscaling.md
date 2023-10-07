@@ -28,7 +28,7 @@ $ helm -n default install metrics-server bitnami/metrics-server
 
 ---
 
-### Review [Default Configuration and Options](./configuration.md)
+### Review [Default Configuration and Options](configuration.md)
 
 This document will explain the differences in the `autoscaling` block for each service:
 
@@ -52,7 +52,7 @@ autoscaling:
 
 ---
 
-### Review [Production Storage](./aws-gpc-storage-walkthrough.md) Set Up
+### Review [Production Storage](aws-gpc-storage-walkthrough.md) Set Up
 
 The default `eoapi` helm chart installs an in-memory postgres/postgis database but mostly folks will want to
 test autoscaling against something more production suitable
@@ -103,11 +103,9 @@ This chart has the metrics, observability and visualization dependencies
     service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s 
     ```
 
-5. 
+5. note that the `service/eoapi-support-grafana` has an EXTERNAL-IP that we can use to view it. This is just a quick way to work with it. You'll want to set it up with a ingress in the future
 
-6. note that the `service/eoapi-support-grafana` has an EXTERNAL-IP that we can use to view it. This is just a quick way to work with it. You'll want to set it up with a ingress in the future
-
-7. to log into Grafana you'll need to export the default username/password it came installed with:
+6. to log into Grafana you'll need to export the default username/password it came installed with:
 
    ```bash
    $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' | base64 -d
@@ -116,7 +114,7 @@ This chart has the metrics, observability and visualization dependencies
    <not-showing-output>
    ```
 
-8. In your browser navigate to the `service/eoapi-support-grafana` EXTERNAL-IP, log in using credentials from the last step and manually upload the Grafana `eoAPI Dashboard` included in `/helm-chart/eoapi-support/eoAPI-Dashboard.json`
+7. In your browser navigate to the `service/eoapi-support-grafana` EXTERNAL-IP, log in using credentials from the last step and manually upload the Grafana `eoAPI Dashboard` included in `/helm-chart/eoapi-support/eoAPI-Dashboard.json`
 
 
 ![](./images/add-grafana-dashboard.png)
@@ -259,9 +257,13 @@ but the important part here is that we are enabling `autoscaling` and playing wi
    service/vector                                   ClusterIP      10.123.247.62    <none>         8080/TCP       87s
    ```
 
-5. Now we need to tell the nginx ingress controller that it should allow prometheus to scrape it. This is a requirement to get our custom metrics. 
+---
 
-6. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. Oftentimes this resource is in `ingress-nginx` namespace
+### Enable a Prometheus to Scrape Nginx
+
+1. Now we need to tell the nginx ingress controller that it should allow prometheus to scrape it. This is a requirement to get our custom metrics. 
+
+2. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. Oftentimes this resource is in `ingress-nginx` namespace
 
    ```bash
    # this assumes your release name is `ingress-nginx`, though you might've named it something else
@@ -275,7 +277,7 @@ but the important part here is that we are enabling `autoscaling` and playing wi
        loadBalancerIP: 12.234.567.89
    ```
 
-7. Create an empty `config.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
+3. Create an empty `config.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
 
    ```yaml
    controller:
@@ -292,7 +294,7 @@ but the important part here is that we are enabling `autoscaling` and playing wi
            prometheus.io/port: "10254"
    ```
    
-8. Redeploy your `ingress-nginx` release with the configuration from the last step:
+4. Redeploy your `ingress-nginx` release with the configuration from the last step:
 
    ```bash
    # this assumes your release name is `ingress-nginx` and that the repo was installed as `ingress-nginx` 
@@ -300,6 +302,55 @@ but the important part here is that we are enabling `autoscaling` and playing wi
    $ helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config.yaml
    ```
 
-10. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
+5. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
 
-### Now move onto the [Load Testing](./configuration.md) document
+---
+
+### Add a `nip.io` Host to Your Ingress
+
+1. Nginx will not expose metrics for ingresses without hosts or with wildcards. Since `eoapi-k8s` doesn't set up
+hosts for you then you'll need to find the `EXTERNAL-IP` for your `ingress-nginx-controller` and use that
+to set up a simple host
+
+2. Find the IP that your `ingress-nginx-controller` exposes:
+
+   ```bash
+   $ kubectl -n ingress-nginx get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+   35.239.254.21%
+   ```
+
+# TODO: we should figure out how to make this option configurable through `values.yaml` overrides to make it easier
+3. Then live edit your shared ingress for eoapi services to build an arbitrary host name using `nip.io`. Since
+one of the Grafana default charts filters on hostname it's probably best to keep the format to `eoapi-<your-external-ip-address-from-last-step>.nip.io`.
+`nip.io` will proxy traffic with a full domain to your instance. Using `nip.io` isn't long-term solution but a way to test:
+
+   ```bash
+   K8_EDITOR=vim kubectl edit ingress/nginx-service-ingress-shared-eoapi
+   ```
+   
+   ```yaml
+   # BEFORE
+   spec:
+   ingressClassName: nginx
+   rules:
+   - http:
+       paths:
+       ...
+   ```
+   
+   ```yaml
+   # AFTER
+   spec:
+   ingressClassName: nginx
+   rules:
+   - host: eoapi-35.239.254.92.nip.io
+     http:
+       paths:
+       ...
+   ``` 
+   
+4. Now go
+
+---
+
+### Now move onto the [Load Testing](loaadtesting.md) document
