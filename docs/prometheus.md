@@ -87,6 +87,24 @@ kubectl port-forward deployment/prometheus-grafana 3000 --namespace prometheus
 http://localhost:3000
 
 
-The dashboards can be customized for each specific use case. There are still more metrics to explore that could be useful or necessary for the EOAPI scenario.
+## Adding node-exporter and cadvisor Dashboard
+
+- node-exporter dashboard: 1860
+- cadvisor dashboard: 14282
+
+Go to: http://localhost:3000/dashboard/import
+
+and import both dashboard by their id:
+
+![](https://github.com/developmentseed/eoapi-k8s/assets/1152236/6cda8565-6972-488a-8c82-40dab6d2a690)
 
 
+## Results
+
+- Node exporter dashboard
+
+![](https://user-images.githubusercontent.com/1152236/268708436-bc7557bd-8d19-4492-acac-4415d69bb188.png)
+
+- cAdvisor dashboard
+
+![](https://user-images.githubusercontent.com/1152236/268710261-593bfe59-3e7e-40df-8ba4-13a31c391581.png)
