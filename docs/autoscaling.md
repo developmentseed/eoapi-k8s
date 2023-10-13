@@ -84,7 +84,7 @@ This chart has the metrics, observability and visualization dependencies
 4. verify that everything is set up correctly and no deployments are failing:
 
     ```bash
-    $ watch -n 1 "kubectl get pod,svc"
+    $ watch -n 1 "kubectl -n eoapi get pod,svc"
   
     NAME                                                    READY   STATUS    RESTARTS   AGE
     pod/eoapi-support-grafana-7fdc9688dd-wkw7p              1/1     Running   0          79s
@@ -108,9 +108,9 @@ This chart has the metrics, observability and visualization dependencies
 6. to log into Grafana you'll need to export the default username/password it came installed with:
 
    ```bash
-   $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' | base64 -d
+   $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' -n eoapi | base64 -d
    <not-showing-output>
-   $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' | base64 -d
+   $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
    <not-showing-output>
    ```
 
@@ -277,7 +277,7 @@ but the important part here is that we are enabling `autoscaling` and playing wi
        loadBalancerIP: 12.234.567.89
    ```
 
-3. Create an empty `config.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
+3. Create an empty `config_ingress.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
 
    ```yaml
    controller:
@@ -299,7 +299,7 @@ but the important part here is that we are enabling `autoscaling` and playing wi
    ```bash
    # this assumes your release name is `ingress-nginx` and that the repo was installed as `ingress-nginx` 
    # though you might've named them something else
-   $ helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config.yaml
+   $ helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config_ingress.yaml
    ```
 
 5. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
