@@ -20,20 +20,28 @@ After creating the cluster we'll walk through installing the following add-ons a
 
 An example command below. See the [eksctl docs](https://eksctl.io/usage/creating-and-managing-clusters/) for all the options
 
-```python
+```sh
+# Useful ssh-access if you want to ssh into your nodes
 $ eksctl create cluster \
     --name sandbox \
     --region us-west-2 \
-    # useful if you want to ssh into your nodes
-    --ssh-access=true --ssh-public-key=~/.ssh/id_ed25519_k8_sandbox.pub \
+    --ssh-access=true \
+    --ssh-public-key=~/.ssh/id_ed25519_k8_sandbox.pub \
     --nodegroup-name=hub-node \
     --node-type=t2.xlarge \
     --nodes=1 --nodes-min=1 --nodes-max=5
 ```
 
+*Note*: To generate your `ssh-public-key`, use:
+
+```sh
+$ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_k8_sandbox
+```
+
+
 You might need to iterate on the command above, so to delete the cluster:
 
-```python
+```sh
 $ eksctl delete cluster --name=sandbox --region us-west-2
 ```
 
@@ -45,8 +53,8 @@ For k8s `ServiceAccount`(s) to do things on behalf of pods in AWS you need an OI
 the [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html) for this
 but below are the relevant bits. Note that `eksctl` "should" set up an OIDC provider for you by default
 
-```python
-export CLUSTER_NAME=my-cluster
+```sh
+export CLUSTER_NAME=sandbox
 export REGION=us-west-2
 oidc_id=$(aws eks describe-cluster --name $CLUSTER_NAME --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
 existing_oidc_id=$(aws iam list-open-id-connect-providers | grep $oidc_id | cut -d "/" -f4)
@@ -69,7 +77,7 @@ First, create an IAM Role for the future EBS CSI `ServiceAccount` binding:
 
 >  &#9432; the AWS docs make it seem like the k8 `ServiceAccount` and related `kind: Controller` are already created, but they aren't
 
-```python
+```sh
 $ eksctl create iamserviceaccount \
     --region us-west-2 \
     --name ebs-csi-controller-sa \
@@ -78,14 +86,14 @@ $ eksctl create iamserviceaccount \
     --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
     --approve \
     --role-only \
-    # arbitrary, the naming is up to you
-    --role-name eksctl-veda-sandbox-addon-aws-ebs-csi-driver
+    --role-name eksctl-veda-sandbox-addon-aws-ebs-csi-driver # arbitrary, the naming is up to you
+
 ```
 
 Then check how to see what the compatible EBS CSI addon version works for you cluster version. [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html).
 Below is an example with sample output:
 
-```python
+```sh
 $ aws eks describe-addon-versions \
     --addon-name aws-ebs-csi-driver \
     --region us-west-2 | grep -e addonVersion -e clusterVersion
@@ -117,27 +125,31 @@ Then create the EBS CSI Addon:
 
 >  &#9432; note that this step creates k8 `ServiceAccount` and ebs-csi pods and `kind: Controller`
 
-```python
+```sh
+# this is the ARN of the role you created two steps ago
+$ export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+
 $ eksctl create addon \
     --name aws-ebs-csi-driver \
     --region us-west-2 \
     --cluster sandbox \
-    --version v1.5.2-eksbuild.1 \
-    # this is the ARN of the role you created two steps ago
-    --service-account-role-arn arn:aws:iam::444055461661:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver \
+    --version "v1.5.2-eksbuild.1" \
+    --service-account-role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver \
     --force
+## In case error in  aws-ebs-csi-driver addon, comment out --version "v1.5.2-eksbuild.1"
 ```
+
 Finally, do some checking to assert things are set up correctly:
 
-```python
+```sh
 # check to make the ServiceAccount has an annotation of your IAM role
 $ kubectl get sa ebs-csi-controller-sa -n kube-system -o yaml | grep -a1 annotations
 metadata:
     annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::444055461661:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver
+        eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver
 ```
 
-```python
+```sh
 # check to make sure we have controller pods up for ebs-csi and that they aren't in state `CrashLoopBack`
 kubectl get pod  -n kube-system | grep ebs-csi
 ebs-csi-controller-5cbc775dc5-hr6mz   6/6     Running   0          4m51s
@@ -156,7 +168,9 @@ examples are provided below.
 
 First, we create the policy, IAM role and the k8s `ServiceAccount`
 
-```python
+```sh
+export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+
 # download the policy aws-load-balancer policy
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.4.7/docs/install/iam_policy.json
 
@@ -165,16 +179,17 @@ aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
     --policy-document file://iam_policy.json
 
-# create the IAM Role, the ServiceAccount and bind them
+# Create the IAM Role, the ServiceAccount and bind them
+# Arbitrary, the naming is up to you
+# ARN from last step
+
 eksctl create iamserviceaccount \
   --region us-west-2 \
   --cluster=sandbox \
   --namespace=kube-system \
   --name=aws-load-balancer-controller \
-  # arbitrary, the naming is up to you
   --role-name AmazonEKSLoadBalancerControllerRole \
-  # ARN from last step
-  --attach-policy-arn=arn:aws:iam::444055461661:policy/AWSLoadBalancerControllerIAMPolicy \
+  --attach-policy-arn=arn:aws:iam::${AWS_ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
 
 # assert it was created and has an annotation
@@ -183,14 +198,14 @@ NAME                           SECRETS   AGE
 aws-load-balancer-controller   0         13s
 
 $ kubectl describe sa aws-load-balancer-controller -n kube-system | grep Annotations
-Annotations:         eks.amazonaws.com/role-arn: arn:aws:iam::444055461661:role/AmazonEKSLoadBalancerControllerRole
+Annotations:         eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/AmazonEKSLoadBalancerControllerRole
 ```
 
 Then install the K8s AWS Controller:
 
-```python
-helm repo add eks https://aws.github.io/eks-charts;
-helm repo update;
+```sh
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
 helm install aws-load-balancer-controller \
     eks/aws-load-balancer-controller \
     -n kube-system \
@@ -210,7 +225,7 @@ aws-load-balancer-controller   2/2     2            2           36d
 
 Please look through the [Nginx Docs](https://github.com/kubernetes/ingress-nginx) to verify nothing has changed below. There are multiple ways to provision and configure. Below is the simplest we found:
 
-```python
+```sh
 $ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 $ helm upgrade \
     -i ingress-nginx \
@@ -219,20 +234,26 @@ $ helm upgrade \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb" \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-scheme"="internet-facing" \
     --namespace <the-same-namespace-where-your-services-will-be-deployed>
+#e.g --namespace eoapi, 
+# kubectl create namespace eoapi
 ```
 
 Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/). 
 Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
 
-```python
-$ kubectl get cm | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
-$ kubectl get deploy | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
+```sh
+$ kubectl get cm  | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
+# Optional if above cli did not work
+#kubectl get cm --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
+$ kubectl get deploy --all-namespaces | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
+# Optional if above cli did not work
+#kubectl get deploy --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
 ```
 
 Assert that things are set up correctly:
 
-```python
-$ kubectl get deploy,pod,svc -namespace testing123 | grep nginx
+```sh
+$ kubectl get deploy,pod,svc --all-namespaces | grep nginx
 deployment.apps/nginx-ingress-nginx-controller   1/1     1            1           2d17h
 
 pod/nginx-ingress-nginx-controller-76d7f6f4d5-g6fkv   1/1     Running   0          27h
