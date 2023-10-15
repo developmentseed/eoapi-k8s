@@ -29,7 +29,8 @@ $ eksctl create cluster \
     --ssh-public-key=~/.ssh/id_ed25519_k8_sandbox.pub \
     --nodegroup-name=hub-node \
     --node-type=t2.xlarge \
-    --nodes=1 --nodes-min=1 --nodes-max=5
+    --nodes=1 --nodes-min=1 --nodes-max=5 \
+    --version 1.27
 ```
 
 *Note*: To generate your `ssh-public-key`, use:
@@ -133,10 +134,10 @@ $ eksctl create addon \
     --name aws-ebs-csi-driver \
     --region us-west-2 \
     --cluster sandbox \
-    --version "v1.5.2-eksbuild.1" \
+    --version "v1.23.1-eksbuild.1" \
     --service-account-role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver \
     --force
-## In case error in  aws-ebs-csi-driver addon, comment out --version "v1.5.2-eksbuild.1"
+## In case error in  aws-ebs-csi-driver addon, comment out --version "v1.23.1-eksbuild.1"
 ```
 
 Finally, do some checking to assert things are set up correctly:
@@ -215,7 +216,7 @@ helm install aws-load-balancer-controller \
     --set serviceAccount.name=aws-load-balancer-controller
 ```
 
-```python
+```sh
 $ kubectl get deployment -n kube-system aws-load-balancer-controller
 NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
 aws-load-balancer-controller   2/2     2            2           36d
@@ -243,11 +244,11 @@ Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
 
 ```sh
 $ kubectl get cm  | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
-# Optional if above cli did not work
-#kubectl get cm --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
+### Optional if above cli did not work
+# kubectl get cm --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
 $ kubectl get deploy --all-namespaces | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
-# Optional if above cli did not work
-#kubectl get deploy --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
+### Optional if above cli did not work
+# kubectl get deploy --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
 ```
 
 Assert that things are set up correctly:

@@ -23,7 +23,7 @@ If it's not there then you can install it with default configuration by doing:
 ```bash
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
 $ helm repo update
-$ helm -n default install metrics-server bitnami/metrics-server
+$ helm  -n kube-system install metrics-server bitnami/metrics-server
 ```
 
 ---
@@ -67,19 +67,19 @@ This chart has the metrics, observability and visualization dependencies
 
 2. then download the dependencies for the `eoapi-support` chart
 
-    ```bash
-    $ helm dependency build ./eoapi-support
-    ```
+```sh
+$ helm dependency build ./eoapi-support
+```
 
 3. then install those dependencies:
 
-    ```bash
-    $ helm install \
-      --namespace eoapi \
-      --create-namespace \
-      eoapi-support \
-      ./eoapi-support
-    ```
+```sh
+$ helm install \
+  --namespace eoapi \
+  --create-namespace \
+  eoapi-support \
+  ./eoapi-support
+```
    
 4. verify that everything is set up correctly and no deployments are failing:
 
@@ -107,12 +107,23 @@ This chart has the metrics, observability and visualization dependencies
 
 6. to log into Grafana you'll need to export the default username/password it came installed with:
 
-   ```bash
-   $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' -n eoapi | base64 -d
-   <not-showing-output>
-   $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
-   <not-showing-output>
-   ```
+  ```sh
+  $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' -n eoapi | base64 -d
+  <not-showing-output>
+  $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
+  <not-showing-output>
+  ```
+
+*Note:* Port forward the prometheus-server and grafana
+
+```sh
+kubectl port-forward svc/eoapi-support-prometheus-server 9090:80 -n eoapi
+kubectl port-forward svc/eoapi-support-grafana 3000:80 -n eoapi
+```
+
+Prometheus: http://localhost:9090
+Grafana: http://localhost:3000
+
 
 7. In your browser navigate to the `service/eoapi-support-grafana` EXTERNAL-IP, log in using credentials from the last step and manually upload the Grafana `eoAPI Dashboard` included in `/helm-chart/eoapi-support/eoAPI-Dashboard.json`
 
@@ -266,7 +277,7 @@ but the important part here is that we are enabling `autoscaling` and playing wi
 2. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. Oftentimes this resource is in `ingress-nginx` namespace
 
    ```bash
-   # this assumes your release name is `ingress-nginx`, though you might've named it something else
+   # this assumes your release name is `ingress-nginx`, though you might've named it something else, or eoapi, if you configured the cluster using aws-eks.md
    $ helm get values ingress-nginx -n ingress-nginx
    
    USER-SUPPLIED VALUES:
