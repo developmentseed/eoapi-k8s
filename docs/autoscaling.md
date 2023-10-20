@@ -14,16 +14,22 @@ we walk through how these things work and are set up.
 Newer versions of AWS EKS and GCP GKE "should" come with `metrics-server` (the default k8s metrics utility) pre-installed
 in the `kube-system` namespace. You can verify this using:
 
-```bash
-$ kubectl get deployment metrics-server -n kube-system
+```sh
+kubectl get deployment metrics-server -n kube-system
 ```
 
 If it's not there then you can install it with default configuration by doing:
 
 ```bash
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm repo update
-$ helm  -n kube-system install metrics-server bitnami/metrics-server
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm -n kube-system install metrics-server bitnami/metrics-server
+# helm -n kube-system delete metrics-server
+```
+Getting nodes stats:
+
+```sh
+kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes | jq '.items[] | {name:.metadata.name, cpu:.usage.cpu, memory:.usage.memory}'
 ```
 
 ---
@@ -59,7 +65,7 @@ test autoscaling against something more production suitable
 
 ---
 
-### Install `eoapi-supprt` Chart
+### Install `eoapi-support` Chart
 
 This chart has the metrics, observability and visualization dependencies
 
@@ -68,17 +74,19 @@ This chart has the metrics, observability and visualization dependencies
 2. then download the dependencies for the `eoapi-support` chart
 
 ```sh
-$ helm dependency build ./eoapi-support
+helm repo add grafana https://grafana.github.io/helm-charts
+helm dependency build ./eoapi-support
 ```
 
 3. then install those dependencies:
 
 ```sh
-$ helm install \
+helm upgrade --install \
   --namespace eoapi \
   --create-namespace \
   eoapi-support \
   ./eoapi-support
+# helm delete eoapi-support  -n eoapi
 ```
    
 4. verify that everything is set up correctly and no deployments are failing:
@@ -152,17 +160,17 @@ Grafana: http://localhost:3000
 
 1. In your terminal:
 
-   ```bash
-   $ helm repo add eoapi https://devseed.com/eoapi-k8s/
-   $ helm repo update
-   ```
+```sh
+helm repo add eoapi https://devseed.com/eoapi-k8s/
+helm repo update
+```
 
 2. Add the required secret overrides and changes you need to an arbitrarily named `.yaml` file (`config.yaml` below) 
 but the important part here is that we are enabling `autoscaling` and playing with `requestRate` metric
 
-   ```bash
-   $ cat config.yaml 
-   ```
+```sh
+cat config.yaml 
+```
    
    ```yaml
    ingress:
@@ -233,13 +241,15 @@ but the important part here is that we are enabling `autoscaling` and playing wi
 
 3. Then `helm install` the eoapi chart pointing to the path for the `config.yaml` above
 
-   ```bash
-   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi -f config.yaml
-   ```
+```bash
+helm upgrade --install -n eoapi --create-namespace eoapi eoapi/eoapi -f config.yaml
+# helm delete eoapi -n eoapi
+```
 
 4. Make sure all pods and services are in `STATUS=Running`:
 
-   ```bash
+```bash
+$ kubectl -n eoapi get pods,service
    NAME                                                    READY   STATUS              RESTARTS      AGE
    pod/doc-server-6dd9c9c888-8l8tv                         1/1     Running             0             87s
    pod/eoapi-support-grafana-865b7f49f5-6qkmj              1/1     Running             0             46m
@@ -266,7 +276,7 @@ but the important part here is that we are enabling `autoscaling` and playing wi
    service/raster                                   ClusterIP      10.123.253.229   <none>         8080/TCP       87s
    service/stac                                     ClusterIP      10.123.245.192   <none>         8080/TCP       87s
    service/vector                                   ClusterIP      10.123.247.62    <none>         8080/TCP       87s
-   ```
+```
 
 ---
 
@@ -276,26 +286,19 @@ but the important part here is that we are enabling `autoscaling` and playing wi
 
 2. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. Oftentimes this resource is in `ingress-nginx` namespace
 
-   ```bash
-   # this assumes your release name is `ingress-nginx`, though you might've named it something else, or eoapi, if you configured the cluster using aws-eks.md
+```bash
+   # this assumes your release name is `ingress-nginx`, though you might've named it something else, or eoapi.
+   # k -n ingress-nginx get services
    $ helm get values ingress-nginx -n ingress-nginx
    
    USER-SUPPLIED VALUES:
-   controller:
-     replicaCount: 1
-     service:
-       externalTrafficPolicy: Local
-       loadBalancerIP: 12.234.567.89
+   # if is empty , that means  nothing is applied , or no custome values applied before. 
    ```
 
 3. Create an empty `config_ingress.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
 
    ```yaml
    controller:
-     service:
-       externalTrafficPolicy: Local
-       loadBalancerIP: 12.234.567.89
-     # requires `prometheus.create = true`
      enableLatencyMetrics: true
      metrics:
        enabled: true
@@ -307,11 +310,11 @@ but the important part here is that we are enabling `autoscaling` and playing wi
    
 4. Redeploy your `ingress-nginx` release with the configuration from the last step:
 
-   ```bash
-   # this assumes your release name is `ingress-nginx` and that the repo was installed as `ingress-nginx` 
-   # though you might've named them something else
-   $ helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config_ingress.yaml
-   ```
+```bash
+# this assumes your release name is `ingress-nginx` and that the repo was installed as `ingress-nginx` 
+# though you might've named them something else
+helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config_ingress.yaml
+```
 
 5. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
 
@@ -335,9 +338,10 @@ to set up a simple host
 one of the Grafana default charts filters on hostname it's probably best to keep the format to `eoapi-<your-external-ip-address-from-last-step>.nip.io`.
 `nip.io` will proxy traffic with a full domain to your instance. Using `nip.io` isn't long-term solution but a way to test:
 
-   ```bash
-   K8_EDITOR=vim kubectl edit ingress/nginx-service-ingress-shared-eoapi
-   ```
+```bash
+K8_EDITOR=vim kubectl edit ingress/nginx-service-ingress-shared-eoapi
+# kubectl edit ingress nginx-service-ingress-shared-eoapi -n eoapi
+```
    
    ```yaml
    # BEFORE

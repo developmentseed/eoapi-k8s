@@ -22,28 +22,29 @@ An example command below. See the [eksctl docs](https://eksctl.io/usage/creating
 
 ```sh
 # Useful ssh-access if you want to ssh into your nodes
-$ eksctl create cluster \
+eksctl create cluster \
     --name sandbox \
     --region us-west-2 \
     --ssh-access=true \
     --ssh-public-key=~/.ssh/id_ed25519_k8_sandbox.pub \
     --nodegroup-name=hub-node \
-    --node-type=t2.xlarge \
+    --node-type=t2.medium \
     --nodes=1 --nodes-min=1 --nodes-max=5 \
     --version 1.27
 ```
+TODO:  Add autoscaling config
 
 *Note*: To generate your `ssh-public-key`, use:
 
 ```sh
-$ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_k8_sandbox
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_k8_sandbox
 ```
 
 
 You might need to iterate on the command above, so to delete the cluster:
 
 ```sh
-$ eksctl delete cluster --name=sandbox --region us-west-2
+eksctl delete cluster --name=sandbox --region us-west-2
 ```
 
 ---
@@ -79,7 +80,7 @@ First, create an IAM Role for the future EBS CSI `ServiceAccount` binding:
 >  &#9432; the AWS docs make it seem like the k8 `ServiceAccount` and related `kind: Controller` are already created, but they aren't
 
 ```sh
-$ eksctl create iamserviceaccount \
+eksctl create iamserviceaccount \
     --region us-west-2 \
     --name ebs-csi-controller-sa \
     --namespace kube-system \
@@ -95,7 +96,7 @@ Then check how to see what the compatible EBS CSI addon version works for you cl
 Below is an example with sample output:
 
 ```sh
-$ aws eks describe-addon-versions \
+aws eks describe-addon-versions \
     --addon-name aws-ebs-csi-driver \
     --region us-west-2 | grep -e addonVersion -e clusterVersion
 
@@ -211,9 +212,10 @@ helm install aws-load-balancer-controller \
     eks/aws-load-balancer-controller \
     -n kube-system \
     --set clusterName=sandbox \
-    # since the last steps already did this, set to false
     --set serviceAccount.create=false \
     --set serviceAccount.name=aws-load-balancer-controller
+        # since the last steps already did this, set to false
+
 ```
 
 ```sh
@@ -227,16 +229,17 @@ aws-load-balancer-controller   2/2     2            2           36d
 Please look through the [Nginx Docs](https://github.com/kubernetes/ingress-nginx) to verify nothing has changed below. There are multiple ways to provision and configure. Below is the simplest we found:
 
 ```sh
-$ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-$ helm upgrade \
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm upgrade \
     -i ingress-nginx \
     ingress-nginx/ingress-nginx \
     --set controller.service.type=LoadBalancer \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb" \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-scheme"="internet-facing" \
-    --namespace <the-same-namespace-where-your-services-will-be-deployed>
-#e.g --namespace eoapi, 
-# kubectl create namespace eoapi
+    --namespace ingress-nginx
+# e.g --namespace eoapi, 
+# kubectl create namespace ingress-nginx
+# helm delete ingress-nginx -n kube-system
 ```
 
 Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/). 
@@ -244,6 +247,7 @@ Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
 
 ```sh
 $ kubectl get cm  | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
+
 ### Optional if above cli did not work
 # kubectl get cm --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
 $ kubectl get deploy --all-namespaces | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   

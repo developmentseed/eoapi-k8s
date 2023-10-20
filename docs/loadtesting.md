@@ -10,11 +10,11 @@ that you're deploying using `ingress.className: "nginx"`.
 1. Find the external IP of your shared nginx ingress
 
 ```sh
-export INGRESS_ENDPOINT=$(kubectl -n eoapi get ingress/nginx-service-ingress-shared-eoapi -o=jsonpath='{.spec.rules[0].host}')
+export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx get ingress/nginx-service-ingress-shared-eoapi -o=jsonpath='{.spec.rules[0].host}')
 # eoapi-35.234.254.12.nip.io%
 
 ## EKS cluster
-export INGRESS_ENDPOINT=$(kubectl -n eoapi get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx  get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 # k8s-eoapi-ingressn-404721dbb4-e6dec70321c3eddd.elb.us-west-2.amazonaws.com
 ```
 
