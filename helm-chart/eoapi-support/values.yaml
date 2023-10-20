@@ -85,9 +85,9 @@ prometheus:
         memory: 30Mi
   server:
     service:
-      # annotations:
-      #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-      #   service.beta.kubernetes.io/aws-load-balancer-internal: "0.0.0.0/0"
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-internal: "false"
       type: LoadBalancer
 
 grafana:
@@ -97,9 +97,9 @@ grafana:
     type: Recreate
   service:
     type: LoadBalancer
-    # annotations:
-    #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    #   service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-internal: "false"
   rbac:
     namespaced: true
     pspEnabled: false

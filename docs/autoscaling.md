@@ -20,7 +20,7 @@ kubectl get deployment metrics-server -n kube-system
 
 If it's not there then you can install it with default configuration by doing:
 
-```bash
+```sh
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 helm -n kube-system install metrics-server bitnami/metrics-server
@@ -91,38 +91,37 @@ helm upgrade --install \
    
 4. verify that everything is set up correctly and no deployments are failing:
 
-    ```bash
-    $ watch -n 1 "kubectl -n eoapi get pod,svc"
-  
-    NAME                                                    READY   STATUS    RESTARTS   AGE
-    pod/eoapi-support-grafana-7fdc9688dd-wkw7p              1/1     Running   0          79s
-    pod/eoapi-support-kube-state-metrics-54d75784db-ghgbd   1/1     Running   0          79s
-    pod/eoapi-support-prometheus-adapter-668b6bd89c-kb25q   1/1     Running   0          79s
-    pod/eoapi-support-prometheus-node-exporter-6f96z        1/1     Running   0          79s
-    pod/eoapi-support-prometheus-node-exporter-fr96x        1/1     Running   0          79s
-    pod/eoapi-support-prometheus-node-exporter-pdvvp        1/1     Running   0          79s
-    pod/eoapi-support-prometheus-server-76dcfc684b-wmk5c    2/2     Running   0          79s
+```sh
+watch -n 1 "kubectl -n eoapi get pod,svc"
+# NAME                                                    READY   STATUS    RESTARTS   AGE
+# pod/eoapi-support-grafana-7fdc9688dd-wkw7p              1/1     Running   0          79s
+# pod/eoapi-support-kube-state-metrics-54d75784db-ghgbd   1/1     Running   0          79s
+# pod/eoapi-support-prometheus-adapter-668b6bd89c-kb25q   1/1     Running   0          79s
+# pod/eoapi-support-prometheus-node-exporter-6f96z        1/1     Running   0          79s
+# pod/eoapi-support-prometheus-node-exporter-fr96x        1/1     Running   0          79s
+# pod/eoapi-support-prometheus-node-exporter-pdvvp        1/1     Running   0          79s
+# pod/eoapi-support-prometheus-server-76dcfc684b-wmk5c    2/2     Running   0          79s
 
-    NAME                                             TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)        AGE
-    service/eoapi-support-grafana                    LoadBalancer   10.123.248.75    104.154.59.180   80:30821/TCP   79s
-    service/eoapi-support-kube-state-metrics         ClusterIP      10.123.241.247   <none>           8080/TCP       79s
-    service/eoapi-support-prometheus-adapter         ClusterIP      10.123.249.21    <none>           443/TCP        79s
-    service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.249.90    <none>           9100/TCP       79s
-    service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s 
-    ```
+# NAME                                             TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)        AGE
+# service/eoapi-support-grafana                    LoadBalancer   10.123.248.75    104.154.59.180   80:30821/TCP   79s
+# service/eoapi-support-kube-state-metrics         ClusterIP      10.123.241.247   <none>           8080/TCP       79s
+# service/eoapi-support-prometheus-adapter         ClusterIP      10.123.249.21    <none>           443/TCP        79s
+# service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.249.90    <none>           9100/TCP       79s
+# service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s 
+```
 
 5. note that the `service/eoapi-support-grafana` has an EXTERNAL-IP that we can use to view it. This is just a quick way to work with it. You'll want to set it up with a ingress in the future
 
 6. to log into Grafana you'll need to export the default username/password it came installed with:
 
-  ```sh
-  $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' -n eoapi | base64 -d
-  <not-showing-output>
-  $ kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
-  <not-showing-output>
-  ```
+```sh
+kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' -n eoapi | base64 -d
+  # <not-showing-output>
+kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
+  # <not-showing-output>
+```
 
-*Note:* Port forward the prometheus-server and grafana
+*Note:* In case you port-forward the prometheus-server and grafana in local.
 
 ```sh
 kubectl port-forward svc/eoapi-support-prometheus-server 9090:80 -n eoapi
@@ -248,34 +247,34 @@ helm upgrade --install -n eoapi --create-namespace eoapi eoapi/eoapi -f config.y
 
 4. Make sure all pods and services are in `STATUS=Running`:
 
-```bash
-$ kubectl -n eoapi get pods,service
-   NAME                                                    READY   STATUS              RESTARTS      AGE
-   pod/doc-server-6dd9c9c888-8l8tv                         1/1     Running             0             87s
-   pod/eoapi-support-grafana-865b7f49f5-6qkmj              1/1     Running             0             46m
-   pod/eoapi-support-kube-state-metrics-54d75784db-d899f   1/1     Running             0             46m
-   pod/eoapi-support-prometheus-adapter-6bd87848fd-glc46   1/1     Running             0             46m
-   pod/eoapi-support-prometheus-node-exporter-d7vks        0/1     ContainerCreating   0             5s
-   pod/eoapi-support-prometheus-node-exporter-np54q        1/1     Running             0             46m
-   pod/eoapi-support-prometheus-node-exporter-rsgc5        1/1     Running             0             46m
-   pod/eoapi-support-prometheus-node-exporter-tcqvb        1/1     Running             0             46m
-   pod/eoapi-support-prometheus-server-76dcfc684b-f78k8    2/2     Running             0             46m
-   pod/pgstac-6648b8cc89-v55fh                             0/2     Pending             0             87s
-   pod/raster-eoapi-b859dd849-7fvwn                        0/1     ContainerCreating   0             87s
-   pod/stac-eoapi-8c865f5cd-pjhx6                          1/1     Running             1 (26s ago)   87s
-   pod/vector-eoapi-9957c7469-qk8hn                        1/1     Running             1 (26s ago)   87s
+```sh
+kubectl -n eoapi get pods,service
+  #  NAME                                                    READY   STATUS              RESTARTS      AGE
+  #  pod/doc-server-6dd9c9c888-8l8tv                         1/1     Running             0             87s
+  #  pod/eoapi-support-grafana-865b7f49f5-6qkmj              1/1     Running             0             46m
+  #  pod/eoapi-support-kube-state-metrics-54d75784db-d899f   1/1     Running             0             46m
+  #  pod/eoapi-support-prometheus-adapter-6bd87848fd-glc46   1/1     Running             0             46m
+  #  pod/eoapi-support-prometheus-node-exporter-d7vks        0/1     ContainerCreating   0             5s
+  #  pod/eoapi-support-prometheus-node-exporter-np54q        1/1     Running             0             46m
+  #  pod/eoapi-support-prometheus-node-exporter-rsgc5        1/1     Running             0             46m
+  #  pod/eoapi-support-prometheus-node-exporter-tcqvb        1/1     Running             0             46m
+  #  pod/eoapi-support-prometheus-server-76dcfc684b-f78k8    2/2     Running             0             46m
+  #  pod/pgstac-6648b8cc89-v55fh                             0/2     Pending             0             87s
+  #  pod/raster-eoapi-b859dd849-7fvwn                        0/1     ContainerCreating   0             87s
+  #  pod/stac-eoapi-8c865f5cd-pjhx6                          1/1     Running             1 (26s ago)   87s
+  #  pod/vector-eoapi-9957c7469-qk8hn                        1/1     Running             1 (26s ago)   87s
 
-   NAME                                             TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)        AGE
-   service/doc-server                               ClusterIP      10.123.252.119   <none>         80/TCP         87s
-   service/eoapi-support-grafana                    LoadBalancer   10.123.250.188   34.171.130.0   80:31513/TCP   46m
-   service/eoapi-support-kube-state-metrics         ClusterIP      10.123.251.118   <none>         8080/TCP       46m
-   service/eoapi-support-prometheus-adapter         ClusterIP      10.123.243.36    <none>         443/TCP        46m
-   service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.247.202   <none>         9100/TCP       46m
-   service/eoapi-support-prometheus-server          ClusterIP      10.123.249.238   <none>         80/TCP         46m
-   service/pgstac                                   ClusterIP      10.123.244.121   <none>         5432/TCP       87s
-   service/raster                                   ClusterIP      10.123.253.229   <none>         8080/TCP       87s
-   service/stac                                     ClusterIP      10.123.245.192   <none>         8080/TCP       87s
-   service/vector                                   ClusterIP      10.123.247.62    <none>         8080/TCP       87s
+  #  NAME                                             TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)        AGE
+  #  service/doc-server                               ClusterIP      10.123.252.119   <none>         80/TCP         87s
+  #  service/eoapi-support-grafana                    LoadBalancer   10.123.250.188   34.171.130.0   80:31513/TCP   46m
+  #  service/eoapi-support-kube-state-metrics         ClusterIP      10.123.251.118   <none>         8080/TCP       46m
+  #  service/eoapi-support-prometheus-adapter         ClusterIP      10.123.243.36    <none>         443/TCP        46m
+  #  service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.247.202   <none>         9100/TCP       46m
+  #  service/eoapi-support-prometheus-server          ClusterIP      10.123.249.238   <none>         80/TCP         46m
+  #  service/pgstac                                   ClusterIP      10.123.244.121   <none>         5432/TCP       87s
+  #  service/raster                                   ClusterIP      10.123.253.229   <none>         8080/TCP       87s
+  #  service/stac                                     ClusterIP      10.123.245.192   <none>         8080/TCP       87s
+  #  service/vector                                   ClusterIP      10.123.247.62    <none>         8080/TCP       87s
 ```
 
 ---
@@ -286,18 +285,17 @@ $ kubectl -n eoapi get pods,service
 
 2. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. Oftentimes this resource is in `ingress-nginx` namespace
 
-```bash
-   # this assumes your release name is `ingress-nginx`, though you might've named it something else, or eoapi.
-   # k -n ingress-nginx get services
-   $ helm get values ingress-nginx -n ingress-nginx
+```sh
+# this assumes your release name is `ingress-nginx`, though you might've named it something else, or eoapi.
+helm get values ingress-nginx -n ingress-nginx
    
-   USER-SUPPLIED VALUES:
-   # if is empty , that means  nothing is applied , or no custome values applied before. 
-   ```
+# USER-SUPPLIED VALUES:
+# If it is empty, this indicates that nothing has been applied, or no custom values were previously set.
+```
 
 3. Create an empty `config_ingress.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
 
-   ```yaml
+```yaml
    controller:
      enableLatencyMetrics: true
      metrics:
@@ -306,7 +304,7 @@ $ kubectl -n eoapi get pods,service
          annotations:
            prometheus.io/scrape: "true"
            prometheus.io/port: "10254"
-   ```
+```
    
 4. Redeploy your `ingress-nginx` release with the configuration from the last step:
 
@@ -315,6 +313,8 @@ $ kubectl -n eoapi get pods,service
 # though you might've named them something else
 helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config_ingress.yaml
 ```
+
+-  Check of metricts 
 
 5. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
 

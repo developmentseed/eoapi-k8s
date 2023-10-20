@@ -58,6 +58,7 @@ but below are the relevant bits. Note that `eksctl` "should" set up an OIDC prov
 ```sh
 export CLUSTER_NAME=sandbox
 export REGION=us-west-2
+
 oidc_id=$(aws eks describe-cluster --name $CLUSTER_NAME --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
 existing_oidc_id=$(aws iam list-open-id-connect-providers | grep $oidc_id | cut -d "/" -f4)
 if [ -z "$existing_oidc_id" ]; then
@@ -89,7 +90,6 @@ eksctl create iamserviceaccount \
     --approve \
     --role-only \
     --role-name eksctl-veda-sandbox-addon-aws-ebs-csi-driver # arbitrary, the naming is up to you
-
 ```
 
 Then check how to see what the compatible EBS CSI addon version works for you cluster version. [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html).
@@ -100,27 +100,12 @@ aws eks describe-addon-versions \
     --addon-name aws-ebs-csi-driver \
     --region us-west-2 | grep -e addonVersion -e clusterVersion
 
- "addonVersion": "v1.6.0-eksbuild.1",
-        "clusterVersion": "1.24",
-        "clusterVersion": "1.23",
-        "clusterVersion": "1.22",
-        "clusterVersion": "1.21",
-        "clusterVersion": "1.20",
-"addonVersion": "v1.5.3-eksbuild.1",
-        "clusterVersion": "1.24",
-        "clusterVersion": "1.23",
-        "clusterVersion": "1.22",
-        "clusterVersion": "1.21",
-        "clusterVersion": "1.20",
-"addonVersion": "v1.5.2-eksbuild.1",
-        "clusterVersion": "1.24",
-        "clusterVersion": "1.23",
-        "clusterVersion": "1.22",
-        "clusterVersion": "1.21",
-        "clusterVersion": "1.20",
-"addonVersion": "v1.4.0-eksbuild.preview",
-        "clusterVersion": "1.21",
-        "clusterVersion": "1.20",
+# "addonVersion": "v1.6.0-eksbuild.1",
+#         "clusterVersion": "1.24",
+# ...
+# "addonVersion": "v1.4.0-eksbuild.preview",
+#         "clusterVersion": "1.21",
+#         "clusterVersion": "1.20",
 ```
 
 Then create the EBS CSI Addon:
@@ -129,9 +114,9 @@ Then create the EBS CSI Addon:
 
 ```sh
 # this is the ARN of the role you created two steps ago
-$ export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 
-$ eksctl create addon \
+eksctl create addon \
     --name aws-ebs-csi-driver \
     --region us-west-2 \
     --cluster sandbox \
@@ -144,18 +129,18 @@ $ eksctl create addon \
 Finally, do some checking to assert things are set up correctly:
 
 ```sh
-# check to make the ServiceAccount has an annotation of your IAM role
-$ kubectl get sa ebs-csi-controller-sa -n kube-system -o yaml | grep -a1 annotations
-metadata:
-    annotations:
-        eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver
+# Check to make the ServiceAccount has an annotation of your IAM role
+kubectl get sa ebs-csi-controller-sa -n kube-system -o yaml | grep -a1 annotations
+# metadata:
+#     annotations:
+#         eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver
 ```
 
 ```sh
-# check to make sure we have controller pods up for ebs-csi and that they aren't in state `CrashLoopBack`
+# Check to make sure we have controller pods up for ebs-csi and that they aren't in state `CrashLoopBack`
 kubectl get pod  -n kube-system | grep ebs-csi
-ebs-csi-controller-5cbc775dc5-hr6mz   6/6     Running   0          4m51s
-ebs-csi-controller-5cbc775dc5-knqnr   6/6     Running   0          4m51s
+# ebs-csi-controller-5cbc775dc5-hr6mz   6/6     Running   0          4m51s
+# ebs-csi-controller-5cbc775dc5-knqnr   6/6     Running   0          4m51s
 ```
 
 You can additionally run through these [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/ebs-sample-app.html) to deploy
@@ -195,12 +180,13 @@ eksctl create iamserviceaccount \
   --approve
 
 # assert it was created and has an annotation
-$ kubectl get sa aws-load-balancer-controller -n kube-system
-NAME                           SECRETS   AGE
-aws-load-balancer-controller   0         13s
+kubectl get sa aws-load-balancer-controller -n kube-system
 
-$ kubectl describe sa aws-load-balancer-controller -n kube-system | grep Annotations
-Annotations:         eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/AmazonEKSLoadBalancerControllerRole
+# NAME                           SECRETS   AGE
+# aws-load-balancer-controller   0         13s
+
+# kubectl describe sa aws-load-balancer-controller -n kube-system | grep Annotations
+# Annotations:         eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/AmazonEKSLoadBalancerControllerRole
 ```
 
 Then install the K8s AWS Controller:
@@ -215,13 +201,12 @@ helm install aws-load-balancer-controller \
     --set serviceAccount.create=false \
     --set serviceAccount.name=aws-load-balancer-controller
         # since the last steps already did this, set to false
-
 ```
 
 ```sh
-$ kubectl get deployment -n kube-system aws-load-balancer-controller
-NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
-aws-load-balancer-controller   2/2     2            2           36d
+kubectl get deployment -n kube-system aws-load-balancer-controller
+# NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+# aws-load-balancer-controller   2/2     2            2           36d
 ```
 
 ## Install Nginx Ingress Controller <a name="nginx-ingress"></a>
@@ -230,39 +215,37 @@ Please look through the [Nginx Docs](https://github.com/kubernetes/ingress-nginx
 
 ```sh
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm upgrade \
-    -i ingress-nginx \
+kubectl create namespace ingress-nginx
+helm upgrade -i ingress-nginx \
     ingress-nginx/ingress-nginx \
     --set controller.service.type=LoadBalancer \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb" \
     --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-scheme"="internet-facing" \
     --namespace ingress-nginx
-# e.g --namespace eoapi, 
-# kubectl create namespace ingress-nginx
-# helm delete ingress-nginx -n kube-system
+
+# helm delete ingress-nginx -n ingress-nginx
 ```
 
 Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/). 
 Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
 
 ```sh
-$ kubectl get cm  | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
+kubectl get cm  | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
 
-### Optional if above cli did not work
-# kubectl get cm --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
-$ kubectl get deploy --all-namespaces | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
-### Optional if above cli did not work
-# kubectl get deploy --all-namespaces | grep ingress-nginx | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
+# kubectl get cm --all-namespaces| grep ingress-nginx-controller | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
+
+kubectl get deploy --all-namespaces | grep ingress-nginx-conto | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
+
+# kubectl get deploy --all-namespaces| grep ingress-nginx-controller | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
 ```
 
 Assert that things are set up correctly:
 
 ```sh
-$ kubectl get deploy,pod,svc --all-namespaces | grep nginx
-deployment.apps/nginx-ingress-nginx-controller   1/1     1            1           2d17h
+kubectl get deploy,pod,svc --all-namespaces | grep nginx
 
-pod/nginx-ingress-nginx-controller-76d7f6f4d5-g6fkv   1/1     Running   0          27h
-
-service/nginx-ingress-nginx-controller             LoadBalancer   10.100.36.152    eoapi-k8s-553d3ea234b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com   80:30342/TCP,443:30742/TCP   2d17h
-service/nginx-ingress-nginx-controller-admission   ClusterIP      10.100.34.22     <none>                                                                          443/TCP                      2d17h
+# deployment.apps/nginx-ingress-nginx-controller   1/1     1            1           2d17h
+# pod/nginx-ingress-nginx-controller-76d7f6f4d5-g6fkv   1/1     Running   0          27h
+# service/nginx-ingress-nginx-controller             LoadBalancer   10.100.36.152    eoapi-k8s-553d3ea234b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com   80:30342/TCP,443:30742/TCP   2d17h
+# service/nginx-ingress-nginx-controller-admission   ClusterIP      10.100.34.22     <none>                                                                          443/TCP                      2d17h
 ```
