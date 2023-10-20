@@ -83,6 +83,12 @@ prometheus:
       requests:
         cpu: 10m
         memory: 30Mi
+  server:
+    service:
+      # annotations:
+      #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      #   service.beta.kubernetes.io/aws-load-balancer-internal: "0.0.0.0/0"
+      type: LoadBalancer
 
 grafana:
   persistence:
@@ -91,6 +97,9 @@ grafana:
     type: Recreate
   service:
     type: LoadBalancer
+    # annotations:
+    #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    #   service.beta.kubernetes.io/aws-load-balancer-internal: "false"
   rbac:
     namespaced: true
     pspEnabled: false
@@ -123,14 +132,14 @@ grafana:
     datasources.yaml:
       apiVersion: 1
       datasources:
-        # Automatically add the prometheus server in the same namespace as the grafana as a datasource
-        - name: prometheus
-          orgId: 1
-          type: prometheus
-          # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
-          # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
-          # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
-          url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
-          access: proxy
-          isDefault: true
-          editable: false
+      # Automatically add the prometheus server in the same namespace as the grafana as a datasource
+      - name: prometheus
+        orgId: 1
+        type: prometheus
+        # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
+        # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
+        # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
+        url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
+        access: proxy
+        isDefault: true
+        editable: false
