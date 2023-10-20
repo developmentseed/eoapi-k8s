@@ -308,13 +308,22 @@ helm get values ingress-nginx -n ingress-nginx
    
 4. Redeploy your `ingress-nginx` release with the configuration from the last step:
 
-```bash
+```sh
 # this assumes your release name is `ingress-nginx` and that the repo was installed as `ingress-nginx` 
 # though you might've named them something else
 helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config_ingress.yaml
 ```
 
 -  Check of metricts 
+
+```sh
+kubectl get pods -n ingress-nginx
+kubectl port-forward pod/<pod> 10254:10254 -n ingress-nginx
+
+```
+http://localhost:10254/metrics
+
+
 
 5. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
 
@@ -328,41 +337,50 @@ to set up a simple host
 
 2. Find the IP that your `ingress-nginx-controller` exposes:
 
-   ```bash
-   $ kubectl -n ingress-nginx get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```sh
+kubectl -n ingress-nginx get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
    35.239.254.21%
-   ```
+```
 
 # TODO: we should figure out how to make this option configurable through `values.yaml` overrides to make it easier
 3. Then live edit your shared ingress for eoapi services to build an arbitrary host name using `nip.io`. Since
 one of the Grafana default charts filters on hostname it's probably best to keep the format to `eoapi-<your-external-ip-address-from-last-step>.nip.io`.
 `nip.io` will proxy traffic with a full domain to your instance. Using `nip.io` isn't long-term solution but a way to test:
 
-```bash
-K8_EDITOR=vim kubectl edit ingress/nginx-service-ingress-shared-eoapi
-# kubectl edit ingress nginx-service-ingress-shared-eoapi -n eoapi
+```sh
+kubectl edit ingress nginx-service-ingress-shared-eoapi -n eoapi
+
+## In case if eks, replace the elb url without using nip.io
+kubectl -n ingress-nginx  get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
    
-   ```yaml
-   # BEFORE
-   spec:
-   ingressClassName: nginx
-   rules:
-   - http:
-       paths:
-       ...
-   ```
-   
-   ```yaml
-   # AFTER
-   spec:
-   ingressClassName: nginx
-   rules:
-   - host: eoapi-35.239.254.92.nip.io
-     http:
-       paths:
-       ...
-   ```
+```yaml
+# BEFORE
+spec:
+ingressClassName: nginx
+rules:
+- http:
+    paths:
+    ...
+```
+
+```yaml
+# AFTER
+spec:
+ingressClassName: nginx
+rules:
+- host: eoapi-35.239.254.92.nip.io
+  http:
+    paths:
+    ...
+```
+
+And then finally roll out the deployment.
+
+```sh
+kubectl rollout restart deploy/ingress-nginx-controller -n ingress-nginx
+
+```
 
 ---
 
