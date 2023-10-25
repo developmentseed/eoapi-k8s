@@ -76,8 +76,14 @@ Here's a simplified high-level diagram to grok:
 
 ---
 
-### Key `autoscaling.type`
+### Key `autoscaling`
+
+#### `autoscaling.type`
 
 |   **Values Key**  |                                                                 **Description**                                                                 | **Default** | **Choices**  |
 |:-----------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|:-----------|:--------------|
-| `autoscaling.type` | a simple example of a default metric (`cpu`) and custom metric (`requestRate`) to scale by. NOTE: `requestRate` is based on nginx metrics and currently isn't supported for `ingress.className: alb/gce` options yet. It will throw an error during install if you attemp this  | requestRate       | requestRate<br>cpu<br>both<br> |
+| `autoscaling.type` | a simple example of a default metric (`cpu`) and custom metric (`requestRate`) to scale by. NOTE: `requestRate` is based on nginx metrics and currently isn't supported for `ingress.className: alb/gce` options yet. It will throw an error during install if you attemp this. If selecting `both` the metric that results in the "highest amount of change" wins. See https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#scaling-on-multiple-metrics for more info  | requestRate       | requestRate<br>cpu<br>both<br> |
+
+#### `autoscaling.behaviour.[scaleDown||scaleUp]`
+
+These are normal k8s autoscaling pass throughs. They are stablization windows in seconds to for scaling up or down to prevent flapping from happening. Read more about [the options on the k8s documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior)

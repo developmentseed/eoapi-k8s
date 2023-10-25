@@ -1,6 +1,6 @@
-##### version numbers below correspond to helm chart `appVersion`: see ./helm-chart/eoapi/Chart.yaml
+version numbers below correspond to helm chart `appVersion`: see `./helm-chart/eoapi/Chart.yaml`
 ---
-### 0.2.9 (2023-10-06)
+### 0.2.9 (2023-10-25)
 
 * removed `providerContext` and any support for minikube from the templates so this is a breaking change
 * added autoscaling rules and docs based on request rate using prometheus + ingress nginx controller + prometheus-adapter

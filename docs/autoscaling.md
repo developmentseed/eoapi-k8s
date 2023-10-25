@@ -1,11 +1,11 @@
 ## Autoscaling
 
-Autoscaling is both art and science. To test our your application's autoscaling needs you often need to consider
+Autoscaling is both art and science. To test out your application's autoscaling requirements you often need to consider
 your data volume, data usage patterns, bottlenecks (such as the database) among many, many other things.
 
-Load testing, metrics and observability will help you explore what those autoscaling needs are. The `eoapi` chart
+Load testing, metrics and observability will help you explore what those autoscaling needs are. This `eoapi-k8s` chart
 includes some default autoscaling values as well as an `eoapi-support` chart to help you do this exploration. Below
-we walk through how these things work and are set up.
+we walk through how to set these things up.
 
 ---
 
@@ -27,7 +27,7 @@ If it's not there then you can install it with default configuration by doing:
    helm -n kube-system install metrics-server bitnami/metrics-server
    # helm -n kube-system delete metrics-server
    ```
-Getting nodes stats:
+After installing verify things are working by getting nodes stats:
 
    ```sh
    kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes | jq '.items[] | {name:.metadata.name, cpu:.usage.cpu, memory:.usage.memory}'
@@ -37,7 +37,7 @@ Getting nodes stats:
 
 ### Review [Default Configuration and Options](configuration.md)
 
-This document will explain the differences in the `autoscaling` block for each service:
+[This document](configuration.md) will explain the differences in the `autoscaling` block for each service:
 
    ```yaml
    autoscaling:
@@ -47,10 +47,10 @@ This document will explain the differences in the `autoscaling` block for each s
        # `type`: "cpu" || "requestRate" || "both"
        type: "requestRate"
        behaviour: {}
-   #      scaleDown:
-   #        stabilizationWindowSeconds: 60
-   #      scaleUp:
-   #        stabilizationWindowSeconds: 0
+         scaleDown:
+           stabilizationWindowSeconds: 60
+         scaleUp:
+           stabilizationWindowSeconds: 0
        targets:
          # matches `type` value above unless `type: "both"` is selected
          cpu: 85
@@ -61,7 +61,7 @@ This document will explain the differences in the `autoscaling` block for each s
 
 ### Review [Production Storage](aws-gpc-storage-walkthrough.md) Set Up
 
-The default `eoapi` helm chart installs an in-memory postgres/postgis database but mostly folks will want to
+The default `eoapi` helm chart installs an in-memory postgres/postgis database but most folks will want to
 test autoscaling against something more production suitable
 
 ---
@@ -70,7 +70,7 @@ test autoscaling against something more production suitable
 
 This chart has the metrics, observability and visualization dependencies
 
-1. change into this repositories `/helm-chart/` folder
+1. change into this repository's `/helm-chart/` folder
 
 2. then download the dependencies for the `eoapi-support` chart
 
@@ -87,6 +87,7 @@ This chart has the metrics, observability and visualization dependencies
      --create-namespace \
      eoapi-support \
      ./eoapi-support
+   # if you need to delete the chart you can run:
    # helm delete eoapi-support  -n eoapi
    ```
    
@@ -124,14 +125,14 @@ This chart has the metrics, observability and visualization dependencies
 
 ### Install Newest `eoapi` Chart
 
-1. In your terminal:
+1. The `autoscaling` key was added to the `values.yaml` in version in chart version `0.1.11`. So update your eoapi repo:
 
    ```sh
    helm repo add eoapi https://devseed.com/eoapi-k8s/
    helm repo update
    ```
 
-2. Add the required secret overrides and changes you need to an arbitrarily named `.yaml` file (`config.yaml` below) 
+2. Add the required secret overrides and autoscaling changes you need to an arbitrarily named `.yaml` file (`config.yaml` below) 
 but the important part here is that we are enabling `autoscaling` and playing with `requestRate` metric
 
    ```sh
@@ -208,7 +209,8 @@ but the important part here is that we are enabling `autoscaling` and playing wi
 3. Then `helm install` the eoapi chart pointing to the path for the `config.yaml` above
 
    ```sh
-   helm upgrade --install -n eoapi --create-namespace eoapi eoapi/eoapi -f config.yaml
+   helm upgrade --install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.11 -f config.yaml
+   # if you need to delete the chart then you can run: 
    # helm delete eoapi -n eoapi
    ```
 
@@ -250,17 +252,17 @@ but the important part here is that we are enabling `autoscaling` and playing wi
 
 1. Now we need to tell the nginx ingress controller that it should allow prometheus to scrape it. This is a requirement to get our custom metrics. 
 
-2. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. Oftentimes this resource is in `ingress-nginx` namespace
+2. Get the values that `ingress-nginx` was deployed with so we can append our rules to them. (If you followed the cloud provider set up docs for [EKS](aws-eks.md) or [GKE](gcp-gke.md) then these configuration values should already be set ). Oftentimes this resource is in `ingress-nginx` namespace
 
    ```sh
-   # this assumes your release name is `ingress-nginx`, though you might've named it something else, or eoapi.
+   # this assumes your release name is `ingress-nginx`, though you might've named it something else
    helm get values ingress-nginx -n ingress-nginx
      
    # USER-SUPPLIED VALUES:
    # If it is empty, this indicates that nothing has been applied, or no custom values were previously set.
    ```
 
-3. Create an empty `config_ingress.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make ingress-inginx scrapable
+3. Create an empty `config_ingress.yaml` somewhere on your file system. Take everything from below `USER-SUPPLIED VALUES:` and make `ingress-nginx` scrapable
 
    ```yaml
      controller:
@@ -281,17 +283,6 @@ but the important part here is that we are enabling `autoscaling` and playing wi
    helm -n ingress-nginx upgrade ingress-nginx ingress-nginx/ingress-nginx -f config_ingress.yaml
    ```
 
--  Check of metricts 
-
-   ```sh
-   kubectl get pods -n ingress-nginx
-   kubectl port-forward pod/<pod> 10254:10254 -n ingress-nginx
-   ```
-
-http://localhost:10254/metrics
-
-
-
 5. Now go back to Grafana and hit the refresh button and wait a bit. You should see data in your graphs
 
 ---
@@ -308,8 +299,7 @@ to set up a simple host
    kubectl -n ingress-nginx get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
      35.239.254.21%
    ```
-
-# TODO: we should figure out how to make this option configurable through `values.yaml` overrides to make it easier
+   
 3. Then live edit your shared ingress for eoapi services to build an arbitrary host name using `nip.io`. Since
 one of the Grafana default charts filters on hostname it's probably best to keep the format to `eoapi-<your-external-ip-address-from-last-step>.nip.io`.
 `nip.io` will proxy traffic with a full domain to your instance. Using `nip.io` isn't long-term solution but a way to test:
