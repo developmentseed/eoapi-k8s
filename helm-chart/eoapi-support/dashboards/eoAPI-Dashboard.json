@@ -276,7 +276,7 @@
         {
           "datasource": {},
           "editorMode": "code",
-          "expr": "sum(rate(nginx_ingress_controller_requests{host=~'eoapi.*'}[2m])) by(service)",
+          "expr": "sum(rate(nginx_ingress_controller_requests[2m])) by(service)",
           "instant": false,
           "legendFormat": "{{service}}",
           "range": true,

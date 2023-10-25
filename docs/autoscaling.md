@@ -132,29 +132,6 @@ Prometheus: http://localhost:9090
 Grafana: http://localhost:3000
 
 
-7. In your browser navigate to the `service/eoapi-support-grafana` EXTERNAL-IP, log in using credentials from the last step and manually upload the Grafana `eoAPI Dashboard` included in `/helm-chart/eoapi-support/eoAPI-Dashboard.json`
-
-
-![](./images/add-grafana-dashboard.png)
-
-8. Unfortunately most of the data sources will show an error about not being found (as seen below)
-
-
-![](./images/datasource.png)
-
-9. For each chart click on the kebob in the top right-hand corner and choose `Edit`
-
-
-![](./images/edit.png)
-
-10. Then in the query input box just add an empty space at the end of the query and click `Run queries` again
-
-
-![](./images/rerun.png)
-
-11. Your chart WILL NOT show data yet b/c we don't have the `eoapi` services installed yet
----
-
 ### Install Newest `eoapi` Chart
 
 1. In your terminal:
