@@ -26,9 +26,6 @@ spec:
     spec:
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
-        {{- if (eq $.Values.providerContext "minikube") }}
-        imagePullPolicy: Never
-        {{- end }}
         name: {{ $serviceName }}
         command:
           {{- toYaml (index $v "command") | nindent 10 }}

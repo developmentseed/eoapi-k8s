@@ -14,6 +14,7 @@
 * [Getting Started](#gettingstarted)
 * [Helm Installation](#helminstall)
 * [Default Configuration and Options](#options)
+* [Autoscaling](./docs/autoscaling.md)
 
 <a name="whatitis"/>
 
