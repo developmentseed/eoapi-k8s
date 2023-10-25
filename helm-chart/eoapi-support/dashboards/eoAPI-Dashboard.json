@@ -23,10 +23,7 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-      },
+      "datasource": {},
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -101,10 +98,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
-          },
+          "datasource": {},
           "editorMode": "code",
           "expr": "rate(container_cpu_usage_seconds_total{pod=~\"$podprefix$\", image!=\"\", container!=\"POD\", name!=\"\", container!=\"\"}[2m])",
           "instant": false,
@@ -117,10 +111,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-      },
+      "datasource": {},
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -195,10 +186,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
-          },
+          "datasource": {},
           "editorMode": "code",
           "expr": "rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$podprefix$\", container!=\"POD\", image!=\"\"}[2m])",
           "instant": false,
@@ -211,10 +199,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-      },
+      "datasource": {},
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -289,10 +274,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-          },
+          "datasource": {},
           "editorMode": "code",
           "expr": "sum(rate(nginx_ingress_controller_requests{host=~'eoapi.*'}[2m])) by(service)",
           "instant": false,
@@ -305,10 +287,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-      },
+      "datasource": {},
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -507,10 +486,7 @@
       "pluginVersion": "10.1.1",
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
-          },
+          "datasource": {},
           "editorMode": "code",
           "expr": "container_memory_usage_bytes{pod=~\"$podprefix$\", image!=\"\", container!=\"POD\", container!=\"\"}",
           "hide": false,
@@ -519,10 +495,7 @@
           "refId": "A"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "f5f3ba39-ccc1-49de-b243-fdbdbb2c26ed"
-          },
+          "datasource": {},
           "editorMode": "code",
           "expr": "kube_pod_container_resource_limits{resource=\"memory\", pod=~\"$podprefix$\", container!=\"\"}",
           "hide": false,
@@ -535,10 +508,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-      },
+      "datasource": {},
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -613,10 +583,7 @@
       },
       "targets": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ad98c8d2-e42e-4f9a-8493-c06c33e17123"
-          },
+          "datasource": {},
           "editorMode": "code",
           "expr": "sum(kube_pod_status_scheduled{pod=~'$podprefix$'})",
           "hide": false,

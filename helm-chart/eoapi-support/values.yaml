@@ -141,8 +141,11 @@ grafana:
         # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
         url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
         access: proxy
+        jsonData:
+          timeInterval: "5s"
         isDefault: true
-        editable: false
+        editable: true
+        version: 1 # This number should be increased when changes are made to update the datasource
 
   dashboardProviders:
     dashboardproviders.yaml:
