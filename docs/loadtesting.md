@@ -20,7 +20,7 @@ export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx  get svc/ingress-nginx-contro
 
 *
 
-2. Then run some naive load testing against some static read-only endpoints in a couple different terminals or backgrounded
+2. Then run some naive load testing against some static read-only endpoints in a couple different terminals 
 
 ```sh
 hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/vector/collections/public.my_data/items?f=geojson"
