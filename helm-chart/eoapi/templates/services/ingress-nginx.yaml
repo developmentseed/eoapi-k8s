@@ -9,6 +9,8 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: nginx-service-ingress-shared-{{ $.Release.Name }}
+  labels:
+    app: nginxsharedingress
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
