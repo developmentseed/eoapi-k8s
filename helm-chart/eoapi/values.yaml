@@ -83,6 +83,13 @@ ingress:
   # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites for /vector, /stac, /raster
   enabled: true
   className: "nginx"
+  host: ""
+  tls:
+    enabled: false
+    secretName: eoapi-tls
+    certManager: false
+    certManagerIssuer: letsencrypt-prod
+    cerrtManagerEmail: ""
 
 raster:
   enabled: true

@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini'
+    if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini' || github.actor == 'sunu'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
