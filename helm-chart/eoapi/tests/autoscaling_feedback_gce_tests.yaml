@@ -1,0 +1,24 @@
+suite: autoscaling feedback when className is gce
+templates:
+  - templates/services/ingress-gce.yaml
+tests:
+  - it: "fail for ingress.host"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      ingress.className: "gce"
+      ingress.host: "abcd.eoapi.com"
+    asserts:
+      - failedTemplate:
+          errorMessage: When using an 'ingress.className' other than 'nginx' you cannot provision a 'host' at this time
+  - it: "fail for ingress.tls.enabled"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      ingress.className: "gce"
+      ingress.tls.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: When using an 'ingress.className' other than 'nginx' you cannot enable 'tls' at this time
