@@ -24,7 +24,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           cd helm-chart
-          helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
+          helm unittest eoapi --release-name "eoapi" -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
   unit-tests:
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
