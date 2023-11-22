@@ -95,6 +95,6 @@ so we use this helper function to check autoscaling rules
 {{- if .Values.ingress.tls.enabled }}
 {{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable 'tls' at this time" }}
 {{- end }}
-{{- end }} # if and .Values.ingress.enabled (ne .Values.ingress.className "nginx")
-{{- end -}} # define
+{{- end }}
+{{- end -}}
 
