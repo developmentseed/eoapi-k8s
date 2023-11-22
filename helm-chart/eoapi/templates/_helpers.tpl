@@ -79,7 +79,7 @@ so we use this helper function to check autoscaling rules
 */}}
 {{- define "eoapi.validateAutoscaleRules" -}}
 {{- if and .Values.ingress.enabled (ne .Values.ingress.className "nginx") (or (.Values.raster.autoscaling.enabled) (.Values.stac.autoscaling.enabled) (.Values.vector.autoscaling.enabled)) }}
-{{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's soley an nginx metric" }}
+{{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric" }}
 {{- end }}
 {{- end -}}
 
