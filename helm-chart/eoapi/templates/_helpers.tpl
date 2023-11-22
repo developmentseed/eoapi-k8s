@@ -78,8 +78,15 @@ values.schema.json doesn't play nice combined value checks
 so we use this helper function to check autoscaling rules
 */}}
 {{- define "eoapi.validateAutoscaleRules" -}}
-{{- if and .Values.ingress.enabled (ne .Values.ingress.className "nginx") (or (.Values.raster.autoscaling.enabled) (.Values.stac.autoscaling.enabled) (.Values.vector.autoscaling.enabled)) }}
+{{- if and .Values.ingress.enabled (ne .Values.ingress.className "nginx") }}
+{{/* "requestRate" cannot be enabled for any service if not "nginx" so give feedback and fail */}}
+{{- if (or (and .Values.raster.autoscaling.enabled (eq .Values.raster.autoscaling.type "requestRate")) (and .Values.stac.autoscaling.enabled (eq .Values.stac.autoscaling.type "requestRate")) (and .Values.vector.autoscaling.enabled (eq .Values.vector.autoscaling.type "requestRate")) ) }}
 {{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric" }}
+{{- end }}
+{{/* "both" cannot be enabled for any service if not "nginx" so give feedback and fail */}}
+{{- if (or (and .Values.raster.autoscaling.enabled (eq .Values.raster.autoscaling.type "both")) (and .Values.stac.autoscaling.enabled (eq .Values.stac.autoscaling.type "both")) (and .Values.vector.autoscaling.enabled (eq .Values.vector.autoscaling.type "both")) ) }}
+{{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'both' at this time b/c "requestRate' is solely an nginx metric" }}
+{{- end }}
 {{- end }}
 {{- end -}}
 
