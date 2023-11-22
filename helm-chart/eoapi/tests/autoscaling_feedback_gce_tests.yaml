@@ -6,7 +6,9 @@ tests:
     set:
       raster.enabled: false
       stac.enabled: false
-      vector.enabled: false
+      vector.enabled: true
+      vector.autoscaling.enabled: true
+      vector.autoscaling.type: "cpu"
       ingress.className: "gce"
       ingress.host: "abcd.eoapi.com"
     asserts:
@@ -16,7 +18,9 @@ tests:
     set:
       raster.enabled: false
       stac.enabled: false
-      vector.enabled: false
+      vector.enabled: true
+      vector.autoscaling.enabled: true
+      vector.autoscaling.type: "cpu"
       ingress.className: "gce"
       ingress.tls.enabled: true
     asserts:
