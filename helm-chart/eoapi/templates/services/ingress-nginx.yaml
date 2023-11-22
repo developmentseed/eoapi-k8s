@@ -15,6 +15,9 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/enable-cors: "true"
+    {{- if (and (.Values.ingress.tls.enabled) (.Values.ingress.tls.certManager)) }}
+    cert-manager.io/issuer: {{ .Values.ingress.tls.certManagerIssuer }}
+    {{- end }}
 spec:
   {{- if (and (.Values.ingress.className) (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion)) }}
   ingressClassName: {{ .Values.ingress.className }}
@@ -52,6 +55,54 @@ spec:
                 port:
                   number: 80
           {{- end }}
+      {{- if (and (not .Values.testing) (.Values.ingress.host)) }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+  {{- if (and (not .Values.testing) (.Values.ingress.host) (.Values.ingress.tls.enabled)) }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
 ---
+{{- if (and (.Values.ingress.tls.enabled) (.Values.ingress.tls.certManager)) }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: {{ .Values.ingress.tls.certManagerEmail }}
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: {{ .Values.ingress.tls.certManagerEmail }}
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
+{{- end }}
 {{/* END: if .Values.ingress.className "nginx" */}}
 {{- end }}
