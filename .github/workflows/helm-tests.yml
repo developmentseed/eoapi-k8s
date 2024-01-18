@@ -110,7 +110,7 @@ jobs:
         continue-on-error: true
         run: |
           kubectl config set-context --current --namespace=eoapitest
-          while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
           done
