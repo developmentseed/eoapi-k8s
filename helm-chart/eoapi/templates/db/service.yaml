@@ -1,3 +1,4 @@
+{{- if (eq .Values.db.environment "k8s") }}
 ---
 apiVersion: v1
 kind: Service
@@ -12,3 +13,4 @@ spec:
     targetPort: 5432
   selector:
     app: {{ include "eoapi.pgstacHostName" . | nindent 10 }}
+{{- end }}
