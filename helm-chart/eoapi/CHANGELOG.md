@@ -1,5 +1,11 @@
 version numbers below correspond to helm chart `appVersion`: see `./helm-chart/eoapi/Chart.yaml`
 ---
+### 0.2.11 (2024-01-19)
+
+* added `ingress.annotations` key to pass through to the nginx ingress -- thanks @ghelobytes
+* upgraded titiler/pgstac/tipg images and integration tests  -- thanks @vincentsarago
+* added autoscaling permissions and docs to the AWS walkthrough -- thanks @Rub21
+
 ### 0.2.10 (2023-11-22)
 
 * give `ingress.className == "nginx"` the ability pass hosts and tls information
