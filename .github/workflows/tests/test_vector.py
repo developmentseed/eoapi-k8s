@@ -34,8 +34,8 @@ def test_vector_api():
         "numberReturned",
         "collections",
     ]
-    assert resp.json()["numberMatched"] == 6  # one public table + 5 functions
-    assert resp.json()["numberReturned"] == 6
+    assert resp.json()["numberMatched"] == 7  # one public table + 5 functions
+    assert resp.json()["numberReturned"] == 7
 
     collections = resp.json()["collections"]
     ids = [c["id"] for c in collections]
