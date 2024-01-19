@@ -61,19 +61,6 @@ Here's a simplified high-level diagram to grok:
 
 ## Additional Options
 
-### Key `ingress.className`
-
-|   **Values Key**  |                                                                 **Description**                                                                 | **Default** | **Choices**  |
-|:-----------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|:-----------|:--------------|
-| `ingress.className` | used as switch in helm templates for specific<br>functionality regarding `kind: Ingress` and cloud-provider<br>specific load balancing options  | nginx       | nginx<br>alb<br>gce<br> |
-
-#### Given `ingress.className=nginx`
-![](./images/default_architecture.png)
-
-
-#### Given `ingress.className=alb||gce` 
-![](./images/alb_architecture.png)
-
 ---
 
 ### Key `autoscaling`

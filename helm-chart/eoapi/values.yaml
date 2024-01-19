@@ -78,9 +78,7 @@ service:
   port: 8080
 
 ingress:
-  # `ingress.className`: "alb" || "gce" || "nginx"
-  # `"alb || gce"` will create a `kind:Service` with `spec.port:'NodePort'` and ALBs for each service
-  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single NLB and path rewrites for /vector, /stac, /raster
+  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single (A||N)LB and path rewrites for /vector, /stac, /raster
   enabled: true
   className: "nginx"
   host: ""

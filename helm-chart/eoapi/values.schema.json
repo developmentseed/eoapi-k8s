@@ -75,7 +75,7 @@
       "properties": {
         "className": {
           "type": "string",
-          "pattern": "^(alb|nginx|gce|testing123)$"
+          "pattern": "^(nginx|testing123)$"
         }
       }
     },
