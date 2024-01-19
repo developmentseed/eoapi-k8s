@@ -2,8 +2,20 @@ apiVersion: v1
 entries:
   eoapi:
   - apiVersion: v2
+    appVersion: 0.3.1
+    created: "2024-01-19T15:32:52.32499905Z"
+    description: Create a full Earth Observation API with Metadata, Raster and Vector
+      services
+    digest: 714550ba910d1adfa7174615d1907fb2060aa5b54ee3fb4f6eae0c21000247f8
+    kubeVersion: '>=1.23.0-0'
+    name: eoapi
+    type: application
+    urls:
+    - eoapi-0.2.14.tgz
+    version: 0.2.14
+  - apiVersion: v2
     appVersion: 0.2.11
-    created: "2024-01-19T14:36:29.152421138Z"
+    created: "2024-01-19T15:32:52.316093052Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 0449c68968f147d6c8104c85dec8cf604f8956238c97f30d78f62109cfb523ea
@@ -15,7 +27,7 @@ entries:
     version: 0.1.13
   - apiVersion: v2
     appVersion: 0.2.10
-    created: "2024-01-19T14:36:29.15147537Z"
+    created: "2024-01-19T15:32:52.31511857Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 79349c2ce1fc77957f32f1b6db4c26243092f94b0cc0051c73809934b917e7d1
@@ -27,7 +39,7 @@ entries:
     version: 0.1.12
   - apiVersion: v2
     appVersion: 0.2.9
-    created: "2024-01-19T14:36:29.150443881Z"
+    created: "2024-01-19T15:32:52.314115665Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 0a54bdb44b0996252355e5ca6142ee66b46d1cc2623dd07844e580e092e02ab3
@@ -39,7 +51,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 0.1.8
-    created: "2024-01-19T14:36:29.148649376Z"
+    created: "2024-01-19T15:32:52.312212205Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 2fea2251a310bf17eb5f0ec0adb73380642bd0e0542ef147c8e82955d2fe2aee
@@ -51,7 +63,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 0.1.7
-    created: "2024-01-19T14:36:29.160431485Z"
+    created: "2024-01-19T15:32:52.323857176Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 0d10be826ca2b4bc560d65a4dbb3f5cbcf177fe275cb1e3fd4d85dfb1bee6cfd
@@ -63,7 +75,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 0.1.6
-    created: "2024-01-19T14:36:29.158852872Z"
+    created: "2024-01-19T15:32:52.32227595Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 1ce3bb489e74f41047aa72157edab6e0c709d08603fd2bfe93e81bf6d70a3dfa
@@ -75,7 +87,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 0.1.5
-    created: "2024-01-19T14:36:29.158040423Z"
+    created: "2024-01-19T15:32:52.321484648Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 38c581aa0ee47c9f0c530a2ed05278051b5db299535f1829b1dc3c48d8a358a1
@@ -87,7 +99,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 0.1.4
-    created: "2024-01-19T14:36:29.157201194Z"
+    created: "2024-01-19T15:32:52.320676986Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: ca06c20cd2d67337fdf8440928e3712c8a0e5cea286f31ed3937df87e812a117
@@ -99,7 +111,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 0.1.3
-    created: "2024-01-19T14:36:29.156373527Z"
+    created: "2024-01-19T15:32:52.319854828Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 0995db4db2dbd06a901cbba113da46fdc557316ccf85f1c3d07ba8b4f6cec0ce
@@ -111,7 +123,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2024-01-19T14:36:29.155467623Z"
+    created: "2024-01-19T15:32:52.31906587Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 6bf7d9834ed3310180eef864ae67b5a08177e2ba8bb9b96d69558da3844b5dc5
@@ -123,7 +135,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2024-01-19T14:36:29.153962299Z"
+    created: "2024-01-19T15:32:52.317572744Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: b9d427bbd1588f6c667d4c7f94c3822f650bb5624280409d42c877f8ec525763
@@ -135,7 +147,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-01-19T14:36:29.153137477Z"
+    created: "2024-01-19T15:32:52.316804615Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 0ffabd564b506e270f3c794139606c199eae7174d5033285d9b789a3af591bba
@@ -147,7 +159,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-01-19T14:36:29.147729757Z"
+    created: "2024-01-19T15:32:52.311270243Z"
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 109ac5ff46d013df14c29249211028592e1bc0658491d68d52143bdaf701cde7
@@ -157,4 +169,4 @@ entries:
     urls:
     - eoapi-0.1.1.tgz
     version: 0.1.1
-generated: "2024-01-19T14:36:29.146824675Z"
+generated: "2024-01-19T15:32:52.310357827Z"
