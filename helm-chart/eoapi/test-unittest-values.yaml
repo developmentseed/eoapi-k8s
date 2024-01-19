@@ -1,4 +1,4 @@
-# used in GH Actions `.github/workflows/helm-tests.yml.jobs.unit-tests`
+# used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
 testing: true
 ingress:
   enabled: true
