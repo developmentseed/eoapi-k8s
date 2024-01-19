@@ -30,7 +30,8 @@ An example command below. See the [eksctl docs](https://eksctl.io/usage/creating
        --nodegroup-name=hub-node \
        --node-type=t2.medium \
        --nodes=1 --nodes-min=1 --nodes-max=5 \
-       --version 1.27
+       --version 1.27 \
+       --asg-access
    ```
 
 TODO:  Add autoscaling config
@@ -71,6 +72,16 @@ but below are the relevant bits. Note that `eksctl` "should" set up an OIDC prov
    ```
 
 ---
+
+## Install Node Autoscaler
+
+To run the autoscaler on EKS, we need to create a policy and install Auto-Discovery Setup, which is the preferred method to configure [Cluster Autoscaler in EKS](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup).
+
+   ```sh
+   aws iam create-policy --policy-name ${CLUSTER_NAME}-asg --policy-document file://configs/aws-asg-policy.json
+   # Update the cluster name ins case you changed in configs/cluster-autoscaler-autodiscover.yaml file
+   kubectl apply -f configs/cluster-autoscaler-autodiscover.yaml
+   ```
 
 ## Install the EBS CSI Addon for dynamic EBS provisioning <a name="ebs-addon"></a>
 

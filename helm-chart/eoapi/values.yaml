@@ -36,7 +36,7 @@ db:
   enabled: true
   image:
     name: ghcr.io/stac-utils/pgstac
-    tag: v0.7.1
+    tag: v0.8.2
   command:
       - "postgres"
       - "-N"
@@ -110,7 +110,7 @@ raster:
       requestRate: 10000
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: uvicorn-0.4.1
+    tag: uvicorn-1.2.0
   command:
     - "uvicorn"
     - "titiler.pgstac.main:app"
@@ -211,7 +211,7 @@ vector:
       requestRate: 15000
   image:
     name: ghcr.io/developmentseed/tipg
-    tag: uvicorn-0.2.0
+    tag: uvicorn-0.6.1
   command:
     - "uvicorn"
     - "tipg.main:app"
