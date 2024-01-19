@@ -7,7 +7,7 @@ tests:
       raster.enabled: false
       stac.enabled: false
       vector.enabled: true
-      ingress.className: "gce"
+      ingress.className: "testing123"
       vector.autoscaling.enabled: true
     asserts:
       - failedTemplate:
