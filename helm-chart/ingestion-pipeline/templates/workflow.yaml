@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  # generateName: eoapi-ingest-{{.Values.workflow.name}}-
+  name: eoapi-ingest-{{.Values.workflow.name}}
+spec:
+  entrypoint: main
+  {{- if .Values.setting }}
+  parallelism: "{{ default 5 .Values.workflow.settings.parallelism }}"
+  {{- else }}
+  parallelism: 5
+  {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi   
+
+  templates:
+  - name: main
+    steps:
+    {{- range .Values.workflow.steps }}
+    - - name: {{.name}}
+        template: {{.name}}-template
+        arguments:
+          parameters:
+          - name: command
+            value: "{{.command}}"
+        {{- if .paramFrom }}
+        withParam: "{{ printf "{{%s}}" .paramFrom}}"
+        {{- end }}
+    {{- end }}
+
+  {{- range .Values.workflow.steps }}
+  - name: {{ .name }}-template
+    inputs:
+      parameters:
+      - name: command
+    {{- if .outputs }}
+    outputs:
+      parameters:
+      {{- range .outputs.parameters }}
+      - name: {{ .name }}
+        valueFrom:
+          path: {{ .path }}
+      {{- end }}
+    {{- end }}
+    container:
+      image: {{ .image }}
+      command: [sh, -c]
+      args: ["{{`{{inputs.parameters.command}}`}}"]
+      env:
+      - name: PGHOST
+        value: pgstac
+      - name: PGPORT
+        value: "5432"
+      - name: PGDATABASE
+        value: postgis
+      - name: PGUSER
+        valueFrom:
+          secretKeyRef:
+            name: pgstac-secrets-eoapi
+            key: PGUSER
+      - name: PGPASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pgstac-secrets-eoapi
+            key: PGPASSWORD
+      {{- range $key, $val := .env }}
+      - name: {{$key}}
+        value: "{{$val}}"
+      {{- end }}
+      {{- range .secret_env }}
+      - name: {{.envvar}}
+        valueFrom:
+          secretKeyRef:
+            name: {{.secret_name}}
+            key: {{.secret_key}}
+      {{- end }}
+      volumeMounts:
+      - name: workdir
+        mountPath: /data
+  {{- end }}

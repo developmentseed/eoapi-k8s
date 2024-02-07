@@ -1,0 +1,7 @@
+apiVersion: v2
+name: eoapi
+description: Data ingestion pipeline for eoAPI
+type: application
+kubeVersion: ">=1.23.0-0"
+version: "0.0.1"
+appVersion: "0.0.1"
