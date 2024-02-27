@@ -11,14 +11,14 @@ dependencies:
   #
   - name: prometheus
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus` values
-    version: 24.5.0
+    version: 25.3.1
     repository: https://prometheus-community.github.io/helm-charts
 
   # used to create custom metrics to autoscale on
   #
   - name: prometheus-adapter
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus-adapter` values
-    version: 4.6.0
+    version: 4.7.1
     repository: https://prometheus-community.github.io/helm-charts
 
   # Grafana for dashboarding of metrics
@@ -26,5 +26,5 @@ dependencies:
   #
   - name: grafana
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.grafana` values
-    version: 6.60.1
+    version: 7.3.3
     repository: https://grafana.github.io/helm-charts
