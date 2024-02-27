@@ -10,8 +10,9 @@ After creating the cluster we'll walk through installing the following add-ons a
 ## Table of Contents:
 1. [Create EKS Cluster](#create-cluster)
 2. [Make sure EKS Cluster has OIDC Provider](#check-oidc)
-3. [Install EBS CSI Add-on](#ebs-addon)
-4. [Install AWS LB Controller](#aws-lb)
+3. [Install Node Autoscaling](#node-autoscaler)
+4. [Install EBS CSI Add-on](#ebs-addon)
+5. [Install AWS LB Controller](#aws-lb)
 4. [Install NGINX Ingress Controller](#nginx-ingress)
 
 ---
@@ -73,7 +74,7 @@ but below are the relevant bits. Note that `eksctl` "should" set up an OIDC prov
 
 ---
 
-## Install Node Autoscaler
+## Install Node Autoscaler  <a name="node-autoscaler"></a>
 
 To run the autoscaler on EKS, we need to create a policy and install Auto-Discovery Setup, which is the preferred method to configure [Cluster Autoscaler in EKS](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#auto-discovery-setup).
 
