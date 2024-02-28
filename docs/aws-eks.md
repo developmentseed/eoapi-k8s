@@ -1,19 +1,16 @@
 # AWS EKS Cluster Walkthrough
 
-This walkthrough uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.
-After creating the cluster we'll walk through installing the following add-ons and controllers:
+This is a verbose walkthrough. It uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.
 
-* `aws-ebs-csi-driver` 
-* `aws-load-balancer-controller`
-* `nginx-ingress-controller`
+If you are familiar with Terraform would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform
+
 
 ## Table of Contents:
 1. [Create EKS Cluster](#create-cluster)
 2. [Make sure EKS Cluster has OIDC Provider](#check-oidc)
 3. [Install Node Autoscaling](#node-autoscaler)
 4. [Install EBS CSI Add-on](#ebs-addon)
-5. [Install AWS LB Controller](#aws-lb)
-4. [Install NGINX Ingress Controller](#nginx-ingress)
+5. [Install NGINX Ingress Controller](#nginx-ingress)
 
 ---
 
@@ -160,67 +157,6 @@ You can additionally run through these [AWS docs](https://docs.aws.amazon.com/ek
 a sample application to make sure it dynamically mounts an EBS volume
 
 ---
-
-### Install AWS load balancer controller <a name="aws-lb"></a>
-
-Best to walk through the [AWS userguide](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html) and [docs](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html) but
-examples are provided below.
-
-First, we create the policy, IAM role and the k8s `ServiceAccount`
-
-   ```sh
-   export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
-
-   # download the policy aws-load-balancer policy
-   curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.4.7/docs/install/iam_policy.json
-
-   # create the policy
-   aws iam create-policy \
-       --policy-name AWSLoadBalancerControllerIAMPolicy \
-       --policy-document file://iam_policy.json
-
-   # Create the IAM Role, the ServiceAccount and bind them
-   # Arbitrary, the naming is up to you
-   # ARN from last step
-
-   eksctl create iamserviceaccount \
-   --region us-west-2 \
-   --cluster=sandbox \
-   --namespace=kube-system \
-   --name=aws-load-balancer-controller \
-   --role-name AmazonEKSLoadBalancerControllerRole \
-   --attach-policy-arn=arn:aws:iam::${AWS_ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy \
-   --approve
-
-   # assert it was created and has an annotation
-   kubectl get sa aws-load-balancer-controller -n kube-system
-
-   # NAME                           SECRETS   AGE
-   # aws-load-balancer-controller   0         13s
-
-   # kubectl describe sa aws-load-balancer-controller -n kube-system | grep Annotations
-   # Annotations:         eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/AmazonEKSLoadBalancerControllerRole
-   ```
-
-Then install the K8s AWS Controller:
-
-   ```sh
-   helm repo add eks https://aws.github.io/eks-charts
-   helm repo update
-   helm install aws-load-balancer-controller \
-       eks/aws-load-balancer-controller \
-       -n kube-system \
-       --set clusterName=sandbox \
-       --set serviceAccount.create=false \
-       --set serviceAccount.name=aws-load-balancer-controller
-           # since the last steps already did this, set to false
-   ```
-
-   ```sh
-   kubectl get deployment -n kube-system aws-load-balancer-controller
-   # NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
-   # aws-load-balancer-controller   2/2     2            2           36d
-   ```
 
 ## Install Nginx Ingress Controller <a name="nginx-ingress"></a>
 

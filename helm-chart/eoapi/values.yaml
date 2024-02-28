@@ -78,7 +78,7 @@ service:
   port: 8080
 
 ingress:
-  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single (A||N)LB and path rewrites for /vector, /stac, /raster
+  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single Load Balancer and path rewrites for /vector, /stac, /raster
   enabled: true
   className: "nginx"
   host: ""
