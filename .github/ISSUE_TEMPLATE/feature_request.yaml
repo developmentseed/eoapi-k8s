@@ -1,0 +1,37 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature!
+
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: A clear and concise title of the feature request
+      placeholder: "Type the feature title here"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the feature you are requesting
+      placeholder: "Describe the feature here..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: labels
+    attributes:
+      label: Labels
+      description: Select labels that apply to this feature request
+      options:
+        - label: enhancement
+        - label: discussion
+        - label: help wanted
