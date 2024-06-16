@@ -8,15 +8,6 @@ body:
       value: |
         Thanks for taking the time to suggest a feature!
 
-  - type: input
-    id: title
-    attributes:
-      label: Title
-      description: A clear and concise title of the feature request
-      placeholder: "Type the feature title here"
-    validations:
-      required: true
-
   - type: textarea
     id: description
     attributes:

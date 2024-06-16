@@ -23,6 +23,10 @@ def test_vector_api():
     assert resp.headers["content-type"] == "application/json"
     assert resp.json()["conformsTo"]
 
+    # refresh to get newest catalog
+    resp = client.get(f"{vector_endpoint}/refresh")
+    assert resp.status_code == 200
+
     # collections
     resp = client.get(f"{vector_endpoint}/collections")
     assert resp.status_code == 200

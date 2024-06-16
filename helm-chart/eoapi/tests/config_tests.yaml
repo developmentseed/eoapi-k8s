@@ -15,7 +15,7 @@ tests:
           pattern: ^vector-envvar-configmap-RELEASE-NAME$
       - equal:
           path: data.TIPG_CATALOG_TTL
-          value: "0"
+          value: "300"
   - it: "raster configmap defaults"
     set:
       raster.enabled: true
@@ -43,4 +43,4 @@ tests:
           pattern: ^stac-envvar-configmap-RELEASE-NAME$
       - equal:
           path: data.WEB_CONCURRENCY
-          value: "10"
+          value: "5"

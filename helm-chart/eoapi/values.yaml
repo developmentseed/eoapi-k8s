@@ -1,84 +1,36 @@
-# default values for eoapi
-
-comment: >
-  some postgres variables are secrets that should be passed in via os environment variables.
-  for example, to pass username or password information during `helm template` or `helm install` do:
+comment_install: >
+  `service` and `gitSha` are required and defaulted value keys.
+  a manual installation looks like this:
 
   $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-  $ export PGUSER=s00pers3cr3t
-  $ export POSTGRES_USER=s00pers3cr3t
-  $ export POSTGRES_PASSWORD=superuserfoobar
-  $ export PGPASSWORD=foobar
-
   $ helm install \
       --namespace eoapi \
       --create-namespace \
       --set gitSha=$GITSHA \
-      --set db.settings.secrets.PGUSER=$PGUSER \
-      --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-      --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-      --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
       eoapi \
       ./eoapi
 
-  $ helm template . \
-      -s template/db/.yaml
-      -f values.yaml \
-      --set gitSha=$GITSHA \
-      --set db.settings.secrets.PGUSER=$PGUSER \
-      --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-      --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-      --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+# the chart on the gh-pages branch will provide
+# the correct updated value otherwise it's defaulted
+gitSha: "gitshaABC123"
 
 
-db:
-  environment: "k8s"
-  enabled: true
-  image:
-    name: ghcr.io/stac-utils/pgstac
-    tag: v0.8.2
-  command:
-      - "postgres"
-      - "-N"
-      - "500"
-  # toggle to true||false if you want the db test fixtures loaded
-  enable_data_fixtures: true
-  settings:
-    resources:
-      requests:
-        storage: "100Mi"
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "512m"
-        memory: "1024Mi"
-    secrets:
-      POSTGRES_DB: "postgis"
-      POSTGRES_USER: ""
-      POSTGRES_PASSWORD: ""
-      POSTGRES_PORT: "5432"
-      POSTGRES_HOST: "pgstac"
-      POSTGRES_HOST_READER: "pgstac"
-      POSTGRES_HOST_WRITER: "pgstac"
-      DB_MIN_CONN_SIZE: "1"
-      DB_MAX_CONN_SIZE: "15"
-      # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
-      PGDATA: "/var/lib/postgresql/data/pgdata"
-      PGUSER: ""
-      PGPASSWORD: ""
-      PGDATABASE: "postgis"
-
+######################
+# TESTING
+######################
 # only used in CI for running parallel helm installs
 testing: false
 
-# the chart on the gh-pages branch will provide the correct updated value otherwise it's defaulted
-gitSha: "gitshaABC123"
 
+######################
+# SERVICE & INGRESS
+######################
 service:
   port: 8080
 
 ingress:
-  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP` and a single Load Balancer and path rewrites for /vector, /stac, /raster
+  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP`
+  # and a single Load Balancer and path rewrites for /vector, /stac, /raster
   enabled: true
   className: "nginx"
   host: ""
@@ -87,8 +39,95 @@ ingress:
     secretName: eoapi-tls
     certManager: false
     certManagerIssuer: letsencrypt-prod
-    cerrtManagerEmail: ""
+    certManagerEmail: ""
 
+
+######################
+# DATABASE
+######################
+comment_db: >
+  We use the crunchydata postgres operator/cluster charts as the k8s internal HA solution for eoapi.
+  Those charts are therefore listed as a dependency of this chart in `Chart.yaml`.
+
+  0. make sure to install the operator first `helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo`
+  1. it will create a postgres cluster: see `postgrescluster.instances` spec below
+  2. will will also create user credentials and mount their secrets: see `postgrescluster.users` spec below
+
+  The `postgrescluster` specs below are pass-through values to configure those separate
+  charts. For more information read https://access.crunchydata.com/documentation/postgres-operator/latest
+
+# this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
+postgrescluster:
+  postgresVersion: 16
+  postGISVersion: 3.4
+  pgBouncerReplicas: 1
+  monitoring: false
+  backupsSize: 20Gi
+  instances:
+  - name: eoapi
+    replicas: 1
+    dataVolumeClaimSpec:
+      accessModes:
+      - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "10Gi"
+          cpu: "1024m"
+          memory: "3048Mi"
+  # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
+  users:
+    # `postgres` always is a `SUPERUSER` and cannot be adjusted with `options` flag
+    # we use this block here to create secrets for the `postgres` user that we can mount and lookup
+    - name: postgres
+      databases:
+        - eoapi
+        - postgres
+    # if you try to grant `options: 'SUPERUSER'` below to your eoapi service user
+    # then they will not be able to connect through the pgbouncer connection pooler, so be aware
+    # https://access.crunchydata.com/documentation/crunchy-postgres-containers/2.4.2/container-specifications/crunchy-pgbouncer/
+    # this user is currently unprivileged and the `pgstacBootstrap` container below will grant privileges
+    # when it boots via the `postgres` superuser above.
+    # see `/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml:initdb-sh-config`
+    - name: eoapi
+      databases:
+        - eoapi
+        - postgres
+      # default `password.type` is ASCII which follows the character set US-ASCII
+      # but which can contain characters that `asyncpg` dislikes
+      # see https://github.com/MagicStack/asyncpg/issues/1151
+      password:
+        type: AlphaNumeric
+
+# `pgstacBootstrap` is a pod that by default runs pgstac schema migrations
+# and optionally loads some fixtures for testing and examples
+# using the LOAD_FIXTURES env var below
+pgstacBootstrap:
+  enabled: true
+  image:
+    name: ghcr.io/stac-utils/pgstac
+    tag: v0.8.2
+  command:
+    - "sh"
+  args:
+    - "/opt/initdb/run-migrate-and-load.sh"
+  settings:
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+    envVars:
+      # toggle to "false" if you don't want fixtures default loaded
+      LOAD_FIXTURES: "true"
+      # toggle to `true` if you want to keep the job running as db jumpbox
+      KEEP_ALIVE: "false"
+
+
+######################
+# API SERVICES
+######################
 raster:
   enabled: true
   autoscaling:
@@ -115,7 +154,6 @@ raster:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -125,13 +163,6 @@ raster:
         cpu: "256m"
         memory: "3072Mi"
     envVars:
-      ##############
-      # uvicorn
-      ##############
-      HOST: "0.0.0.0"
-      PORT: "8080"
-      # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "10"
       ##############
       # titiler
       ##############
@@ -145,6 +176,13 @@ raster:
       PYTHONWARNINGS: "ignore"
       VSI_CACHE: "TRUE"
       VSI_CACHE_SIZE: "5000000"  # 5 MB (per file-handle)
+      ##############
+      # uvicorn
+      ##############
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      # https://www.uvicorn.org/settings/#production
+      WEB_CONCURRENCY: "5"
 
 stac:
   enabled: true
@@ -172,7 +210,6 @@ stac:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -188,7 +225,7 @@ stac:
       HOST: "0.0.0.0"
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "10"
+      WEB_CONCURRENCY: "5"
 
 vector:
   enabled: true
@@ -216,7 +253,6 @@ vector:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    timeout: 10
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -229,14 +265,16 @@ vector:
       ##############
       # tipg
       ##############
-      TIPG_CATALOG_TTL: "0"
+      TIPG_CATALOG_TTL: "300"
+      TIPG_DEBUG: "True"
       ##############
       # uvicorn
       ##############
       HOST: "0.0.0.0"
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "10"
+      WEB_CONCURRENCY: "5"
+
 docServer:
   enabled: true
 

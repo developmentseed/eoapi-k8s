@@ -8,15 +8,6 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report!
 
-  - type: input
-    id: title
-    attributes:
-      label: Title
-      description: A clear and concise title of the issue
-      placeholder: "Type the issue title here"
-    validations:
-      required: true
-
   - type: checkboxes
     id: labels
     attributes:

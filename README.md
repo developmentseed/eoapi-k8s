@@ -37,47 +37,56 @@ If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide be
  
 <a name="helminstall"/>
 
-## Helm Installation 
+## Helm Installation
 
-Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
+Once you have a k8s cluster set up you can `helm install` eoAPI with the following steps:
 
-1. `helm install` from https://devseed.com/eoapi-k8s/:
+0. `eoapi-k8s` depends on the [Crunchydata Postgresql Operator](https://access.crunchydata.com/documentation/postgres-operator/latest/installation/helm). Install that first:
+
+   ```python
+   $ helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+   ```
+
+
+1. Add the eoapi repo from https://devseed.com/eoapi-k8s/:
 
     ```python
-      # add the eoapi helm repo locally
       $ helm repo add eoapi https://devseed.com/eoapi-k8s/
-    
-      # list out the eoapi chart versions
-      $ helm search repo eoapi --versions
-      NAME            CHART VERSION   APP VERSION     DESCRIPTION                                       
-      eoapi/eoapi     0.1.1           0.1.0           Create a full Earth Observation API with Metada...
-      eoapi/eoapi     0.1.2           0.1.0           Create a full Earth Observation API with Metada...
-   
-      # add the required secret overrides to an arbitrarily named `.yaml` file (`config.yaml` below)
-      $ cat config.yaml 
-      db:
-        settings:
-          secrets:
-            PGUSER: "username"
-            POSTGRES_USER: "username"
-            PGPASSWORD: "password"
-            POSTGRES_PASSWORD: "password"
-    
-      # then run `helm install` with those overrides 
-      $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
     ```
 
-2. or `helm install` from this repo's `helm-chart/` folder:
+2. List out the eoapi chart versions
+    
+   ```python
+   $ helm search repo eoapi --versions
+   NAME            CHART VERSION   APP VERSION     DESCRIPTION                                       
+   eoapi/eoapi     0.2.14          0.3.1           Create a full Earth Observation API with Metada...
+   eoapi/eoapi     0.1.13          0.2.11          Create a full Earth Observation API with Metada...
+   ```
+3. Optionally override keys/values in the default `values.yaml` with a custom `config.yaml` like below:
+
+   ```python
+   $ cat config.yaml 
+   vector:
+     enable: false
+   pgstacBootstrap:
+     settings:
+       envVars:
+         LOAD_FIXTURES: "0"
+         RUN_FOREVER: "1"
+   ```
+4. Then `helm install` with those `config.yaml` values:
+
+   ```python
+   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
+   ```
+
+5. or check out this repo and `helm install` from this repo's `helm-chart/` folder:
 
     ```python
       ######################################################
       # create os environment variables for required secrets
       ######################################################
       $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-      $ export PGUSER=s00pers3cr3t
-      $ export POSTGRES_USER=s00pers3cr3t
-      $ export POSTGRES_PASSWORD=superuserfoobar
-      $ export PGPASSWORD=foobar
    
       $ cd ./helm-chart
 
@@ -85,10 +94,6 @@ Once you have a k8s cluster set up you can `helm install` eoAPI as follows:
           --namespace eoapi \
           --create-namespace \
           --set gitSha=$GITSHA \
-          --set db.settings.secrets.PGUSER=$PGUSER \
-          --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-          --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-          --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
           eoapi \
           ./eoapi
     ```

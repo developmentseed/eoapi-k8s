@@ -66,11 +66,78 @@ Create pgstac host string depending if .Values.testing
 */}}
 {{- define "eoapi.pgstacHostName" -}}
 {{- if .Values.testing }}
-{{- printf "%s-%s" "pgstac" .Release.Name }}
+{{- printf "%s-%s" "pgstacbootstrap" .Release.Name }}
 {{- else }}
 {{/* need to match what is default in values.yamls */}}
-{{- printf "%s" "pgstac" }}
+{{- printf "%s" "pgstacbootstrap" }}
 {{- end }}
+{{- end }}
+
+{{/*
+Secrets for postgres/postgis access have to be
+derived from what the crunchydata operator creates
+
+Also note that we want to use the pgbouncer-<port|host|uri>
+but currently it doesn't support `search_path` parameters
+(https://github.com/pgbouncer/pgbouncer/pull/73) which
+are required for much of *pgstac
+*/}}
+{{- define "eoapi.pgstacSecrets"  -}}
+{{- range $userName, $v := .Values.postgrescluster.users -}}
+{{/* do not render anything for the "postgres" user */}}
+{{- if not (eq (index $v "name") "postgres") }}
+- name: POSTGRES_USER
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: user
+- name: POSTGRES_PORT
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: port
+- name: POSTGRES_HOST
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: host
+- name: POSTGRES_HOST_READER
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: host
+- name: POSTGRES_HOST_WRITER
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: host
+- name: POSTGRES_PASS
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: password
+- name: POSTGRES_DBNAME
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: dbname
+- name: PGBOUNCER_URI
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: pgbouncer-uri
+- name: DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: uri
+{{- end }}
+{{- end }}
+- name: PGADMIN_URI
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Release.Name }}-pguser-postgres
+      key: uri
 {{- end }}
 
 {{/*
@@ -89,3 +156,29 @@ so we use this helper function to check autoscaling rules
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{/*
+validate:
+1. the .Values.postgrescluster.users array does not have more than two elements.
+2. at least one of the users is named "postgres".
+*/}}
+{{- define "eoapi.validatePostgresCluster" -}}
+{{- $users := .Values.postgrescluster.users | default (list) -}}
+
+{{- if gt (len $users) 2 -}}
+  {{- fail "The users array in postgrescluster should not have more than two users declared b/c the last user declared will override all secrets generated in eoapi.pgstacSecrets" -}}
+{{- end -}}
+
+{{- $hasPostgres := false -}}
+{{- range $index, $user := $users -}}
+  {{- if eq $user.name "postgres" -}}
+    {{- $hasPostgres = true -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if not $hasPostgres -}}
+  {{- fail "The users array in postgrescluster must contain at least one user named 'postgres'." -}}
+{{- end -}}
+
+{{- end -}}
+

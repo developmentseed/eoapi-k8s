@@ -2,7 +2,7 @@
 
 This is a verbose walkthrough. It uses `gcloud` and assumes you already have an GCP account and project where you want to run eoapi. We also assume that you have some prerequisites installed including `gcloud`, `kubectl` and `helm`.
 
-If you are familiar with Terraform would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform
+If you're familiar with Terraform and would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform
 
 # Table of Contents
 - [Pre-requisites](#pre-requisites)
