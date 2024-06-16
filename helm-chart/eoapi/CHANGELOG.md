@@ -2,8 +2,7 @@ version numbers below correspond to helm chart `appVersion`: see `./helm-chart/e
 ---
 ### 0.3.2 (2024-06-16)
 
-* backward breaking change: remove in-memory postgres database for crunchydata postgresql cluster
-
+* backward breaking change: remove in-memory postgres database and secret management for crunchydata postgresql cluster
 
 ### 0.3.1 (2024-01-19)
 
