@@ -10,19 +10,16 @@ $ head -n 9 <eoapi-k8s-repo>/values.schema.json
   "$schema": "http://json-schema.org/schema#",
   "type": "object",
   "required": [
-    "db",
     "service",
     "gitSha"
   ],
 ```
 
-Most of the required fields have common-sense defaults except traditional username and password secrets under `db`. 
+Most of the required fields have common-sense defaults. 
 The table below and the `values.yaml` comments should explain what the options and defaults are:
 
 |                               **Values Key**                              |                                                              **Description**                                                              |  **Default** | **Choices**            |
 |:-------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------|:------------|:------------------------|
-| `db.settings.secrets.PGUSER`<br>`db.settings.secrets.PGPASSWORD`              | username and password used by application for connections<br>https://www.postgresql.org/docs/current/libpq-envars.html                    |              |                        |
-| `db.settings.secrets.POSTGRES_USER`<br>`db.settings.secrets.POSTGRES_PASSWORD` | username and password used by<br>base postgresl image for admin purposes<br>see https://www.postgresql.org/docs/current/libpq-envars.html |              |                        |
 | `service.port`                                                              | the port that all vector/raster/stac services run on<br>used in `kind: Service` and `kind: Ingress`                                       |     8080     |   your favorite port   |
 | `gitSha`                                                                    | sha attached to a `kind: Deployment` key `metadata.labels`                                                                                | gitshaABC123 | your favorite sha      |
 
@@ -31,23 +28,11 @@ The table below and the `values.yaml` comments should explain what the options a
 
 ## Default Configuration
 
-Running `helm install` from https://devseed.com/eoapi-k8s/ with this simple `config.yml` overrides below
-should spin up similar infrastructure in EKS or GKE:
-
-```python
-$ cat config.yaml 
-db:
-  settings:
-    secrets:
-      PGUSER: "username"
-      POSTGRES_USER: "username"
-      PGPASSWORD: "password"
-      POSTGRES_PASSWORD: "password"
-```
+Running `helm install` from https://devseed.com/eoapi-k8s/ should spin up similar infrastructure in EKS or GKE:
 
 In EKS or GKE you'll by default get:
 
-* a pgstac PostgreSQL database deployment and service
+* a HA PostgreSQL database deployment and service via [Crunchdata's Postgresl Operator](https://access.crunchydata.com/documentation/postgres-operator)
 * the same vector and raster data fixtures used for testing loaded into the DB
 * a load balancer and nginx-compatible ingress with the following path rewrites:
     * a `/stac` service for `stac_fastapi.pgstac`
@@ -69,7 +54,7 @@ Here's a simplified high-level diagram to grok:
 
 |   **Values Key**  |                                                                 **Description**                                                                 | **Default** | **Choices**  |
 |:-----------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|:-----------|:--------------|
-| `autoscaling.type` | a simple example of a default metric (`cpu`) and custom metric (`requestRate`) to scale by. NOTE: `requestRate` is based on nginx metrics and currently isn't supported for `ingress.className: alb/gce` options yet. It will throw an error during install if you attemp this. If selecting `both` the metric that results in the "highest amount of change" wins. See https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#scaling-on-multiple-metrics for more info  | requestRate       | requestRate<br>cpu<br>both<br> |
+| `autoscaling.type` | a simple example of a default metric (`cpu`) and custom metric (`requestRate`) to scale by. If selecting `both` the metric that results in the "highest amount of change" wins. See [k8s documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#scaling-on-multiple-metrics) for more info  | requestRate       | requestRate<br>cpu<br>both<br> |
 
 #### `autoscaling.behaviour.[scaleDown||scaleUp]`
 

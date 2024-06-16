@@ -3,12 +3,11 @@ testing: true
 ingress:
   enabled: true
   className: "nginx"
-db:
+pgstacBootstrap:
   enabled: true
   settings:
     resources:
       requests:
-        storage: "100Mi"
         cpu: "256m"
         memory: "1024Mi"
       limits:
@@ -44,3 +43,6 @@ vector:
       requests:
         cpu: "256m"
         memory: "1024Mi"
+    envVars:
+      # needs to on so we can call /refresh for integration tests
+      TIPG_DEBUG: "True"
