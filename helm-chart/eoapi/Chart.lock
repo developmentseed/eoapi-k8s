@@ -1,0 +1,9 @@
+dependencies:
+- name: pgo
+  repository: ""
+  version: 5.5.2
+- name: postgrescluster
+  repository: ""
+  version: 5.5.2
+digest: sha256:88b79b5e364db5d6d1b636c5533628b2d874584f119b1630ec0b16ee6d0f9d88
+generated: "2024-06-06T11:50:50.141657-07:00"

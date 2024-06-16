@@ -10,7 +10,7 @@ jobs:
     if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini' || github.actor == 'sunu'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -19,11 +19,10 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - uses: azure/setup-helm@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: azure/setup-helm@v4
         with:
-          helm-version: v3.8.2
+          version: v3.15.2
+          #token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: update gh-pages with content from main
         env:

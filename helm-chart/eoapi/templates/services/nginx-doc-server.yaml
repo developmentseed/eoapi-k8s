@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-root-html
+  name: nginx-root-html-{{ .Release.Name }}
 data:
   index.html: |
     <html>
@@ -23,37 +23,37 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: doc-server
+  name: doc-server-{{ .Release.Name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: doc-server
+      app: doc-server-{{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: doc-server
+        app: doc-server-{{ .Release.Name }}
     spec:
       containers:
       - name: doc-server
         image: nginx:alpine
         volumeMounts:
-        - name: doc-html
+        - name: doc-html-{{ .Release.Name }}
           mountPath: /usr/share/nginx/html
         ports:
         - containerPort: 80
       volumes:
-      - name: doc-html
+      - name: doc-html-{{ .Release.Name }}
         configMap:
-          name: nginx-root-html
+          name: nginx-root-html-{{ .Release.Name }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: doc-server
+  name: doc-server-{{ .Release.Name }}
 spec:
   selector:
-    app: doc-server
+    app: doc-server-{{ .Release.Name }}
   ports:
     - protocol: TCP
       port: 80
