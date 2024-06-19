@@ -70,6 +70,8 @@ jobs:
 
           cd helm-chart
 
+          helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+
           helm install $RELEASE_NAME \
             --namespace eoapitest \
             --create-namespace \
