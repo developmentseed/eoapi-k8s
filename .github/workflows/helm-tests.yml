@@ -1,4 +1,4 @@
-name: CI
+name: CI - GKE
 
 on:
   push:
@@ -21,6 +21,147 @@ jobs:
       - run: |
           cd helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
+  k3s-integration-tests:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    needs: helm-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: debianmaster/actions-k3s@master
+        id: k3s
+        with:
+          version: 'latest'
+      - uses: azure/setup-helm@v3
+        with:
+          version: v3.8.2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: last commit sha if PR
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          echo "LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> ${GITHUB_ENV}
+
+      - name: last commit sha if push
+        if: ${{ github.event_name == 'push' }}
+        shell: bash
+        run: |
+          echo "LAST_COMMIT_SHA=${GITHUB_SHA}" >> ${GITHUB_ENV}
+
+      - name: set k8s .release.name suffix
+        run: |
+          # salt for randomness per test run
+          COMMITSHA=$(echo $LAST_COMMIT_SHA | cut -c 1-6)
+          SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
+          echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
+
+      - name: Install k3s
+        run: |
+          curl -sfL https://get.k3s.io | sh -
+          k3s kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+      - name: helm render/install eoapi templates
+        run: |
+          export PGUSER=username
+          export POSTGRES_USER=username
+          export PGPASSWORD=password
+          export POSTGRES_PASSWORD=password
+          export GITSHA='${{github.sha}}'
+
+          cd helm-chart
+
+          helm install $RELEASE_NAME \
+            --namespace eoapitest \
+            --create-namespace \
+            --set db.settings.secrets.POSTGRES_HOST=pgstac-$RELEASE_NAME \
+            --set db.settings.secrets.POSTGRES_HOST_READER=pgstac-$RELEASE_NAME \
+            --set db.settings.secrets.POSTGRES_HOST_WRITER=pgstac-$RELEASE_NAME \
+            --set db.settings.secrets.PGUSER=$PGUSER \
+            --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
+            --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
+            --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+            -f ./eoapi/values.yaml \
+            -f ./eoapi/test-unittest-values.yaml \
+            ./eoapi
+
+      - name: sleep for 10s seconds while services boot
+        shell: bash
+        run: sleep 10s
+
+      - id: watchservices
+        name: watch services boot
+        timeout-minutes: 10
+        continue-on-error: true
+        run: |
+          k3s kubectl config set-context --current --namespace=eoapitest
+          while [[ -z "$(k3s kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} k3s kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
+            echo "still waiting for raster service to start..."
+            sleep 1
+          done
+          echo "raster service has started, moving on..."
+          while [[ -z "$(k3s kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} k3s kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
+            echo "still waiting for vector service to start..."
+            sleep 1
+          done
+          echo "vector service has started, moving on..."
+          while [[ -z "$(k3s kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} k3s kubectl logs pod/{} | grep "GET /_mgmt/ping" | head -n 1)" ]]; do
+            echo "still waiting for stac service to start..."
+            sleep 1
+          done
+          echo "all services have started, moving on..."
+      
+      - name: cleanup if services fail to boot
+        if: steps.watchservices.outcome == 'failure'
+        run: |
+          echo "The previous step failed or timed out."
+          # force GH action to show failed result
+          exit 128
+
+      - name: install python unit-test dependencies
+        run: |
+          python -m pip install pytest httpx
+
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
+
+      - name: run the tests
+        id: testrunner
+        continue-on-error: true
+        run: |
+          k3s kubectl config set-context --current --namespace=eoapitest
+          PUBLICIP='http://'$(k3s kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
+          echo '#################################'
+          echo vector=$PUBLICIP/vector$RELEASE_NAME
+          echo stac=$PUBLICIP/stac$RELEASE_NAME
+          echo raster=$PUBLICIP/raster$RELEASE_NAME
+          echo '#################################'
+
+          sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$PUBLICIP/vector$RELEASE_NAME'|g" .github/workflows/tests/test_vector.py
+          head -n 5 .github/workflows/tests/test_vector.py
+          pytest .github/workflows/tests/test_vector.py
+
+          sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$PUBLICIP/stac$RELEASE_NAME'|g" .github/workflows/tests/test_stac.py
+          head -n 5 .github/workflows/tests/test_stac.py
+          pytest .github/workflows/tests/test_stac.py
+
+          sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
+          head -n 5 .github/workflows/tests/test_raster.py
+          pytest .github/workflows/tests/test_raster.py
+
+      - name: error if tests failed
+        if: steps.testrunner.outcome == 'failure'
+        run: |
+          echo "The previous step failed or timed out."
+          # force GH action to show failed result
+          exit 128
+
+      - name: helm uninstall eoapi templates
+        run: |
+          helm uninstall $RELEASE_NAME
+
   integration-tests-gcp:
     # run on:
     #  - all pushes to specified branch(es)
