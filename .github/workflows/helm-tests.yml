@@ -40,6 +40,7 @@ jobs:
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: v3.8.2
+          traefik-enabled: false
 
       - name: last commit sha if PR
         if: ${{ github.event_name == 'pull_request' }}
@@ -130,6 +131,7 @@ jobs:
         id: testrunner
         continue-on-error: true
         run: |
+          kubens
           kubectl config set-context --current --namespace=eoapitest
           PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
           echo '#################################'
