@@ -30,14 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: debianmaster/actions-k3s@master
-        id: k3s
+
+      - name: Start a local k3s cluster
+        uses: jupyterhub/action-k3s-helm@v4
         with:
-          version: 'latest'
-      - uses: azure/setup-helm@v3
-        with:
-          version: v3.8.2
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # See available:
+          # - k3s release channels at https://github.com/k3s-io/k3s/blob/HEAD/channel.yaml
+          # - k3s versions at https://github.com/k3s-io/k3s/tags
+          # - helm versions at https://github.com/helm/helm/tags
+          k3s-channel: latest
+          helm-version: v3.8.2
 
       - name: last commit sha if PR
         if: ${{ github.event_name == 'pull_request' }}
@@ -57,11 +59,6 @@ jobs:
           COMMITSHA=$(echo $LAST_COMMIT_SHA | cut -c 1-6)
           SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
           echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
-
-      - name: Install k3s
-        run: |
-          curl -sfL https://get.k3s.io | sh -
-          k3s kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
       - name: helm render/install eoapi templates
         run: |
@@ -96,18 +93,18 @@ jobs:
         timeout-minutes: 10
         continue-on-error: true
         run: |
-          k3s kubectl config set-context --current --namespace=eoapitest
-          while [[ -z "$(k3s kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} k3s kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
+          kubectl config set-context --current --namespace=eoapitest
+          while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
           done
           echo "raster service has started, moving on..."
-          while [[ -z "$(k3s kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} k3s kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
             echo "still waiting for vector service to start..."
             sleep 1
           done
           echo "vector service has started, moving on..."
-          while [[ -z "$(k3s kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} k3s kubectl logs pod/{} | grep "GET /_mgmt/ping" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /_mgmt/ping" | head -n 1)" ]]; do
             echo "still waiting for stac service to start..."
             sleep 1
           done
@@ -131,8 +128,8 @@ jobs:
         id: testrunner
         continue-on-error: true
         run: |
-          k3s kubectl config set-context --current --namespace=eoapitest
-          PUBLICIP='http://'$(k3s kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
+          kubectl config set-context --current --namespace=eoapitest
+          PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
           echo '#################################'
           echo vector=$PUBLICIP/vector$RELEASE_NAME
           echo stac=$PUBLICIP/stac$RELEASE_NAME
