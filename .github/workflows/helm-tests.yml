@@ -61,6 +61,12 @@ jobs:
           SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
           echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
 
+      - name: helm install ingress-nginx
+        run: |
+          helm upgrade --install ingress-nginx ingress-nginx \
+          --repo https://kubernetes.github.io/ingress-nginx \
+          --namespace ingress-nginx --create-namespace
+
       - name: helm render/install eoapi templates
         run: |
           export PGUSER=username
@@ -72,14 +78,6 @@ jobs:
           cd helm-chart
 
           helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
-          
-          helm upgrade --install ingress-nginx ingress-nginx \
-          --repo https://kubernetes.github.io/ingress-nginx \
-          --namespace ingress-nginx --create-namespace
-          kubectl wait --namespace ingress-nginx \
-            --for=condition=ready pod \
-            --selector=app.kubernetes.io/component=controller \
-            --timeout=120s
 
           helm install $RELEASE_NAME \
             --namespace eoapitest \
