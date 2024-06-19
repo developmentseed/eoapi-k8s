@@ -164,11 +164,9 @@ jobs:
 
   integration-tests-gcp:
     # run on:
-    #  - all pushes to specified branch(es)
     #  - a PR was just labeled 'test-integration'
     #  - a PR with 'test-integration' label was opened, reopened, or synchronized
     if: |
-      github.event_name == 'push' ||
       github.event.label.name == 'test-integration-gcp' ||
       contains( github.event.pull_request.labels.*.name, 'test-integration-gcp')
     permissions:
