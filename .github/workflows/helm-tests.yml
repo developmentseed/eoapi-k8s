@@ -72,7 +72,7 @@ jobs:
           cd helm-chart
 
           helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
-          hhelm upgrade --install ingress-nginx ingress-nginx \
+          helm upgrade --install ingress-nginx ingress-nginx \
           --repo https://kubernetes.github.io/ingress-nginx \
           --namespace ingress-nginx --create-namespace
 
