@@ -73,9 +73,7 @@ jobs:
 
           helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
           
-          helm upgrade --install ingress-nginx ingress-nginx \
-          --repo https://kubernetes.github.io/ingress-nginx \
-          --namespace eoapi
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.7.1/deploy/static/provider/baremetal/deploy.yaml
 
           helm install $RELEASE_NAME \
             --namespace eoapitest \
