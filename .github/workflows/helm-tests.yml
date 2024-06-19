@@ -1,4 +1,4 @@
-name: CI - GKE
+name: CI
 
 on:
   push:
@@ -22,11 +22,11 @@ jobs:
           cd helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
   k3s-integration-tests:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    #if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: 'read'
       id-token: 'write'
-    needs: helm-tests
+    #needs: helm-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,6 +40,8 @@ jobs:
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: v3.8.2
+          traefik-enabled: false # must disable to use nginx ingress
+          docker-enabled: true
 
       - name: last commit sha if PR
         if: ${{ github.event_name == 'pull_request' }}
@@ -60,6 +62,12 @@ jobs:
           SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
           echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
 
+      - name: helm install ingress-nginx
+        run: |
+          helm upgrade --install ingress-nginx ingress-nginx \
+          --repo https://kubernetes.github.io/ingress-nginx \
+          --namespace ingress-nginx --create-namespace --debug
+
       - name: helm render/install eoapi templates
         run: |
           export PGUSER=username
@@ -69,6 +77,8 @@ jobs:
           export GITSHA='${{github.sha}}'
 
           cd helm-chart
+
+          helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
 
           helm install $RELEASE_NAME \
             --namespace eoapitest \
@@ -128,6 +138,7 @@ jobs:
         id: testrunner
         continue-on-error: true
         run: |
+          kubectl get namespace
           kubectl config set-context --current --namespace=eoapitest
           PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
           echo '#################################'
