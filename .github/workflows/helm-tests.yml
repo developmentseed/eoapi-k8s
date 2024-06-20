@@ -131,10 +131,12 @@ jobs:
         id: testrunner
         continue-on-error: true
         run: |
+          # Get services and ingresses
           kubectl get svc --all-namespaces
           kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
           kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.io "$name" -n "$namespace"; done
-
+          
+          # Set namespace context
           kubectl config set-context --current --namespace=eoapitest
           PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo '#################################'
@@ -142,18 +144,46 @@ jobs:
           echo stac=$PUBLICIP/stac$RELEASE_NAME
           echo raster=$PUBLICIP/raster$RELEASE_NAME
           echo '#################################'
-
+          
+          # Update test scripts with endpoint URLs
           sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$PUBLICIP/vector$RELEASE_NAME'|g" .github/workflows/tests/test_vector.py
           head -n 5 .github/workflows/tests/test_vector.py
           pytest .github/workflows/tests/test_vector.py
-
+          vector_exit_status=$?
+          
+          if [ $vector_exit_status -ne 0 ]; then
+            echo "Test vector failed. Fetching logs..."
+            kubectl logs deployment/traefik -n kube-system
+            kubectl logs deployment/vector-eoapi22fe12109 -n eoapitest
+          fi
+          
           sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$PUBLICIP/stac$RELEASE_NAME'|g" .github/workflows/tests/test_stac.py
           head -n 5 .github/workflows/tests/test_stac.py
           pytest .github/workflows/tests/test_stac.py
-
+          stac_exit_status=$?
+          
+          if [ $stac_exit_status -ne 0 ]; then
+            echo "Test stac failed. Fetching logs..."
+            kubectl logs deployment/traefik -n kube-system
+            kubectl logs deployment/stac-eoapi22fe12109 -n eoapitest
+          fi
+          
           sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
           head -n 5 .github/workflows/tests/test_raster.py
           pytest .github/workflows/tests/test_raster.py
+          raster_exit_status=$?
+          
+          if [ $raster_exit_status -ne 0 ]; then
+            echo "Test raster failed. Fetching logs..."
+            kubectl logs deployment/traefik -n kube-system
+            kubectl logs deployment/raster-eoapi22fe12109 -n eoapitest
+          fi
+          
+          # Check if any test failed and exit with an error if so
+          if [ $vector_exit_status -ne 0 ] || [ $stac_exit_status -ne 0 ] || [ $raster_exit_status -ne 0 ]; then
+            exit 1
+          fi
+          
 
       - name: error if tests failed
         if: steps.testrunner.outcome == 'failure'
