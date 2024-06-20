@@ -132,7 +132,9 @@ jobs:
         continue-on-error: true
         run: |
           kubectl get svc --all-namespaces
-          kubectl get ingress --all-namespaces
+          kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
+          kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.containo.us "$name" -n "$namespace"; done
+
           kubectl config set-context --current --namespace=eoapitest
           PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo '#################################'
