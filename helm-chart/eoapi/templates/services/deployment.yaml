@@ -29,9 +29,9 @@ spec:
         name: {{ $serviceName }}
         command:
           {{- toYaml (index $v "command") | nindent 10 }}
-          {{- if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") (not $.Values.testing)) }}
+          {{- if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik")) (not $.Values.testing)) }}
           - "--root-path=/{{ $serviceName }}"
-          {{- else if (and ($.Values.ingress.className) (eq $.Values.ingress.className "nginx") ($.Values.testing)) }}
+          {{- else if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik")) ($.Values.testing)) }}
           - "--root-path=/{{ $serviceName }}{{ $.Release.Name }}"
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
