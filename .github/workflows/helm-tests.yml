@@ -40,7 +40,8 @@ jobs:
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: v3.8.2
-          traefik-enabled: false
+          traefik-enabled: false # must disable to use nginx ingress
+          docker-enabled: true
 
       - name: last commit sha if PR
         if: ${{ github.event_name == 'pull_request' }}
@@ -65,7 +66,7 @@ jobs:
         run: |
           helm upgrade --install ingress-nginx ingress-nginx \
           --repo https://kubernetes.github.io/ingress-nginx \
-          --namespace ingress-nginx --create-namespace
+          --namespace ingress-nginx --create-namespace --debug
 
       - name: helm render/install eoapi templates
         run: |
