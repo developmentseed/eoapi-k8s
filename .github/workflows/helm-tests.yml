@@ -148,19 +148,19 @@ jobs:
           # Update test scripts with endpoint URLs
           sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$PUBLICIP/vector$RELEASE_NAME'|g" .github/workflows/tests/test_vector.py
           head -n 5 .github/workflows/tests/test_vector.py
-          pytest .github/workflows/tests/test_vector.py
-          vector_exit_status=$?
+          pytest .github/workflows/tests/test_vector.py || vector_exit_status=1
           
           if [ $vector_exit_status -ne 0 ]; then
             echo "Test vector failed. Fetching logs..."
             kubectl logs deployment/traefik -n kube-system
             kubectl logs deployment/vector-eoapi22fe12109 -n eoapitest
+            exit 1
           fi
+      
           
           sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$PUBLICIP/stac$RELEASE_NAME'|g" .github/workflows/tests/test_stac.py
           head -n 5 .github/workflows/tests/test_stac.py
-          pytest .github/workflows/tests/test_stac.py
-          stac_exit_status=$?
+          pytest .github/workflows/tests/test_stac.py || stac_exit_status=1
           
           if [ $stac_exit_status -ne 0 ]; then
             echo "Test stac failed. Fetching logs..."
@@ -170,8 +170,7 @@ jobs:
           
           sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
           head -n 5 .github/workflows/tests/test_raster.py
-          pytest .github/workflows/tests/test_raster.py
-          raster_exit_status=$?
+          pytest .github/workflows/tests/test_raster.py || raster_exit_status=1
           
           if [ $raster_exit_status -ne 0 ]; then
             echo "Test raster failed. Fetching logs..."
