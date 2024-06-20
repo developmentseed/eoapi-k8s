@@ -2,7 +2,7 @@
 testing: true
 ingress:
   enabled: true
-  className: "nginx"
+  className: "traefik"
 pgstacBootstrap:
   enabled: true
   settings:
