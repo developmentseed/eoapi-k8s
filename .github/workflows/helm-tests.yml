@@ -131,9 +131,9 @@ jobs:
         id: testrunner
         continue-on-error: true
         run: |
-          kubectl get namespace
+          kubectl get svc
           kubectl config set-context --current --namespace=eoapitest
-          PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
+          PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo '#################################'
           echo vector=$PUBLICIP/vector$RELEASE_NAME
           echo stac=$PUBLICIP/stac$RELEASE_NAME
