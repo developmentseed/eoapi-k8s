@@ -26,7 +26,7 @@
       "properties": {
         "className": {
           "type": "string",
-          "pattern": "^(nginx|testing123)$"
+          "pattern": "^(nginx|traefik|testing123)$"
         }
       }
     },
