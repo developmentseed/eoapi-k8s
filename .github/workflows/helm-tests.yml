@@ -153,7 +153,7 @@ jobs:
           if [ $vector_exit_status -ne 0 ]; then
             echo "Test vector failed. Fetching logs..."
             kubectl logs deployment/traefik -n kube-system
-            kubectl logs 'svc/vector$RELEASE_NAME' -n eoapitest
+            kubectl logs 'svc/vector${RELEASE_NAME}' -n eoapitest
             exit 1
           fi
       
@@ -165,7 +165,7 @@ jobs:
           if [ $stac_exit_status -ne 0 ]; then
             echo "Test stac failed. Fetching logs..."
             kubectl logs deployment/traefik -n kube-system
-            kubectl logs 'svc/stac$RELEASE_NAME' -n eoapitest
+            kubectl logs 'svc/stac${RELEASE_NAME}' -n eoapitest
           fi
           
           sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
@@ -175,7 +175,7 @@ jobs:
           if [ $raster_exit_status -ne 0 ]; then
             echo "Test raster failed. Fetching logs..."
             kubectl logs deployment/traefik -n kube-system
-            kubectl logs 'svc/raster$RELEASE_NAME' -n eoapitest
+            kubectl logs 'svc/raster${RELEASE_NAME}' -n eoapitest
           fi
           
           # Check if any test failed and exit with an error if so
