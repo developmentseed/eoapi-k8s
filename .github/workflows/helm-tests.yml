@@ -1,4 +1,4 @@
-name: CI - GKE
+name: CI
 
 on:
   push:
@@ -22,11 +22,11 @@ jobs:
           cd helm-chart
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
   k3s-integration-tests:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    #if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: 'read'
       id-token: 'write'
-    needs: helm-tests
+    #needs: helm-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
