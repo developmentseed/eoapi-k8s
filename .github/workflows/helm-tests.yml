@@ -145,7 +145,7 @@ jobs:
 
           sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$PUBLICIP/vector$RELEASE_NAME'|g" .github/workflows/tests/test_vector.py
           head -n 5 .github/workflows/tests/test_vector.py
-          pytest .github/workflows/tests/test_vector.py || kubectl log svc/vector-$RELEASE_NAME
+          pytest .github/workflows/tests/test_vector.py || kubectl logs svc/vector-$RELEASE_NAME
 
           sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$PUBLICIP/stac$RELEASE_NAME'|g" .github/workflows/tests/test_stac.py
           head -n 5 .github/workflows/tests/test_stac.py
