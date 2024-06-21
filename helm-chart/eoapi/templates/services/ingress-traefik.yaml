@@ -7,7 +7,7 @@ metadata:
 spec:
   replacePathRegex:
     regex: "^/(raster|vector|stac){{ $.Release.Name }}(/|$)(.*)"
-    replacement: "/$3"
+    replacement: "/$2"
 {{- end }}
 ---
 {{- if (and (.Values.ingress.enabled) (eq .Values.ingress.className "traefik")) }}
