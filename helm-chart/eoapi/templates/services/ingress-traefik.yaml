@@ -1,4 +1,4 @@
-{{- include "eoapi.validateTraefik" -}}
+{{- include "eoapi.validateTraefik" . -}}
 {{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
