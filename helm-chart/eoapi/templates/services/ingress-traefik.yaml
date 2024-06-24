@@ -1,3 +1,4 @@
+{{- include "eoapi.validateTraefik" -}}
 {{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -7,7 +8,7 @@ metadata:
 spec:
   replacePathRegex:
     regex: "^/(raster|vector|stac){{ $.Release.Name }}(/|$)(.*)"
-    replacement: "/$3"
+    replacement: "$1{{ $.Release.Name }}/$3"
 {{- end }}
 ---
 {{- if (and (.Values.ingress.enabled) (eq .Values.ingress.className "traefik")) }}
@@ -43,7 +44,7 @@ spec:
           {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
           {{- if (and (index $v "enabled") (not $.Values.testing)) }}
           - pathType: Prefix
-            path: "/{{ $serviceName }}(/|$)(.*)"
+            path: "/{{ $serviceName }}"
             backend:
               service:
                 name: {{ $serviceName }}
@@ -51,7 +52,7 @@ spec:
                   number: {{ $.Values.service.port }}
           {{- else if (and (index $v "enabled") ($.Values.testing)) }}
           - pathType: Prefix
-            path: "/{{ $serviceName }}{{ $.Release.Name }}(/|$)(.*)"
+            path: "/{{ $serviceName }}{{ $.Release.Name }}"
             backend:
               service:
                 name: {{ $serviceName }}-{{ $.Release.Name }}

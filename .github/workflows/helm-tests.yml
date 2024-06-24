@@ -40,6 +40,7 @@ jobs:
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: v3.8.2
+          metrics-enabled: false
           docker-enabled: true
 
       - name: last commit sha if PR
@@ -81,8 +82,8 @@ jobs:
         shell: bash
         run: sleep 10s
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
 
       - id: watchservices
         name: watch services boot
@@ -226,7 +227,7 @@ jobs:
             --namespace $RELEASE_NAME \
             --create-namespace \
             -f ./eoapi/values.yaml \
-            -f ./eoapi/test-unittest-values.yaml \
+            -f ./eoapi/test-gcp-unittest-values.yaml \
             ./eoapi
 
       - name: sleep for 10s seconds while services boot
