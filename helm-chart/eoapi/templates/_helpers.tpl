@@ -187,7 +187,7 @@ validate:
 that you can only use traefik as ingress when `testing=true`
 */}}
 {{- define "eoapi.validateTraefik" -}}
-{{- if and (not .Values.testing) (.Values.ingress.className "traefik") $ -}}
+{{- if and (not .Values.testing) (eq .Values.ingress.className "traefik") $ -}}
   {{- fail "you cannot use traefik yet outside of testing" -}}
 {{- end -}}
 
