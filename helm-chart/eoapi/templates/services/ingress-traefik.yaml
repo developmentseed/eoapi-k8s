@@ -6,7 +6,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   replacePathRegex:
-    regex: "^/(raster|vector|stac){{ $.Release.Name }}(/|$)(.*)"
+    regex: "^/(raster|vector|stac)(/|$)(.*)"
     replacement: "/$3"
 {{- end }}
 ---
@@ -25,7 +25,7 @@ metadata:
     app: traefiksharedingress
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: "{{ $.Release.Namespace }}-path-rewrite-middleware-{{ $.Release.Name }}@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "path-rewrite-middleware-{{ $.Release.Name }}@kubernetescrd"
     {{- if (and (.Values.ingress.tls.enabled) (.Values.ingress.tls.certManager)) }}
     cert-manager.io/issuer: {{ .Values.ingress.tls.certManagerIssuer }}
     {{- end }}

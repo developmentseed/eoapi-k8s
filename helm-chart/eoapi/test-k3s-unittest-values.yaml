@@ -1,8 +1,8 @@
 # used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
-testing: true
+testing: false
 ingress:
   enabled: true
-  className: "nginx"
+  className: "traefik"
 pgstacBootstrap:
   enabled: true
   settings:

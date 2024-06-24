@@ -74,7 +74,7 @@ jobs:
           helm install $RELEASE_NAME \
             --namespace default \
             -f ./eoapi/values.yaml \
-            -f ./eoapi/test-unittest-values.yaml \
+            -f ./eoapi/test-k3s-unittest-values.yaml \
             ./eoapi
 
       - name: sleep for 10s seconds while services boot
