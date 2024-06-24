@@ -61,28 +61,17 @@ jobs:
           SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
           echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
 
+      - name: helm install crunchydata postgres operator
+        run: |
+          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+
       - name: helm render/install eoapi templates
         run: |
-          export PGUSER=username
-          export POSTGRES_USER=username
-          export PGPASSWORD=password
-          export POSTGRES_PASSWORD=password
           export GITSHA='${{github.sha}}'
 
           cd helm-chart
 
-          helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
-
           helm install $RELEASE_NAME \
-            --namespace eoapitest \
-            --create-namespace \
-            --set db.settings.secrets.POSTGRES_HOST=pgstac-$RELEASE_NAME \
-            --set db.settings.secrets.POSTGRES_HOST_READER=pgstac-$RELEASE_NAME \
-            --set db.settings.secrets.POSTGRES_HOST_WRITER=pgstac-$RELEASE_NAME \
-            --set db.settings.secrets.PGUSER=$PGUSER \
-            --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-            --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-            --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
             -f ./eoapi/values.yaml \
             -f ./eoapi/test-unittest-values.yaml \
             ./eoapi
@@ -90,6 +79,9 @@ jobs:
       - name: sleep for 10s seconds while services boot
         shell: bash
         run: sleep 10s
+
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v
 
       - id: watchservices
         name: watch services boot
@@ -123,9 +115,6 @@ jobs:
       - name: install python unit-test dependencies
         run: |
           python -m pip install pytest httpx
-
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
 
       - name: run the tests
         id: testrunner
@@ -222,6 +211,10 @@ jobs:
           gcloud components install gke-gcloud-auth-plugin
           gcloud container clusters get-credentials k8seed-labs-cluster --zone us-central1-f
 
+      - name: helm install crunchydata postgres operator
+        run: |
+          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+
       - name: helm render/install eoapi templates
         run: |
           export GITSHA='${{github.sha}}'
@@ -238,6 +231,9 @@ jobs:
       - name: sleep for 10s seconds while services boot
         shell: bash
         run: sleep 10s
+
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
 
       - id: watchservices
         name: watch services boot
@@ -275,9 +271,6 @@ jobs:
       - name: install python unit-test dependencies
         run: |
           python -m pip install pytest httpx
-
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
 
       - name: run the tests
         id: testrunner
