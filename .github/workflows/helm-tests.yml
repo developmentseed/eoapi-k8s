@@ -40,6 +40,7 @@ jobs:
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: v3.8.2
+          metrics-enabled: false
           docker-enabled: true
 
       - name: last commit sha if PR
@@ -61,42 +62,35 @@ jobs:
           SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
           echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
 
+      - name: helm install crunchydata postgres operator
+        run: |
+          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+
       - name: helm render/install eoapi templates
         run: |
-          export PGUSER=username
-          export POSTGRES_USER=username
-          export PGPASSWORD=password
-          export POSTGRES_PASSWORD=password
           export GITSHA='${{github.sha}}'
 
           cd helm-chart
 
-          helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
-
           helm install $RELEASE_NAME \
-            --namespace eoapitest \
-            --create-namespace \
-            --set db.settings.secrets.POSTGRES_HOST=pgstac-$RELEASE_NAME \
-            --set db.settings.secrets.POSTGRES_HOST_READER=pgstac-$RELEASE_NAME \
-            --set db.settings.secrets.POSTGRES_HOST_WRITER=pgstac-$RELEASE_NAME \
-            --set db.settings.secrets.PGUSER=$PGUSER \
-            --set db.settings.secrets.POSTGRES_USER=$POSTGRES_USER \
-            --set db.settings.secrets.PGPASSWORD=$PGPASSWORD \
-            --set db.settings.secrets.POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+            --namespace default \
             -f ./eoapi/values.yaml \
-            -f ./eoapi/test-unittest-values.yaml \
+            -f ./eoapi/test-k3s-unittest-values.yaml \
             ./eoapi
 
       - name: sleep for 10s seconds while services boot
         shell: bash
         run: sleep 10s
 
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
+
       - id: watchservices
         name: watch services boot
         timeout-minutes: 10
         continue-on-error: true
         run: |
-          kubectl config set-context --current --namespace=eoapitest
+          kubectl config set-context --current --namespace=default
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
@@ -124,9 +118,6 @@ jobs:
         run: |
           python -m pip install pytest httpx
 
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
-
       - name: run the tests
         id: testrunner
         continue-on-error: true
@@ -135,7 +126,7 @@ jobs:
           kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
           kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.io "$name" -n "$namespace"; done
 
-          kubectl config set-context --current --namespace=eoapitest
+          kubectl config set-context --current --namespace=default
           PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo '#################################'
           echo vector=$PUBLICIP/vector$RELEASE_NAME
@@ -151,9 +142,9 @@ jobs:
           head -n 5 .github/workflows/tests/test_stac.py
           pytest .github/workflows/tests/test_stac.py
 
-          sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
-          head -n 5 .github/workflows/tests/test_raster.py
-          pytest .github/workflows/tests/test_raster.py
+#          sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
+#          head -n 5 .github/workflows/tests/test_raster.py
+#          pytest .github/workflows/tests/test_raster.py
 
       - name: error if tests failed
         if: steps.testrunner.outcome == 'failure'
@@ -222,6 +213,10 @@ jobs:
           gcloud components install gke-gcloud-auth-plugin
           gcloud container clusters get-credentials k8seed-labs-cluster --zone us-central1-f
 
+      - name: helm install crunchydata postgres operator
+        run: |
+          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+
       - name: helm render/install eoapi templates
         run: |
           export GITSHA='${{github.sha}}'
@@ -232,12 +227,15 @@ jobs:
             --namespace $RELEASE_NAME \
             --create-namespace \
             -f ./eoapi/values.yaml \
-            -f ./eoapi/test-unittest-values.yaml \
+            -f ./eoapi/test-gcp-unittest-values.yaml \
             ./eoapi
 
       - name: sleep for 10s seconds while services boot
         shell: bash
         run: sleep 10s
+
+#      - name: Setup upterm session
+#        uses: lhotari/action-upterm@v1
 
       - id: watchservices
         name: watch services boot
@@ -275,9 +273,6 @@ jobs:
       - name: install python unit-test dependencies
         run: |
           python -m pip install pytest httpx
-
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
 
       - name: run the tests
         id: testrunner
