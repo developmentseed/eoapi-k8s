@@ -64,7 +64,7 @@ jobs:
 
       - name: helm install crunchydata postgres operator
         run: |
-          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo  --version 5.5.2
 
       - name: helm render/install eoapi templates
         run: |
@@ -215,7 +215,7 @@ jobs:
 
       - name: helm install crunchydata postgres operator
         run: |
-          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo  --version 5.5.2
 
       - name: helm render/install eoapi templates
         run: |
