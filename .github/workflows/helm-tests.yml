@@ -72,6 +72,7 @@ jobs:
           cd helm-chart
 
           helm install $RELEASE_NAME \
+            --namespace default \
             -f ./eoapi/values.yaml \
             -f ./eoapi/test-unittest-values.yaml \
             ./eoapi
@@ -80,15 +81,15 @@ jobs:
         shell: bash
         run: sleep 10s
 
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v
 
       - id: watchservices
         name: watch services boot
         timeout-minutes: 10
         continue-on-error: true
         run: |
-          kubectl config set-context --current --namespace=eoapitest
+          kubectl config set-context --current --namespace=default
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
@@ -124,7 +125,7 @@ jobs:
           kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
           kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.io "$name" -n "$namespace"; done
 
-          kubectl config set-context --current --namespace=eoapitest
+          kubectl config set-context --current --namespace=default
           PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo '#################################'
           echo vector=$PUBLICIP/vector$RELEASE_NAME
