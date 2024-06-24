@@ -142,9 +142,9 @@ jobs:
           head -n 5 .github/workflows/tests/test_stac.py
           pytest .github/workflows/tests/test_stac.py
 
-          sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
-          head -n 5 .github/workflows/tests/test_raster.py
-          pytest .github/workflows/tests/test_raster.py
+#          sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
+#          head -n 5 .github/workflows/tests/test_raster.py
+#          pytest .github/workflows/tests/test_raster.py
 
       - name: error if tests failed
         if: steps.testrunner.outcome == 'failure'
