@@ -66,6 +66,7 @@ jobs:
         run: |
           helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
 
+
       - name: helm render/install eoapi templates
         run: |
           export GITSHA='${{github.sha}}'
