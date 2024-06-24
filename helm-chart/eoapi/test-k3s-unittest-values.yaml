@@ -1,5 +1,5 @@
 # used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
-testing: false
+testing: true
 ingress:
   enabled: true
   className: "traefik"
