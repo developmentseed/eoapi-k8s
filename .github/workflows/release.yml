@@ -5,6 +5,9 @@ on:
     branches:
       - gh-pages
 
+env:
+  HELM_VERSION: v3.15.2
+
 jobs:
   release:
     if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini' || github.actor == 'sunu'
@@ -21,7 +24,7 @@ jobs:
 
       - uses: azure/setup-helm@v4
         with:
-          version: v3.15.2
+          version: $HELM_VERSION
           #token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: update gh-pages with content from main
