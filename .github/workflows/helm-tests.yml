@@ -82,8 +82,8 @@ jobs:
         shell: bash
         run: sleep 10s
 
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - id: watchservices
         name: watch services boot
