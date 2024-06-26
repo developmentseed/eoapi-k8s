@@ -45,7 +45,6 @@ jobs:
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: ${{ env.HELM_VERSION }}
-          helm-version: v3.8.2
           metrics-enabled: false
           docker-enabled: true
 
