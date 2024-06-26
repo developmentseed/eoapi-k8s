@@ -54,14 +54,14 @@ spec:
             path: /(/|$)
             backend:
               service:
-                name: doc-server
+                name: doc-server-{{ $.Release.Name }}
                 port:
                   number: 80
           {{- end }}
-      {{- if (and (not .Values.testing) (.Values.ingress.host)) }}
+      {{- if (.Values.ingress.host) }}
       host: {{ .Values.ingress.host }}
       {{- end }}
-  {{- if (and (not .Values.testing) (.Values.ingress.host) (.Values.ingress.tls.enabled)) }}
+  {{- if (and (.Values.ingress.host) (.Values.ingress.tls.enabled)) }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
