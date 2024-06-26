@@ -1,15 +1,16 @@
 """test EOapi."""
-
 import httpx
+import os
 
 # better timeouts
 timeout = httpx.Timeout(15.0, connect=60.0)
-client = httpx.Client(timeout=timeout)
+if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
+    client = httpx.Client(timeout=timeout, verify=False)
+else:
+    client = httpx.Client(timeout=timeout)
 
-raster_endpoint="http://k8s-eoapi-ingressn-cd16d0ed58-580a04972ec20c3c.elb.us-west-1.amazonaws.com/raster"
 
-
-def test_raster_api():
+def test_raster_api(raster_endpoint):
     """test api."""
     resp = client.get(
         f"{raster_endpoint}/healthz", headers={"Accept-Encoding": "br, gzip"}
@@ -18,7 +19,7 @@ def test_raster_api():
     assert resp.headers["content-type"] == "application/json"
 
 
-def test_mosaic_api():
+def test_mosaic_api(raster_endpoint):
     """test mosaic."""
     query = {"collections": ["noaa-emergency-response"], "filter-lang": "cql-json"}
     resp = client.post(f"{raster_endpoint}/searches/register", json=query)
@@ -55,7 +56,7 @@ def test_mosaic_api():
     assert "content-encoding" not in resp.headers
 
 
-def test_mosaic_collection_api():
+def test_mosaic_collection_api(raster_endpoint):
     """test mosaic collection."""
     resp = client.get(
         f"{raster_endpoint}/collections/noaa-emergency-response/-85.6358,36.1624/assets"
@@ -85,7 +86,7 @@ def test_mosaic_collection_api():
     assert "content-encoding" not in resp.headers
 
 
-def test_mosaic_search():
+def test_mosaic_search(raster_endpoint):
     """test mosaic."""
     # register some fake mosaic
     searches = [
@@ -203,7 +204,7 @@ def test_mosaic_search():
     assert "owner" in resp.json()["searches"][0]["search"]["metadata"]
 
 
-def test_item():
+def test_item(raster_endpoint):
     """test stac endpoints."""
     resp = client.get(
         f"{raster_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/assets",

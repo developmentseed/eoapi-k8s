@@ -1,5 +1,15 @@
 version numbers below correspond to helm chart `appVersion`: see `./helm-chart/eoapi/Chart.yaml`
 ---
+### 0.3.3 (2024-06-26)
+
+* add k3 integration tests
+* break out GCP integreation tests and force them to use TLS
+* clean it up
+
+### 0.3.2 (2024-06-16)
+
+* backward breaking change: remove in-memory postgres database and secret management for crunchydata postgresql cluster
+
 ### 0.3.1 (2024-01-19)
 
 * removed support for having anything but `ingresss.className=='nginx'`

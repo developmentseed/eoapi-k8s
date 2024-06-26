@@ -1,0 +1,62 @@
+# used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
+testing: true
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  # NOTE: for these integration tests `ingress.host`
+  # is unique and passed during helm install using --set
+  # host: $RELEASE_NAME.k8s.labs.ds.io
+  tls:
+    enabled: true
+    certManager: true
+    secretName: eoapi-tls
+
+pgstacBootstrap:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+raster:
+  enabled: true
+  settings:
+    resources:
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+stac:
+  enabled: true
+  settings:
+    resources:
+      limits:
+        cpu: "1280m"
+        memory: "1536Mi"
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+vector:
+  enabled: true
+  settings:
+    resources:
+      limits:
+        cpu: "768m"
+        memory: "1536Mi"
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+    envVars:
+      # needs to on so we can call /refresh for integration tests
+      TIPG_DEBUG: "True"
+      TIPG_CATALOG_TTL: "30"

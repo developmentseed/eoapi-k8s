@@ -1,4 +1,17 @@
-{{- if (and (.Values.ingress.enabled) (eq .Values.ingress.className "nginx")) }}
+{{- include "eoapi.validateTraefik" . -}}
+{{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: path-rewrite-middleware-{{ $.Release.Name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  replacePathRegex:
+    regex: "^/(raster|vector|stac){{ $.Release.Name }}(/|$)(.*)"
+    replacement: "$1{{ $.Release.Name }}/$3"
+{{- end }}
+---
+{{- if (and (.Values.ingress.enabled) (eq .Values.ingress.className "traefik")) }}
 {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" $.Capabilities.KubeVersion.GitVersion -}}
@@ -8,13 +21,12 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: nginx-service-ingress-shared-{{ $.Release.Name }}
+  name: traefik-service-ingress-shared-{{ $.Release.Name }}
   labels:
-    app: nginxsharedingress
+    app: traefiksharedingress
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/enable-cors: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ $.Release.Namespace }}-path-rewrite-middleware-{{ $.Release.Name }}@kubernetescrd"
     {{- if (and (.Values.ingress.tls.enabled) (.Values.ingress.tls.certManager)) }}
     cert-manager.io/issuer: {{ .Values.ingress.tls.certManagerIssuer }}
     {{- end }}
@@ -32,7 +44,7 @@ spec:
           {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
           {{- if (and (index $v "enabled") (not $.Values.testing)) }}
           - pathType: Prefix
-            path: "/{{ $serviceName }}(/|$)(.*)"
+            path: "/{{ $serviceName }}"
             backend:
               service:
                 name: {{ $serviceName }}
@@ -40,7 +52,7 @@ spec:
                   number: {{ $.Values.service.port }}
           {{- else if (and (index $v "enabled") ($.Values.testing)) }}
           - pathType: Prefix
-            path: "/{{ $serviceName }}{{ $.Release.Name }}(/|$)(.*)"
+            path: "/{{ $serviceName }}{{ $.Release.Name }}"
             backend:
               service:
                 name: {{ $serviceName }}-{{ $.Release.Name }}
@@ -54,14 +66,14 @@ spec:
             path: /(/|$)
             backend:
               service:
-                name: doc-server-{{ $.Release.Name }}
+                name: doc-server
                 port:
                   number: 80
           {{- end }}
-      {{- if (.Values.ingress.host) }}
+      {{- if (and (not .Values.testing) (.Values.ingress.host)) }}
       host: {{ .Values.ingress.host }}
       {{- end }}
-  {{- if (and (.Values.ingress.host) (.Values.ingress.tls.enabled)) }}
+  {{- if (and (not .Values.testing) (.Values.ingress.host) (.Values.ingress.tls.enabled)) }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
@@ -86,7 +98,7 @@ spec:
     solvers:
       - http01:
           ingress:
-            class: nginx
+            class: traefik
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -105,7 +117,7 @@ spec:
     solvers:
       - http01:
           ingress:
-            class: nginx
+            class: traefik
 {{- end }}
-{{/* END: if .Values.ingress.className "nginx" */}}
+{{/* END: if .Values.ingress.className "traefik" */}}
 {{- end }}
