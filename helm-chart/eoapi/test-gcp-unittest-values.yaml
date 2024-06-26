@@ -1,6 +1,5 @@
 # used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
-<<<<<<< HEAD
-testing: testing
+testing: true
 
 ingress:
   enabled: true
@@ -17,12 +16,6 @@ ingress:
     certManager: true
     secretName: eoapi-tls
 
-=======
-testing: true
-ingress:
-  enabled: true
-  className: "traefik"
->>>>>>> main
 pgstacBootstrap:
   enabled: true
   settings:
@@ -66,7 +59,4 @@ vector:
     envVars:
       # needs to on so we can call /refresh for integration tests
       TIPG_DEBUG: "True"
-<<<<<<< HEAD
       TIPG_CATALOG_TTL: "30"
-=======
->>>>>>> main
