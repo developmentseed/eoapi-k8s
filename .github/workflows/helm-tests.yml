@@ -7,6 +7,11 @@ on:
     branches: [ "main" ]
     types: [ opened, reopened, synchronize, labeled ]
 
+env:
+  HELM_VERSION: v3.15.2
+  PGO_VERSION: 5.5.2
+  EOAPI_CHART_VERSION: 0.3.0
+
 jobs:
   helm-tests:
     runs-on: ubuntu-latest
@@ -15,7 +20,7 @@ jobs:
 
       - uses: d3adb5/helm-unittest-action@v2
         with:
-          helm-version: v3.15.2
+          helm-version: ${{ env.HELM_VERSION }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
@@ -39,6 +44,7 @@ jobs:
           # - k3s versions at https://github.com/k3s-io/k3s/tags
           # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
+          helm-version: ${{ env.HELM_VERSION }}
           helm-version: v3.8.2
           metrics-enabled: false
           docker-enabled: true
@@ -64,7 +70,11 @@ jobs:
 
       - name: helm install crunchydata postgres operator
         run: |
-          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+          helm upgrade --install \
+            --set disable_check_for_upgrades=true \
+            pgo \
+            oci://registry.developers.crunchydata.com/crunchydata/pgo \
+            --version ${{ env.PGO_VERSION }}
 
       - name: helm render/install eoapi templates
         run: |
@@ -76,6 +86,7 @@ jobs:
             --namespace default \
             -f ./eoapi/values.yaml \
             -f ./eoapi/test-k3s-unittest-values.yaml \
+            ./eoapi --version ${{ env.EOAPI_CHART_VERSION }}
             ./eoapi
 
       - name: sleep for 10s seconds while services boot
@@ -128,23 +139,20 @@ jobs:
 
           kubectl config set-context --current --namespace=default
           PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          export VECTOR_ENDPOINT=$PUBLICIP/vector$RELEASE_NAME
+          export STAC_ENDPOINT=$PUBLICIP/stac$RELEASE_NAME
+          export RASTER_ENDPOINT=$PUBLICIP/raster$RELEASE_NAME
+
           echo '#################################'
-          echo vector=$PUBLICIP/vector$RELEASE_NAME
-          echo stac=$PUBLICIP/stac$RELEASE_NAME
-          echo raster=$PUBLICIP/raster$RELEASE_NAME
+          echo $VECTOR_ENDPOINT
+          echo $STAC_ENDPOINT
+          echo $RASTER_ENDPOINT
           echo '#################################'
 
-          sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$PUBLICIP/vector$RELEASE_NAME'|g" .github/workflows/tests/test_vector.py
-          head -n 5 .github/workflows/tests/test_vector.py
           pytest .github/workflows/tests/test_vector.py || kubectl logs svc/vector-$RELEASE_NAME
-
-          sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$PUBLICIP/stac$RELEASE_NAME'|g" .github/workflows/tests/test_stac.py
-          head -n 5 .github/workflows/tests/test_stac.py
           pytest .github/workflows/tests/test_stac.py
-
-#          sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
-#          head -n 5 .github/workflows/tests/test_raster.py
-#          pytest .github/workflows/tests/test_raster.py
+          # TODO: fix raster tests
+          #pytest .github/workflows/tests/test_raster.py
 
       - name: error if tests failed
         if: steps.testrunner.outcome == 'failure'
@@ -157,8 +165,9 @@ jobs:
         run: |
           helm uninstall $RELEASE_NAME
 
-  integration-tests-gcp:
+  gcp-integration-tests:
     # run on:
+    #  - a PR was just labeled 'test-integration-gcp'
     #  - a PR was just labeled 'test-integration'
     #  - a PR with 'test-integration' label was opened, reopened, or synchronized
     if: |
@@ -174,7 +183,7 @@ jobs:
 
       - uses: azure/setup-helm@v4
         with:
-          version: v3.15.2
+          version: ${{ env.HELM_VERSION }}
           #token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: last commit sha if PR
@@ -215,20 +224,26 @@ jobs:
 
       - name: helm install crunchydata postgres operator
         run: |
-          helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
+          helm upgrade --install \
+            --set disable_check_for_upgrades=true \
+            pgo \
+            oci://registry.developers.crunchydata.com/crunchydata/pgo \
+            --version ${{ env.PGO_VERSION }}
 
       - name: helm render/install eoapi templates
         run: |
-          export GITSHA='${{github.sha}}'
+          HOST='${{ env.RELEASE_NAME }}.k8s.labs.ds.io'
+          echo $HOST
 
           cd helm-chart
 
           helm install $RELEASE_NAME \
             --namespace $RELEASE_NAME \
             --create-namespace \
+            --set ingress.host=$HOST \
             -f ./eoapi/values.yaml \
             -f ./eoapi/test-gcp-unittest-values.yaml \
-            ./eoapi
+            ./eoapi --version ${{ env.EOAPI_CHART_VERSION }}
 
       - name: sleep for 10s seconds while services boot
         shell: bash
@@ -279,41 +294,32 @@ jobs:
         continue-on-error: true
         run: |
           kubectl config set-context --current --namespace=$RELEASE_NAME
-          PUBLICIP='http://'$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o jsonpath='{.spec.loadBalancerIP}')
+          PUBLICIP='https://${{ env.RELEASE_NAME }}.k8s.labs.ds.io'
+          export VECTOR_ENDPOINT=$PUBLICIP/vector$RELEASE_NAME
+          export STAC_ENDPOINT=$PUBLICIP/stac$RELEASE_NAME
+          export RASTER_ENDPOINT=$PUBLICIP/raster$RELEASE_NAME
+
           echo '#################################'
-          echo vector=$PUBLICIP/vector$RELEASE_NAME
-          echo stac=$PUBLICIP/stac$RELEASE_NAME
-          echo raster=$PUBLICIP/raster$RELEASE_NAME
+          echo $VECTOR_ENDPOINT
+          echo $STAC_ENDPOINT
+          echo $RASTER_ENDPOINT
           echo '#################################'
 
-          # first substitute test endpoints in the test files
-          # TODO: pytest should be able to have a pattern for injection here but moving fast
-          sed -i "s|vector_endpoint\=.*$|vector_endpoint\='$PUBLICIP/vector$RELEASE_NAME'|g" .github/workflows/tests/test_vector.py
-          head -n 5 .github/workflows/tests/test_vector.py
           pytest .github/workflows/tests/test_vector.py
-
-          sed -i "s|stac_endpoint\=.*$|stac_endpoint\='$PUBLICIP/stac$RELEASE_NAME'|g" .github/workflows/tests/test_stac.py
-          head -n 5 .github/workflows/tests/test_stac.py
           pytest .github/workflows/tests/test_stac.py
-
           # TODO: fix raster tests
-          #sed -i "s|raster_endpoint\=.*$|raster_endpoint\='$PUBLICIP/raster$RELEASE_NAME'|g" .github/workflows/tests/test_raster.py
-          #head -n 5 .github/workflows/tests/test_raster.py
           #pytest .github/workflows/tests/test_raster.py
 
-      - name: cleanup if tests faile
+      - name: cleanup if tests fail
         if: steps.testrunner.outcome == 'failure'
         run: |
           echo "The previous step failed or timed out. Running cleanup logic..."
           helm uninstall $RELEASE_NAME
-
           kubectl delete ns/$RELEASE_NAME
-
           # force GH action to show failed result
           exit 128
 
-      - name: helm uinstall eoapi templates
+      - name: helm uninstall eoapi templates
         run: |
           helm uninstall $RELEASE_NAME
-
           kubectl delete ns/$RELEASE_NAME

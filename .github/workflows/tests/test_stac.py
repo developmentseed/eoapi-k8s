@@ -1,14 +1,15 @@
 """test EOapi."""
-
 import httpx
+import os
 
-stac_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/stac/"
-
-# better timeouts
 timeout = httpx.Timeout(15.0, connect=60.0)
-client = httpx.Client(timeout=timeout)
+if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
+    client = httpx.Client(timeout=timeout, verify=False)
+else:
+    client = httpx.Client(timeout=timeout)
 
-def test_stac_api():
+
+def test_stac_api(stac_endpoint):
     """test stac."""
     # Ping
     assert client.get(f"{stac_endpoint}/_mgmt/ping").status_code == 200
@@ -40,7 +41,7 @@ def test_stac_api():
     assert item["id"] == "20200307aC0853300w361200"
 
 
-def test_stac_to_raster():
+def test_stac_to_raster(stac_endpoint):
     """test link to raster api."""
     # tilejson
     resp = client.get(

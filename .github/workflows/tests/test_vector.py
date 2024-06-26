@@ -1,16 +1,15 @@
-"""test EOapi.vector"""
-
 import httpx
+import os
 
-vector_endpoint="http://k8s-gcorradi-nginxing-553d3ea33b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com/vector/"
-
-
-def test_vector_api():
-    """test vector."""
-    # better timeouts
-    timeout = httpx.Timeout(15.0, connect=60.0)
+timeout = httpx.Timeout(15.0, connect=60.0)
+if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
+    client = httpx.Client(timeout=timeout, verify=False)
+else:
     client = httpx.Client(timeout=timeout)
 
+
+def test_vector_api(vector_endpoint):
+    """test vector."""
     # landing
     resp = client.get(f"{vector_endpoint}/")
     assert resp.status_code == 200

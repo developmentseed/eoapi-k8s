@@ -1,8 +1,28 @@
 # used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
-testing: true
+<<<<<<< HEAD
+testing: testing
+
 ingress:
   enabled: true
   className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  # NOTE: for these integration tests `ingress.host`
+  # is unique and passed during helm install using --set
+  # host: $RELEASE_NAME.k8s.labs.ds.io
+  tls:
+    enabled: true
+    certManager: true
+    secretName: eoapi-tls
+
+=======
+testing: true
+ingress:
+  enabled: true
+  className: "traefik"
+>>>>>>> main
 pgstacBootstrap:
   enabled: true
   settings:
@@ -46,3 +66,7 @@ vector:
     envVars:
       # needs to on so we can call /refresh for integration tests
       TIPG_DEBUG: "True"
+<<<<<<< HEAD
+      TIPG_CATALOG_TTL: "30"
+=======
+>>>>>>> main
