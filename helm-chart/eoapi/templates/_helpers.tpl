@@ -64,6 +64,18 @@ Create the name of the service account to use
 {{/*
 Create pgstac host string depending if .Values.testing
 */}}
+{{- define "eoapi.pgstacTempDbHostName" -}}
+{{- if .Values.testing }}
+{{- printf "%s-%s" "pgstac" .Release.Name }}
+{{- else }}
+{{/* need to match what is default in values.yamls */}}
+{{- printf "%s" "pgstac" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create pgstac host string depending if .Values.testing
+*/}}
 {{- define "eoapi.pgstacHostName" -}}
 {{- if .Values.testing }}
 {{- printf "%s-%s" "pgstacbootstrap" .Release.Name }}
@@ -189,6 +201,20 @@ that you can only use traefik as ingress when `testing=true`
 {{- define "eoapi.validateTraefik" -}}
 {{- if and (not .Values.testing) (eq .Values.ingress.className "traefik") $ -}}
   {{- fail "you cannot use traefik yet outside of testing" -}}
+{{- end -}}
+
+{{- end -}}
+
+{{/*
+validate:
+that you cannot have db.enabled and (postgrescluster.enabled or pgstacBootstrap.enabled)
+*/}}
+{{- define "eoapi.validateTempDB" -}}
+{{- if and (.Values.db.enabled) (.Values.postgrescluster.enabled) -}}
+  {{- fail "you cannot use have both db.enabled and postgresclsuter.enabled" -}}
+{{- end -}}
+{{- if and (.Values.db.enabled) (.Values.pgstacBootstrap.enabled) -}}
+  {{- fail "you cannot use have both db.enabled and pgstacBootstrap.enabled" -}}
 {{- end -}}
 
 {{- end -}}

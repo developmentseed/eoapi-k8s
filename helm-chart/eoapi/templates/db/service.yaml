@@ -1,0 +1,16 @@
+{{- if .Values.db.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 10 }}
+  name: {{ include "eoapi.pgstacTempDbHostName" . | nindent 8 }}
+spec:
+  ports:
+  - name: "5432"
+    port: 5432
+    targetPort: 5432
+  selector:
+    app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 10 }}
+{{- end }}
