@@ -1,5 +1,9 @@
 version numbers below correspond to helm chart `appVersion`: see `./helm-chart/eoapi/Chart.yaml`
 ---
+### 0.3.4 (2024-07-05)
+
+* add back in a hidden non-pgo option for EOEPCA+ 
+
 ### 0.3.3 (2024-06-26)
 
 * add k3 integration tests

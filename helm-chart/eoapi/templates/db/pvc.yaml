@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgstac-claim-{{ $.Release.Name }}
+spec:
+  storageClassName: {{ .Values.db.storageClassName }}
+{{- if .Values.db.accessModes }}
+  accessModes:
+{{ toYaml .Values.db.accessModes | indent 4 }}
+{{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.db.settings.resources.requests.storage }}

@@ -1,3 +1,4 @@
+{{- if .Values.pgstacBootstrap.enabled }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -62,3 +63,4 @@ data:
 
     # let the k8's pod know we've completed successfully
     exit 0
+{{- end }}
