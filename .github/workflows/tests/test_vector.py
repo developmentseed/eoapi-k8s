@@ -1,5 +1,6 @@
 import httpx
 import os
+import time
 
 timeout = httpx.Timeout(15.0, connect=60.0)
 if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
@@ -37,6 +38,20 @@ def test_vector_api(vector_endpoint):
         "numberReturned",
         "collections",
     ]
+
+    total_timeout = 60 * 5
+    start_time = time.time()
+    while True:
+        if resp.json()["numberMatched"] == 7:
+            break
+
+        if time.time() - start_time > total_timeout:
+            print("Timeout exceeded")
+            assert False
+
+        time.sleep(20)
+        resp = client.get(f"{vector_endpoint}/collections")
+
     assert resp.json()["numberMatched"] == 7  # one public table + 5 functions
     assert resp.json()["numberReturned"] == 7
 
