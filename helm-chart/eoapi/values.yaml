@@ -56,8 +56,52 @@ comment_db: >
   The `postgrescluster` specs below are pass-through values to configure those separate
   charts. For more information read https://access.crunchydata.com/documentation/postgres-operator/latest
 
+# temporary solution for EOEPCA until we figure out how to get NFS mounts
+# working with PGO below. Since disabled by default most people SHOULD NOT
+# use this option as it won't be talked about explicitly in the docs
+db:
+  enabled: false
+  image:
+    name: ghcr.io/stac-utils/pgstac
+    tag: v0.8.2
+  command:
+    - "postgres"
+    - "-N"
+    - "500"
+  # toggle to true||false if you want the db test fixtures loaded
+  enable_data_fixtures: true
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  settings:
+    resources:
+      requests:
+        storage: "100Mi"
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+    secrets:
+      POSTGRES_DB: "postgis"
+      POSTGRES_USER: ""
+      POSTGRES_PASSWORD: ""
+      POSTGRES_PORT: "5432"
+      POSTGRES_HOST: "pgstac"
+      POSTGRES_HOST_READER: "pgstac"
+      POSTGRES_HOST_WRITER: "pgstac"
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "15"
+      # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
+      PGDATA: "/data/pgdata"
+      PGUSER: ""
+      PGPASSWORD: ""
+      PGDATABASE: "postgis"
+
+
 # this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
 postgrescluster:
+  enabled: true
   postgresVersion: 16
   postGISVersion: 3.4
   pgBouncerReplicas: 1
