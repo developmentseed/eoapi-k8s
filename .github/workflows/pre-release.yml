@@ -69,7 +69,7 @@ jobs:
             exit 0
           fi
 
-      - name: Continue if changes are detected
+      - name: continue if changes are detected
         if: steps.check_changes.outputs.continue == 'true'
         run: |
           echo "Proceeding with the workflow as changes are detected in the helm-chart/ directory."
