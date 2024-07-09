@@ -98,6 +98,17 @@ db:
       PGPASSWORD: ""
       PGDATABASE: "postgis"
 
+# on AWS we use the EBS and EFS CSI drivers that dynamically create
+# and mount storage on request via PVC(s) but for NFS
+# the EFS CSI driver by default creates mounts with access points
+# that restrict read/write permissions to the uid:gid of the mount.
+# in simple cases we don't want to have to think about this extra layer for NFS
+# and this is a workaround to mount a static NFS without access points.
+# NOTE: GCP and other IaC haven't been set up to use NFS yet
+postgresclusterNFSStaticPV:
+  enabled: false
+  storageClassName: ""
+  volumeHandle: ""
 
 # this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
 postgrescluster:
@@ -106,7 +117,7 @@ postgrescluster:
   postGISVersion: 3.4
   pgBouncerReplicas: 1
   monitoring: false
-  backupsSize: 20Gi
+
   instances:
   - name: eoapi
     replicas: 1

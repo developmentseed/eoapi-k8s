@@ -1,5 +1,9 @@
 version numbers below correspond to helm chart `appVersion`: see `./helm-chart/eoapi/Chart.yaml`
 ---
+### 0.3.5 (2024-07-09)
+
+* tweaks for getting NFS working with a static NFS EFS mount
+
 ### 0.3.4 (2024-07-05)
 
 * add back in a hidden non-pgo option for EOEPCA+ 
