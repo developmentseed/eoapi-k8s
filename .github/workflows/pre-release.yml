@@ -73,6 +73,10 @@ jobs:
             NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
           fi
 
+          # export so strenv picks them up
+          export NEW_VERSION
+          export NEW_APP_VERSION
+
           yq -i '.version = strenv(NEW_VERSION)' Chart.yaml
           yq -i '.appVersion = strenv(NEW_APP_VERSION)' Chart.yaml
 
@@ -100,7 +104,7 @@ jobs:
           commit-message: 'release eoapi chart to ${{ env.new_version }}'
           title: 'release for ${{ github.ref }}@${{ github.sha }}'
           body: |
-            this PR contains the version bumps for the eoapi chart > ${{ env.new_version }}
+            this PR contains the version bumps for the eoapi chart ${{ env.new_version }}
           base: main
           branch: apply-${{ github.head_ref }}
           labels: release-apply
