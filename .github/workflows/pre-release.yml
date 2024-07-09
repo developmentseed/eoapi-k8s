@@ -10,7 +10,7 @@ env:
 
 jobs:
   pre-release:
-    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -20,6 +20,33 @@ jobs:
       - uses: azure/setup-helm@v4
         with:
           version: ${{ env.HELM_VERSION }}
+
+      - name: install github cli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: check if 'release-apply' label exists
+        id: check_label
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
+          echo "Labels: $LABELS"
+          if echo "$LABELS" | grep -q "release-apply"; then
+            echo "Label 'release-apply' found."
+            echo "release_apply=true" >>$GITHUB_OUTPUT
+          else
+            echo "Label 'release-apply' not found."
+            echo "release_apply=false" >>$GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: early exit if release-apply is not present
+        if: steps.check_label.outputs.release_apply == 'false'
+        run: |
+          echo "The pull request is merged and does not have the 'release-apply' label. Existing with success"
+          exit 0
 
       - name: determine version increment
         id: determine-version
