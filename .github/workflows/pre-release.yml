@@ -47,11 +47,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: early exit if release-apply is present
-        if: steps.check_label.outputs.continue == 'true'
-        run: |
-          exit 0
-
       - name: check for changes in helm-chart directory
         id: check_changes
         run: |
