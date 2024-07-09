@@ -1,16 +1,16 @@
-name: release
+name: release helm chart
 
 on:
-  workflow_dispatch:
-    branches:
-      - gh-pages
+  release:
+    types:
+      - published
 
 env:
   HELM_VERSION: v3.15.2
 
 jobs:
   release:
-    if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini' || github.actor == 'sunu'
+    if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini' || github.actor == 'sunu' || github.actor == 'ividito'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
