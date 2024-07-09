@@ -43,9 +43,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: early exit if release-apply is not present
-        if: steps.check_label.outputs.release_apply == 'false'
+        if: steps.check_label.outputs.release_apply == 'true'
         run: |
-          echo "The pull request is merged and does not have the 'release-apply' label. Existing with success"
+          echo "The pull request is merged and has the 'release-apply' label. Existing with success"
           exit 0
 
       - name: determine version increment
