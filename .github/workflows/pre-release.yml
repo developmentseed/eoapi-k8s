@@ -1,0 +1,83 @@
+name: pre-release helm chart
+
+on:
+  pull_request:
+    types:
+      - closed
+
+env:
+  HELM_VERSION: v3.15.2
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: determine version increment
+        id: determine-version
+        run: |
+          PR_TITLE=$(echo "${{ github.event.pull_request.title }}" | tr '[:upper:]' '[:lower:]')
+          if [[ "$PR_TITLE" =~ "major:" ]]; then
+            echo "version_type=major" >> $GITHUB_ENV
+          elif [[ "$PR_TITLE" =~ "minor:" ]]; then
+            echo "version_type=minor" >> $GITHUB_ENV
+          else
+            echo "version_type=patch" >> $GITHUB_ENV
+          fi
+          echo "Version increment type: ${{ env.version_type }}"
+
+      - name: bump chart versions
+        id: bump-version
+        run: |
+          VERSION_TYPE=${{ env.version_type }}
+          CURRENT_VERSION=$(grep '^version:' Chart.yaml | awk '{print $2}')
+          CURRENT_APP_VERSION=$(grep '^appVersion:' Chart.yaml | awk '{print $2}')
+
+          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+          IFS='.' read -r -a APP_VERSION_PARTS <<< "$CURRENT_APP_VERSION"
+
+          if [[ "$VERSION_TYPE" == "major" ]]; then
+            NEW_VERSION="$((VERSION_PARTS[0] + 1)).0.0"
+            NEW_APP_VERSION="$((APP_VERSION_PARTS[0] + 1)).0.0"
+          elif [[ "$VERSION_TYPE" == "minor" ]]; then
+            NEW_VERSION="${VERSION_PARTS[0]}.$((VERSION_PARTS[1] + 1)).0"
+            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.$((APP_VERSION_PARTS[1] + 1)).0"
+          else
+            NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$((VERSION_PARTS[2] + 1))"
+            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
+          fi
+
+          yq e -i '.version = strenv(NEW_VERSION)' Chart.yaml
+          yq e -i '.appVersion = strenv(NEW_APP_VERSION)' Chart.yaml
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+          echo "New version: $NEW_VERSION"
+          echo "New app version: $NEW_APP_VERSION"
+
+      - name: commit and tag version bump
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git commit -am "bump version to ${{ env.new_version }}"
+          git tag -a "v${{ env.new_version }}" -m "release version ${{ env.new_version }}"
+          git push origin main --tags
+
+      - name: create github release (triggers release)
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ env.new_version }}"
+          release_name: "v${{ env.new_version }}"
+          body: |
+            ## Changes in this Release
+            - Auto-generated release based on PR merge.
+
