@@ -51,7 +51,7 @@ jobs:
         id: check_changes
         run: |
           # fetch all
-          git fetch -all
+          git fetch --all
 
           # get the base commit (before the merge)
           BASE_COMMIT=$(git merge-base HEAD origin/main)
