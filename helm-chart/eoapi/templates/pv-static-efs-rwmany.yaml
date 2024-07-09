@@ -1,0 +1,19 @@
+#https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/examples/kubernetes/static_provisioning/README.md
+{{- if and (.Values.postgresclusterNFSStaticPV.enabled) (.Values.postgrescluster.enabled) }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: efs-pv
+spec:
+  capacity:
+    storage: 300Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ .Values.postgresclusterNFSStaticPV.storageClassName }}
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: {{ .Values.postgresclusterNFSStaticPV.volumeHandle }}
+{{- end }}
