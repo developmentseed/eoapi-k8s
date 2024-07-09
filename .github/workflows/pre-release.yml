@@ -9,7 +9,7 @@ env:
   HELM_VERSION: v3.15.2
 
 jobs:
-  release:
+  pre-release:
     if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
@@ -36,6 +36,9 @@ jobs:
 
       - name: install yq
         uses: mikefarah/yq@master
+
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - name: bump chart versions
         id: bump-version
