@@ -69,6 +69,7 @@ jobs:
             exit 0
           fi
 
+
       - name: determine version increment
         if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         id: determine-version
