@@ -62,8 +62,8 @@ jobs:
             NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
           fi
 
-          yq -iy '.version = strenv(NEW_VERSION)' Chart.yaml
-          yq -iy '.appVersion = strenv(NEW_APP_VERSION)' Chart.yaml
+          yq -i '.version = strenv(NEW_VERSION)' Chart.yaml
+          yq -i '.appVersion = strenv(NEW_APP_VERSION)' Chart.yaml
 
           echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
           echo "New version: $NEW_VERSION"
