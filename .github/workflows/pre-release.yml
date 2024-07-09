@@ -36,28 +36,33 @@ jobs:
           echo "Labels: $LABELS"
           if echo "$LABELS" | grep -q "release-apply"; then
             echo "Label 'release-apply' found."
-            echo "release_apply=true" >>$GITHUB_OUTPUT
+            # PRs with label "release-label" are created at the end of this workflow and we don't want infinite loops
+            echo "The pull request is merged and has the 'release-apply' label. Nothing to do. Exiting with success"
+            echo "continue=false" >>$GITHUB_OUTPUT
+            exit 0
           else
             echo "Label 'release-apply' not found."
-            echo "release_apply=false" >>$GITHUB_OUTPUT
+            echo "continue=true" >>$GITHUB_OUTPUT
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: early exit if release-apply is present
-        if: steps.check_label.outputs.release_apply == 'true'
+        if: steps.check_label.outputs.continue == 'true'
         run: |
-          echo "The pull request is merged and has the 'release-apply' label. Nothing to do. Exiting with success"
           exit 0
 
       - name: check for changes in helm-chart directory
         id: check_changes
         run: |
-          # fetch the latest commit from the main branch
-          git fetch origin main
+          # fetch all
+          git fetch -all
 
-          # get the list of files changed in the PR
-          CHANGED_FILES=$(git diff --name-only HEAD origin/main)
+          # get the base commit (before the merge)
+          BASE_COMMIT=$(git merge-base HEAD origin/main)
+
+          # get the list of files changed in the pull request
+          CHANGED_FILES=$(git diff --name-only $BASE_COMMIT HEAD)
 
           # check if any files in the helm-chart/ directory have changed
           if echo "$CHANGED_FILES" | grep -q "^helm-chart/"; then
@@ -69,13 +74,8 @@ jobs:
             exit 0
           fi
 
-      - name: continue if changes are detected
-        if: steps.check_changes.outputs.continue == 'true'
-        run: |
-          echo "Proceeding with the workflow as changes are detected in the helm-chart/ directory."
-          # Add your subsequent steps here
-
       - name: determine version increment
+        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         id: determine-version
         run: |
           PR_TITLE=$(echo "${{ github.event.pull_request.title }}" | tr '[:upper:]' '[:lower:]')
@@ -155,10 +155,10 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'release eoapi chart to ${{ env.new_version }}'
-          title: 'release for ${{ github.ref }}@${{ github.sha }}'
+          commit-message: 'release eoapi chart to v${{ env.new_version }}'
+          title: 'release v${{ env.new_version }} for ${{ github.ref }}@${{ github.sha }}'
           body: |
-            this PR contains the version bumps for the eoapi chart ${{ env.new_version }}
+            this PR contains the version bumps for the eoapi chart v${{ env.new_version }}
           base: main
           branch: apply-${{ github.head_ref }}
           labels: release-apply
