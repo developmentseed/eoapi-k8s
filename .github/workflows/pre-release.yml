@@ -85,12 +85,14 @@ jobs:
           echo "Version increment type: ${{ env.version_type }}"
 
       - name: install yq
+        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         uses: mikefarah/yq@master
 
 #      - name: Setup upterm session
 #        uses: lhotari/action-upterm@v1
 
       - name: bump chart versions
+        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         id: bump-version
         run: |
           cd helm-chart/eoapi
@@ -147,6 +149,7 @@ jobs:
 #          git push origin main --tags
 
       - name: create pr
+        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         id: create_pr
         uses: peter-evans/create-pull-request@v6
         with:
