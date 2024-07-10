@@ -47,6 +47,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: check for changes in helm-chart directory
         id: check_changes
         run: |
@@ -87,11 +90,6 @@ jobs:
       - name: install yq
         if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         uses: mikefarah/yq@master
-
-
-
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
 
       - name: bump chart versions
         if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
