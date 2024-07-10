@@ -105,7 +105,6 @@ postgrescluster:
   postGISVersion: 3.4
   pgBouncerReplicas: 1
   monitoring: false
-
   instances:
   - name: eoapi
     replicas: 1
