@@ -27,7 +27,7 @@ data:
   load.sh: |
     #!/bin/bash
     apt update -y && apt install python3 python3-pip -y
-    pip install pypgstac[psycopg]
+    pip install pypgstac[psycopg]=={{ .Values.db.image.tag | trimPrefix "v" }}
     DSN="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB"
     pypgstac pgready --dsn $DSN
     pypgstac load collections /opt/initdb/json-data/noaa-emergency-response.json --dsn $DSN --method insert_ignore
