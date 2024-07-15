@@ -1,6 +1,7 @@
 apiVersion: v2
 name: eoapi
 description: Create a full Earth Observation API with Metadata, Raster and Vector services
+
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
