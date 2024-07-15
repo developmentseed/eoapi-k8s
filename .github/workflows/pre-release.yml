@@ -127,7 +127,7 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "New app version: $NEW_APP_VERSION"
 
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v5
         if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         with:
           script: |
