@@ -147,7 +147,7 @@ jobs:
           git fetch origin
           git checkout ${{ github.head_ref }}
           git add -A
-          git commit -m "release version to ${{ env.new_version }}"
+          git commit -m "release version to v${{ env.new_version }}"
           # only tag main branch in manual release
           # git tag "v${{ env.new_version }}"
           git push origin ${{ github.head_ref }}
