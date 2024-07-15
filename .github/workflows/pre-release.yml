@@ -148,8 +148,9 @@ jobs:
           git checkout ${{ github.head_ref }}
           git add -A
           git commit -m "release version to ${{ env.new_version }}"
-          git tag "v${{ env.new_version }}"
-          git push origin ${{ github.head_ref }} --tags
+          # only tag main branch in manual release
+          # git tag "v${{ env.new_version }}"
+          git push origin ${{ github.head_ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
