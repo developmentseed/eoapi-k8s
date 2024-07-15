@@ -144,6 +144,8 @@ jobs:
           TAG="v${{ env.new_version }}"
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git fetch origin
+          git checkout ${{ github.head_ref }}
           git add -A
           git commit -m "release version to ${{ env.new_version }}"
           git tag "v${{ env.new_version }}"
