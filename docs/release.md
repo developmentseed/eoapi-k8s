@@ -5,7 +5,7 @@ title that decides if the chart's version bumps will be major, minor or patch ac
 All they need to do is prefix `major: `, `minor: ` or `patch: ` to the PR title
 
 
-2. All PRs merged against the base `main` will kick off a "pre-release" workflow that does the following:
+2. All PRs opened, synchronized or reopened against `main` will kick off a "pre-release" workflow that does the following:
 
    1. detect if there are changes in the `helm-chart/` directory (if no changes are detected the "pre-release.yaml" workflow exits gracefully)
    
@@ -13,18 +13,17 @@ All they need to do is prefix `major: `, `minor: ` or `patch: ` to the PR title
    
    3. increment the helm chart's `version` and `appVersion` accordingly
  
-   4. create a new PR with these changes with a title called
-   `'release ${{ env.new_version }} for ${{ github.ref }}@${{ github.sha }}'` and body listing the new chart version
+   4. add a commit to the open PR with the `Chart.yaml` bumps and a commit titled: `'release version to v<version-increment>`
 
 
-3. The releaser should find this PR, review and merge accordingly
+3. The releaser should review this PR and make sure everything (include the `Chart.yaml` bumps seem correct). Then merge the PR
 
 
-4. Then the releaser should go to the Github release UI/UX and kick off a new release by doing the following:
+3. Then the releaser should go to the Github release UI/UX and kick off a new release by doing the following:
 
    1. click "Draft New Release"
    
-   2. create a new tag for the branch `main` with the chart version listed in the previous PR's body and title
+   2. create a new tag for the branch `main` with the chart version listed in the previous PR's commit message
    
    3. click the "Generate release notes"
    
