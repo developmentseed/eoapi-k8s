@@ -127,11 +127,11 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "New app version: $NEW_APP_VERSION"
 
-      - uses: actions/github-script@v5
+      - uses: actions/github-script@v6
         if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         with:
           script: |
-            github.issues.addLabels({
+            github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
