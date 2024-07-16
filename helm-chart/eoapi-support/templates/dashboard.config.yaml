@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: eoapi-dashboards
-  labels:
-    eoapi_dashboard: "1"
-data:
-  kubernetes.json: |-
-{{ .Files.Get "dashboards/eoAPI-Dashboard.json" | indent 4 }}
