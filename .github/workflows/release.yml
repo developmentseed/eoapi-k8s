@@ -10,7 +10,7 @@ env:
 
 jobs:
   release:
-    if: "!startsWith(github.ref, 'refs/tags/eoapi-')"
+    if: "!startsWith(github.ref, 'refs/tags/eoapi-')"  # prevent the helm chart releaser from running this release workflow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,17 +25,6 @@ jobs:
       - uses: azure/setup-helm@v4
         with:
           version: ${{ env.HELM_VERSION }}
-          #token: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: update gh-pages with content from main
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          git checkout main
-#          git pull origin main
-#          git checkout gh-pages
-#          git pull origin gh-pages
-#          git merge -X theirs main
 
       - name: add helm repos
         run: |
@@ -52,28 +41,3 @@ jobs:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: true
           CR_INDEX_PATH: "."
-
-
-#      - name: helm release packages
-#        env:
-#          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          # update `values.yaml` with a gitSha
-#          chart="helm-chart/eoapi"
-#          COMMITSHA=$(git rev-parse HEAD | cut -c1-10)
-#          sed -i "s|gitSha: \"[a-zA-Z0-9]+\"|gitSha: \"$COMMITSHA\"|g" "$chart"/values.yaml
-#
-#          # package recent chart
-#          helm package $chart --destination .
-#
-#          # create the index file
-#          helm repo index .
-#
-#          git add -A
-#          chart_version=$(cat $chart/Chart.yaml| grep version: | cut -d' ' -f2)
-#          git commit -m $chart_version
-#          git push origin gh-pages
-
-
-
-
