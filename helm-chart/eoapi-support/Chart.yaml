@@ -1,9 +1,8 @@
-apiVersion: "0.1.0"
+apiVersion: v2
 name: eoapi-support
-version: "0.1.0"
-# most of this was cribbed from https://github.com/2i2c-org/infrastructure/blob/master/helm-charts/support/
-# so giving props where props are due to Yuvi Panda :sparkles:
-description: observability, monitoring and some custom metrics for autoscaling
+
+appVersion: "0.1.1"
+version: "0.1.1"
 
 dependencies:
   # Prometheus for collection of metrics.
