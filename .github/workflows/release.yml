@@ -1,9 +1,14 @@
 name: release helm chart
 
+#on:
+#  release:
+#    types:
+#      - published
+
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - main
 
 env:
   HELM_VERSION: v3.15.2
@@ -27,35 +32,50 @@ jobs:
           version: ${{ env.HELM_VERSION }}
           #token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: update gh-pages with content from main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: update gh-pages with content from main
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          git checkout main
+#          git pull origin main
+#          git checkout gh-pages
+#          git pull origin gh-pages
+#          git merge -X theirs main
+
+      - name: add helm repos
         run: |
-          git checkout main
-          git pull origin main
-          git checkout gh-pages
-          git pull origin gh-pages
-          git merge -X theirs main
+          helm repo add eoapi https://devseed.com/eoapi-k8s/
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo list
 
-      - name: helm release packages
+      - name: run chart-releaser
+        uses: helm/chart-releaser-action@v1.4.0
+        with:
+          charts_dir: helm-chart
         env:
-          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # update `values.yaml` with a gitSha
-          chart="helm-chart/eoapi"
-          COMMITSHA=$(git rev-parse HEAD | cut -c1-10)
-          sed -i "s|gitSha: \"[a-zA-Z0-9]+\"|gitSha: \"$COMMITSHA\"|g" "$chart"/values.yaml
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_SKIP_EXISTING: true
 
-          # package recent chart
-          helm package $chart --destination .
-
-          # create the index file
-          helm repo index .
-
-          git add -A
-          chart_version=$(cat $chart/Chart.yaml| grep version: | cut -d' ' -f2)
-          git commit -m $chart_version
-          git push origin gh-pages
+#      - name: helm release packages
+#        env:
+#          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          # update `values.yaml` with a gitSha
+#          chart="helm-chart/eoapi"
+#          COMMITSHA=$(git rev-parse HEAD | cut -c1-10)
+#          sed -i "s|gitSha: \"[a-zA-Z0-9]+\"|gitSha: \"$COMMITSHA\"|g" "$chart"/values.yaml
+#
+#          # package recent chart
+#          helm package $chart --destination .
+#
+#          # create the index file
+#          helm repo index .
+#
+#          git add -A
+#          chart_version=$(cat $chart/Chart.yaml| grep version: | cut -d' ' -f2)
+#          git commit -m $chart_version
+#          git push origin gh-pages
 
 
 

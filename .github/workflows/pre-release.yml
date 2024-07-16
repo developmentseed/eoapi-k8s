@@ -138,7 +138,7 @@ jobs:
               labels: ['release-apply']
             })
 
-      - name: commit and tag version bump
+      - name: commit chart version bump
         if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
         run: |
           TAG="v${{ env.new_version }}"
