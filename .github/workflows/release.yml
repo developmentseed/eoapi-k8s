@@ -45,7 +45,7 @@ jobs:
           helm repo list
 
       - name: run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.1
+        uses: helm/chart-releaser-action@v1.6.0
         with:
           charts_dir: helm-chart
         env:
