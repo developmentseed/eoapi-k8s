@@ -1,169 +1,169 @@
-name: pre-release helm chart
-
-on:
-  pull_request:
-    branches: [ "main" ]
-    #types: [ closed ]
-    types: [ opened, reopened, synchronize ]
-
-env:
-  HELM_VERSION: v3.15.2
-
-jobs:
-  pre-release:
-    #if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # ensure the full history is fetched so we can compare changes
-
-      - uses: azure/setup-helm@v4
-        with:
-          version: ${{ env.HELM_VERSION }}
-
-      - name: install github cli
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      - name: install yq
-        uses: mikefarah/yq@master
-
-#      - name: setup upterm session
-#        uses: lhotari/action-upterm@v1
-
-      - name: check if 'release-apply' label exists
-        id: check_label
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
-          echo "Labels: $LABELS"
-          if echo "$LABELS" | grep -q "release-apply"; then
-            echo "Label 'release-apply' found."
-            # PRs with label "release-label" are created at the end of this workflow and we don't want infinite loops
-            echo "The pull request is merged and has the 'release-apply' label. Nothing to do. Exiting with success"
-            echo "continue=false" >>$GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Label 'release-apply' not found."
-            echo "continue=true" >>$GITHUB_OUTPUT
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: check for changes in helm-chart directory
-        id: check_changes
-        run: |
-          git fetch --all
-          # check for changes between HEAD and previous commit in a specific directory
-          if ! git diff --quiet HEAD~ -- ./helm-chart/eoapi/; then
-            echo "Changes detected in the ./helm-chart/eoapi/ directory."
-            echo "continue=true" >> $GITHUB_OUTPUT
-          else
-            echo "No changes detected in the ./helm-chart/eoapi directory. Exiting."
-            echo "continue=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-      - name: determine version increment
-        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
-        id: determine-version
-        run: |
-          PR_TITLE=$(echo "${{ github.event.pull_request.title }}" | tr '[:upper:]' '[:lower:]')
-          if [[ "$PR_TITLE" =~ "major:" ]]; then
-            echo "version_type=major" >> $GITHUB_ENV
-          elif [[ "$PR_TITLE" =~ "minor:" ]]; then
-            echo "version_type=minor" >> $GITHUB_ENV
-          else
-            echo "version_type=patch" >> $GITHUB_ENV
-          fi
-          echo "Version increment type: ${{ env.version_type }}"
-
-      - name: bump chart versions
-        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
-        id: bump-version
-        run: |
-          cd helm-chart/eoapi
-          VERSION_TYPE=${{ env.version_type }}
-
-          CURRENT_VERSION=$(grep '^version:' Chart.yaml | awk '{print $2}')
-          # strip double quotes
-          CURRENT_VERSION=${CURRENT_VERSION#\"}
-          CURRENT_VERSION=${CURRENT_VERSION%\"}
-
-          CURRENT_APP_VERSION=$(grep '^appVersion:' Chart.yaml | awk '{print $2}')
-          # strip double quotes
-          CURRENT_APP_VERSION=${CURRENT_APP_VERSION#\"}
-          CURRENT_APP_VERSION=${CURRENT_APP_VERSION%\"}
-
-          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-          IFS='.' read -r -a APP_VERSION_PARTS <<< "$CURRENT_APP_VERSION"
-
-          if [[ "$VERSION_TYPE" == "major" ]]; then
-            NEW_VERSION="$((VERSION_PARTS[0] + 1)).0.0"
-            # appVersion does not need to follow semvar
-            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
-          elif [[ "$VERSION_TYPE" == "minor" ]]; then
-            NEW_VERSION="${VERSION_PARTS[0]}.$((VERSION_PARTS[1] + 1)).0"
-            # appVersion does not need to follow semvar
-            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
-          else
-            NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$((VERSION_PARTS[2] + 1))"
-            # appVersion does not need to follow semvar
-            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
-          fi
-
-          # export so strenv picks them up
-          export NEW_VERSION
-          export NEW_APP_VERSION
-
-          yq -i '.version = strenv(NEW_VERSION)' Chart.yaml
-          yq -i '.appVersion = strenv(NEW_APP_VERSION)' Chart.yaml
-
-          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
-          echo "New version: $NEW_VERSION"
-          echo "New app version: $NEW_APP_VERSION"
-
-      - uses: actions/github-script@v6
-        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: ['release-apply']
-            })
-
-      - name: commit chart version bump
-        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
-        run: |
-          TAG="v${{ env.new_version }}"
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git fetch origin
-          git checkout ${{ github.head_ref }}
-          git add -A
-          git commit -m "release version to v${{ env.new_version }}"
-          # only tag main branch in manual release
-          # git tag "v${{ env.new_version }}"
-          git push origin ${{ github.head_ref }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: create pr
-#        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
-#        id: create_pr
-#        uses: peter-evans/create-pull-request@v6
+#name: pre-release helm chart
+#
+#on:
+#  pull_request:
+#    branches: [ "main" ]
+#    #types: [ closed ]
+#    types: [ opened, reopened, synchronize ]
+#
+#env:
+#  HELM_VERSION: v3.15.2
+#
+#jobs:
+#  pre-release:
+#    #if: github.event.pull_request.merged == true
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: checkout code
+#        uses: actions/checkout@v4
 #        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          commit-message: 'release eoapi chart to v${{ env.new_version }}'
-#          title: 'release v${{ env.new_version }} for ${{ github.ref }}@${{ github.sha }}'
-#          body: |
-#            this PR contains the version bumps for the eoapi chart v${{ env.new_version }}
-#          base: main
-#          branch: apply-${{ github.head_ref }}
-#          labels: release-apply
+#          fetch-depth: 0  # ensure the full history is fetched so we can compare changes
+#
+#      - uses: azure/setup-helm@v4
+#        with:
+#          version: ${{ env.HELM_VERSION }}
+#
+#      - name: install github cli
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y gh
+#
+#      - name: install yq
+#        uses: mikefarah/yq@master
+#
+##      - name: setup upterm session
+##        uses: lhotari/action-upterm@v1
+#
+#      - name: check if 'release-apply' label exists
+#        id: check_label
+#        run: |
+#          PR_NUMBER=${{ github.event.pull_request.number }}
+#          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
+#          echo "Labels: $LABELS"
+#          if echo "$LABELS" | grep -q "release-apply"; then
+#            echo "Label 'release-apply' found."
+#            # PRs with label "release-label" are created at the end of this workflow and we don't want infinite loops
+#            echo "The pull request is merged and has the 'release-apply' label. Nothing to do. Exiting with success"
+#            echo "continue=false" >>$GITHUB_OUTPUT
+#            exit 0
+#          else
+#            echo "Label 'release-apply' not found."
+#            echo "continue=true" >>$GITHUB_OUTPUT
+#          fi
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: check for changes in helm-chart directory
+#        id: check_changes
+#        run: |
+#          git fetch --all
+#          # check for changes between HEAD and previous commit in a specific directory
+#          if ! git diff --quiet HEAD~ -- ./helm-chart/eoapi/; then
+#            echo "Changes detected in the ./helm-chart/eoapi/ directory."
+#            echo "continue=true" >> $GITHUB_OUTPUT
+#          else
+#            echo "No changes detected in the ./helm-chart/eoapi directory. Exiting."
+#            echo "continue=false" >> $GITHUB_OUTPUT
+#            exit 0
+#          fi
+#
+#      - name: determine version increment
+#        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
+#        id: determine-version
+#        run: |
+#          PR_TITLE=$(echo "${{ github.event.pull_request.title }}" | tr '[:upper:]' '[:lower:]')
+#          if [[ "$PR_TITLE" =~ "major:" ]]; then
+#            echo "version_type=major" >> $GITHUB_ENV
+#          elif [[ "$PR_TITLE" =~ "minor:" ]]; then
+#            echo "version_type=minor" >> $GITHUB_ENV
+#          else
+#            echo "version_type=patch" >> $GITHUB_ENV
+#          fi
+#          echo "Version increment type: ${{ env.version_type }}"
+#
+#      - name: bump chart versions
+#        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
+#        id: bump-version
+#        run: |
+#          cd helm-chart/eoapi
+#          VERSION_TYPE=${{ env.version_type }}
+#
+#          CURRENT_VERSION=$(grep '^version:' Chart.yaml | awk '{print $2}')
+#          # strip double quotes
+#          CURRENT_VERSION=${CURRENT_VERSION#\"}
+#          CURRENT_VERSION=${CURRENT_VERSION%\"}
+#
+#          CURRENT_APP_VERSION=$(grep '^appVersion:' Chart.yaml | awk '{print $2}')
+#          # strip double quotes
+#          CURRENT_APP_VERSION=${CURRENT_APP_VERSION#\"}
+#          CURRENT_APP_VERSION=${CURRENT_APP_VERSION%\"}
+#
+#          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+#          IFS='.' read -r -a APP_VERSION_PARTS <<< "$CURRENT_APP_VERSION"
+#
+#          if [[ "$VERSION_TYPE" == "major" ]]; then
+#            NEW_VERSION="$((VERSION_PARTS[0] + 1)).0.0"
+#            # appVersion does not need to follow semvar
+#            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
+#          elif [[ "$VERSION_TYPE" == "minor" ]]; then
+#            NEW_VERSION="${VERSION_PARTS[0]}.$((VERSION_PARTS[1] + 1)).0"
+#            # appVersion does not need to follow semvar
+#            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
+#          else
+#            NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$((VERSION_PARTS[2] + 1))"
+#            # appVersion does not need to follow semvar
+#            NEW_APP_VERSION="${APP_VERSION_PARTS[0]}.${APP_VERSION_PARTS[1]}.$((APP_VERSION_PARTS[2] + 1))"
+#          fi
+#
+#          # export so strenv picks them up
+#          export NEW_VERSION
+#          export NEW_APP_VERSION
+#
+#          yq -i '.version = strenv(NEW_VERSION)' Chart.yaml
+#          yq -i '.appVersion = strenv(NEW_APP_VERSION)' Chart.yaml
+#
+#          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+#          echo "New version: $NEW_VERSION"
+#          echo "New app version: $NEW_APP_VERSION"
+#
+#      - uses: actions/github-script@v6
+#        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
+#        with:
+#          script: |
+#            github.rest.issues.addLabels({
+#              owner: context.repo.owner,
+#              repo: context.repo.repo,
+#              issue_number: context.issue.number,
+#              labels: ['release-apply']
+#            })
+#
+#      - name: commit chart version bump
+#        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
+#        run: |
+#          TAG="v${{ env.new_version }}"
+#          git config --global user.name "${{ github.actor }}"
+#          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+#          git fetch origin
+#          git checkout ${{ github.head_ref }}
+#          git add -A
+#          git commit -m "release version to v${{ env.new_version }}"
+#          # only tag main branch in manual release
+#          # git tag "v${{ env.new_version }}"
+#          git push origin ${{ github.head_ref }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+##      - name: create pr
+##        if: steps.check_label.outputs.continue == 'true' && steps.check_changes.outputs.continue == 'true'
+##        id: create_pr
+##        uses: peter-evans/create-pull-request@v6
+##        with:
+##          token: ${{ secrets.GITHUB_TOKEN }}
+##          commit-message: 'release eoapi chart to v${{ env.new_version }}'
+##          title: 'release v${{ env.new_version }} for ${{ github.ref }}@${{ github.sha }}'
+##          body: |
+##            this PR contains the version bumps for the eoapi chart v${{ env.new_version }}
+##          base: main
+##          branch: apply-${{ github.head_ref }}
+##          labels: release-apply

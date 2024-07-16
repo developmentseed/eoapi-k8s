@@ -1,21 +1,16 @@
 name: release helm chart
 
-#on:
-#  release:
-#    types:
-#      - published
-
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - published
 
 env:
   HELM_VERSION: v3.15.2
 
 jobs:
   release:
-    if: github.actor == 'ranchodeluxe' || github.actor == 'gcorradini' || github.actor == 'sunu' || github.actor == 'ividito'
+    if: "!startsWith(github.ref, 'refs/tags/eoapi-')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,12 +45,15 @@ jobs:
           helm repo list
 
       - name: run chart-releaser
-        uses: helm/chart-releaser-action@v1.4.0
+        uses: helm/chart-releaser-action@v1.6.1
         with:
           charts_dir: helm-chart
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: true
+          CR_PACKAGE_PATH: "."
+          CR_INDEX_PATH: "."
+
 
 #      - name: helm release packages
 #        env:
