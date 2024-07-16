@@ -19,23 +19,6 @@ entries:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-0.4.6/eoapi-0.4.6.tgz
     version: 0.4.6
   - apiVersion: v2
-    appVersion: 0.3.9
-    created: "2024-07-16T22:32:50.733890062Z"
-    dependencies:
-    - condition: postgrescluster.enabled
-      name: postgrescluster
-      repository: ""
-      version: 5.5.2
-    description: Create a full Earth Observation API with Metadata, Raster and Vector
-      services
-    digest: 869e2448861a5bec341902bb7b556fc7f621d089b25b06f7db7288365fca4993
-    kubeVersion: '>=1.23.0-0'
-    name: eoapi
-    type: application
-    urls:
-    - eoapi-0.4.3.tgz
-    version: 0.4.3
-  - apiVersion: v2
     appVersion: 0.3.8
     created: "2024-07-16T22:32:50.731693098Z"
     dependencies:
