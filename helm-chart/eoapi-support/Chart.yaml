@@ -27,3 +27,8 @@ dependencies:
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.grafana` values
     version: 7.3.3
     repository: https://grafana.github.io/helm-charts
+
+
+  - name: metrics-server
+    version: 7.2.8
+    repository: https://charts.bitnami.com/bitnami

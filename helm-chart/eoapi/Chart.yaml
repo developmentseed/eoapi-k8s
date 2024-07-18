@@ -28,3 +28,8 @@ dependencies:
     version: 5.5.2
     respository: "file://charts/postgrescluster"
     condition: postgrescluster.enabled
+
+  - name: eoapi-support
+    version: 0.1.4
+    repository: https://devseed.com/eoapi-k8s/
+    condition: autoscalingCondition

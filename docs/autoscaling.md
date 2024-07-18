@@ -61,7 +61,7 @@ After installing verify things are working by getting nodes stats:
 
 ### Review [Production Storage](aws-gpc-storage-walkthrough.md) Set Up
 
-The default `eoapi` helm chart installs an in-memory postgres/postgis database but most folks will want to
+The default `eoapi` helm chart installs a simple postgres/postgis database with no connection pool, backups or replicas. Most folks will want to
 test autoscaling against something more production suitable
 
 ---

@@ -170,6 +170,9 @@ pgstacBootstrap:
 ######################
 # API SERVICES
 ######################
+# check if ANY of the services below enabled autoscaling and conditionally install the eoapi-support helm chart
+autoscalingCondition: {{ include "check_autoscaling_enabled" . }}
+
 raster:
   enabled: true
   autoscaling:
