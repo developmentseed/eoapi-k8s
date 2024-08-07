@@ -51,7 +51,7 @@ Once you have a k8s cluster set up you can `helm install` eoAPI with the followi
 1. Add the eoapi repo from https://devseed.com/eoapi-k8s/:
 
     ```python
-      $ helm repo add eoapi https://devseed.com/eoapi-k8s/
+    $ helm repo add eoapi https://devseed.com/eoapi-k8s/
     ```
 
 2. List out the eoapi chart versions
