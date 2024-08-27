@@ -170,8 +170,12 @@ pgstacBootstrap:
 ######################
 # API SERVICES
 ######################
-# check if ANY of the services below enabled autoscaling and conditionally install the eoapi-support helm chart
-autoscalingCondition: {{ include "check_autoscaling_enabled" . }}
+# a flag that is only used in the eoapi chart dependencies condition block
+# to install the eoapi-support chart that includes the additional observability
+# since we cannot use any syntax that such as
+# (or .Values.raster.autoscaling.enabled .Values.vector.autoscaling.enabled .Values.stac.autoscaling.enabled)
+autoscaling:
+  enabled: false
 
 raster:
   enabled: true
@@ -180,7 +184,7 @@ raster:
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
@@ -188,8 +192,12 @@ raster:
         stabilizationWindowSeconds: 0
     targets:
       # matches `type` value above unless `type: "both"` is selected
-      cpu: 85
-      requestRate: 10000
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 10000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-1.2.0
@@ -236,7 +244,7 @@ stac:
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
@@ -244,8 +252,12 @@ stac:
         stabilizationWindowSeconds: 0
     targets:
       # matches `type` value above unless `type: "both"` is selected
-      cpu: 85
-      requestRate: 15000
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 60000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
@@ -279,7 +291,7 @@ vector:
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
@@ -287,8 +299,12 @@ vector:
         stabilizationWindowSeconds: 0
     targets:
       # matches `type` value above unless `type: "both"` is selected
-      cpu: 85
-      requestRate: 15000
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 60000m
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.6.1
@@ -322,6 +338,3 @@ vector:
 
 docServer:
   enabled: true
-
-
-

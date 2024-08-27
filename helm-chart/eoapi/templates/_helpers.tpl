@@ -218,12 +218,3 @@ that you cannot have db.enabled and (postgrescluster.enabled or pgstacBootstrap.
 {{- end -}}
 
 {{- end -}}
-
-
-{{- define "check_autoscaling_enabled" -}}
-{{- $enabled := false -}}
-{{- if or .Values.raster.autoscaling.enabled .Values.vector.autoscaling.enabled .Values.stac.autoscaling.enabled -}}
-  {{- $enabled = true -}}
-{{- end -}}
-{{- $enabled -}}
-{{- end -}}

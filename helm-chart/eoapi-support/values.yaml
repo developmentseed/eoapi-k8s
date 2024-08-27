@@ -20,7 +20,7 @@ prometheus-adapter:
       name:
         matches: ""
         as: "nginx_ingress_controller_requests_rate_vector_eoapi"
-      metricsQuery: round(sum(rate(<<.Series>>{service=~"vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+      metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
     - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
       seriesFilters: []
       resources:
@@ -28,7 +28,7 @@ prometheus-adapter:
       name:
         matches: ""
         as: "nginx_ingress_controller_requests_rate_raster_eoapi"
-      metricsQuery: round(sum(rate(<<.Series>>{service=~"raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+      metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
     - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
       seriesFilters: []
       resources:
@@ -36,7 +36,7 @@ prometheus-adapter:
       name:
         matches: ""
         as: "nginx_ingress_controller_requests_rate_stac_eoapi"
-      metricsQuery: round(sum(rate(<<.Series>>{service=~"stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+      metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
 
 prometheus:
   # alertmanager is an optional prometheus chart dependency that we opt-out from
