@@ -170,16 +170,11 @@ pgstacBootstrap:
 ######################
 # API SERVICES
 ######################
-# a flag that is only used in the eoapi chart dependencies condition block
-# to install the eoapi-support chart that includes the additional observability
-# since we cannot use any syntax that such as
-# (or .Values.raster.autoscaling.enabled .Values.vector.autoscaling.enabled .Values.stac.autoscaling.enabled)
-autoscaling:
-  enabled: false
-
 raster:
   enabled: true
   autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
     maxReplicas: 10
@@ -197,7 +192,7 @@ raster:
       # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
-      requestRate: 10000m
+      requestRate: 10000000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-1.2.0
@@ -240,6 +235,8 @@ raster:
 stac:
   enabled: true
   autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
     maxReplicas: 10
@@ -257,7 +254,7 @@ stac:
       # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
-      requestRate: 60000m
+      requestRate: 15000000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
@@ -287,6 +284,8 @@ stac:
 vector:
   enabled: true
   autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
     maxReplicas: 10
@@ -304,7 +303,7 @@ vector:
       # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
-      requestRate: 60000m
+      requestRate: 15000000m
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.6.1
