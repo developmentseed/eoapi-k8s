@@ -17,6 +17,7 @@ tests:
       - equal:
           path: metadata.annotations
           value:
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
             nginx.ingress.kubernetes.io/use-regex: "true"
             nginx.ingress.kubernetes.io/rewrite-target: /$2
             nginx.ingress.kubernetes.io/enable-cors: "true"
@@ -38,6 +39,7 @@ tests:
       - equal:
           path: metadata.annotations
           value:
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
             nginx.ingress.kubernetes.io/use-regex: "true"
             nginx.ingress.kubernetes.io/rewrite-target: /$2
             nginx.ingress.kubernetes.io/enable-cors: "true"
@@ -59,6 +61,7 @@ tests:
       - equal:
           path: metadata.annotations
           value:
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
             nginx.ingress.kubernetes.io/use-regex: "true"
             nginx.ingress.kubernetes.io/rewrite-target: /$2
             nginx.ingress.kubernetes.io/enable-cors: "true"

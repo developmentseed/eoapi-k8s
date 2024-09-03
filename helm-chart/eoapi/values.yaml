@@ -56,8 +56,8 @@ comment_db: >
   The `postgrescluster` specs below are pass-through values to configure those separate
   charts. For more information read https://access.crunchydata.com/documentation/postgres-operator/latest
 
-# temporary solution for EOEPCA until we figure out how to get NFS mounts
-# working with PGO below. Since disabled by default most people SHOULD NOT
+# DEPRECATED: this is the backward compatible way we originally did things
+# and a temporary solution for EOEPCA. Since disabled by default most people SHOULD NOT
 # use this option as it won't be talked about explicitly in the docs
 db:
   enabled: false
@@ -173,11 +173,13 @@ pgstacBootstrap:
 raster:
   enabled: true
   autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
@@ -185,8 +187,12 @@ raster:
         stabilizationWindowSeconds: 0
     targets:
       # matches `type` value above unless `type: "both"` is selected
-      cpu: 85
-      requestRate: 10000
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 1000000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-1.2.0
@@ -229,11 +235,13 @@ raster:
 stac:
   enabled: true
   autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
@@ -241,8 +249,12 @@ stac:
         stabilizationWindowSeconds: 0
     targets:
       # matches `type` value above unless `type: "both"` is selected
-      cpu: 85
-      requestRate: 15000
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 15000000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
@@ -270,13 +282,15 @@ stac:
       WEB_CONCURRENCY: "5"
 
 vector:
-  enabled: true
+  enabled: false
   autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
@@ -284,8 +298,12 @@ vector:
         stabilizationWindowSeconds: 0
     targets:
       # matches `type` value above unless `type: "both"` is selected
-      cpu: 85
-      requestRate: 15000
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 1000000m
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.6.1
@@ -319,6 +337,3 @@ vector:
 
 docServer:
   enabled: true
-
-
-
