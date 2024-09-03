@@ -62,6 +62,29 @@ manual step that cannot be automated
    service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.249.90    <none>           9100/TCP       79s
    service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s 
    ```
+   
+
+5. If anything in steps 1 through 3 seems confusing then here is a quick bash script to clear it up:
+
+   ```shell
+   export RELEASE_NAME=eoapi
+   export RELEASE_NS=eoapi
+   export SUPPORT_RELEASE_NAME=eoapi-support
+   export SUPPORT_RELEASE_NS=eoapi-support
+
+   helm upgrade --install \
+     -n $SUPPORT_RELEASE_NS --create-namespace $SUPPORT_RELEASE_NAME \
+     eoapi/eoapi-support --version 0.1.4 \
+     --set prometheus-adapter.prometheus.url='http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local' \
+     --set grafana.datasources.datasources\\.yaml.datasources[0].url='http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local' \
+     -f /tmp/values-overrides.yaml
+
+   helm upgrade --install \
+     -n $RELEASE_NS --create-namespace $RELEASE_NAME \
+     eoapi/eoapi --version 0.4.6 \
+     -f /tmp/support-values-overrides.yaml
+   ```
+
 
 ---
 
