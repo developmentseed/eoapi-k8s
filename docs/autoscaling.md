@@ -71,12 +71,13 @@ manual step that cannot be automated
    export RELEASE_NS=eoapi
    export SUPPORT_RELEASE_NAME=eoapi-support
    export SUPPORT_RELEASE_NS=eoapi-support
+   PROMETHEUS_URL="http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local"
 
    helm upgrade --install \
      -n $SUPPORT_RELEASE_NS --create-namespace $SUPPORT_RELEASE_NAME \
      eoapi/eoapi-support --version 0.1.4 \
-     --set prometheus-adapter.prometheus.url='http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local' \
-     --set grafana.datasources.datasources\\.yaml.datasources[0].url='http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local' \
+     --set prometheus-adapter.prometheus.url=$PROMETHEUS_URL \
+     --set grafana.datasources.datasources\\.yaml.datasources[0].url=$PROMETHEUS_URL \
      -f /tmp/values-overrides.yaml
 
    helm upgrade --install \
