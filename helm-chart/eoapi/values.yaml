@@ -282,7 +282,7 @@ stac:
       WEB_CONCURRENCY: "5"
 
 vector:
-  enabled: false
+  enabled: true
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information

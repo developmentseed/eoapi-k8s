@@ -14,7 +14,7 @@ helm upgrade --install \
 
 helm upgrade --install \
   -n $RELEASE_NS --create-namespace $RELEASE_NAME \
-  eoapi/eoapi --version 0.4.7 \
+  eoapi/eoapi --version 0.4.8 \
   -f /Users/ranchodeluxe/apps/eoapi-k8s/helm-chart/eoapi/values.yaml
 
 
