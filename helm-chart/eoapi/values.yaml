@@ -286,11 +286,11 @@ vector:
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
-    enabled: true
+    enabled: false
     minReplicas: 1
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
-    type: "requestRate"
+    type: "both"
     behaviour:
       scaleDown:
         stabilizationWindowSeconds: 60
