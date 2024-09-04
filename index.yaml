@@ -2,6 +2,23 @@ apiVersion: v1
 entries:
   eoapi:
   - apiVersion: v2
+    appVersion: 0.3.15
+    created: "2024-09-04T15:34:15.202994548Z"
+    dependencies:
+    - condition: postgrescluster.enabled
+      name: postgrescluster
+      repository: ""
+      version: 5.5.2
+    description: Create a full Earth Observation API with Metadata, Raster and Vector
+      services
+    digest: a76855d4ebdad9e544f968440796b7f86520aa698b6ea5a6c459f4b331f9705d
+    kubeVersion: '>=1.23.0-0'
+    name: eoapi
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-0.4.9/eoapi-0.4.9.tgz
+    version: 0.4.9
+  - apiVersion: v2
     appVersion: 0.3.14
     created: "2024-09-03T14:41:06.489824341Z"
     dependencies:
@@ -339,6 +356,27 @@ entries:
     version: 0.1.1
   eoapi-support:
   - apiVersion: v2
+    appVersion: 0.1.6
+    created: "2024-09-04T15:34:15.320807932Z"
+    dependencies:
+    - name: prometheus
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 25.3.1
+    - name: prometheus-adapter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.7.1
+    - name: grafana
+      repository: https://grafana.github.io/helm-charts
+      version: 7.3.3
+    - name: metrics-server
+      repository: https://charts.bitnami.com/bitnami
+      version: 7.2.8
+    digest: 731db4397f433eb37ff318c4db8fb976bd996738fcc499cd1ae1cf3846ed8236
+    name: eoapi-support
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-support-0.1.6/eoapi-support-0.1.6.tgz
+    version: 0.1.6
+  - apiVersion: v2
     appVersion: 0.1.5
     created: "2024-09-03T14:35:41.045983245Z"
     dependencies:
@@ -377,4 +415,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-support-0.1.4/eoapi-support-0.1.4.tgz
     version: 0.1.4
-generated: "2024-09-03T14:41:06.490028224Z"
+generated: "2024-09-04T15:34:15.320986597Z"
