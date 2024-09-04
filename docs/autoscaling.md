@@ -187,6 +187,10 @@ with the `release` name we installed the chart with below `<release-name>-grafan
    kubectl get svc -n eoapi-support
    ```
    
+3. Login and you should be default be able to see the eoapi-k8s grafana dashboard
+
+   ![](./images/gfdashboard.png)
+   
 ### Install or Upgrade Autoscaling Changes to `eoapi` Chart
 
 1. If you haven't already decide which services (`vector` || `raster` || `stac`) you want to enable `autoscaling` on change your values yaml for these and redeploy
