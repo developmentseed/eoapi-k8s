@@ -1,8 +1,8 @@
 apiVersion: v2
 name: eoapi-support
 
-appVersion: "0.1.5"
-version: "0.1.5"
+appVersion: "0.1.6"
+version: "0.1.6"
 
 dependencies:
   # Prometheus for collection of metrics.

@@ -162,3 +162,8 @@ grafana:
 
   dashboardsConfigMaps:
     default: "eoapi-dashboards"
+
+
+metrics-server:
+  apiService:
+    create: true
