@@ -80,6 +80,8 @@ jobs:
 
           cd helm-chart
 
+          helm dependency build eoapi
+
           helm install $RELEASE_NAME \
             --namespace default \
             -f ./eoapi/values.yaml \
@@ -233,6 +235,8 @@ jobs:
           echo $HOST
 
           cd helm-chart
+
+          helm dependency build eoapi
 
           helm install $RELEASE_NAME \
             --namespace $RELEASE_NAME \
