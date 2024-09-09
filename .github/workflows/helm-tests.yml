@@ -30,7 +30,7 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    #needs: helm-tests
+    needs: helm-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -173,7 +173,7 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    #needs: helm-tests
+    needs: helm-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
