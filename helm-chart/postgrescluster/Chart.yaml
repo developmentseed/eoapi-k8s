@@ -1,10 +1,8 @@
 apiVersion: v2
 name: postgrescluster
-description: A Helm chart for Kubernetes
+description: A Helm chart for eoapi database dep for k8s
 type: application
 # The version below should match the version on the PostgresCluster CRD
 version: 5.5.2
 appVersion: 5.5.2
-# just a stupid yaml toggle to force
-# GH action chart-releaser to know there were changes in the PR and release this
 force: true
