@@ -18,8 +18,6 @@ export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx  get svc/ingress-nginx-contro
 # k8s-eoapi-ingressn-404721dbb4-e6dec70321c3eddd.elb.us-west-2.amazonaws.com
 ```
 
-*
-
 2. Then run some naive load testing against some static read-only endpoints in a couple different terminals 
 
 ```sh

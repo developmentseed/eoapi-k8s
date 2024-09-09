@@ -192,7 +192,7 @@ raster:
       # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
-      requestRate: 1000000m
+      requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-1.2.0
@@ -254,7 +254,7 @@ stac:
       # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
-      requestRate: 15000000m
+      requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
     tag: 2.4.9
@@ -303,7 +303,7 @@ vector:
       # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
-      requestRate: 1000000m
+      requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/tipg
     tag: uvicorn-0.6.1
