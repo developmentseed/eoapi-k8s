@@ -26,5 +26,5 @@ appVersion: "0.3.19"
 dependencies:
   - name: postgrescluster
     version: 5.5.2
-    respository: "https://devseed.com/eoapi-k8s/postgrescluster"
+    respository: "https://devseed.com/eoapi-k8s/"
     condition: postgrescluster.enabled
