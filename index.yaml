@@ -458,6 +458,16 @@ entries:
     version: 0.1.4
   postgrescluster:
   - apiVersion: v2
+    appVersion: 5.5.3
+    created: "2024-09-20T20:28:15.332991474Z"
+    description: A Helm chart for eoapi database dep for k8s
+    digest: 32dd4f597490f48f16dd881bb1f35cb0503892b8a63f6a06317e45d2a4cfef9d
+    name: postgrescluster
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.3/postgrescluster-5.5.3.tgz
+    version: 5.5.3
+  - apiVersion: v2
     appVersion: 5.5.2
     created: "2024-09-09T14:56:14.85865633Z"
     description: A Helm chart for eoapi database dep for k8s
@@ -467,4 +477,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2024-09-09T15:55:40.941212024Z"
+generated: "2024-09-20T20:28:15.333062967Z"
