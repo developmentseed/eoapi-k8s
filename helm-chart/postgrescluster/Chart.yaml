@@ -3,6 +3,6 @@ name: postgrescluster
 description: A Helm chart for eoapi database dep for k8s
 type: application
 # The version below should match the version on the PostgresCluster CRD
-version: 5.5.2
-appVersion: 5.5.2
+version: 5.5.3
+appVersion: 5.5.3
 force: true
