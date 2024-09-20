@@ -115,6 +115,19 @@ spec:
       - name: repo1
         azure:
           container: {{ .Values.azure.container | quote }}
+      {{- else if .Values.nfsCustom }}
+      repos:
+      - name: repo1
+        volume:
+          volumeClaimSpec:
+            {{- if .Values.backupsStorageClassName }}
+            storageClassName: {{ .Values.backupsStorageClassName | quote }}
+            {{- end }}
+            accessModes:
+              - "ReadWriteMany"
+            resources:
+              requests:
+                storage: {{ default "1Gi" .Values.backupsSize | quote }}
       {{- else }}
       repos:
       - name: repo1
