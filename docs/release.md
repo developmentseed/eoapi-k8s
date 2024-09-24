@@ -1,6 +1,6 @@
 ### Release Workflow
 
-1. PRs that include changes in the `helm-chart/<eoapi> || <eoapi-support>` charts are manually required to consider 
+1. PRs that include changes in the `helm-chart/<eoapi> || <eoapi-support> || <postgrescluster>` charts are manually required to consider 
 whether their changes are major, minor or patch (in terms of semantic versioning) and bump the appropriate 
 chart `version: ` (which follows semver) and `appVersion: ` (which does not follow semver) for each affected chart
 
@@ -10,11 +10,11 @@ chart `version: ` (which follows semver) and `appVersion: ` (which does not foll
 
    1. click "Draft New Release"
    
-   2. create a new tag for that matches the `helm-chart/eoapi/Chart.yaml:version` they just commited
+   2. create a new tag increment based on the last one that matches the pattern `v<major>.<minor>.<patch>`. This does not have to match any of the chart versions you changed in the above PR. This repository is one-to-many with charts. So in terms of GH release we are saying, "we've release one of the three charts above" and the commit message will reflect that
    
    3. click the "Generate release notes"
    
-   4. review the release notes and clean up
+   4. review the release notes and clean up and makes sure talk about which chart you released
    
    5. click the "Publish release"
 
