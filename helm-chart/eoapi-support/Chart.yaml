@@ -1,10 +1,14 @@
 apiVersion: v2
 name: eoapi-support
 
-appVersion: "0.1.6"
-version: "0.1.6"
+appVersion: "0.1.7"
+version: "0.1.7"
 
 dependencies:
+  - name: metrics-server
+    version: 7.2.8
+    repository: https://charts.bitnami.com/bitnami
+
   # Prometheus for collection of metrics.
   # https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus
   #
@@ -27,8 +31,3 @@ dependencies:
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.grafana` values
     version: 7.3.3
     repository: https://grafana.github.io/helm-charts
-
-
-  - name: metrics-server
-    version: 7.2.8
-    repository: https://charts.bitnami.com/bitnami
