@@ -1,6 +1,5 @@
 {{ include "eoapi.validateTempDB" . }}
-{{- range $serviceName, $v := .Values -}}
-{{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+{{- range $serviceName, $v := .Values.externalServices -}}
 {{- if index $v "enabled" }}
 apiVersion: apps/v1
 kind: Deployment
@@ -82,7 +81,5 @@ spec:
 ---
 {{/* END: if index $v "enabled" */}}
 {{- end }}
-{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
-{{- end }}
-{{/* END: range $serviceName, $v := .Values*/}}
+{{/* END: range $serviceName, $v := .Values.externalServices */}}
 {{- end }}

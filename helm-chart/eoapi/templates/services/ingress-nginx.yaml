@@ -30,8 +30,7 @@ spec:
   rules:
     - http:
         paths:
-          {{- range $serviceName, $v := .Values }}
-          {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+          {{- range $serviceName, $v := .Values.externalServices }}
           {{- if (and (index $v "enabled") (not $.Values.testing)) }}
           - pathType: Prefix
             path: "/{{ $serviceName }}(/|$)(.*)"
@@ -49,8 +48,7 @@ spec:
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}{{/* END: if index $v "enabled" */}}
-          {{- end }}{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
-          {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
+          {{- end }}{{/* END: range $serviceName, $v := .Values.externalServices */}}
           {{- if (and (not $.Values.testing) (.Values.docServer.enabled)) }}
           - pathType: Prefix
             path: /(/|$)
