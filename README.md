@@ -1,7 +1,7 @@
 # eoapi-k8s
 
 <p align="center">
-    <img height=200 src="https://raw.githubusercontent.com/developmentseed/eoapi-k8s/refs/heads/feature/icon/docs/eoapi-k8s.svg" alt="eoapi-k8s">
+    <img height=200 src="https://raw.githubusercontent.com/developmentseed/eoapi-k8s/refs/heads/main/docs/eoapi-k8s.svg" alt="eoapi-k8s">
 </p>
 <p>
   <a href="https://github.com/developmentseed/eoapi-k8s/actions?query=workflow%3ACI" target="_blank">
