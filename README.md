@@ -56,4 +56,5 @@ Instead of using the `make` commands above you can also [manually `helm install`
 
 * Read about [Default Configuration](./docs/configuration.md#default-configuration) and
 other [Configuration Options](./docs/configuration.md#additional-options)
+* [Manage your data](./docs/manage-data.md) in eoAPI
 * Learn about [Autoscaling / Monitoring / Observability](./docs/autoscaling.md)

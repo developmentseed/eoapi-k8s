@@ -5,7 +5,7 @@ HELM_REPO_URL=https://devseed.com/eoapi-k8s/
 HELM_CHART_NAME=eoapi/eoapi
 PGO_CHART_VERSION=5.7.0
 
-.PHONY: all deploy minikube help
+.PHONY: all deploy minikube ingest help
 
 # Default target
 all: deploy
@@ -31,8 +31,14 @@ minikube:
 	@echo "eoAPI is now available at:"
 	@minikube service ingress-nginx-controller -n ingress-nginx --url | head -n 1
 
+ingest:
+	@echo "Ingesting STAC collections and items into the database."
+	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
+	@./ingest.sh || { echo "Ingestion failed."; exit 1; }
+
 help:
 	@echo "Makefile commands:"
 	@echo "  make deploy         -  Install eoAPI on a cluster kubectl is connected to."
 	@echo "  make minikube       -  Install eoAPI on minikube."
+	@echo "  make ingest         -  Ingest STAC collections and items into the database."
 	@echo "  make help           -  Show this help message."
