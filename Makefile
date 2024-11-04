@@ -3,7 +3,7 @@
 # Variables
 HELM_REPO_URL=https://devseed.com/eoapi-k8s/
 HELM_CHART_NAME=eoapi/eoapi
-PGO_CHART_VERSION=5.5.2
+PGO_CHART_VERSION=5.7.0
 
 .PHONY: all deploy minikube help
 
