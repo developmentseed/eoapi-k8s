@@ -448,6 +448,27 @@ entries:
     version: 0.1.1
   eoapi-support:
   - apiVersion: v2
+    appVersion: 0.1.8
+    created: "2024-11-22T16:45:11.691099192Z"
+    dependencies:
+    - name: metrics-server
+      repository: https://charts.bitnami.com/bitnami
+      version: 7.2.8
+    - name: prometheus
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 25.3.1
+    - name: prometheus-adapter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.7.1
+    - name: grafana
+      repository: https://grafana.github.io/helm-charts
+      version: 7.3.3
+    digest: 7a0ac7b53388c9f67db33b1333a65c9bd5004fb3375d100761f192344b188d90
+    name: eoapi-support
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-support-0.1.8/eoapi-support-0.1.8.tgz
+    version: 0.1.8
+  - apiVersion: v2
     appVersion: 0.1.7
     created: "2024-09-24T13:35:18.352887259Z"
     dependencies:
@@ -549,4 +570,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2024-11-01T10:49:54.339365822Z"
+generated: "2024-11-22T16:45:11.691199007Z"
