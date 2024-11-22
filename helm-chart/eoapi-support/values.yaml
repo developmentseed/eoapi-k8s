@@ -1,8 +1,3 @@
-# when enabled, metrics-server will use the caBundle from the provided secret
-# ref: https://github.com/developmentseed/eoapi-k8s/issues/154
-enableCaBundleFetch: false
-caBundleSecretName: ""
-
 # most of this was cribbed from https://github.com/2i2c-org/infrastructure/blob/master/helm-charts/support/
 # so giving props where props are due to Yuvi Panda :sparkles:
 prometheus-adapter:
