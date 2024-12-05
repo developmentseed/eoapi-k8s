@@ -65,6 +65,12 @@ spec:
         - secretRef:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
+        {{- if index $v "settings" "envSecrets" }}
+        {{- range $secret := index $v "settings" "envSecrets" }}
+        - secretRef:
+            name: {{ $secret }}
+        {{- end }}
+        {{- end }}
 ---
 {{/* END: if index $v "enabled" */}}
 {{- end }}
