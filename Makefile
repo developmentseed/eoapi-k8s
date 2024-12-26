@@ -13,13 +13,13 @@ all: deploy
 deploy:
 	@echo "Installing dependencies."
 	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
-	helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version $(PGO_CHART_VERSION)
+	helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version $(PGO_CHART_VERSION)
 	@echo "Adding eoAPI helm repository."
 	@helm repo add eoapi $(HELM_REPO_URL)
 	@echo "Installing eoAPI helm chart."
 	@cd ./helm-chart && \
 	helm dependency build ./eoapi && \
-	helm install --namespace eoapi --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) eoapi ./eoapi
+	helm upgrade --install --namespace eoapi --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) eoapi ./eoapi
 
 minikube:
 	@echo "Starting minikube."
