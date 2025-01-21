@@ -51,5 +51,13 @@ spec:
         - name: pgstac-setup-volume-{{ $.Release.Name }}
           configMap:
             name: pgstac-setup-config-{{ $.Release.Name }}
+      {{- with .Values.pgstacBootstrap.settings.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pgstacBootstrap.settings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   backoffLimit: 1
 {{- end }}

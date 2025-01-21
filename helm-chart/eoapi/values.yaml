@@ -165,6 +165,8 @@ pgstacBootstrap:
       LOAD_FIXTURES: "true"
       # toggle to `true` if you want to keep the job running as db jumpbox
       KEEP_ALIVE: "false"
+    affinity: {}
+    tolerations: []
 
 
 ######################
@@ -230,6 +232,8 @@ raster:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+    affinity: {}
+    tolerations: []
 
 stac:
   enabled: true
@@ -279,6 +283,8 @@ stac:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+    affinity: {}
+    tolerations: []
 
 vector:
   enabled: true
@@ -333,6 +339,11 @@ vector:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+    affinity: {}
+    tolerations: []
 
 docServer:
   enabled: true
+  settings:
+    affinity: {}
+    tolerations: []
