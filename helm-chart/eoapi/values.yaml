@@ -108,6 +108,8 @@ postgrescluster:
   instances:
   - name: eoapi
     replicas: 1
+    affinity: {}
+    tolerations: []
     dataVolumeClaimSpec:
       accessModes:
       - "ReadWriteOnce"
