@@ -346,6 +346,3 @@ vector:
 
 docServer:
   enabled: true
-  settings:
-    affinity: {}
-    tolerations: []
