@@ -167,8 +167,6 @@ pgstacBootstrap:
       LOAD_FIXTURES: "true"
       # toggle to `true` if you want to keep the job running as db jumpbox
       KEEP_ALIVE: "false"
-    affinity: {}
-    tolerations: []
 
 
 ######################
