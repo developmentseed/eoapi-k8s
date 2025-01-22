@@ -283,8 +283,6 @@ stac:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
-    affinity: {}
-    tolerations: []
 
 vector:
   enabled: true
