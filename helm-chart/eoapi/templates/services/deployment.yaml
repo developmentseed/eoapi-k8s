@@ -71,6 +71,14 @@ spec:
             name: {{ $secret }}
         {{- end }}
         {{- end }}
+      {{- with index $v "settings" "affinity" }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with index $v "settings" "tolerations" }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 {{/* END: if index $v "enabled" */}}
 {{- end }}
