@@ -4,9 +4,9 @@ templates:
 tests:
   - it: "vector configmap defaults"
     set:
-      externalServices.raster.enabled: false
-      externalServices.stac.enabled: false
-      externalServices.vector.enabled: true
+      apiServices.raster.enabled: false
+      apiServices.stac.enabled: false
+      apiServices.vector.enabled: true
     asserts:
       - isKind:
           of: ConfigMap
@@ -18,9 +18,9 @@ tests:
           value: "300"
   - it: "raster configmap defaults"
     set:
-      externalServices.raster.enabled: true
-      externalServices.stac.enabled: false
-      externalServices.vector.enabled: false
+      apiServices.raster.enabled: true
+      apiServices.stac.enabled: false
+      apiServices.vector.enabled: false
     asserts:
       - isKind:
           of: ConfigMap
@@ -32,9 +32,9 @@ tests:
           value: "YES"
   - it: "stac configmap defaults"
     set:
-      externalServices.raster.enabled: false
-      externalServices.stac.enabled: true
-      externalServices.vector.enabled: false
+      apiServices.raster.enabled: false
+      apiServices.stac.enabled: true
+      apiServices.vector.enabled: false
     asserts:
       - isKind:
           of: ConfigMap

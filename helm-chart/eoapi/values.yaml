@@ -171,7 +171,7 @@ pgstacBootstrap:
 # API SERVICES
 ######################
 
-externalServices:
+apiServices:
   raster:
     enabled: true
     autoscaling:

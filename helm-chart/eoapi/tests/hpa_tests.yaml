@@ -4,12 +4,12 @@ templates:
 tests:
   - it: "vector hpa fail for requestRate"
     set:
-      externalServices.raster.enabled: false
-      externalServices.stac.enabled: false
-      externalServices.vector.enabled: true
+      apiServices.raster.enabled: false
+      apiServices.stac.enabled: false
+      apiServices.vector.enabled: true
       ingress.className: "testing123"
-      externalServices.vector.autoscaling.enabled: true
-      externalServices.vector.autoscaling.type: "requestRate"
+      apiServices.vector.autoscaling.enabled: true
+      apiServices.vector.autoscaling.type: "requestRate"
     asserts:
       - failedTemplate:
           errorMessage: When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric

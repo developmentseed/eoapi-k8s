@@ -1,5 +1,5 @@
 {{- include "eoapi.validateAutoscaleRules" . -}}
-{{- range $serviceName, $v := .Values.externalServices -}}
+{{- range $serviceName, $v := .Values.apiServices -}}
 {{- if index $v "autoscaling" "enabled" }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

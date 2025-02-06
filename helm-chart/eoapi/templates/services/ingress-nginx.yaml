@@ -30,7 +30,7 @@ spec:
   rules:
     - http:
         paths:
-          {{- range $serviceName, $v := .Values.externalServices }}
+          {{- range $serviceName, $v := .Values.apiServices }}
           {{- if (and (index $v "enabled") (not $.Values.testing)) }}
           - pathType: Prefix
             path: "/{{ $serviceName }}(/|$)(.*)"
@@ -48,7 +48,7 @@ spec:
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}{{/* END: if index $v "enabled" */}}
-          {{- end }}{{/* END: range $serviceName, $v := .Values.externalServices */}}
+          {{- end }}{{/* END: range $serviceName, $v := .Values.apiServices */}}
           {{- if (and (not $.Values.testing) (.Values.docServer.enabled)) }}
           - pathType: Prefix
             path: /(/|$)

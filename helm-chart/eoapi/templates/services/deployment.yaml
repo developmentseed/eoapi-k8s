@@ -1,5 +1,5 @@
 {{ include "eoapi.validateTempDB" . }}
-{{- range $serviceName, $v := .Values.externalServices -}}
+{{- range $serviceName, $v := .Values.apiServices -}}
 {{- if index $v "enabled" }}
 apiVersion: apps/v1
 kind: Deployment
@@ -81,5 +81,5 @@ spec:
 ---
 {{/* END: if index $v "enabled" */}}
 {{- end }}
-{{/* END: range $serviceName, $v := .Values.externalServices */}}
+{{/* END: range $serviceName, $v := .Values.apiServices */}}
 {{- end }}

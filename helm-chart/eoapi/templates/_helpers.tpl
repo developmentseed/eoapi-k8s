@@ -160,7 +160,7 @@ so we use this helper function to check autoscaling rules
 {{- if and .Values.ingress.enabled (ne .Values.ingress.className "nginx") }}
 {{/* "requestRate" cannot be enabled for any service if not "nginx" so give feedback and fail */}}
 {{- $hasRequestRate := false }}
-{{- range $serviceName, $service := .Values.externalServices }}
+{{- range $serviceName, $service := .Values.apiServices }}
   {{- if and $service.autoscaling.enabled (eq $service.autoscaling.type "requestRate") }}
     {{- $hasRequestRate = true }}
   {{- end }}
@@ -170,7 +170,7 @@ so we use this helper function to check autoscaling rules
 {{- end }}
 {{/* "both" cannot be enabled for any service if not "nginx" so give feedback and fail */}}
 {{- $hasBoth := false }}
-{{- range $serviceName, $service := .Values.externalServices }}
+{{- range $serviceName, $service := .Values.apiServices }}
   {{- if and $service.autoscaling.enabled (eq $service.autoscaling.type "both") }}
     {{- $hasBoth = true }}
   {{- end }}
