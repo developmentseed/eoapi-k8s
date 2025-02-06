@@ -4,10 +4,10 @@ templates:
 tests:
   - it: "vector ingress defaults"
     set:
-      ingress.className: "nginx"
-      raster.enabled: false
-      stac.enabled: false
-      vector.enabled: true
+      externalServices.ingress.className: "nginx"
+      externalServices.raster.enabled: false
+      externalServices.stac.enabled: false
+      externalServices.vector.enabled: true
     asserts:
       - isKind:
           of: Ingress
@@ -26,10 +26,10 @@ tests:
           value: "nginx"
   - it: "raster ingress defaults"
     set:
-      ingress.className: "nginx"
-      raster.enabled: true
-      stac.enabled: false
-      vector.enabled: false
+      externalServices.ingress.className: "nginx"
+      externalServices.raster.enabled: true
+      externalServices.stac.enabled: false
+      externalServices.vector.enabled: false
     asserts:
       - isKind:
           of: Ingress
@@ -48,10 +48,10 @@ tests:
           value: "nginx"
   - it: "stac ingress defaults"
     set:
-      ingress.className: "nginx"
-      raster.enabled: false
-      stac.enabled: true
-      vector.enabled: false
+      externalServices.ingress.className: "nginx"
+      externalServices.raster.enabled: false
+      externalServices.stac.enabled: true
+      externalServices.vector.enabled: false
     asserts:
       - isKind:
           of: Ingress

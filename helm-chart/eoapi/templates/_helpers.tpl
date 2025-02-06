@@ -159,11 +159,23 @@ so we use this helper function to check autoscaling rules
 {{- define "eoapi.validateAutoscaleRules" -}}
 {{- if and .Values.ingress.enabled (ne .Values.ingress.className "nginx") }}
 {{/* "requestRate" cannot be enabled for any service if not "nginx" so give feedback and fail */}}
-{{- if (or (and .Values.raster.autoscaling.enabled (eq .Values.raster.autoscaling.type "requestRate")) (and .Values.stac.autoscaling.enabled (eq .Values.stac.autoscaling.type "requestRate")) (and .Values.vector.autoscaling.enabled (eq .Values.vector.autoscaling.type "requestRate")) ) }}
+{{- $hasRequestRate := false }}
+{{- range $serviceName, $service := .Values.externalServices }}
+  {{- if and $service.autoscaling.enabled (eq $service.autoscaling.type "requestRate") }}
+    {{- $hasRequestRate = true }}
+  {{- end }}
+{{- end }}
+{{- if $hasRequestRate }}
 {{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric" }}
 {{- end }}
 {{/* "both" cannot be enabled for any service if not "nginx" so give feedback and fail */}}
-{{- if (or (and .Values.raster.autoscaling.enabled (eq .Values.raster.autoscaling.type "both")) (and .Values.stac.autoscaling.enabled (eq .Values.stac.autoscaling.type "both")) (and .Values.vector.autoscaling.enabled (eq .Values.vector.autoscaling.type "both")) ) }}
+{{- $hasBoth := false }}
+{{- range $serviceName, $service := .Values.externalServices }}
+  {{- if and $service.autoscaling.enabled (eq $service.autoscaling.type "both") }}
+    {{- $hasBoth = true }}
+  {{- end }}
+{{- end }}
+{{- if $hasBoth }}
 {{- fail "When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'both' at this time b/c 'requestRate' is solely an nginx metric" }}
 {{- end }}
 {{- end }}
