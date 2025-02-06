@@ -1,5 +1,5 @@
 {{- range $serviceName, $v := .Values -}}
-{{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+{{- if has $serviceName $.Values.apiServices }}
 {{- if index $v "enabled" }}
 apiVersion: v1
 kind: Service
@@ -28,7 +28,7 @@ spec:
 ---
 {{/* END: if index $v "enabled" */}}
 {{- end }}
-{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
+{{/* END: if has $serviceName $.Values.externalServices */}}
 {{- end }}
 {{/* END: range $serviceName, $v := .Values*/}}
 {{- end }}

@@ -170,6 +170,11 @@ pgstacBootstrap:
 ######################
 # API SERVICES
 ######################
+apiServices:
+  - raster
+  - stac
+  - vector
+
 raster:
   enabled: true
   autoscaling:
