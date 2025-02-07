@@ -31,7 +31,7 @@ spec:
     - http:
         paths:
           {{- range $serviceName, $v := .Values }}
-          {{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+          {{- if has $serviceName $.Values.apiServices }}
           {{- if (and (index $v "enabled") (not $.Values.testing)) }}
           - pathType: Prefix
             path: "/{{ $serviceName }}(/|$)(.*)"
@@ -49,7 +49,7 @@ spec:
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}{{/* END: if index $v "enabled" */}}
-          {{- end }}{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
+          {{- end }}{{/* END: if has $serviceName $.Values.apiServices */}}
           {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
           {{- if (and (not $.Values.testing) (.Values.docServer.enabled)) }}
           - pathType: Prefix

@@ -36,6 +36,11 @@ ingest:
 	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
 	@./ingest.sh || { echo "Ingestion failed."; exit 1; }
 
+tests:
+	@echo "Running tests."
+	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
+	@helm unittest helm-chart/eoapi -f 'tests/*.yaml' -v helm-chart/eoapi/test-helm-values.yaml
+
 help:
 	@echo "Makefile commands:"
 	@echo "  make deploy         -  Install eoAPI on a cluster kubectl is connected to."

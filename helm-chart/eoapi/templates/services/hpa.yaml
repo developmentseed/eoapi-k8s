@@ -1,6 +1,6 @@
 {{- include "eoapi.validateAutoscaleRules" . -}}
 {{- range $serviceName, $v := .Values -}}
-{{- if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) }}
+{{- if has $serviceName $.Values.apiServices }}
 {{- if index $v "autoscaling" "enabled" }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -44,7 +44,7 @@ spec:
 ---
 {{/* END: if index $v "autoscaling" "enabled" */}}
 {{- end }}
-{{/* END: if (or (eq $serviceName "raster") (eq $serviceName "stac") (eq $serviceName "vector")) */}}
+{{/* END: if has $serviceName $.Values.apiServices */}}
 {{- end }}
 {{/* END: range $serviceName, $v := .Values*/}}
 {{- end }}
