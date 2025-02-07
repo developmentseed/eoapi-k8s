@@ -8,6 +8,10 @@ metadata:
     app: {{ $serviceName }}-{{ $.Release.Name }}
     gitsha: {{ $.Values.gitSha }}
   name: {{ $serviceName }}-{{ $.Release.Name }}
+  {{- with index $v "annotations" }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   progressDeadlineSeconds: 600
   revisionHistoryLimit: 5
