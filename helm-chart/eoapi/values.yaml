@@ -170,7 +170,6 @@ pgstacBootstrap:
 ######################
 # API SERVICES
 ######################
-
 apiServices:
   raster:
     enabled: true

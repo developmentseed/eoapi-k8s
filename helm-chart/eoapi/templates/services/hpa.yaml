@@ -43,5 +43,5 @@ spec:
 ---
 {{/* END: if index $v "autoscaling" "enabled" */}}
 {{- end }}
-{{/* END: range $serviceName, $v := .Values*/}}
+{{/* END: range $serviceName, $v := .Values.apiServices */}}
 {{- end }}
