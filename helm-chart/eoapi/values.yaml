@@ -172,6 +172,7 @@ pgstacBootstrap:
 ######################
 apiServices:
   - raster
+  - multidim
   - stac
   - vector
 
@@ -201,6 +202,67 @@ raster:
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: uvicorn-1.4.0
+  command:
+    - "uvicorn"
+    - "titiler.pgstac.main:app"
+    - "--host=$(HOST)"
+    - "--port=$(PORT)"
+  settings:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    resources:
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+      requests:
+        cpu: "256m"
+        memory: "3072Mi"
+    envVars:
+      ##############
+      # titiler
+      ##############
+      GDAL_CACHEMAX: "200"  # 200 mb
+      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      PYTHONWARNINGS: "ignore"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "5000000"  # 5 MB (per file-handle)
+      ##############
+      # uvicorn
+      ##############
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      # https://www.uvicorn.org/settings/#production
+      WEB_CONCURRENCY: "5"
+
+multidim:
+  enabled: false # disabled by default
+  autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    # `type`: "cpu" || "requestRate" || "both"
+    type: "requestRate"
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+    targets:
+      # matches `type` value above unless `type: "both"` is selected
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 100000m
+  image:
+    name: ghcr.io/developmentseed/titiler-md-demo
+    tag: 0ea56bfa44457b92e804fd4c0c2192019c002965
   command:
     - "uvicorn"
     - "titiler.pgstac.main:app"
