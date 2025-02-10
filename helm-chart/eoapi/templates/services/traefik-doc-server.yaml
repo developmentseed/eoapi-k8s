@@ -16,6 +16,7 @@ data:
           <li><a href="/raster" target="_blank" rel="noopener noreferrer">/raster</a></li>
           <li><a href="/vector" target="_blank" rel="noopener noreferrer">/vector</a></li>
           <li><a href="/stac" target="_blank" rel="noopener noreferrer">/stac</a></li>
+          <li><a href="/browser/" target="_blank" rel="noopener noreferrer">/browser</a></li>
         </ul>
     </body>
     </html>
