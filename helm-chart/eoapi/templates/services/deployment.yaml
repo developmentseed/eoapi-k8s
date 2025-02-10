@@ -40,6 +40,13 @@ spec:
           - "--root-path=/{{ $serviceName }}{{ $.Release.Name }}"
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
+          tcpSocket:
+            port: {{ $.Values.service.port }}
+          failureThreshold: 3
+          periodSeconds: 15
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
           httpGet:
             {{- if (eq $serviceName "stac") }}
             path: /_mgmt/ping
@@ -48,8 +55,19 @@ spec:
             {{- end }}
             port: {{ $.Values.service.port }}
           failureThreshold: 3
-          initialDelaySeconds: 30
           periodSeconds: 15
+          successThreshold: 1
+        startupProbe:
+          httpGet:
+            {{- if (eq $serviceName "stac") }}
+            path: /_mgmt/ping
+            {{- else }}
+            path: /healthz
+            {{- end }}
+            port: {{ $.Values.service.port }}
+          # check every sec for 1 minute
+          periodSeconds: 1
+          failureThreshold: 60
           successThreshold: 1
         ports:
           - containerPort: {{ $.Values.service.port }}
