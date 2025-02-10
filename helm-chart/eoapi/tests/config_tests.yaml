@@ -7,6 +7,7 @@ tests:
       raster.enabled: false
       stac.enabled: false
       vector.enabled: true
+      multidim.enabled: false
     asserts:
       - isKind:
           of: ConfigMap
@@ -21,6 +22,7 @@ tests:
       raster.enabled: true
       stac.enabled: false
       vector.enabled: false
+      multidim.enabled: false
     asserts:
       - isKind:
           of: ConfigMap
@@ -35,6 +37,7 @@ tests:
       raster.enabled: false
       stac.enabled: true
       vector.enabled: false
+      multidim.enabled: false
     asserts:
       - isKind:
           of: ConfigMap
@@ -44,3 +47,18 @@ tests:
       - equal:
           path: data.WEB_CONCURRENCY
           value: "5"
+  - it: "multidim configmap defaults"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: metadata.name
+          pattern: ^multidim-envvar-configmap-RELEASE-NAME$
+      - equal:
+          path: data.GDAL_HTTP_MULTIPLEX
+          value: "YES"
