@@ -7,6 +7,7 @@ tests:
       raster.enabled: false
       stac.enabled: false
       vector.enabled: true
+      multidim.enabled: false
     asserts:
       - isKind:
           of: Deployment
@@ -36,6 +37,7 @@ tests:
       raster.enabled: true
       stac.enabled: false
       vector.enabled: false
+      multidim.enabled: false
     asserts:
       - isKind:
           of: Deployment
@@ -65,6 +67,7 @@ tests:
       raster.enabled: false
       stac.enabled: true
       vector.enabled: false
+      multidim.enabled: false
     asserts:
       - isKind:
           of: Deployment
@@ -86,6 +89,36 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
           value: "1024Mi"
+      - equal:
+          path: metadata.labels.gitsha
+          value: "ABC123"
+  - it: "multidim deploy defaults"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: true
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: metadata.name
+          pattern: ^multidim-RELEASE-NAME$
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "768m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "256m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "4096Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "3072Mi"
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"

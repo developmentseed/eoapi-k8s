@@ -8,6 +8,7 @@ tests:
       raster.enabled: false
       stac.enabled: false
       vector.enabled: true
+      multidim.enabled: false
     asserts:
       - isKind:
           of: Ingress
@@ -30,6 +31,7 @@ tests:
       raster.enabled: true
       stac.enabled: false
       vector.enabled: false
+      multidim.enabled: false
     asserts:
       - isKind:
           of: Ingress
@@ -52,12 +54,36 @@ tests:
       raster.enabled: false
       stac.enabled: true
       vector.enabled: false
+      multidim.enabled: false
     asserts:
       - isKind:
           of: Ingress
       - matchRegex:
           path: spec.rules[0].http.paths[0].path
           pattern: ^/stac\(\/\|\$\)\(\.\*\)$
+      - equal:
+          path: metadata.annotations
+          value:
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
+            nginx.ingress.kubernetes.io/use-regex: "true"
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/enable-cors: "true"
+      - equal:
+          path: spec.ingressClassName
+          value: "nginx"
+  - it: "multidim ingress defaults"
+    set:
+      ingress.className: "nginx"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - matchRegex:
+          path: spec.rules[0].http.paths[0].path
+          pattern: ^/multidim\(\/\|\$\)\(\.\*\)$
       - equal:
           path: metadata.annotations
           value:
