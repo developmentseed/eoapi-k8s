@@ -403,3 +403,18 @@ vector:
 
 docServer:
   enabled: true
+
+# Contains configuration specific to using Azure. Can be safely ignored if not using Azure.
+# We need this to map secrets from an Azure secrets vault to a k8s secret object,
+# and we use this when using Azure managed postgres to pass in the DB creds.
+azure:
+  aksSecretsProviderAvailable: false
+  keyvault:
+    name: ""
+    clientId: ""
+    tenantId: ""
+  # Mapping of name inside Azure Vault to name inside k8s secret object
+  secretKeys:
+    pgpassword: POSTGRES_PASSWORD
+    pghost: POSTGRES_HOST
+    dbname: POSTGRES_DBNAME
