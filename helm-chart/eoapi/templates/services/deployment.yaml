@@ -116,6 +116,9 @@ spec:
             volumeAttributes:
               secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
         {{- end }}
+      {{- if $.Values.azure.serviceAccount.create }}
+      serviceAccountName: azure-service-account-{{ $.Release.Name }}
+      {{- end }}
       {{- with index $v "settings" "affinity" }}
       affinity:
         {{- toYaml . | nindent 8 }}
