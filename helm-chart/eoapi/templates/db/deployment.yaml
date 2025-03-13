@@ -73,4 +73,12 @@ spec:
         - name: initdb-sh-volume-{{ $.Release.Name }}
           configMap:
             name: initdb-sh-config-{{ $.Release.Name }}
+        {{- if .Values.azure.aksSecretsProviderAvailable }}
+        - name: pgstac-secrets-{{ $.Release.Name }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
+        {{- end }}
 {{- end }}
