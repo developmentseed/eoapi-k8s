@@ -85,6 +85,8 @@ gke-eoapi-test-default-pool-94a2b7e7-vg4f   Ready    <none>   5m   v1.31.5-gke.1
 
 NGINX Ingress Controller can be installed through `helm` using the following command:
 ```
+kubectl create ns eoapi
+
 helm upgrade --install ingress-nginx ingress-nginx \
   --repo https://kubernetes.github.io/ingress-nginx \
   --namespace eoapi
