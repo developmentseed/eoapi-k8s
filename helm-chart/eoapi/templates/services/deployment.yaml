@@ -28,6 +28,9 @@ spec:
     metadata:
       labels:
         app: {{ $serviceName }}-{{ $.Release.Name }}
+        {{- if $.Values.azure.serviceAccount.create }}
+        azure.workload.identity/use: "true"
+        {{- end }}
     spec:
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
