@@ -98,6 +98,12 @@ spec:
             name: {{ $secret }}
         {{- end }}
         {{- end }}
+        {{- if .Values.azure.aksSecretsProviderAvailable }}
+        volumeMounts:
+          - name: pgstac-secrets-{{ $.Release.Name }}
+            mountPath: /mnt/secrets-store
+            readOnly: true
+        {{- end }}
       volumes:
         {{- if $.Values.azure.aksSecretsProviderAvailable }}
         - name: pgstac-secrets-{{ $.Release.Name }}
