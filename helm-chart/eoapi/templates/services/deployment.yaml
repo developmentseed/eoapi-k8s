@@ -117,7 +117,7 @@ spec:
               secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
         {{- end }}
       {{- if $.Values.azure.serviceAccount.create }}
-      serviceAccountName: azure-service-account-{{ $.Release.Name }}
+      serviceAccountName: {{ $.Values.azure.serviceAccount.name }}
       {{- end }}
       {{- with index $v "settings" "affinity" }}
       affinity:
