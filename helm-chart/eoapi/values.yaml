@@ -409,6 +409,8 @@ docServer:
 # and we use this when using Azure managed postgres to pass in the DB creds.
 azure:
   aksSecretsProviderAvailable: false
+  serviceAccount:
+    create: false
   keyvault:
     name: ""
     clientId: ""

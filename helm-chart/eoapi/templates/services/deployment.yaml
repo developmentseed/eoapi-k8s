@@ -87,9 +87,9 @@ spec:
         - secretRef:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
-        # TODO (emmanuel): choose another name to not mix up with the db secret if internal DB
+          # TODO (emmanuel): choose another name to not mix up with the db secret if internal DB
         {{- if $.Values.azure.aksSecretsProviderAvailable }}
-         - secretRef:
+        - secretRef:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
         {{- if index $v "settings" "envSecrets" }}
