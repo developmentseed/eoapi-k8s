@@ -88,7 +88,7 @@ spec:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
         # TODO (emmanuel): choose another name to not mix up with the db secret if internal DB
-        {{- if .Values.azure.aksSecretsProviderAvailable }}
+        {{- if $.Values.azure.aksSecretsProviderAvailable }}
          - secretRef:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
@@ -99,7 +99,7 @@ spec:
         {{- end }}
         {{- end }}
       volumes:
-        {{- if .Values.azure.aksSecretsProviderAvailable }}
+        {{- if $.Values.azure.aksSecretsProviderAvailable }}
         - name: pgstac-secrets-{{ $.Release.Name }}
           csi:
             driver: secrets-store.csi.k8s.io
