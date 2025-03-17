@@ -54,7 +54,7 @@ spec:
           {{- if $.Values.azure.aksSecretsProviderAvailable }}
             # pyscopg connection string
             - name: PGADMIN_URI
-              value: postgresql://postgres:$(POSTGRES_PASS)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)
+              value: {{ printf "host='$(POSTGRES_HOST)' port='5432' dbname='$(POSTGRES_DB)' user='postgres' password='$(POSTGRES_PASSWORD)'" | quote }}
           {{- else}}
             {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
           {{- end }}
