@@ -40,15 +40,21 @@ spec:
               mountPath: /mnt/secrets-store
               readOnly: true
             {{- end }}
+              value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
+          {{- if $.Values.azure.aksSecretsProviderAvailable }}
+          envFrom:
+            - secretRef:
+                name: pgstac-secrets-{{ $.Release.Name }}
+          {{- end }}
           env:
             - name: LOAD_FIXTURES
               value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
             - name: KEEP_ALIVE
               value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
           {{- if $.Values.azure.aksSecretsProviderAvailable }}
-          envFrom:
-            - secretRef:
-                name: pgstac-secrets-{{ $.Release.Name }}
+            # pyscopg connection string
+            - name: PGADMIN_URI
+              value: postgresql://postgres:$(POSTGRES_PASS)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)
           {{- else}}
             {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
           {{- end }}
