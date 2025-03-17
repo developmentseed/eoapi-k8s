@@ -45,11 +45,12 @@ spec:
               value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
             - name: KEEP_ALIVE
               value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
-            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
           {{- if $.Values.azure.aksSecretsProviderAvailable }}
           envFrom:
             - secretRef:
                 name: pgstac-secrets-{{ $.Release.Name }}
+          {{- else}}
+            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
           {{- end }}
       volumes:
         - name: initdb-sql-volume-{{ $.Release.Name }}
