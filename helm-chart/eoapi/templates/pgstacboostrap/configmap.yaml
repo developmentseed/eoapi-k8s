@@ -46,6 +46,9 @@ data:
     #!/bin/bash
     bash /opt/initdb/apt-and-pip-install.sh
     # make sure crunchydata postgresql operator has seeded our secrets and we're ready to go
+    # init PGADMIN_URI if not set
+    if [ -z "$PGADMIN_URI" ]; then
+        export PGADMIN_URI="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
     pypgstac pgready --dsn $PGADMIN_URI
     # run migrations
     python3 /opt/initdb/python-scripts/pgstac-migrate.py

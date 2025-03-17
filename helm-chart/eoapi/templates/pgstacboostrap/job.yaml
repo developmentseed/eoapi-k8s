@@ -52,9 +52,10 @@ spec:
             - name: KEEP_ALIVE
               value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
           {{- if $.Values.azure.aksSecretsProviderAvailable }}
-            # pyscopg connection string
-            - name: PGADMIN_URI
-              value: {{ printf "host='$(POSTGRES_HOST)' port='5432' dbname='$(POSTGRES_DB)' user='postgres' password='$(POSTGRES_PASSWORD)'" | quote }}
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
           {{- else}}
             {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
           {{- end }}
