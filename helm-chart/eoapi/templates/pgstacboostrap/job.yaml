@@ -11,6 +11,9 @@ spec:
     metadata:
       labels:
         app: {{ include "eoapi.pgstacHostName" . | nindent 14 }}
+        {{- if .Values.azure.serviceAccount.create }}
+        azure.workload.identity/use: "true"
+        {{- end }}
     spec:
       restartPolicy: Never
       containers:
@@ -32,12 +35,22 @@ spec:
               name: initdb-sh-volume-{{ $.Release.Name }}
             - mountPath: /opt/initdb/python-scripts
               name: pgstac-setup-volume-{{ $.Release.Name }}
+            {{- if .Values.azure.aksSecretsProviderAvailable }}
+            - name: pgstac-secrets-{{ $.Release.Name }}
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            {{- end }}
           env:
             - name: LOAD_FIXTURES
               value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
             - name: KEEP_ALIVE
               value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
             {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
+          {{- if $.Values.azure.aksSecretsProviderAvailable }}
+          envFrom:
+            - secretRef:
+                name: pgstac-secrets-{{ $.Release.Name }}
+          {{- end }}
       volumes:
         - name: initdb-sql-volume-{{ $.Release.Name }}
           configMap:
@@ -51,6 +64,17 @@ spec:
         - name: pgstac-setup-volume-{{ $.Release.Name }}
           configMap:
             name: pgstac-setup-config-{{ $.Release.Name }}
+        {{- if $.Values.azure.aksSecretsProviderAvailable }}
+        - name: pgstac-secrets-{{ $.Release.Name }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
+        {{- end }}
+      {{- if .Values.azure.serviceAccount.create }}
+      serviceAccountName: {{ .Values.azure.serviceAccount.name }}
+      {{- end }}
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
