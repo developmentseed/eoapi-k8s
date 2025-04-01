@@ -1,3 +1,9 @@
+#! /usr/bin/env python3
+
+# This script is used to setup the pgstac database.
+# It is run as a job in the pgstacbootstrap pod.
+# It is important that this script and all of its steps are idempotent.
+
 import os
 import psycopg
 from psycopg import sql
