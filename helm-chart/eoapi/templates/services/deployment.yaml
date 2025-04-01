@@ -29,7 +29,7 @@ spec:
       labels:
         app: {{ $serviceName }}-{{ $.Release.Name }}
     spec:
-      serviceAccountName: {{ $serviceName }}-sa-{{ $.Release.Name }}
+      serviceAccountName: eoapi-sa-{{ $.Release.Name }}
       {{- if eq $serviceName "stac" }}
       initContainers:
       - name: wait-for-pgstacbootstrap

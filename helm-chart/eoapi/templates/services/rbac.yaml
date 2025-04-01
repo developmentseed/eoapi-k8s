@@ -1,20 +1,18 @@
-{{- range $serviceName, $v := .Values -}}
-{{- if has $serviceName $.Values.apiServices }}
-{{- if index $v "enabled" }}
+{{- if .Values.apiServices }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ $serviceName }}-sa-{{ $.Release.Name }}
+  name: eoapi-sa-{{ $.Release.Name }}
   labels:
-    app: {{ $serviceName }}-{{ $.Release.Name }}
+    app: eoapi-{{ $.Release.Name }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ $serviceName }}-role-{{ $.Release.Name }}
+  name: eoapi-role-{{ $.Release.Name }}
   labels:
-    app: {{ $serviceName }}-{{ $.Release.Name }}
+    app: eoapi-{{ $.Release.Name }}
 rules:
 - apiGroups: ["batch"]
   resources: ["jobs"]
@@ -23,17 +21,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ $serviceName }}-rolebinding-{{ $.Release.Name }}
+  name: eoapi-rolebinding-{{ $.Release.Name }}
   labels:
-    app: {{ $serviceName }}-{{ $.Release.Name }}
+    app: eoapi-{{ $.Release.Name }}
 subjects:
 - kind: ServiceAccount
-  name: {{ $serviceName }}-sa-{{ $.Release.Name }}
+  name: eoapi-sa-{{ $.Release.Name }}
   namespace: {{ $.Release.Namespace }}
 roleRef:
   kind: Role
-  name: {{ $serviceName }}-role-{{ $.Release.Name }}
+  name: eoapi-role-{{ $.Release.Name }}
   apiGroup: rbac.authorization.k8s.io
-{{- end }}
-{{- end }}
 {{- end }}
