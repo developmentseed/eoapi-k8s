@@ -4,13 +4,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 10 }}
-  name: {{ include "eoapi.pgstacTempDbHostName" . | nindent 8 }}
+    app: pgstac
+  name: pgstac
 spec:
   ports:
   - name: "5432"
     port: 5432
     targetPort: 5432
   selector:
-    app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 10 }}
+    app: pgstac
 {{- end }}
