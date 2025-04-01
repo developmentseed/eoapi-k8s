@@ -5,6 +5,6 @@ type: application
 # The version below should match the version on the PostgresCluster CRD
 # from CrunchyData's Postgres Operator
 # https://access.crunchydata.com/documentation/postgres-operator/latest/releases
-version: 5.7.0
-appVersion: 5.7.0
+version: 5.7.4
+appVersion: 5.7.4
 force: true
