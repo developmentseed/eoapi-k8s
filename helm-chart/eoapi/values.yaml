@@ -262,10 +262,10 @@ multidim:
       requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/titiler-md-demo
-    tag: 0ea56bfa44457b92e804fd4c0c2192019c002965
+    tag: 016ae717674a2ae1f846880470fe8700c3b37e4f
   command:
     - "uvicorn"
-    - "titiler.pgstac.main:app"
+    - "titiler_md_demo.main:app"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:

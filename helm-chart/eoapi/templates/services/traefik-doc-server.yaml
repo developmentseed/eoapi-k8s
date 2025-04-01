@@ -16,6 +16,9 @@ data:
           <li><a href="/raster" target="_blank" rel="noopener noreferrer">/raster</a></li>
           <li><a href="/vector" target="_blank" rel="noopener noreferrer">/vector</a></li>
           <li><a href="/stac" target="_blank" rel="noopener noreferrer">/stac</a></li>
+          {{- if .Values.multidim.enabled }}
+          <li><a href="/multidim" target="_blank" rel="noopener noreferrer">/multidim</a></li>
+          {{- end}}
         </ul>
     </body>
     </html>
