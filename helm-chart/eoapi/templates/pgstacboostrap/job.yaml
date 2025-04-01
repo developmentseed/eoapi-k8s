@@ -3,14 +3,14 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "eoapi.pgstacHostName" . | nindent 8 }}
+  name: pgstacbootstrap
   labels:
-    app: {{ include "eoapi.pgstacHostName" . | nindent 10 }}
+    app: pgstacbootstrap
 spec:
   template:
     metadata:
       labels:
-        app: {{ include "eoapi.pgstacHostName" . | nindent 14 }}
+        app: pgstacbootstrap
     spec:
       restartPolicy: Never
       containers:
