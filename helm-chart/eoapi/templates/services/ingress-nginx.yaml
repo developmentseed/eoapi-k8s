@@ -33,7 +33,7 @@ spec:
           {{- range $serviceName, $v := .Values }}
           {{- if has $serviceName $.Values.apiServices }}
           {{- if (index $v "enabled") }}
-          - pathType: Prefix
+          - pathType: ImplementationSpecific
             path: "/{{ $serviceName }}(/|$)(.*)"
             backend:
               service:
@@ -44,7 +44,7 @@ spec:
           {{- end }}{{/* END: if has $serviceName $.Values.apiServices */}}
           {{- end }}{{/* END: range $serviceName, $v := .Values*/}}
           {{- if (and (not $.Values.testing) (.Values.docServer.enabled)) }}
-          - pathType: Prefix
+          - pathType: ImplementationSpecific
             path: /(/|$)
             backend:
               service:
