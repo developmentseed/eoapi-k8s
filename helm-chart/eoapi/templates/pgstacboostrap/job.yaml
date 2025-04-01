@@ -13,6 +13,15 @@ spec:
         app: pgstacbootstrap
     spec:
       restartPolicy: Never
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command:
+            {{ if .Values.testing }}
+            ['sh', '-c', 'until nc -z {{ $.Release.Name }}-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
+            {{ else }}
+            ['sh', '-c', 'until nc -z eoapi-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
+            {{ end }}
       containers:
         - name: pgstacbootstrap
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
