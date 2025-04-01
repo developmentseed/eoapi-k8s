@@ -38,6 +38,7 @@ with psycopg.connect(admin_db_conninfo, autocommit=True) as conn:
                 "GRANT pgstac_read TO {username};"
                 "GRANT pgstac_ingest TO {username};"
                 "GRANT pgstac_admin TO {username};"
+                "ALTER USER {username} SET search_path TO pgstac, public;" # add pgstac to search_path by default
             ).format(
                 db_name=sql.Identifier(os.environ["POSTGRES_DBNAME"]),
                 username=sql.Identifier(os.environ["POSTGRES_USER"]),
