@@ -147,7 +147,7 @@ pgstacBootstrap:
   enabled: true
   image:
     name: ghcr.io/stac-utils/pgstac
-    tag: v0.8.2
+    tag: v0.9.5
   command:
     - "sh"
   args:
@@ -323,7 +323,7 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 2.4.9
+    tag: 5.0.1
   command:
     - "uvicorn"
     - "stac_fastapi.pgstac.app:app"
