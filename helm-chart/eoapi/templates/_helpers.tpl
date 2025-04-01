@@ -62,30 +62,6 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Create pgstac host string depending if .Values.testing
-*/}}
-{{- define "eoapi.pgstacTempDbHostName" -}}
-{{- if .Values.testing }}
-{{- printf "%s-%s" "pgstac" .Release.Name }}
-{{- else }}
-{{/* need to match what is default in values.yamls */}}
-{{- printf "%s" "pgstac" }}
-{{- end }}
-{{- end }}
-
-{{/*
-Create pgstac host string depending if .Values.testing
-*/}}
-{{- define "eoapi.pgstacHostName" -}}
-{{- if .Values.testing }}
-{{- printf "%s-%s" "pgstacbootstrap" .Release.Name }}
-{{- else }}
-{{/* need to match what is default in values.yamls */}}
-{{- printf "%s" "pgstacbootstrap" }}
-{{- end }}
-{{- end }}
-
-{{/*
 Secrets for postgres/postgis access have to be
 derived from what the crunchydata operator creates
 
