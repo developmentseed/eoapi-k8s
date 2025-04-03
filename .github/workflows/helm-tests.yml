@@ -104,12 +104,12 @@ jobs:
             sleep 1
           done
           echo "raster service has started, moving on..."
-          while [[ -z "$(kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /healthz" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for vector service to start..."
             sleep 1
           done
           echo "vector service has started, moving on..."
-          while [[ -z "$(kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /stac/_mgmt/ping" | head -n 1)" ]]; do
+          while [[ -z "$(kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /.*/_mgmt/ping" | head -n 1)" ]]; do
             echo "still waiting for stac service to start..."
             sleep 1
           done

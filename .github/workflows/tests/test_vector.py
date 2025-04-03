@@ -107,11 +107,11 @@ def test_vector_api(vector_endpoint):
     assert item["id"] == 1
 
     # OGC Tiles
-    resp = client.get(f"{vector_endpoint}/collections/public.my_data/tiles/0/0/0")
+    resp = client.get(f"{vector_endpoint}/collections/public.my_data/tiles/WebMercatorQuad/0/0/0")
     assert resp.status_code == 200
 
     resp = client.get(
-        f"{vector_endpoint}/collections/public.my_data/tilejson.json"
+        f"{vector_endpoint}/collections/public.my_data/tiles/WebMercatorQuad/tilejson.json"
     )
     assert resp.status_code == 200
 
