@@ -174,12 +174,14 @@ postgresVersion: 16
 #################################
 
 # backupsEnabled sets whether pgBackRest backups are enabled.
-# This is enabled by default.
+# This is disabled by default.
 # Disabling backups is only supported on CrunchyData Postgres Operator v5.7.0 and above.
+# If you are using a version below v5.7.0, you will need to enable backups.
 # If enabled, please carefully review the pgBackRest config below.
 # Check out CrunchyData's Postgres Operator docs for more info:
 # https://access.crunchydata.com/documentation/postgres-operator/v5/tutorials/backups-disaster-recovery/backups
-backupsEnabled: true
+backupsEnabled: false
+
 # backupsSize sets the storage size of the backups to a volume in Kubernetes.
 # can be overridden by "pgBackRestConfig", if set. Defaults to the value below.
 # backupsSize: 1Gi
