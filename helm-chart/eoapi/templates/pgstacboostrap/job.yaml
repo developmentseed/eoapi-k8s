@@ -46,7 +46,6 @@ spec:
             {{- with .Values.pgstacBootstrap.settings.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-              value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
           {{- if .Values.pgstacBootstrap.settings.envFrom }}
           envFrom:
             {{- with .Values.pgstacBootstrap.settings.extraEnvFrom }}
