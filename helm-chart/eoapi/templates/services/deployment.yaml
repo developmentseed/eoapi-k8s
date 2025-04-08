@@ -76,7 +76,7 @@ spec:
           {{- toYaml (index $v "settings" "resources") | nindent 10 }}
         env:
           - name: DUMMY_ENV_VAR
-            value: 1
+            value: "1"
         {{- if $.Values.postgrescluster.enabled }}
           {{- include "eoapi.pgstacSecrets" $ | nindent 12 }}
         {{- end }}
