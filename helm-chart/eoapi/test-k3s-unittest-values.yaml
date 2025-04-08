@@ -5,8 +5,6 @@ ingress:
   className: "traefik"
 postgrescluster:
   enabled: true
-  # Needed with PGO <= 5.7.0 https://github.com/CrunchyData/postgres-operator/issues/3152
-  backupsEnabled: true
 pgstacBootstrap:
   enabled: true
   settings:
