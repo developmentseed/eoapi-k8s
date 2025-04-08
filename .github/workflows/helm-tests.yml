@@ -128,9 +128,17 @@ jobs:
           echo "===== Database Pod Logs ====="
           kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
           
-          # Extract logs from raster pod
-          echo "===== Raster Pod Logs ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster logs"
+          # Extract logs from pgstacbootstrap pod
+          echo "===== PGSTACBootstrap Pod Logs ====="
+          kubectl get pod | grep "^pgstacbootstrap-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstacbootstrap logs"
+          
+          # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
+          echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
+          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstacbootstrap --tail=100 || echo "Could not get raster init container logs"
+          
+          # Extract logs from raster pod main container
+          echo "===== Raster Pod Main Container Logs ====="
+          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster main container logs"
           
           # Extract logs from vector pod
           echo "===== Vector Pod Logs ====="
