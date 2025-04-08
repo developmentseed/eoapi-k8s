@@ -22,11 +22,14 @@ spec:
             {{ if .Values.testing }}
             ['sh', '-c', 'until nc -z {{ $.Release.Name }}-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
             {{ else }}
-            ['sh', '-c', 'until nc -z $POSTGRES_HOST 5432; do echo waiting for db; sleep 10; done;']
+            ['sh', '-c', 'until nc -z $POSTGRES_HOST POSTGRES_PORT; do echo waiting for db; sleep 10; done;']
             {{ end }}
           env:
           {{- with .Values.pgstacBootstrap.settings.envVars }}
-            {{- toYaml . | nindent 12 }}
+            - name: POSTGRES_HOST
+              value: {{ .Values.pgstacBootstrap.settings.envVars.POSTGRES_HOST | quote }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.pgstacBootstrap.settings.envVars.POSTGRES_PORT | quote }}
           {{- end }}
       containers:
         - name: pgstacbootstrap
