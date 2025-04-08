@@ -87,9 +87,15 @@ spec:
           - containerPort: {{ $.Values.service.port }}
         resources:
           {{- toYaml (index $v "settings" "resources") | nindent 10 }}
-        {{- if $.Values.postgrescluster.enabled }}
         env:
+          - name: DUMMY_ENV_VAR
+            value: 1
+        {{- if $.Values.postgrescluster.enabled }}
           {{- include "eoapi.pgstacSecrets" $ | nindent 12 }}
+        {{- end }}
+        {{- range $key, $value := .Values.pgstacBootstrap.settings.extraEnvVars }}
+          - name: {{ $key | quote }}
+            value: {{ $value | quote }}
         {{- end }}
         envFrom:
           # NOTE: there's no reason we need to use a `ConfigMap` or `Secret` here to get os env vars into the pod.

@@ -181,7 +181,7 @@ pgstacBootstrap:
       # toggle to `true` if you want to keep the job running as db jumpbox
       KEEP_ALIVE: "false"
     # extra env vars to set in the pgstacBootstrap pod
-    extraEnvVars: []
+    extraEnvVars: {}
     # extra env var from mounts to set in the pgstacBootstrap pod
     extraEnvFrom: []
     # extra volumes to mount in the pgstacBootstrap pod
@@ -269,7 +269,7 @@ raster:
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
     # Additional environment variables
-    extraEnvVars: []
+    extraEnvVars: {}
 
 multidim:
   enabled: false # disabled by default
@@ -340,7 +340,7 @@ multidim:
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
     # Additional environment variables
-    extraEnvVars: []
+    extraEnvVars: {}
 
 stac:
   enabled: true
@@ -400,7 +400,7 @@ stac:
       WEB_CONCURRENCY: "5"
       DB_MIN_CONN_SIZE: "1"
     # Additional environment variables
-    extraEnvVars: []
+    extraEnvVars: {}
 
 vector:
   enabled: true
@@ -464,7 +464,7 @@ vector:
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
     # Additional environment variables
-    extraEnvVars: []
+    extraEnvVars: {}
 
 docServer:
   enabled: true
