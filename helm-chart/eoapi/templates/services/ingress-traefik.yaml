@@ -42,20 +42,12 @@ spec:
         paths:
           {{- range $serviceName, $v := .Values }}
           {{- if has $serviceName $.Values.apiServices }}
-          {{- if (and (index $v "enabled") (not $.Values.testing)) }}
+          {{- if (index $v "enabled") }}
           - pathType: Prefix
             path: "/{{ $serviceName }}"
             backend:
               service:
                 name: {{ $serviceName }}
-                port:
-                  number: {{ $.Values.service.port }}
-          {{- else if (and (index $v "enabled") ($.Values.testing)) }}
-          - pathType: Prefix
-            path: "/{{ $serviceName }}{{ $.Release.Name }}"
-            backend:
-              service:
-                name: {{ $serviceName }}-{{ $.Release.Name }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}{{/* END: if index $v "enabled" */}}

@@ -63,7 +63,7 @@ db:
   enabled: false
   image:
     name: ghcr.io/stac-utils/pgstac
-    tag: v0.8.2
+    tag: v0.9.5
   command:
     - "postgres"
     - "-N"
@@ -147,7 +147,7 @@ pgstacBootstrap:
   enabled: true
   image:
     name: ghcr.io/stac-utils/pgstac
-    tag: v0.8.2
+    tag: v0.9.5
   command:
     - "sh"
   args:
@@ -201,7 +201,7 @@ raster:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: uvicorn-1.4.0
+    tag: 1.7.1
   command:
     - "uvicorn"
     - "titiler.pgstac.main:app"
@@ -262,10 +262,10 @@ multidim:
       requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/titiler-md-demo
-    tag: 0ea56bfa44457b92e804fd4c0c2192019c002965
+    tag: dd740a700ce655e785c7bd50331f9ac857be4126
   command:
     - "uvicorn"
-    - "titiler.pgstac.main:app"
+    - "titiler_md_demo.main:app"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
@@ -323,7 +323,7 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 2.4.9
+    tag: 5.0.1
   command:
     - "uvicorn"
     - "stac_fastapi.pgstac.app:app"
@@ -346,6 +346,7 @@ stac:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+      DB_MIN_CONN_SIZE: "1"
 
 vector:
   enabled: true
@@ -372,7 +373,7 @@ vector:
       requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/tipg
-    tag: uvicorn-0.6.1
+    tag: 1.0.1
   command:
     - "uvicorn"
     - "tipg.main:app"

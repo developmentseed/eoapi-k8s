@@ -32,15 +32,27 @@ spec:
         azure.workload.identity/use: "true"
         {{- end }}
     spec:
+      serviceAccountName: eoapi-sa-{{ $.Release.Name }}
+      initContainers:
+      - name: wait-for-pgstacbootstrap
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for pgstacbootstrap job to complete..."
+          while ! kubectl -n {{ $.Release.Namespace }} wait --for=condition=complete job/pgstacbootstrap --timeout=5s; do
+            echo "pgstacbootstrap job not completed yet. Checking again in 10 seconds..."
+            sleep 10
+          done
+          echo "pgstacbootstrap job completed successfully"
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
         command:
           {{- toYaml (index $v "command") | nindent 10 }}
-          {{- if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik")) (not $.Values.testing)) }}
+          {{- if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik"))) }}
           - "--root-path=/{{ $serviceName }}"
-          {{- else if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik")) ($.Values.testing)) }}
-          - "--root-path=/{{ $serviceName }}{{ $.Release.Name }}"
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
           tcpSocket:

@@ -3,19 +3,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "eoapi.pgstacTempDbHostName" . | nindent 8 }}
+  name: pgstac
   labels:
-    app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 10 }}
+    app: pgstac
 spec:
   selector:
     matchLabels:
-      app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 12 }}
+      app: pgstac
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: {{ include "eoapi.pgstacTempDbHostName" . | nindent 14 }}
+        app: pgstac
     spec:
       restartPolicy: Always
       containers:

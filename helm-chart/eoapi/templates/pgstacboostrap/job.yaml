@@ -3,19 +3,28 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "eoapi.pgstacHostName" . | nindent 8 }}
+  name: pgstacbootstrap
   labels:
-    app: {{ include "eoapi.pgstacHostName" . | nindent 10 }}
+    app: pgstacbootstrap
 spec:
   template:
     metadata:
       labels:
-        app: {{ include "eoapi.pgstacHostName" . | nindent 14 }}
+        app: pgstacbootstrap
         {{- if .Values.azure.serviceAccount.create }}
         azure.workload.identity/use: "true"
         {{- end }}
     spec:
       restartPolicy: Never
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command:
+            {{ if .Values.testing }}
+            ['sh', '-c', 'until nc -z {{ $.Release.Name }}-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
+            {{ else }}
+            ['sh', '-c', 'until nc -z eoapi-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
+            {{ end }}
       containers:
         - name: pgstacbootstrap
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}

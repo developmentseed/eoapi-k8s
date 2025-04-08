@@ -3,6 +3,8 @@ name: postgrescluster
 description: A Helm chart for eoapi database dep for k8s
 type: application
 # The version below should match the version on the PostgresCluster CRD
-version: 5.5.3
-appVersion: 5.5.3
+# from CrunchyData's Postgres Operator
+# https://access.crunchydata.com/documentation/postgres-operator/latest/releases
+version: 5.7.4
+appVersion: 5.7.4
 force: true

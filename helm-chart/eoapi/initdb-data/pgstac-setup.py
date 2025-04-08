@@ -1,3 +1,9 @@
+#! /usr/bin/env python3
+
+# This script is used to setup the pgstac database.
+# It is run as a job in the pgstacbootstrap pod.
+# It is important that this script and all of its steps are idempotent.
+
 import os
 import psycopg
 from psycopg import sql
@@ -32,6 +38,7 @@ with psycopg.connect(admin_db_conninfo, autocommit=True) as conn:
                 "GRANT pgstac_read TO {username};"
                 "GRANT pgstac_ingest TO {username};"
                 "GRANT pgstac_admin TO {username};"
+                "ALTER USER {username} SET search_path TO pgstac, public;" # add pgstac to search_path by default
             ).format(
                 db_name=sql.Identifier(os.environ["POSTGRES_DBNAME"]),
                 username=sql.Identifier(os.environ["POSTGRES_USER"]),
