@@ -468,20 +468,3 @@ vector:
 
 docServer:
   enabled: true
-
-# TODO DEPRECATE THIS SECTION
-# This section is used to create a SecretProviderClass for Azure Key Vault
-# and mount the secrets in the pod using the Secrets Store CSI driver.
-# It should not be part of the base chart and should be moved to a specific deployment
-# chart when using the Azure Key Vault.
-azure:
-  aksSecretsProviderAvailable: false
-  keyvault:
-    name: ""
-    clientId: ""
-    tenantId: ""
-  # Mapping of name inside Azure Vault to name inside k8s secret object
-  secretKeys:
-    pgpassword: POSTGRES_PASSWORD
-    pghost: POSTGRES_HOST
-    dbname: POSTGRES_DBNAME
