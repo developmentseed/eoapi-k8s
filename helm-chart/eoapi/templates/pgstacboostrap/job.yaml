@@ -70,7 +70,7 @@ spec:
             {{- with .Values.pgstacBootstrap.settings.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if .Values.pgstacBootstrap.settings.envFrom }}
+          {{- if .Values.pgstacBootstrap.settings.extraEnvFrom }}
           envFrom:
             {{- with .Values.pgstacBootstrap.settings.extraEnvFrom }}
             {{- toYaml . | nindent 12 }}
