@@ -22,7 +22,7 @@ spec:
             {{ if .Values.testing }}
             ['sh', '-c', 'until nc -z {{ $.Release.Name }}-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
             {{ else }}
-            ['sh', '-c', 'until nc -z $POSTGRES_HOST POSTGRES_PORT; do echo waiting for db; sleep 10; done;']
+            ['sh', '-c', 'until nc -z $POSTGRES_HOST $POSTGRES_PORT; do echo waiting for db; sleep 10; done;']
             {{ end }}
           env:
           {{- with .Values.pgstacBootstrap.settings.envVars }}
