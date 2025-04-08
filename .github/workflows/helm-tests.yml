@@ -168,9 +168,9 @@ jobs:
           kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.io "$name" -n "$namespace"; done
 
           PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          export VECTOR_ENDPOINT=$PUBLICIP/vector
-          export STAC_ENDPOINT=$PUBLICIP/stac
-          export RASTER_ENDPOINT=$PUBLICIP/raster
+          export VECTOR_ENDPOINT=$PUBLICIP/vector$RELEASE_NAME
+          export STAC_ENDPOINT=$PUBLICIP/stac$RELEASE_NAME
+          export RASTER_ENDPOINT=$PUBLICIP/raster$RELEASE_NAME
 
           echo '#################################'
           echo $VECTOR_ENDPOINT
@@ -179,7 +179,7 @@ jobs:
           echo '#################################'
 
           pytest .github/workflows/tests/test_vector.py || kubectl logs svc/vector
-          pytest .github/workflows/tests/test_stac.py || kubectl logs svc/stac
+          pytest .github/workflows/tests/test_stac.py
           # TODO: fix raster tests
           #pytest .github/workflows/tests/test_raster.py
 
