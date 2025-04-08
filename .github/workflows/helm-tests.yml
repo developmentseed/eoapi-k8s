@@ -118,7 +118,32 @@ jobs:
       - name: cleanup if services fail to boot
         if: steps.watchservices.outcome == 'failure'
         run: |
-          echo "The previous step failed or timed out."
+          echo "The watchservices step failed or timed out. Extracting pod logs for debugging..."
+          
+          # Get and display all pods status
+          echo "===== Pod Status ====="
+          kubectl get pods
+          
+          # Extract logs from database pod
+          echo "===== Database Pod Logs ====="
+          kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
+          
+          # Extract logs from raster pod
+          echo "===== Raster Pod Logs ====="
+          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster logs"
+          
+          # Extract logs from vector pod
+          echo "===== Vector Pod Logs ====="
+          kubectl get pod | grep "^vector-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get vector logs"
+          
+          # Extract logs from stac pod
+          echo "===== STAC Pod Logs ====="
+          kubectl get pod | grep "^stac-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get STAC logs"
+          
+          # Check if pods are in pending state or have issues
+          echo "===== Pod Descriptions for Troubleshooting ====="
+          kubectl get pod | grep "$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl describe pod/{} || echo "Could not describe pods"
+          
           # force GH action to show failed result
           exit 128
 
