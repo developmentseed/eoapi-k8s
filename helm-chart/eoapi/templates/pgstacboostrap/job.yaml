@@ -28,7 +28,7 @@ spec:
             {{- with .Values.pgstacBootstrap.settings.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if .Values.pgstacBootstrap.settings.envFrom }}
+          {{- if .Values.pgstacBootstrap.settings.extraEnvFrom }}
           envFrom:
             {{- with .Values.pgstacBootstrap.settings.extraEnvFrom }}
             {{- toYaml . | nindent 12 }}
@@ -39,8 +39,9 @@ spec:
               value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
             - name: KEEP_ALIVE
               value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
-          {{- with .Values.pgstacBootstrap.settings.extraEnvVars }}
-            {{- toYaml . | nindent 12 }}
+          {{- range $key, $value := .Values.pgstacBootstrap.settings.extraEnvVars }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
           {{- end }}
           # TODO (emmanuel): to be removed when we have a generic way to
           # inject secrets in the pod

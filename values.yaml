@@ -18,7 +18,7 @@ stac:
   settings:
     labels:
       azure.workload.identity/use: "true"
-    envVars:
+    extraEnvVars:
       FORWARDED_ALLOW_IPS: "*"
       PROXY_HEADERS: True
       POSTGRES_USER: postgres
@@ -63,7 +63,7 @@ pgstacBootstrap:
   settings:
     labels:
       azure.workload.identity/use: "true"
-    envVars:
+    extraEnvVars:
       POSTGRES_USER: postgres
       POSTGRES_PORT: 5432
 postgrescluster:
