@@ -21,6 +21,16 @@ gitSha: "gitshaABC123"
 # only used in CI for running parallel helm installs
 testing: false
 
+#######################
+# SERVICE ACCOUNT
+#######################
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+  annotations: {}
+  labels: {}
+
 
 ######################
 # SERVICE & INGRESS
@@ -98,6 +108,8 @@ db:
       PGPASSWORD: ""
       PGDATABASE: "postgis"
 
+# This section is used to configure a postgres cluster using the
+# crunchydata postgres operator included in the `postgrescluster` chart.
 # this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
 postgrescluster:
   enabled: true
@@ -153,6 +165,7 @@ pgstacBootstrap:
   args:
     - "/opt/initdb/run-migrate-and-load.sh"
   settings:
+    labels: {}
     resources:
       requests:
         cpu: "512m"
@@ -160,11 +173,22 @@ pgstacBootstrap:
       limits:
         cpu: "512m"
         memory: "1024Mi"
+    # TODO: to be deprecated in favor of `pgstacBootstrap.settings.extraEnvVars`
+    # LOAD_FIXTURES and KEEP_ALIVE should be plain settings if this is a function of the chart
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
       # toggle to `true` if you want to keep the job running as db jumpbox
       KEEP_ALIVE: "false"
+    # extra env vars to set in the pgstacBootstrap pod
+    extraEnvVars: []
+    # extra env var from mounts to set in the pgstacBootstrap pod
+    extraEnvFrom: []
+    # extra volumes to mount in the pgstacBootstrap pod
+    extraVolumeMounts: []
+    # extra volumes to mount in the pgstacBootstrap pod
+    extraVolumes: []
+    
 
 
 ######################
@@ -330,6 +354,7 @@ stac:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -405,13 +430,13 @@ vector:
 docServer:
   enabled: true
 
-# Contains configuration specific to using Azure. Can be safely ignored if not using Azure.
-# We need this to map secrets from an Azure secrets vault to a k8s secret object,
-# and we use this when using Azure managed postgres to pass in the DB creds.
+# TODO DEPRECATE THIS SECTION
+# This section is used to create a SecretProviderClass for Azure Key Vault
+# and mount the secrets in the pod using the Secrets Store CSI driver.
+# It should not be part of the base chart and should be moved to a specific deployment
+# chart when using the Azure Key Vault.
 azure:
   aksSecretsProviderAvailable: false
-  serviceAccount:
-    create: false
   keyvault:
     name: ""
     clientId: ""

@@ -28,11 +28,10 @@ spec:
     metadata:
       labels:
         app: {{ $serviceName }}-{{ $.Release.Name }}
-        {{- if $.Values.azure.serviceAccount.create }}
-        azure.workload.identity/use: "true"
+        {{- with index $v "settings" "labels" }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: eoapi-sa-{{ $.Release.Name }}
       initContainers:
       - name: wait-for-pgstacbootstrap
         image: bitnami/kubectl:latest
@@ -103,9 +102,8 @@ spec:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
           # TODO (emmanuel): choose another name to not mix up with the db secret if internal DB
-        {{- if $.Values.azure.aksSecretsProviderAvailable }}
-        - secretRef:
-            name: pgstac-secrets-{{ $.Release.Name }}
+        {{- with index $v "settings" "extraEnvFrom" }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- if index $v "settings" "envSecrets" }}
         {{- range $secret := index $v "settings" "envSecrets" }}
@@ -113,24 +111,15 @@ spec:
             name: {{ $secret }}
         {{- end }}
         {{- end }}
-        {{- if $.Values.azure.aksSecretsProviderAvailable }}
+        {{- with index $v "settings" "extraVolumeMounts" }}
         volumeMounts:
-          - name: pgstac-secrets-{{ $.Release.Name }}
-            mountPath: /mnt/secrets-store
-            readOnly: true
+          {{- toYaml . | nindent 10 }}
         {{- end }}
       volumes:
-        {{- if $.Values.azure.aksSecretsProviderAvailable }}
-        - name: pgstac-secrets-{{ $.Release.Name }}
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
+        {{- with index $v "settings" "extraVolumes" }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- if $.Values.azure.serviceAccount.create }}
-      serviceAccountName: {{ $.Values.azure.serviceAccount.name }}
-      {{- end }}
+      serviceAccountName: {{ include "eoapi.serviceAccountName" $ }}
       {{- with index $v "settings" "affinity" }}
       affinity:
         {{- toYaml . | nindent 8 }}
