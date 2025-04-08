@@ -70,6 +70,7 @@ jobs:
         run: |
           helm upgrade --install \
             --set disable_check_for_upgrades=true \
+            --set backupsEnabled=true \
             pgo \
             oci://registry.developers.crunchydata.com/crunchydata/pgo \
             --version ${{ env.PGO_VERSION }}
