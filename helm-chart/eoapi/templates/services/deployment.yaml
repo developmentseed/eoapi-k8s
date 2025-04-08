@@ -32,19 +32,6 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      initContainers:
-      - name: wait-for-pgstacbootstrap
-        image: bitnami/kubectl:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "Waiting for pgstacbootstrap job to complete..."
-          while ! kubectl -n {{ $.Release.Namespace }} wait --for=condition=complete job/pgstacbootstrap --timeout=5s; do
-            echo "pgstacbootstrap job not completed yet. Checking again in 10 seconds..."
-            sleep 10
-          done
-          echo "pgstacbootstrap job completed successfully"
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}

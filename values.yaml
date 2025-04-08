@@ -66,16 +66,20 @@ pgstacBootstrap:
     extraEnvVars:
       POSTGRES_USER: postgres
       POSTGRES_PORT: 5432
+    extraEnvFrom:
+      - secretRef:
+          name: pgstac-secrets-montandon-eoapi
+    extraVolumeMounts:
+      - name: azure-keyvault-secrets
+        mountPath: /mnt/secrets-store
+        readOnly: true
+    extraVolumes:
+      - name: azure-keyvault-secrets
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: azure-secret-provider-montandon-eoapi
+            
 postgrescluster:
   enabled: false
-  instances:
-  - name: eoapi
-    replicas: 1
-    dataVolumeClaimSpec:
-      accessModes:
-      - "ReadWriteOnce"
-      resources:
-        requests:
-          storage: "600Gi"
-          cpu: "1024m"
-          memory: "3048Mi"
