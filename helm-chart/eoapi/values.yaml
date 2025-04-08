@@ -232,6 +232,8 @@ raster:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -240,6 +242,12 @@ raster:
       requests:
         cpu: "256m"
         memory: "3072Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # titiler
@@ -260,6 +268,8 @@ raster:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+    # Additional environment variables
+    extraEnvVars: []
 
 multidim:
   enabled: false # disabled by default
@@ -293,6 +303,8 @@ multidim:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -301,6 +313,12 @@ multidim:
       requests:
         cpu: "256m"
         memory: "3072Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # titiler
@@ -321,6 +339,8 @@ multidim:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+    # Additional environment variables
+    extraEnvVars: []
 
 stac:
   enabled: true
@@ -354,7 +374,8 @@ stac:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -363,6 +384,12 @@ stac:
       requests:
         cpu: "256m"
         memory: "1024Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # uvicorn
@@ -372,6 +399,8 @@ stac:
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
       DB_MIN_CONN_SIZE: "1"
+    # Additional environment variables
+    extraEnvVars: []
 
 vector:
   enabled: true
@@ -405,6 +434,8 @@ vector:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -413,6 +444,12 @@ vector:
       requests:
         cpu: "256m"
         memory: "256Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # tipg
@@ -426,6 +463,8 @@ vector:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
+    # Additional environment variables
+    extraEnvVars: []
 
 docServer:
   enabled: true
