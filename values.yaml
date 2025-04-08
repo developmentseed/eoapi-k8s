@@ -10,11 +10,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
 raster:
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    envVars:
-      POSTGRES_USER: postgres
+  enabled: false
 stac:
   image:
     name: ghcr.io/sunu/stac-fastapi-pgstac
@@ -43,11 +39,7 @@ stac:
             secretProviderClass: azure-secret-provider-montandon-eoapi
   
 vector:
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    envVars:
-      POSTGRES_USER: postgres
+  enabled: false
 
 serviceAccount:
   create: true

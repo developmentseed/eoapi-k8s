@@ -93,7 +93,7 @@ spec:
         {{- if $.Values.postgrescluster.enabled }}
           {{- include "eoapi.pgstacSecrets" $ | nindent 12 }}
         {{- end }}
-        {{- range $key, $value := .Values.pgstacBootstrap.settings.extraEnvVars }}
+        {{- range $key, $value := index $v "settings" "extraEnvVars" }}
           - name: {{ $key | quote }}
             value: {{ $value | quote }}
         {{- end }}
