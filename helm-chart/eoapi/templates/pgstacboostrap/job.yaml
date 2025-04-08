@@ -24,6 +24,10 @@ spec:
             {{ else }}
             ['sh', '-c', 'until nc -z $POSTGRES_HOST 5432; do echo waiting for db; sleep 10; done;']
             {{ end }}
+          env:
+          {{- with .Values.pgstacBootstrap.settings.envVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       containers:
         - name: pgstacbootstrap
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
