@@ -24,12 +24,28 @@ spec:
             {{ else }}
             ['sh', '-c', 'until nc -z $POSTGRES_HOST $POSTGRES_PORT; do echo waiting for db; sleep 10; done;']
             {{ end }}
+          volumeMounts:
+            {{- with .Values.pgstacBootstrap.settings.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.pgstacBootstrap.settings.envFrom }}
+          envFrom:
+            {{- with .Values.pgstacBootstrap.settings.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
           env:
-          {{- with .Values.pgstacBootstrap.settings.envVars }}
-            - name: POSTGRES_HOST
-              value: {{ .Values.pgstacBootstrap.settings.envVars.POSTGRES_HOST | quote }}
-            - name: POSTGRES_PORT
-              value: {{ .Values.pgstacBootstrap.settings.envVars.POSTGRES_PORT | quote }}
+            - name: LOAD_FIXTURES
+              value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
+            - name: KEEP_ALIVE
+              value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
+          {{- with .Values.pgstacBootstrap.settings.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # TODO (emmanuel): to be removed when we have a generic way to
+          # inject secrets in the pod
+          {{- if or .Values.postgrescluster.enabled .Values.db.enabled }}
+            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
           {{- end }}
       containers:
         - name: pgstacbootstrap
