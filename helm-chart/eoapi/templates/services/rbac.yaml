@@ -1,12 +1,4 @@
 {{- if .Values.apiServices }}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: eoapi-sa-{{ $.Release.Name }}
-  labels:
-    app: eoapi-{{ $.Release.Name }}
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -26,7 +18,7 @@ metadata:
     app: eoapi-{{ $.Release.Name }}
 subjects:
 - kind: ServiceAccount
-  name: eoapi-sa-{{ $.Release.Name }}
+  name: {{ include "eoapi.serviceAccountName" . }}
   namespace: {{ $.Release.Namespace }}
 roleRef:
   kind: Role

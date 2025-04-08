@@ -1,5 +1,4 @@
 {{- if .Values.pgstacBootstrap.enabled }}
----
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -11,6 +10,9 @@ spec:
     metadata:
       labels:
         app: pgstacbootstrap
+        {{- with .Values.pgstacBootstrap.settings.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       restartPolicy: Never
       initContainers:
@@ -20,8 +22,32 @@ spec:
             {{ if .Values.testing }}
             ['sh', '-c', 'until nc -z {{ $.Release.Name }}-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
             {{ else }}
-            ['sh', '-c', 'until nc -z eoapi-pgbouncer 5432; do echo waiting for db; sleep 10; done;']
+            ['sh', '-c', 'until nc -z $POSTGRES_HOST $POSTGRES_PORT; do echo waiting for db; sleep 10; done;']
             {{ end }}
+          volumeMounts:
+            {{- with .Values.pgstacBootstrap.settings.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.pgstacBootstrap.settings.extraEnvFrom }}
+          envFrom:
+            {{- with .Values.pgstacBootstrap.settings.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          env:
+            - name: LOAD_FIXTURES
+              value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
+            - name: KEEP_ALIVE
+              value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
+          {{- range $key, $value := .Values.pgstacBootstrap.settings.extraEnvVars }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+          {{- end }}
+          # TODO (emmanuel): to be removed when we have a generic way to
+          # inject secrets in the pod
+          {{- if or .Values.postgrescluster.enabled .Values.db.enabled }}
+            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
+          {{- end }}
       containers:
         - name: pgstacbootstrap
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
@@ -41,12 +67,29 @@ spec:
               name: initdb-sh-volume-{{ $.Release.Name }}
             - mountPath: /opt/initdb/python-scripts
               name: pgstac-setup-volume-{{ $.Release.Name }}
+            {{- with .Values.pgstacBootstrap.settings.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.pgstacBootstrap.settings.extraEnvFrom }}
+          envFrom:
+            {{- with .Values.pgstacBootstrap.settings.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
           env:
             - name: LOAD_FIXTURES
               value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
             - name: KEEP_ALIVE
               value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
+          {{- range $key, $value := .Values.pgstacBootstrap.settings.extraEnvVars }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+          {{- end }}
+          # TODO (emmanuel): to be removed when we have a generic way to
+          # inject secrets in the pod
+          {{- if or .Values.postgrescluster.enabled .Values.db.enabled }}
             {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
+          {{- end }}
       volumes:
         - name: initdb-sql-volume-{{ $.Release.Name }}
           configMap:
@@ -60,6 +103,10 @@ spec:
         - name: pgstac-setup-volume-{{ $.Release.Name }}
           configMap:
             name: pgstac-setup-config-{{ $.Release.Name }}
+        {{- with .Values.pgstacBootstrap.settings.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

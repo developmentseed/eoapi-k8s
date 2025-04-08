@@ -3,6 +3,8 @@ testing: true
 ingress:
   enabled: true
   className: "traefik"
+postgrescluster:
+  enabled: true
 pgstacBootstrap:
   enabled: true
   settings:

@@ -28,21 +28,10 @@ spec:
     metadata:
       labels:
         app: {{ $serviceName }}-{{ $.Release.Name }}
+        {{- with index $v "settings" "labels" }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
-      serviceAccountName: eoapi-sa-{{ $.Release.Name }}
-      initContainers:
-      - name: wait-for-pgstacbootstrap
-        image: bitnami/kubectl:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "Waiting for pgstacbootstrap job to complete..."
-          while ! kubectl -n {{ $.Release.Namespace }} wait --for=condition=complete job/pgstacbootstrap --timeout=5s; do
-            echo "pgstacbootstrap job not completed yet. Checking again in 10 seconds..."
-            sleep 10
-          done
-          echo "pgstacbootstrap job completed successfully"
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
@@ -85,9 +74,15 @@ spec:
           - containerPort: {{ $.Values.service.port }}
         resources:
           {{- toYaml (index $v "settings" "resources") | nindent 10 }}
-        {{- if $.Values.postgrescluster.enabled }}
         env:
+          - name: DUMMY_ENV_VAR
+            value: "1"
+        {{- if $.Values.postgrescluster.enabled }}
           {{- include "eoapi.pgstacSecrets" $ | nindent 12 }}
+        {{- end }}
+        {{- range $key, $value := index $v "settings" "extraEnvVars" }}
+          - name: {{ $key | quote }}
+            value: {{ $value | quote }}
         {{- end }}
         envFrom:
           # NOTE: there's no reason we need to use a `ConfigMap` or `Secret` here to get os env vars into the pod.
@@ -99,12 +94,25 @@ spec:
         - secretRef:
             name: pgstac-secrets-{{ $.Release.Name }}
         {{- end }}
+          # TODO (emmanuel): choose another name to not mix up with the db secret if internal DB
+        {{- with index $v "settings" "extraEnvFrom" }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- if index $v "settings" "envSecrets" }}
         {{- range $secret := index $v "settings" "envSecrets" }}
         - secretRef:
             name: {{ $secret }}
         {{- end }}
         {{- end }}
+        {{- with index $v "settings" "extraVolumeMounts" }}
+        volumeMounts:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      volumes:
+        {{- with index $v "settings" "extraVolumes" }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      serviceAccountName: {{ include "eoapi.serviceAccountName" $ }}
       {{- with index $v "settings" "affinity" }}
       affinity:
         {{- toYaml . | nindent 8 }}
