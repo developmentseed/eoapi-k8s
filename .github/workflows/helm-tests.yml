@@ -130,13 +130,6 @@ jobs:
           echo "===== Related Kubernetes Events ====="
           kubectl get events | grep -E "pgstac|db" || echo "No relevant events found"
 
-      - name: sleep for 10s seconds while services boot
-        shell: bash
-        run: sleep 10s
-
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
-
       - id: watchservices
         name: watch services boot
         timeout-minutes: 3
