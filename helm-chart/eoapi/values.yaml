@@ -113,22 +113,13 @@ postgrescluster:
           - "host all all 0.0.0.0/0 md5"
         parameters:
           shared_preload_libraries: pg_stat_statements, auto_explain
-        # Grant CREATE privileges on the public schema to all users
-        # This is needed for PgSTAC setup and is the default in PostgreSQL < 15
-        # but was changed for security reasons in PostgreSQL 15+
-        postgresql.conf:
-          # Initial SQL statements to run on startup
-          custom_variable_classes: 'pgo'
-          pgo.init_sql: |
-            GRANT USAGE ON SCHEMA public TO eoapi;
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public 
-            GRANT ALL PRIVILEGES ON TABLES TO eoapi;
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public
-             GRANT ALL PRIVILEGES ON SEQUENCES TO eoapi;
-              GRANT pgstac_read TO eoapi;
-              GRANT pgstac_ingest TO eoapi;
-              GRANT pgstac_admin TO eoapi;
-            ALTER USER eoapi SET search_path TO pgstac, public;
+  databaseInitSQL:
+    - name: initdb
+      # SQL file to run on database initialization
+      initdb.sql: 
+        key: initdb.sql
+        name: initdb
+            
 
   instances:
   - name: eoapi
@@ -157,7 +148,7 @@ postgrescluster:
       databases:
         - eoapi
         - postgres
-      options: "SUPERUSER"
+      options: "CREATEDB, CREATEROLE"
       # default `password.type` is ASCII which follows the character set US-ASCII
       # but which can contain characters that `asyncpg` dislikes
       # see https://github.com/MagicStack/asyncpg/issues/1151
