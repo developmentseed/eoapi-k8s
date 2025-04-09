@@ -5,6 +5,7 @@ metadata:
   name: initdb
 data:
   initdb.sql: |
+    ALTER DATABASE eoapi OWNER TO eoapi;
     ALTER USER eoapi SET search_path TO pgstac, public;
     ALTER DATABASE eoapi set search_path to pgstac, public;
     GRANT CONNECT ON DATABASE eoapi TO eoapi;
