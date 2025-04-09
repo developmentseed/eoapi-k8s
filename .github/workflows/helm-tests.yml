@@ -9,7 +9,7 @@ on:
 
 env:
   HELM_VERSION: v3.15.2
-  PGO_VERSION: 5.5.2
+  PGO_VERSION: 5.7.4
 
 jobs:
   helm-tests:
