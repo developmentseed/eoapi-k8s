@@ -5,14 +5,10 @@ metadata:
   name: initdb
 data:
   initdb.sql: |
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public 
-    GRANT ALL PRIVILEGES ON TABLES TO eoapi;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public
-      GRANT ALL PRIVILEGES ON SEQUENCES TO eoapi;
-      GRANT pgstac_read TO eoapi;
-      GRANT pgstac_ingest TO eoapi;
-      GRANT pgstac_admin TO eoapi;
+    CREATE DATABASE eoapi;
     ALTER USER eoapi SET search_path TO pgstac, public;
+    ALTER DATABASE eoapi set search_path to pgstac, public;
+    GRANT CONNECT ON DATABASE eoapi TO eoapi;
     GRANT ALL ON SCHEMA public TO eoapi;
     \c eoapi
     GRANT ALL ON SCHEMA public TO "eoapi";
