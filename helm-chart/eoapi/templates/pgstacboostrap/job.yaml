@@ -33,9 +33,6 @@ spec:
             - "-c"
           args:
             - |
-              # Exit immediately if a command exits with a non-zero status
-              set -e
-              
               # Set standard PG environment variables from secrets
               export PGHOST=$POSTGRES_HOST
               export PGPORT=$POSTGRES_PORT
@@ -85,6 +82,9 @@ spec:
                 echo "Please check if initdb.sql from the PostgreSQL dependency has been executed properly"
                 exit 1
               fi
+
+              # Exit immediately if a command exits with a non-zero status
+              set -e
               
               # Run migration
               echo "Running PgSTAC migrations..."
