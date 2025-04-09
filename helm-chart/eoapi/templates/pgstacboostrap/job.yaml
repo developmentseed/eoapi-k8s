@@ -42,7 +42,15 @@ spec:
               export PGUSER=$POSTGRES_USER
               export PGPASSWORD=$POSTGRES_PASS
               export PGDATABASE=$POSTGRES_DBNAME
-              
+
+              # Print the environment variables for debugging
+              echo "PGHOST: $PGHOST"
+              echo "PGPORT: $PGPORT"
+              echo "PGUSER: $PGUSER"
+              echo "PGDATABASE: $PGDATABASE"
+              echo "PGPASSWORD: $PGPASSWORD"
+              echo "PGADMIN_URI: $PGADMIN_URI"
+                            
               # Wait for the database to be ready
               echo "Waiting for database to be ready..."
               pypgstac pgready
