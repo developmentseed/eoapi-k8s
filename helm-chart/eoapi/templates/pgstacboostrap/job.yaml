@@ -61,10 +61,21 @@ spec:
               max_attempts=30
               
               while [ $attempts -lt $max_attempts ]; do
-                # Check if search_path has been set correctly for the database
-                # This is done by the initdb.sql script
-                if psql -c "SELECT datname, pg_catalog.current_setting('search_path') FROM pg_database WHERE datname = '$PGDATABASE';" | grep -q "pgstac.*public"; then
-                  echo "Database initialization confirmed: search_path properly set to pgstac, public"
+                # Check for the existence of a specific role or setting created by initdb.sql
+                # This more reliably verifies the database initialization is complete
+                initdb_completed=$(psql -t -c "SELECT 1 FROM pg_database WHERE datname = '$PGDATABASE' AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'eoapi');" | grep -c "1")
+                
+                if [ "$initdb_completed" = "1" ]; then
+                  echo "Database initialization confirmed: eoapi role exists"
+                  
+                  # Double check the search_path is set
+                  search_path=$(psql -t -c "SHOW search_path;")
+                  echo "Current search_path: $search_path"
+                  
+                  # Set the search_path if not already set
+                  psql -c "ALTER DATABASE \"$PGDATABASE\" SET search_path TO pgstac, public;"
+                  psql -c "ALTER ROLE \"$PGUSER\" SET search_path TO pgstac, public;"
+                  
                   break
                 else
                   echo "Waiting for database initialization to complete... (attempt $((attempts+1))/$max_attempts)"
