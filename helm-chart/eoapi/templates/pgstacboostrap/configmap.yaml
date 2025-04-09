@@ -44,3 +44,32 @@ data:
   {{- end }}
 {{- end }}
 {{- end }}
+---
+{{- if .Values.postgrescluster.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: initdb
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-6"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+data:
+  initdb.sql: |
+    \c eoapi
+    CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS btree_gist;
+    CREATE EXTENSION IF NOT EXISTS unaccent;
+    CREATE ROLE pgstac_admin;
+    CREATE ROLE pgstac_read;
+    CREATE ROLE pgstac_ingest;
+    ALTER DATABASE eoapi OWNER TO eoapi;
+    ALTER USER eoapi SET search_path TO pgstac, public;
+    ALTER DATABASE eoapi set search_path to pgstac, public;
+    GRANT CONNECT ON DATABASE eoapi TO eoapi;
+    GRANT ALL PRIVILEGES ON TABLES TO eoapi;
+    GRANT ALL PRIVILEGES ON SEQUENCES TO eoapi;
+    GRANT pgstac_read TO eoapi WITH ADMIN OPTION;
+    GRANT pgstac_ingest TO eoapi WITH ADMIN OPTION;
+    GRANT pgstac_admin TO eoapi WITH ADMIN OPTION;
+{{- end }}
