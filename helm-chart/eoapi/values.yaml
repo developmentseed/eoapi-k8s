@@ -148,11 +148,10 @@ pgstacBootstrap:
   image:
     name: ghcr.io/stac-utils/pgstac
     tag: v0.9.5
-  command:
-    - "sh"
-  args:
-    - "/opt/initdb/run-migrate-and-load.sh"
   settings:
+    # General configuration options
+    loadSamples: true      # Set to false to disable sample data loading
+    
     resources:
       requests:
         cpu: "512m"
@@ -160,11 +159,10 @@ pgstacBootstrap:
       limits:
         cpu: "512m"
         memory: "1024Mi"
+    # DEPRECATED: Use pgstacBootstrap.settings.loadSamples instead
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
-      # toggle to `true` if you want to keep the job running as db jumpbox
-      KEEP_ALIVE: "false"
 
 
 ######################
