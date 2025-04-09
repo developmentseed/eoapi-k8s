@@ -1,10 +1,25 @@
 {{- if .Values.pgstacBootstrap.enabled }}
+---
+# This job initializes the PostgreSQL database with the necessary schema and data.
+# Instead of using an initContainer in the deployment to wait for this job to complete,
+# we use Helm hooks to control the execution order:
+# 
+# 1. The "post-install,post-upgrade" hook ensures this job runs after the postgres 
+#    dependency is installed but before other resources (like deployments)
+# 2. The "-5" hook-weight ensures this job runs after its ConfigMaps (weight -6)
+# 3. The "before-hook-creation,hook-succeeded" delete policy ensures the job is recreated
+#    on each helm install/upgrade and is cleaned up after successful completion
+#
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: pgstac-migrate
   labels:
     app: pgstac-migrate
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 spec:
   template:
     metadata:
@@ -12,19 +27,6 @@ spec:
         app: pgstac-migrate
     spec:
       restartPolicy: Never
-      initContainers:
-        - name: wait-for-db
-          image: busybox
-          command:
-            {{- if .Values.testing }}
-            - 'sh'
-            - '-c'
-            - 'until nc -z {{ $.Release.Name }}-pgbouncer 5432; do echo waiting for db; sleep 10; done;'
-            {{- else }}
-            - 'sh'
-            - '-c'
-            - 'until nc -z eoapi-pgbouncer 5432; do echo waiting for db; sleep 10; done;'
-            {{- end }}
       containers:
         - name: pgstac-migrate
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
@@ -62,7 +64,7 @@ spec:
               # Apply settings
               echo "Applying PgSTAC settings..."
               psql -f /opt/settings/pgstac-settings.sql
-              
+
               echo "PgSTAC migration and setup complete"
           resources:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}

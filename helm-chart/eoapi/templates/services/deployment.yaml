@@ -9,9 +9,11 @@ metadata:
     app: {{ $serviceName }}-{{ $.Release.Name }}
     gitsha: {{ $.Values.gitSha }}
   name: {{ $serviceName }}-{{ $.Release.Name }}
-  {{- with index $v "annotations" }}
+  {{- if index $v "annotations" }}
   annotations:
+    {{- with index $v "annotations" }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
 spec:
   progressDeadlineSeconds: 600
@@ -30,19 +32,6 @@ spec:
         app: {{ $serviceName }}-{{ $.Release.Name }}
     spec:
       serviceAccountName: eoapi-sa-{{ $.Release.Name }}
-      initContainers:
-      - name: wait-for-pgstacbootstrap
-        image: bitnami/kubectl:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "Waiting for pgstac-migrate job to complete..."
-          while ! kubectl -n {{ $.Release.Namespace }} wait --for=condition=complete job/pgstac-migrate --timeout=5s; do
-            echo "pgstac-migrate job not completed yet. Checking again in 10 seconds..."
-            sleep 10
-          done
-          echo "pgstac-migrate job completed successfully"
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}

@@ -1,9 +1,16 @@
 {{- if .Values.pgstacBootstrap.enabled }}
 ---
+# These ConfigMaps provide the necessary data and scripts for the pgstacbootstrap job.
+# They use Helm hooks with a weight of "-6" (lower than the job's "-5") to ensure
+# they are created before the job that depends on them.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: pgstac-settings-config-{{ $.Release.Name }}
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-6"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   pgstac-settings.sql: |
     {{ $.Files.Get "initdb-data/settings/pgstac-settings.sql" | nindent 4 }}
@@ -13,6 +20,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: initdb-sql-config-{{ $.Release.Name }}
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-6"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   initdb.sql: |
     {{- range $path, $bytes := $.Files.Glob "initdb-data/samples/*.sql"  -}}
@@ -23,6 +34,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: initdb-json-config-{{ $.Release.Name }}
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-6"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   {{- range $path, $bytes := $.Files.Glob "initdb-data/samples/*.json"  -}}
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
