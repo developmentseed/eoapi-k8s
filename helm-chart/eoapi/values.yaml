@@ -146,7 +146,7 @@ postgrescluster:
 pgstacBootstrap:
   enabled: true
   image:
-    name: ghcr.io/stac-utils/pgstac
+    name: ghcr.io/stac-utils/pgstac-pypgstac
     tag: v0.9.5
   settings:
     # General configuration options
