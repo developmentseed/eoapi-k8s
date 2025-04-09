@@ -144,7 +144,7 @@ postgrescluster:
       databases:
         - eoapi
         - postgres
-      options: "CREATEDB, CREATEROLE"
+      options: "CREATEDB CREATEROLE"
       # default `password.type` is ASCII which follows the character set US-ASCII
       # but which can contain characters that `asyncpg` dislikes
       # see https://github.com/MagicStack/asyncpg/issues/1151
