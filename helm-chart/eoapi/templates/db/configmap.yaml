@@ -5,13 +5,9 @@ metadata:
   name: initdb
 data:
   initdb.sql: |
-    CREATE DATABASE eoapi;
     ALTER USER eoapi SET search_path TO pgstac, public;
     ALTER DATABASE eoapi set search_path to pgstac, public;
     GRANT CONNECT ON DATABASE eoapi TO eoapi;
-    GRANT ALL ON SCHEMA public TO eoapi;
-    \c eoapi
-    GRANT ALL ON SCHEMA public TO "eoapi";
 ---
 apiVersion: v1
 kind: ConfigMap

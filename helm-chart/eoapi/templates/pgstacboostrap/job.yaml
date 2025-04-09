@@ -54,6 +54,31 @@ spec:
               # Wait for the database to be ready
               echo "Waiting for database to be ready..."
               pypgstac pgready
+              
+              # Verify that the database initialization has been completed
+              echo "Verifying database initialization..."
+              attempts=0
+              max_attempts=30
+              
+              while [ $attempts -lt $max_attempts ]; do
+                # Check if search_path has been set correctly for the database
+                # This is done by the initdb.sql script
+                if psql -c "SELECT datname, pg_catalog.current_setting('search_path') FROM pg_database WHERE datname = '$PGDATABASE';" | grep -q "pgstac.*public"; then
+                  echo "Database initialization confirmed: search_path properly set to pgstac, public"
+                  break
+                else
+                  echo "Waiting for database initialization to complete... (attempt $((attempts+1))/$max_attempts)"
+                  sleep 10
+                  attempts=$((attempts+1))
+                fi
+              done
+              
+              if [ $attempts -eq $max_attempts ]; then
+                echo "ERROR: Database initialization not completed after $(($max_attempts * 10)) seconds"
+                echo "Please check if initdb.sql from the PostgreSQL dependency has been executed properly"
+                exit 1
+              fi
+              
               # Run migration
               echo "Running PgSTAC migrations..."
               pypgstac migrate
