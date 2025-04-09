@@ -88,6 +88,8 @@ jobs:
             -f ./eoapi/test-k3s-unittest-values.yaml \
             ./eoapi
 
+          exit $?
+
       - name: debug pgstac-migrate job failure
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
