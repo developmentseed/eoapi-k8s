@@ -120,10 +120,16 @@ postgrescluster:
           # Initial SQL statements to run on startup
           custom_variable_classes: 'pgo'
           pgo.init_sql: |
-            ALTER SCHEMA public OWNER TO postgres;
-            REVOKE ALL ON SCHEMA public FROM PUBLIC;
-            GRANT ALL ON SCHEMA public TO postgres;
-            GRANT ALL ON SCHEMA public TO eoapi;
+            GRANT USAGE ON SCHEMA public TO eoapi;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+            GRANT ALL PRIVILEGES ON TABLES TO eoapi;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+             GRANT ALL PRIVILEGES ON SEQUENCES TO eoapi;
+              GRANT pgstac_read TO eoapi;
+              GRANT pgstac_ingest TO eoapi;
+              GRANT pgstac_admin TO eoapi;
+            ALTER USER eoapi SET search_path TO pgstac, public;
+
   instances:
   - name: eoapi
     replicas: 1
