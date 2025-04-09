@@ -96,9 +96,24 @@ jobs:
 
       - id: watchservices
         name: watch services boot
-        timeout-minutes: 2
+        timeout-minutes: 3
         continue-on-error: true
         run: |
+          # First wait for pgstac-migrate job to complete successfully
+          echo "Waiting for pgstac-migrate job to complete..."
+          while [[ "$(kubectl get job pgstac-migrate -o jsonpath='{.status.succeeded}')" != "1" ]]; do
+            echo "pgstac-migrate job still running or not yet succeeded..."
+            # Check if it failed
+            if [[ "$(kubectl get job pgstac-migrate -o jsonpath='{.status.failed}')" == "1" ]]; then
+              echo "ERROR: pgstac-migrate job failed!"
+              kubectl logs job/pgstac-migrate
+              exit 1
+            fi
+            sleep 3
+          done
+          echo "pgstac-migrate job completed successfully, checking services..."
+
+          # Now wait for services to boot up
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
