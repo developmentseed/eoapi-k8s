@@ -51,14 +51,6 @@ spec:
               export PGUSER=$POSTGRES_USER
               export PGPASSWORD=$POSTGRES_PASS
               export PGDATABASE=$POSTGRES_DBNAME
-
-              # Print the environment variables for debugging
-              echo "PGHOST: $PGHOST"
-              echo "PGPORT: $PGPORT"
-              echo "PGUSER: $PGUSER"
-              echo "PGDATABASE: $PGDATABASE"
-              echo "PGPASSWORD: $PGPASSWORD"
-              echo "PGADMIN_URI: $PGADMIN_URI"
                             
               # Wait for the database to be ready
               echo "Waiting for database to be ready..."
@@ -106,6 +98,10 @@ metadata:
   name: pgstac-load-samples
   labels:
     app: pgstac-load-samples
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-4"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 spec:
   template:
     metadata:
@@ -113,13 +109,6 @@ spec:
         app: pgstac-load-samples
     spec:
       restartPolicy: Never
-      initContainers:
-        - name: wait-for-migrate
-          image: busybox
-          command:
-            - 'sh'
-            - '-c'
-            - 'sleep 30; echo "Waiting for pgstac-migrate job to complete"; exit 0'
       containers:
         - name: pgstac-load-samples
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
