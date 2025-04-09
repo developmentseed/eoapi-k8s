@@ -68,9 +68,13 @@ spec:
                 if [ "$initdb_completed" = "1" ]; then
                   echo "Database initialization confirmed: eoapi role exists"
                   
-                  # Double check the search_path is set
+                  # Double check the search_path is set and contains pgstac
+                  # This is important for PgSTAC to function correctly
                   search_path=$(psql -t -c "SHOW search_path;")
                   echo "Current search_path: $search_path"
+                  if [[ "$search_path" != *"pgstac"* ]]; then
+                    continue
+                  fi
                   
                   # Set the search_path if not already set
                   psql -c "ALTER DATABASE \"$PGDATABASE\" SET search_path TO pgstac, public;"
