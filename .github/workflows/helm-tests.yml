@@ -96,7 +96,7 @@ jobs:
 
       - id: watchservices
         name: watch services boot
-        timeout-minutes: 10
+        timeout-minutes: 2
         continue-on-error: true
         run: |
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
