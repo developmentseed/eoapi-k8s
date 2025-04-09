@@ -10,6 +10,16 @@
 # 3. The "before-hook-creation,hook-succeeded" delete policy ensures the job is recreated
 #    on each helm install/upgrade and is cleaned up after successful completion
 #
+# DEBUGGING NOTES:
+# If the job fails with "BackoffLimitExceeded" error:
+# 1. Check database connectivity - ensure the database is running and accessible
+# 2. Check database credentials - make sure POSTGRES_HOST, POSTGRES_PORT, etc. are correct
+# 3. Check for pgstac migration errors - examine container logs for migration failures
+# 4. Verify database initialization - ensure postgres extensions and roles are created
+#
+# The CI workflow has been enhanced with a debug step that captures comprehensive logs 
+# from all pgstac-migrate pods to help diagnose failures during testing.
+#
 apiVersion: batch/v1
 kind: Job
 metadata:

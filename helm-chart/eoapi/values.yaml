@@ -162,7 +162,10 @@ pgstacBootstrap:
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
-    
+    ### Database connection settings TEMPORARY UNTIL WE HAVE A BETTER SOLUTION
+    ### FOR CONFIGURING THE DB CONNECTION
+    user: eoapi
+    database: eoapi
     resources:
       requests:
         cpu: "512m"
