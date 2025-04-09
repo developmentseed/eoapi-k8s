@@ -5,7 +5,6 @@ metadata:
   name: initdb
 data:
   initdb.sql: |
-    GRANT USAGE ON SCHEMA public TO eoapi;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public 
     GRANT ALL PRIVILEGES ON TABLES TO eoapi;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public
@@ -14,8 +13,9 @@ data:
       GRANT pgstac_ingest TO eoapi;
       GRANT pgstac_admin TO eoapi;
     ALTER USER eoapi SET search_path TO pgstac, public;
+    GRANT ALL ON SCHEMA public TO eoapi;
     \c eoapi
-    GRANT CREATE ON SCHEMA public TO "eoapi";
+    GRANT ALL ON SCHEMA public TO "eoapi";
 ---
 apiVersion: v1
 kind: ConfigMap
