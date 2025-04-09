@@ -10,10 +10,6 @@ metadata:
     gitsha: {{ $.Values.gitSha }}
   name: {{ $serviceName }}-{{ $.Release.Name }}
   annotations:
-    # These hooks ensure the deployment runs after the pgstacbootstrap job (which has weight -5)
-    # No initContainer is needed anymore since Helm will handle the execution order
-    # helm.sh/hook: "post-install,post-upgrade"
-    # helm.sh/hook-weight: "10"
     {{- with index $v "annotations" }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
