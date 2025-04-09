@@ -59,17 +59,9 @@ spec:
               echo "Running PgSTAC migrations..."
               pypgstac migrate
               
-              # Register PostGIS extension
-              echo "Registering PostGIS extension..."
-              psql -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-              
               # Apply settings
               echo "Applying PgSTAC settings..."
               psql -f /opt/settings/pgstac-settings.sql
-              
-              # Set permissions
-              echo "Setting permissions..."
-              psql -c "GRANT CONNECT ON DATABASE ${POSTGRES_DBNAME} TO ${POSTGRES_USER}; GRANT CREATE ON DATABASE ${POSTGRES_DBNAME} TO ${POSTGRES_USER}; GRANT USAGE ON SCHEMA public TO ${POSTGRES_USER}; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO ${POSTGRES_USER}; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO ${POSTGRES_USER}; GRANT pgstac_read TO ${POSTGRES_USER}; GRANT pgstac_ingest TO ${POSTGRES_USER}; GRANT pgstac_admin TO ${POSTGRES_USER}; ALTER USER ${POSTGRES_USER} SET search_path TO pgstac, public;"
               
               echo "PgSTAC migration and setup complete"
           resources:

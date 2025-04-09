@@ -5,6 +5,9 @@ metadata:
   name: initdb
 data:
   initdb.sql: |
+    CREATE EXTENSION IF NOT EXISTS postgis;
+    CREATE EXTENSION IF NOT EXISTS btree_gist;
+    CREATE EXTENSION IF NOT EXISTS unaccent;
     ALTER DATABASE eoapi OWNER TO eoapi;
     ALTER USER eoapi SET search_path TO pgstac, public;
     ALTER DATABASE eoapi set search_path to pgstac, public;
