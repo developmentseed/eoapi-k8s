@@ -9,10 +9,14 @@ metadata:
     app: {{ $serviceName }}-{{ $.Release.Name }}
     gitsha: {{ $.Values.gitSha }}
   name: {{ $serviceName }}-{{ $.Release.Name }}
-  {{- with index $v "annotations" }}
   annotations:
+    # These hooks ensure the deployment runs after the pgstacbootstrap job (which has weight -5)
+    # No initContainer is needed anymore since Helm will handle the execution order
+    # helm.sh/hook: "post-install,post-upgrade"
+    # helm.sh/hook-weight: "10"
+    {{- with index $v "annotations" }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
   progressDeadlineSeconds: 600
   revisionHistoryLimit: 5
@@ -30,19 +34,6 @@ spec:
         app: {{ $serviceName }}-{{ $.Release.Name }}
     spec:
       serviceAccountName: eoapi-sa-{{ $.Release.Name }}
-      initContainers:
-      - name: wait-for-pgstacbootstrap
-        image: bitnami/kubectl:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "Waiting for pgstacbootstrap job to complete..."
-          while ! kubectl -n {{ $.Release.Namespace }} wait --for=condition=complete job/pgstacbootstrap --timeout=5s; do
-            echo "pgstacbootstrap job not completed yet. Checking again in 10 seconds..."
-            sleep 10
-          done
-          echo "pgstacbootstrap job completed successfully"
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
