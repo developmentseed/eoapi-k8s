@@ -114,12 +114,8 @@ postgrescluster:
         parameters:
           shared_preload_libraries: pg_stat_statements, auto_explain
   databaseInitSQL:
-    - name: initdb
-      # SQL file to run on database initialization
-      initdb.sql: 
-        key: initdb.sql
-        name: initdb
-            
+    key: initdb.sql
+    name: initdb
 
   instances:
   - name: eoapi
