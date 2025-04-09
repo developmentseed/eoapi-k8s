@@ -105,6 +105,25 @@ postgrescluster:
   postGISVersion: 3.4
   pgBouncerReplicas: 1
   monitoring: false
+  # Configure Patroni to set proper schema permissions
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - "host all all 0.0.0.0/0 md5"
+        parameters:
+          shared_preload_libraries: pg_stat_statements, auto_explain
+        # Grant CREATE privileges on the public schema to all users
+        # This is needed for PgSTAC setup and is the default in PostgreSQL < 15
+        # but was changed for security reasons in PostgreSQL 15+
+        postgresql.conf:
+          # Initial SQL statements to run on startup
+          custom_variable_classes: 'pgo'
+          pgo.init_sql: |
+            ALTER SCHEMA public OWNER TO postgres;
+            REVOKE ALL ON SCHEMA public FROM PUBLIC;
+            GRANT ALL ON SCHEMA public TO postgres;
+            GRANT CREATE, USAGE ON SCHEMA public TO eoapi;
   instances:
   - name: eoapi
     replicas: 1
