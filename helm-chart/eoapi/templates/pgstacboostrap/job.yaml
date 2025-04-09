@@ -43,9 +43,11 @@ spec:
               export PGPASSWORD=$POSTGRES_PASS
               export PGDATABASE=$POSTGRES_DBNAME
               
+              # Wait for the database to be ready
+              echo "Waiting for database to be ready..."
+              pypgstac pgready
               # Run migration
               echo "Running PgSTAC migrations..."
-              pypgstac pgready
               pypgstac migrate
               
               # Register PostGIS extension
@@ -113,6 +115,9 @@ spec:
             - "-c"
           args:
             - |
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+              
               # Set standard PG environment variables from secrets
               export PGHOST=$POSTGRES_HOST
               export PGPORT=$POSTGRES_PORT
