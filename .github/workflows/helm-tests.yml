@@ -128,9 +128,9 @@ jobs:
           echo "===== Database Pod Logs ====="
           kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
           
-          # Extract logs from pgstacbootstrap pod
-          echo "===== PGSTACBootstrap Pod Logs ====="
-          kubectl get pod | grep "^pgstacbootstrap-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstacbootstrap logs"
+          # Extract logs from pgstac-migrate pod
+          echo "===== pgstac-migrate Pod Logs ====="
+          kubectl get pod | grep "^pgstac-migrate" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstac-migrate logs"
           
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
@@ -196,9 +196,9 @@ jobs:
           echo "===== Database Pod Logs ====="
           kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
           
-          # Extract logs from pgstacbootstrap pod
-          echo "===== PGSTACBootstrap Pod Logs ====="
-          kubectl get pod | grep "^pgstacbootstrap-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstacbootstrap logs"
+          # Extract logs from pgstac-migrate pod
+          echo "===== pgstac-migrate Pod Logs ====="
+          kubectl get pod | grep "^pgstac-migrate" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstac-migrate logs"
           
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
