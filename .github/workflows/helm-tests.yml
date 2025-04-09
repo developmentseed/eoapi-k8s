@@ -107,34 +107,6 @@ jobs:
           
           # Extract logs from pgstac-migrate pod(s)
           echo "===== pgstac-migrate Pod Logs ====="
-          
-          # Method 1: Get pods by label
-          echo "Looking for pods with label app=pgstac-migrate..."
-          POD_NAMES=$(kubectl get pods -l app=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-          if [ -n "$POD_NAMES" ]; then
-            echo "Found pods with app=pgstac-migrate label. Extracting logs from each:"
-            for POD in $POD_NAMES; do
-              echo "--- Logs from pod $POD ---"
-              kubectl logs pod/$POD || echo "Could not get logs from pod $POD"
-            done
-          else
-            echo "No pods found with app=pgstac-migrate label"
-          fi
-          
-          # Method 2: Get pods by name pattern (backup method)
-          echo "Looking for pods with 'pgstac-migrate' in name..."
-          MIGRATE_PODS=$(kubectl get pods | grep "pgstac-migrate" | cut -d' ' -f1)
-          if [ -n "$MIGRATE_PODS" ]; then
-            echo "Found pods with 'pgstac-migrate' in name. Extracting logs from each:"
-            echo "$MIGRATE_PODS" | while read -r POD; do
-              echo "--- Logs from pod $POD ---"
-              kubectl logs pod/$POD || echo "Could not get logs from pod $POD"
-            done
-          else
-            echo "No pods found with 'pgstac-migrate' in name"
-          fi
-          
-          # Method 3: Check job history for completed pods
           echo "Looking for completed pods from pgstac-migrate job..."
           COMPLETED_PODS=$(kubectl get pods --selector=job-name=pgstac-migrate --field-selector=status.phase=Succeeded,status.phase=Failed -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
           if [ -n "$COMPLETED_PODS" ]; then
