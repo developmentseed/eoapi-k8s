@@ -74,7 +74,7 @@ jobs:
             oci://registry.developers.crunchydata.com/crunchydata/pgo \
             --version ${{ env.PGO_VERSION }}
 
-      - name: helm render/install eoapi templates
+      - name: helm render install eoapi templates
         continue-on-error: true
         run: |
           export GITSHA='${{github.sha}}'
@@ -89,7 +89,7 @@ jobs:
             ./eoapi
 
       - name: debug pgstac-migrate job failure
-        if: ${{ always() }}
+        if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
         run: |
           echo "Extracting pgstac-migrate job info and logs for debugging..."
@@ -167,25 +167,6 @@ jobs:
         timeout-minutes: 3
         continue-on-error: true
         run: |
-          # First wait for pgstac-migrate job to complete successfully
-          echo "Waiting for pgstac-migrate job to complete..."
-          while [[ "$(kubectl get job pgstac-migrate -o jsonpath='{.status.succeeded}')" != "1" ]]; do
-            echo "pgstac-migrate job still running or not yet succeeded..."
-            # Check if it failed
-            if [[ "$(kubectl get job pgstac-migrate -o jsonpath='{.status.failed}')" == "1" ]]; then
-              echo "ERROR: pgstac-migrate job failed!"
-              kubectl logs job/pgstac-migrate
-              exit 1
-            fi
-            sleep 3
-          done
-
-          # Extract logs from pgstac-migrate pod
-          echo "===== pgstac-migrate Pod Logs ====="
-          kubectl get pod | grep "^pgstac-migrate" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstac-migrate logs"
-
-          echo "pgstac-migrate job completed successfully, checking services..."
-
           # Now wait for services to boot up
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
@@ -211,14 +192,6 @@ jobs:
           # Get and display all pods status
           echo "===== Pod Status ====="
           kubectl get pods
-          
-          # Extract logs from database pod
-          echo "===== Database Pod Logs ====="
-          kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
-          
-          # Extract logs from pgstac-migrate pod
-          echo "===== pgstac-migrate Pod Logs ====="
-          kubectl get pod | grep "^pgstac-migrate" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstac-migrate logs"
           
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
@@ -279,14 +252,6 @@ jobs:
           # Get and display all pods status
           echo "===== Pod Status ====="
           kubectl get pods
-          
-          # Extract logs from database pod
-          echo "===== Database Pod Logs ====="
-          kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
-          
-          # Extract logs from pgstac-migrate pod
-          echo "===== pgstac-migrate Pod Logs ====="
-          kubectl get pod | grep "^pgstac-migrate" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstac-migrate logs"
           
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
