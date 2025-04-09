@@ -123,7 +123,7 @@ postgrescluster:
             ALTER SCHEMA public OWNER TO postgres;
             REVOKE ALL ON SCHEMA public FROM PUBLIC;
             GRANT ALL ON SCHEMA public TO postgres;
-            GRANT CREATE, USAGE ON SCHEMA public TO eoapi;
+            GRANT ALL ON SCHEMA public TO eoapi;
   instances:
   - name: eoapi
     replicas: 1
