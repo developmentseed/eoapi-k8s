@@ -33,6 +33,9 @@ spec:
             - "-c"
           args:
             - |
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+              
               # Set standard PG environment variables from secrets
               export PGHOST=$POSTGRES_HOST
               export PGPORT=$POSTGRES_PORT
