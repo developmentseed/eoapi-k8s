@@ -74,7 +74,8 @@ jobs:
             oci://registry.developers.crunchydata.com/crunchydata/pgo \
             --version ${{ env.PGO_VERSION }}
 
-      - name: helm render install eoapi templates
+      - id: helm-render-install-eoapi-templates
+        name: helm render/install eoapi templates
         continue-on-error: true
         run: |
           export GITSHA='${{github.sha}}'
