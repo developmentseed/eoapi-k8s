@@ -111,6 +111,11 @@ jobs:
             fi
             sleep 3
           done
+
+          # Extract logs from pgstac-migrate pod
+          echo "===== pgstac-migrate Pod Logs ====="
+          kubectl get pod | grep "^pgstac-migrate" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstac-migrate logs"
+
           echo "pgstac-migrate job completed successfully, checking services..."
 
           # Now wait for services to boot up
