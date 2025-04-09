@@ -118,22 +118,21 @@ postgrescluster:
           memory: "3048Mi"
   # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
   users:
-    # `postgres` always is a `SUPERUSER` and cannot be adjusted with `options` flag
+    # `postgres` always has SUPERUSER privileges
     # we use this block here to create secrets for the `postgres` user that we can mount and lookup
     - name: postgres
       databases:
         - eoapi
         - postgres
-    # if you try to grant `options: 'SUPERUSER'` below to your eoapi service user
-    # then they will not be able to connect through the pgbouncer connection pooler, so be aware
+      options: "SUPERUSER"
+    # Grant CREATEROLE privilege to eoapi user so it can create the pgstac_admin role
+    # If you grant SUPERUSER to the eoapi user, it won't be able to connect through pgbouncer
     # https://access.crunchydata.com/documentation/crunchy-postgres-containers/2.4.2/container-specifications/crunchy-pgbouncer/
-    # this user is currently unprivileged and the `pgstacBootstrap` container below will grant privileges
-    # when it boots via the `postgres` superuser above.
-    # see `/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml:initdb-sh-config`
     - name: eoapi
       databases:
         - eoapi
         - postgres
+      options: "CREATEROLE"
       # default `password.type` is ASCII which follows the character set US-ASCII
       # but which can contain characters that `asyncpg` dislikes
       # see https://github.com/MagicStack/asyncpg/issues/1151
