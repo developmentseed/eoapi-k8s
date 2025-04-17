@@ -128,6 +128,16 @@ PostgreSQL cluster secrets
     secretKeyRef:
       name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
       key: host
+- name: POSTGRES_HOST_READER
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: host
+- name: POSTGRES_HOST_WRITER
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: host
 - name: POSTGRES_PASS
   valueFrom:
     secretKeyRef:
@@ -138,6 +148,11 @@ PostgreSQL cluster secrets
     secretKeyRef:
       name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
       key: dbname
+- name: DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      key: uri
 {{- end }}
 {{- end }}
 - name: PGADMIN_URI
@@ -169,10 +184,16 @@ External PostgreSQL with plaintext credentials
   value: {{ .Values.postgresql.external.port | quote }}
 - name: POSTGRES_HOST
   value: {{ .Values.postgresql.external.host | quote }}
+- name: POSTGRES_HOST_READER
+  value: {{ .Values.postgresql.external.host | quote }}
+- name: POSTGRES_HOST_WRITER
+  value: {{ .Values.postgresql.external.host | quote }}
 - name: POSTGRES_PASS
   value: {{ .Values.postgresql.external.credentials.password | quote }}
 - name: POSTGRES_DBNAME
   value: {{ .Values.postgresql.external.database | quote }}
+- name: DATABASE_URL
+  value: "postgresql://{{ .Values.postgresql.external.credentials.username }}:{{ .Values.postgresql.external.credentials.password }}@{{ .Values.postgresql.external.host }}:{{ .Values.postgresql.external.port }}/{{ .Values.postgresql.external.database }}"
 {{- end }}
 
 {{/*
@@ -214,10 +235,24 @@ External PostgreSQL with secret credentials
     secretKeyRef:
       name: {{ .Values.postgresql.external.existingSecret.name }}
       key: {{ .Values.postgresql.external.existingSecret.keys.host }}
+- name: POSTGRES_HOST_READER
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.postgresql.external.existingSecret.name }}
+      key: {{ .Values.postgresql.external.existingSecret.keys.host }}
+- name: POSTGRES_HOST_WRITER
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.postgresql.external.existingSecret.name }}
+      key: {{ .Values.postgresql.external.existingSecret.keys.host }}
 {{- else }}
 - name: PGHOST
   value: {{ .Values.postgresql.external.host | quote }}
 - name: POSTGRES_HOST
+  value: {{ .Values.postgresql.external.host | quote }}
+- name: POSTGRES_HOST_READER
+  value: {{ .Values.postgresql.external.host | quote }}
+- name: POSTGRES_HOST_WRITER
   value: {{ .Values.postgresql.external.host | quote }}
 {{- end }}
 
@@ -255,6 +290,18 @@ External PostgreSQL with secret credentials
   value: {{ .Values.postgresql.external.database | quote }}
 - name: POSTGRES_DBNAME
   value: {{ .Values.postgresql.external.database | quote }}
+{{- end }}
+
+# Add DATABASE_URL for connection string
+{{- if .Values.postgresql.external.existingSecret.keys.uri }}
+- name: DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.postgresql.external.existingSecret.name }}
+      key: {{ .Values.postgresql.external.existingSecret.keys.uri }}
+{{- else }}
+- name: DATABASE_URL
+  value: "postgresql://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
 {{- end }}
 {{- end }}
 
