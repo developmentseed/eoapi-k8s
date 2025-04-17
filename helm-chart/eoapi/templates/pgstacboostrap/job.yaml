@@ -10,12 +10,22 @@
 # 3. The "before-hook-creation,hook-succeeded" delete policy ensures the job is recreated
 #    on each helm install/upgrade and is cleaned up after successful completion
 #
+# DEBUGGING NOTES:
+# If the job fails with "BackoffLimitExceeded" error:
+# 1. Check database connectivity - ensure the database is running and accessible
+# 2. Check database credentials - make sure POSTGRES_HOST, POSTGRES_PORT, etc. are correct
+# 3. Check for pgstac migration errors - examine container logs for migration failures
+# 4. Verify database initialization - ensure postgres extensions and roles are created
+#
+# The CI workflow has been enhanced with a debug step that captures comprehensive logs 
+# from all pgstac-migrate pods to help diagnose failures during testing.
+#
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pgstacbootstrap
+  name: pgstac-migrate
   labels:
-    app: pgstacbootstrap
+    app: pgstac-migrate
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-5"
@@ -24,33 +34,118 @@ spec:
   template:
     metadata:
       labels:
-        app: pgstacbootstrap
+        app: pgstac-migrate
     spec:
       restartPolicy: Never
       containers:
-        - name: pgstacbootstrap
+        - name: pgstac-migrate
           image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
-          command: {{- toYaml .Values.pgstacBootstrap.command | nindent 12 }}
+          command:
+            - "/bin/sh"
+            - "-c"
           args:
-            {{- toYaml .Values.pgstacBootstrap.args | nindent 12 }}
-          ports:
-            - containerPort: 5432
+            - |
+              # Set standard PG environment variables from secrets
+              export PGHOST=$POSTGRES_HOST
+              export PGPORT=$POSTGRES_PORT
+              export PGUSER=$POSTGRES_USER
+              export PGPASSWORD=$POSTGRES_PASS
+              export PGDATABASE=$POSTGRES_DBNAME
+                            
+              # Wait for the database to be ready
+              echo "Waiting for database to be ready..."
+              pypgstac pgready
+
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+              
+              # Run migration
+              echo "Running PgSTAC migrations..."
+              pypgstac migrate
+              
+              # Apply settings
+              echo "Applying PgSTAC settings..."
+              psql -f /opt/settings/pgstac-settings.sql
+
+              echo "PgSTAC migration and setup complete"
           resources:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
-            - mountPath: /opt/initdb/sql-data
-              name: initdb-sql-volume-{{ $.Release.Name }}
-            - mountPath: /opt/initdb/json-data
-              name: initdb-json-volume-{{ $.Release.Name }}
-            - mountPath: /opt/initdb/
-              name: initdb-sh-volume-{{ $.Release.Name }}
-            - mountPath: /opt/initdb/python-scripts
-              name: pgstac-setup-volume-{{ $.Release.Name }}
+            - mountPath: /opt/settings
+              name: pgstac-settings-volume-{{ $.Release.Name }}
           env:
-            - name: LOAD_FIXTURES
-              value: {{ .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES | quote }}
-            - name: KEEP_ALIVE
-              value: {{ .Values.pgstacBootstrap.settings.envVars.KEEP_ALIVE | quote }}
+            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
+      volumes:
+        - name: pgstac-settings-volume-{{ $.Release.Name }}
+          configMap:
+            name: pgstac-settings-config-{{ $.Release.Name }}
+      {{- with .Values.pgstacBootstrap.settings.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pgstacBootstrap.settings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  backoffLimit: 1
+{{- end }}
+
+{{- if and .Values.pgstacBootstrap.enabled (or .Values.pgstacBootstrap.settings.loadSamples (eq .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES "true")) }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgstac-load-samples
+  labels:
+    app: pgstac-load-samples
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-4"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+spec:
+  template:
+    metadata:
+      labels:
+        app: pgstac-load-samples
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pgstac-load-samples
+          image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
+          command:
+            - "/bin/sh"
+            - "-c"
+          args:
+            - |
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+              
+              # Set standard PG environment variables from secrets
+              export PGHOST=$POSTGRES_HOST
+              export PGPORT=$POSTGRES_PORT
+              export PGUSER=$POSTGRES_USER
+              export PGPASSWORD=$POSTGRES_PASS
+              export PGDATABASE=$POSTGRES_DBNAME
+              
+              # Load sample data
+              echo "Loading sample collections..."
+              pypgstac load collections /opt/data/noaa-emergency-response.json --method insert_ignore
+              
+              echo "Loading sample items..."
+              pypgstac load items /opt/data/noaa-eri-nashville2020.json --method insert_ignore
+              
+              echo "Running custom SQL..."
+              psql -f /opt/sql/initdb.sql
+              
+              echo "Sample data loading complete"
+          resources:
+            {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /opt/sql
+              name: initdb-sql-volume-{{ $.Release.Name }}
+            - mountPath: /opt/data
+              name: initdb-json-volume-{{ $.Release.Name }}
+          env:
             {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
       volumes:
         - name: initdb-sql-volume-{{ $.Release.Name }}
@@ -59,12 +154,6 @@ spec:
         - name: initdb-json-volume-{{ $.Release.Name }}
           configMap:
             name: initdb-json-config-{{ $.Release.Name }}
-        - name: initdb-sh-volume-{{ $.Release.Name }}
-          configMap:
-            name: initdb-sh-config-{{ $.Release.Name }}
-        - name: pgstac-setup-volume-{{ $.Release.Name }}
-          configMap:
-            name: pgstac-setup-config-{{ $.Release.Name }}
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

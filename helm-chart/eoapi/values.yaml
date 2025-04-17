@@ -105,6 +105,18 @@ postgrescluster:
   postGISVersion: 3.4
   pgBouncerReplicas: 1
   monitoring: false
+  # Configure Patroni to set proper schema permissions
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - "host all all 0.0.0.0/0 md5"
+        parameters:
+          shared_preload_libraries: pg_stat_statements, auto_explain
+  databaseInitSQL:
+    key: initdb.sql
+    name: initdb
+
   instances:
   - name: eoapi
     replicas: 1
@@ -118,22 +130,21 @@ postgrescluster:
           memory: "3048Mi"
   # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
   users:
-    # `postgres` always is a `SUPERUSER` and cannot be adjusted with `options` flag
+    # `postgres` always has SUPERUSER privileges
     # we use this block here to create secrets for the `postgres` user that we can mount and lookup
     - name: postgres
       databases:
         - eoapi
         - postgres
-    # if you try to grant `options: 'SUPERUSER'` below to your eoapi service user
-    # then they will not be able to connect through the pgbouncer connection pooler, so be aware
+      options: "SUPERUSER"
+    # Grant CREATEROLE privilege to eoapi user so it can create the pgstac_admin role
+    # If you grant SUPERUSER to the eoapi user, it won't be able to connect through pgbouncer
     # https://access.crunchydata.com/documentation/crunchy-postgres-containers/2.4.2/container-specifications/crunchy-pgbouncer/
-    # this user is currently unprivileged and the `pgstacBootstrap` container below will grant privileges
-    # when it boots via the `postgres` superuser above.
-    # see `/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml:initdb-sh-config`
     - name: eoapi
       databases:
         - eoapi
         - postgres
+      options: "CREATEDB CREATEROLE"
       # default `password.type` is ASCII which follows the character set US-ASCII
       # but which can contain characters that `asyncpg` dislikes
       # see https://github.com/MagicStack/asyncpg/issues/1151
@@ -146,13 +157,15 @@ postgrescluster:
 pgstacBootstrap:
   enabled: true
   image:
-    name: ghcr.io/stac-utils/pgstac
+    name: ghcr.io/stac-utils/pgstac-pypgstac
     tag: v0.9.5
-  command:
-    - "sh"
-  args:
-    - "/opt/initdb/run-migrate-and-load.sh"
   settings:
+    # General configuration options
+    loadSamples: true      # Set to false to disable sample data loading
+    ### Database connection settings TEMPORARY UNTIL WE HAVE A BETTER SOLUTION
+    ### FOR CONFIGURING THE DB CONNECTION
+    user: eoapi
+    database: eoapi
     resources:
       requests:
         cpu: "512m"
@@ -160,11 +173,10 @@ pgstacBootstrap:
       limits:
         cpu: "512m"
         memory: "1024Mi"
+    # DEPRECATED: Use pgstacBootstrap.settings.loadSamples instead
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
-      # toggle to `true` if you want to keep the job running as db jumpbox
-      KEEP_ALIVE: "false"
 
 
 ######################

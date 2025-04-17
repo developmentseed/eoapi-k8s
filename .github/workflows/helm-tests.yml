@@ -74,7 +74,9 @@ jobs:
             oci://registry.developers.crunchydata.com/crunchydata/pgo \
             --version ${{ env.PGO_VERSION }}
 
-      - name: helm render/install eoapi templates
+      - id: helm-render-install-eoapi-templates
+        name: helm render/install eoapi templates
+        continue-on-error: true
         run: |
           export GITSHA='${{github.sha}}'
 
@@ -87,18 +89,53 @@ jobs:
             -f ./eoapi/test-k3s-unittest-values.yaml \
             ./eoapi
 
-      - name: sleep for 10s seconds while services boot
-        shell: bash
-        run: sleep 10s
+          exit $?
 
-#      - name: Setup upterm session
-#        uses: lhotari/action-upterm@v1
+      - name: debug pgstac-migrate job failure
+        if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          echo "Extracting pgstac-migrate job info and logs for debugging..."
+          
+          # Get job details
+          echo "===== pgstac-migrate Job Details ====="
+          kubectl get job pgstac-migrate -o yaml || echo "Could not get pgstac-migrate job details"
+          
+          # Get pod details
+          echo "===== pgstac-migrate Pod Details ====="
+          kubectl get pods -l app=pgstac-migrate --all-namespaces || echo "Could not find pgstac-migrate pods"
+          
+          # Extract logs from pgstac-migrate pod(s)
+          echo "===== pgstac-migrate Pod Logs ====="
+          echo "Looking for completed pods from pgstac-migrate job..."
+          COMPLETED_PODS=$(kubectl get pods --selector=job-name=pgstac-migrate --field-selector=status.phase=Succeeded,status.phase=Failed -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          if [ -n "$COMPLETED_PODS" ]; then
+            echo "Found completed pods from pgstac-migrate job. Extracting logs from each:"
+            for POD in $COMPLETED_PODS; do
+              echo "--- Logs from completed pod $POD ---"
+              kubectl logs pod/$POD || echo "Could not get logs from pod $POD"
+            done
+          else
+            echo "No completed pods found for pgstac-migrate job"
+          fi
+          
+          # Get details about the database pods/services
+          echo "===== Database Pod/Service Details ====="
+          # Find database service
+          kubectl get svc | grep "db" || echo "Could not find database services"
+          # Find database pods
+          kubectl get pods | grep "db-" || echo "Could not find database pods"
+          
+          # Check for any events related to the job or pods
+          echo "===== Related Kubernetes Events ====="
+          kubectl get events | grep -E "pgstac|db" || echo "No relevant events found"
 
       - id: watchservices
         name: watch services boot
-        timeout-minutes: 10
+        timeout-minutes: 3
         continue-on-error: true
         run: |
+          # Now wait for services to boot up
           while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
             echo "still waiting for raster service to start..."
             sleep 1
@@ -123,14 +160,6 @@ jobs:
           # Get and display all pods status
           echo "===== Pod Status ====="
           kubectl get pods
-          
-          # Extract logs from database pod
-          echo "===== Database Pod Logs ====="
-          kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
-          
-          # Extract logs from pgstacbootstrap pod
-          echo "===== PGSTACBootstrap Pod Logs ====="
-          kubectl get pod | grep "^pgstacbootstrap-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstacbootstrap logs"
           
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
@@ -161,7 +190,7 @@ jobs:
 
       - name: run the tests
         id: testrunner
-        continue-on-error: true
+        # continue-on-error: true
         run: |
           kubectl get svc --all-namespaces
           kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
@@ -191,14 +220,6 @@ jobs:
           # Get and display all pods status
           echo "===== Pod Status ====="
           kubectl get pods
-          
-          # Extract logs from database pod
-          echo "===== Database Pod Logs ====="
-          kubectl get pod | grep "^db-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get database logs"
-          
-          # Extract logs from pgstacbootstrap pod
-          echo "===== PGSTACBootstrap Pod Logs ====="
-          kubectl get pod | grep "^pgstacbootstrap-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get pgstacbootstrap logs"
           
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
