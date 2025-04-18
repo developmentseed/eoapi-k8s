@@ -45,13 +45,9 @@ spec:
             - "-c"
           args:
             - |
-              # Set standard PG environment variables from secrets
-              export PGHOST=$POSTGRES_HOST
-              export PGPORT=$POSTGRES_PORT
-              export PGUSER=$POSTGRES_USER
-              export PGPASSWORD=$POSTGRES_PASS
-              export PGDATABASE=$POSTGRES_DBNAME
-                            
+              # Database connection configured through standard PG* environment variables
+              # Environment variables are already set by the container
+
               # Wait for the database to be ready
               echo "Waiting for database to be ready..."
               pypgstac pgready
@@ -72,13 +68,13 @@ spec:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /opt/settings
-              name: pgstac-settings-volume-{{ $.Release.Name }}
+              name: pgstac-settings-volume-{{ .Release.Name }}
           env:
-            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
+            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
       volumes:
-        - name: pgstac-settings-volume-{{ $.Release.Name }}
+        - name: pgstac-settings-volume-{{ .Release.Name }}
           configMap:
-            name: pgstac-settings-config-{{ $.Release.Name }}
+            name: pgstac-settings-config-{{ .Release.Name }}
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -90,7 +86,7 @@ spec:
   backoffLimit: 1
 {{- end }}
 
-{{- if and .Values.pgstacBootstrap.enabled (or .Values.pgstacBootstrap.settings.loadSamples (eq .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES "true")) }}
+{{- if and .Values.pgstacBootstrap.enabled .Values.pgstacBootstrap.settings.loadSamples }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -120,12 +116,8 @@ spec:
               # Exit immediately if a command exits with a non-zero status
               set -e
               
-              # Set standard PG environment variables from secrets
-              export PGHOST=$POSTGRES_HOST
-              export PGPORT=$POSTGRES_PORT
-              export PGUSER=$POSTGRES_USER
-              export PGPASSWORD=$POSTGRES_PASS
-              export PGDATABASE=$POSTGRES_DBNAME
+              # Database connection configured through standard PG* environment variables
+              # Environment variables are already set by the container
               
               # Load sample data
               echo "Loading sample collections..."
@@ -142,18 +134,18 @@ spec:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /opt/sql
-              name: initdb-sql-volume-{{ $.Release.Name }}
+              name: initdb-sql-volume-{{ .Release.Name }}
             - mountPath: /opt/data
-              name: initdb-json-volume-{{ $.Release.Name }}
+              name: initdb-json-volume-{{ .Release.Name }}
           env:
-            {{ include "eoapi.pgstacSecrets" . | nindent 12 }}
+            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
       volumes:
-        - name: initdb-sql-volume-{{ $.Release.Name }}
+        - name: initdb-sql-volume-{{ .Release.Name }}
           configMap:
-            name: initdb-sql-config-{{ $.Release.Name }}
-        - name: initdb-json-volume-{{ $.Release.Name }}
+            name: initdb-sql-config-{{ .Release.Name }}
+        - name: initdb-json-volume-{{ .Release.Name }}
           configMap:
-            name: initdb-json-config-{{ $.Release.Name }}
+            name: initdb-json-config-{{ .Release.Name }}
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
