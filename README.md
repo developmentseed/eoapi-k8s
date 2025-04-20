@@ -10,7 +10,7 @@
   <a href="https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="License">
   </a>
-  <a href="https://artifacthub.io/packages/search?repo=eoapi" target="_blank">
+  <a href="https://artifacthub.io/packages/helm/eoapi/eoapi" target="_blank">
       <img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/eoapi" alt="Artifact Hub">
   </a>
 </p>
