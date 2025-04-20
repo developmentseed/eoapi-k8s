@@ -9,7 +9,7 @@
 # when the hash of the last commit in the branch you set up changes. This does
 # NOT apply to ownership claim operations, which are processed immediately.
 #
-# repositoryID: bb8121e4-7762-43a1-971a-ea0454ba6027
+repositoryID: 5196aeab-d7e3-43d7-86c4-7e18efda0c7c
 owners: # (used to claim repository ownership)
   - name: Emmanuel mathot
     email: emmanuel@developmentseed.org
