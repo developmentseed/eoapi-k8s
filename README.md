@@ -8,7 +8,10 @@
       <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/helm-tests.yml/badge.svg?branch=main" alt="Test">
   </a>
   <a href="https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE" target="_blank">
-      <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="Downloads">
+      <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="License">
+  </a>
+  <a href="https://artifacthub.io/packages/helm/developmentseed/eoapi" target="_blank">
+      <img src="https://img.shields.io/badge/Artifact%20Hub-eoapi-417598" alt="Artifact Hub">
   </a>
 </p>
 
