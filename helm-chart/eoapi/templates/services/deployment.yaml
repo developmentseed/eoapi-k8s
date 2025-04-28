@@ -32,6 +32,8 @@ spec:
         app: {{ $serviceName }}-{{ $.Release.Name }}
     spec:
       serviceAccountName: eoapi-sa-{{ $.Release.Name }}
+      initContainers:
+        {{- include "eoapi.pgstacInitContainer" $ | nindent 8 }}
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
