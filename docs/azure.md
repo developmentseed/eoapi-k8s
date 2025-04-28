@@ -1,10 +1,54 @@
 # Microsoft Azure Setup
 
-## Using Azure managed PostgreSQL
-To use Azure managed PostgreSQL with the `eoapi-k8s` chart, you need to set up the following:
-1. **Create an Azure PostgreSQL server**: You can create a PostgreSQL server using the Azure portal or the Azure CLI. Make sure to note down the server name, username, and password.
-2. **Create a PostgreSQL database**: After creating the server, create a database that will be used by the `eoapi-k8s` chart.
-3. **Configure firewall rules**: Ensure that the PostgreSQL server allows connections from your Kubernetes cluster's IP address. You can do this by adding a firewall rule in the Azure portal or using the Azure CLI.
+## Using Azure Managed PostgreSQL
+
+With the unified PostgreSQL configuration, connecting to an Azure managed PostgreSQL instance has become more straightforward. Here's how to set it up:
+
+1. **Create an Azure PostgreSQL server**: Create a PostgreSQL server using the Azure portal or the Azure CLI.
+
+   ```bash
+   # Example of creating an Azure PostgreSQL flexible server
+   az postgres flexible-server create \
+     --resource-group myResourceGroup \
+     --name mypostgresserver \
+     --location westus \
+     --admin-user myusername \
+     --admin-password mypassword \
+     --sku-name Standard_B1ms
+   ```
+
+2. **Create a PostgreSQL database**: After creating the server, create a database for your EOAPI deployment.
+
+   ```bash
+   # Create a database on the Azure PostgreSQL server
+   az postgres flexible-server db create \
+     --resource-group myResourceGroup \
+     --server-name mypostgresserver \
+     --database-name eoapi
+   ```
+
+3. **Configure firewall rules**: Ensure that the PostgreSQL server allows connections from your Kubernetes cluster's IP address.
+
+   ```bash
+   # Allow connections from your AKS cluster's outbound IP
+   az postgres flexible-server firewall-rule create \
+     --resource-group myResourceGroup \
+     --server-name mypostgresserver \
+     --name AllowAKS \
+     --start-ip-address <AKS-outbound-IP> \
+     --end-ip-address <AKS-outbound-IP>
+   ```
+
+4. **Store PostgreSQL credentials in Azure Key Vault**: Create secrets in your Azure Key Vault to store the database connection information.
+
+   ```bash
+   # Create Key Vault secrets for PostgreSQL connection
+   az keyvault secret set --vault-name your-keyvault-name --name db-host --value "mypostgresserver.postgres.database.azure.com"
+   az keyvault secret set --vault-name your-keyvault-name --name db-port --value "5432"
+   az keyvault secret set --vault-name your-keyvault-name --name db-name --value "eoapi"
+   az keyvault secret set --vault-name your-keyvault-name --name db-username --value "myusername@mypostgresserver"
+   az keyvault secret set --vault-name your-keyvault-name --name db-password --value "mypassword"
+   ```
 
 ## Azure Configuration for eoapi-k8s
 
@@ -12,23 +56,9 @@ When deploying on Azure, you'll need to configure several settings in your value
 
 ### Common Azure Configuration
 
-Add the following to your values.yaml:
+First, configure the service account with Azure Workload Identity:
 
 ```yaml
-# Main Azure Configuration 
-azure:
-  aksSecretsProviderAvailable: true  # set to true when using Azure Key Vault
-  keyvault:
-    name: "your-keyvault-name"
-    clientId: "your-client-id"
-    tenantId: "your-tenant-id"
-  # Mapping of name inside Azure Vault to name inside k8s secret object
-  secretKeys:
-    pgpassword: POSTGRES_PASSWORD
-    pghost: POSTGRES_HOST
-    dbname: POSTGRES_DBNAME
-    # Add any other secrets your services need
-
 # Service Account Configuration
 serviceAccount:
   create: true
@@ -37,167 +67,144 @@ serviceAccount:
     azure.workload.identity/tenant-id: "your-tenant-id"
 ```
 
-### PostgreSQL Configuration
+### Unified PostgreSQL Configuration
 
-Disable the internal PostgreSQL cluster when using Azure's managed PostgreSQL:
+Use the unified PostgreSQL configuration with the `external-secret` type to connect to your Azure managed PostgreSQL:
+
+```yaml
+# Configure PostgreSQL connection to use Azure managed PostgreSQL with secrets from Key Vault
+postgresql:
+  # Use external-secret type to get credentials from a pre-existing secret
+  type: "external-secret"
+  
+  # Basic connection information
+  external:
+    host: "mypostgresserver.postgres.database.azure.com"  # Can be overridden by secret values
+    port: "5432"                                          # Can be overridden by secret values
+    database: "eoapi"                                     # Can be overridden by secret values
+    
+    # Reference to a secret that will be created by Azure Key Vault integration
+    existingSecret:
+      name: "azure-pg-credentials"
+      keys:
+        username: "username"     # Secret key for the username
+        password: "password"     # Secret key for the password
+        host: "host"             # Secret key for the host (optional)
+        port: "port"             # Secret key for the port (optional)
+        database: "database"     # Secret key for the database name (optional)
+```
+
+With this configuration, you're telling the PostgreSQL components to use an external PostgreSQL database and to get its connection details from a Kubernetes secret named `azure-pg-credentials`. This secret will be created using Azure Key Vault integration as described below.
+
+### Disable internal PostgreSQL cluster
+
+When using Azure managed PostgreSQL, you should disable the internal PostgreSQL cluster:
 
 ```yaml
 postgrescluster:
   enabled: false
 ```
 
-### PgSTAC Bootstrap Configuration
+### Azure Key Vault Integration
 
-Configure the pgstacBootstrap service for Azure:
-
-```yaml
-pgstacBootstrap:
-  enabled: true
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    extraEnvVars:
-      - name: POSTGRES_USER
-        value: postgres
-      - name: POSTGRES_PORT
-        value: "5432"
-    extraEnvFrom:
-      - secretRef:
-          name: pgstac-secrets-{{ $.Release.Name }}
-    extraVolumeMounts:
-      - name: azure-keyvault-secrets
-        mountPath: /mnt/secrets-store
-        readOnly: true
-    extraVolumes:
-      - name: azure-keyvault-secrets
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
-```
-
-### API Services Configuration
-
-For each API service (raster, multidim, stac, vector), add the following configuration:
-
-```yaml
-# Example for the raster service
-raster:
-  enabled: true
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    extraEnvFrom:
-      - secretRef:
-          name: pgstac-secrets-{{ $.Release.Name }}
-    extraVolumeMounts:
-      - name: azure-keyvault-secrets
-        mountPath: /mnt/secrets-store
-        readOnly: true
-    extraVolumes:
-      - name: azure-keyvault-secrets
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
-
-# Example for the stac service
-stac:
-  enabled: true
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    extraEnvFrom:
-      - secretRef:
-          name: pgstac-secrets-{{ $.Release.Name }}
-    extraVolumeMounts:
-      - name: azure-keyvault-secrets
-        mountPath: /mnt/secrets-store
-        readOnly: true
-    extraVolumes:
-      - name: azure-keyvault-secrets
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
-
-# Example for the vector service
-vector:
-  enabled: true
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    extraEnvFrom:
-      - secretRef:
-          name: pgstac-secrets-{{ $.Release.Name }}
-    extraVolumeMounts:
-      - name: azure-keyvault-secrets
-        mountPath: /mnt/secrets-store
-        readOnly: true
-    extraVolumes:
-      - name: azure-keyvault-secrets
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
-
-# Example for the multidim service (if enabled)
-multidim:
-  enabled: false  # set to true if needed
-  settings:
-    labels:
-      azure.workload.identity/use: "true"
-    extraEnvFrom:
-      - secretRef:
-          name: pgstac-secrets-{{ $.Release.Name }}
-    extraVolumeMounts:
-      - name: azure-keyvault-secrets
-        mountPath: /mnt/secrets-store
-        readOnly: true
-    extraVolumes:
-      - name: azure-keyvault-secrets
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: azure-secret-provider-{{ $.Release.Name }}
-```
-
-## Azure Key Vault Secret Provider Configuration
-
-Create the following Secret Provider Class to access the secrets in Azure Key Vault:
+To allow your Kubernetes pods to access PostgreSQL credentials stored in Azure Key Vault, create a SecretProviderClass:
 
 ```yaml
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
-  name: azure-secret-provider-{{ $.Release.Name }}
+  name: azure-pg-secret-provider
 spec:
   provider: azure
   parameters:
     usePodIdentity: "false"
-    clientID: {{ .Values.azure.keyvault.clientId }}
-    keyvaultName: {{ .Values.azure.keyvault.name }}
-    tenantId: {{ .Values.azure.keyvault.tenantId }}
+    clientID: "your-client-id"
+    keyvaultName: "your-keyvault-name"
+    tenantId: "your-tenant-id"
     objects: |
       array:
-    {{- range $name, $value := .Values.azure.secretKeys }}
         - |
-          objectName: {{ $value | replace "_" "-" }}
+          objectName: db-host
           objectType: secret
-    {{- end }}
+          objectAlias: host
+        - |
+          objectName: db-port
+          objectType: secret
+          objectAlias: port
+        - |
+          objectName: db-name
+          objectType: secret
+          objectAlias: database
+        - |
+          objectName: db-username
+          objectType: secret
+          objectAlias: username
+        - |
+          objectName: db-password
+          objectType: secret
+          objectAlias: password
   secretObjects:
-    - secretName: pgstac-secrets-{{ $.Release.Name }}
+    - secretName: azure-pg-credentials
       type: Opaque
       data:
-      {{- range $name, $value := .Values.azure.secretKeys }}
-        - objectName: {{ $value | replace "_" "-" }}
-          key: {{ $name }}
-      {{- end }}
+        - objectName: host
+          key: host
+        - objectName: port
+          key: port
+        - objectName: database
+          key: database
+        - objectName: username
+          key: username
+        - objectName: password
+          key: password
+```
+
+### Service Configuration
+
+For services that need to mount the Key Vault secrets, add the following configuration to each service (pgstacBootstrap, raster, stac, vector, multidim):
+
+```yaml
+# Define a common volume configuration for all services
+commonVolumeConfig: &commonVolumeConfig
+  labels:
+    azure.workload.identity/use: "true"
+  extraVolumeMounts:
+    - name: azure-keyvault-secrets
+      mountPath: /mnt/secrets-store
+      readOnly: true
+  extraVolumes:
+    - name: azure-keyvault-secrets
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: azure-pg-secret-provider
+
+# Apply the common volume configuration to each service
+pgstacBootstrap:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+raster:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+stac:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+vector:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+multidim:
+  enabled: false  # set to true if needed
+  settings:
+    <<: *commonVolumeConfig
 ```
 
 ## Azure Managed Identity Setup
@@ -232,3 +239,80 @@ To use Azure Managed Identity with your Kubernetes cluster:
      --issuer <aks-oidc-issuer> \
      --subject system:serviceaccount:<namespace>:eoapi-sa
    ```
+
+## Complete Example
+
+Here's a complete example configuration for connecting EOAPI to an Azure managed PostgreSQL database:
+
+```yaml
+# Service Account Configuration with Azure Workload Identity
+serviceAccount:
+  create: true
+  annotations:
+    azure.workload.identity/client-id: "12345678-1234-1234-1234-123456789012"
+    azure.workload.identity/tenant-id: "87654321-4321-4321-4321-210987654321"
+
+# Unified PostgreSQL Configuration - using external-secret type
+postgresql:
+  type: "external-secret"
+  external:
+    host: "mypostgresserver.postgres.database.azure.com"
+    port: "5432"
+    database: "eoapi"
+    existingSecret:
+      name: "azure-pg-credentials"
+      keys:
+        username: "username"
+        password: "password"
+        host: "host"
+        port: "port"
+        database: "database"
+
+# Disable internal PostgreSQL cluster
+postgrescluster:
+  enabled: false
+
+# Define common volume configuration with Azure Key Vault integration
+commonVolumeConfig: &commonVolumeConfig
+  labels:
+    azure.workload.identity/use: "true"
+  extraVolumeMounts:
+    - name: azure-keyvault-secrets
+      mountPath: /mnt/secrets-store
+      readOnly: true
+  extraVolumes:
+    - name: azure-keyvault-secrets
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: azure-pg-secret-provider
+
+# Apply the common volume configuration to each service
+pgstacBootstrap:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+stac:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+raster:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+vector:
+  enabled: true
+  settings:
+    <<: *commonVolumeConfig
+
+multidim:
+  enabled: false
+  settings:
+    <<: *commonVolumeConfig
+```
+
+Make sure to create the SecretProviderClass as shown in the "Azure Key Vault Integration" section above before deploying EOAPI with this configuration.
