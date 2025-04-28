@@ -7,4 +7,23 @@ type: application
 # https://access.crunchydata.com/documentation/postgres-operator/latest/releases
 version: 5.7.4
 appVersion: 5.7.4
-force: true
+# Removed invalid 'force' property
+
+# Artifacthub metadata
+annotations:
+  artifacthub.io/changes: |
+    - Adds integration with Artifacthub.io
+  artifacthub.io/links: |
+    - name: GitHub Repository
+      url: https://github.com/developmentseed/eoapi-k8s
+    - name: Documentation
+      url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+  artifacthub.io/maintainers: |
+    - name: DevelopmentSeed
+      email: eoapi@developmentseed.org
+  artifacthub.io/keywords: |
+    - postgres
+    - database
+    - postgis
+    - pgstac
+    - kubernetes
