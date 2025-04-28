@@ -66,50 +66,36 @@ comment_db: >
   The `postgrescluster` specs below are pass-through values to configure those separate
   charts. For more information read https://access.crunchydata.com/documentation/postgres-operator/latest
 
-# DEPRECATED: this is the backward compatible way we originally did things
-# and a temporary solution for EOEPCA. Since disabled by default most people SHOULD NOT
-# use this option as it won't be talked about explicitly in the docs
-db:
-  enabled: false
-  image:
-    name: ghcr.io/stac-utils/pgstac
-    tag: v0.9.5
-  command:
-    - "postgres"
-    - "-N"
-    - "500"
-  # toggle to true||false if you want the db test fixtures loaded
-  enable_data_fixtures: true
-  storageClassName: ""
-  accessModes:
-    - ReadWriteOnce
-  settings:
-    resources:
-      requests:
-        storage: "100Mi"
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "512m"
-        memory: "1024Mi"
-    secrets:
-      POSTGRES_DB: "postgis"
-      POSTGRES_USER: ""
-      POSTGRES_PASSWORD: ""
-      POSTGRES_PORT: "5432"
-      POSTGRES_HOST: "pgstac"
-      POSTGRES_HOST_READER: "pgstac"
-      POSTGRES_HOST_WRITER: "pgstac"
-      DB_MIN_CONN_SIZE: "1"
-      DB_MAX_CONN_SIZE: "15"
-      # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
-      PGDATA: "/data/pgdata"
-      PGUSER: ""
-      PGPASSWORD: ""
-      PGDATABASE: "postgis"
+# New unified PostgreSQL configuration
+postgresql:
+  # Management type: "postgrescluster" (default), "external-plaintext", or "external-secret"
+  type: "postgrescluster"
+  
+  # Configuration for external PostgreSQL (used when type is "external-plaintext" or "external-secret")
+  external:
+    # Connection information
+    host: ""
+    port: "5432"
+    database: "eoapi"
+    
+    # Credentials configuration (used when type is "external-plaintext")
+    credentials:
+      username: ""
+      password: ""
+    
+    # Secret reference (used when type is "external-secret")
+    existingSecret:
+      name: ""
+      # Key mapping for the secret
+      keys:
+        username: "username"
+        password: "password"
+        # Optional: if these are provided in the secret
+        # Note: These values override external.host, external.port and external.database if defined
+        host: "host"
+        port: "port"
+        database: "database"
 
-# This section is used to configure a postgres cluster using the
-# crunchydata postgres operator included in the `postgrescluster` chart.
 # this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
 postgrescluster:
   enabled: true
@@ -117,6 +103,18 @@ postgrescluster:
   postGISVersion: 3.4
   pgBouncerReplicas: 1
   monitoring: false
+  # Configure Patroni to set proper schema permissions
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - "host all all 0.0.0.0/0 md5"
+        parameters:
+          shared_preload_libraries: pg_stat_statements, auto_explain
+  databaseInitSQL:
+    key: initdb.sql
+    name: initdb
+
   instances:
   - name: eoapi
     replicas: 1
@@ -130,22 +128,21 @@ postgrescluster:
           memory: "3048Mi"
   # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
   users:
-    # `postgres` always is a `SUPERUSER` and cannot be adjusted with `options` flag
+    # `postgres` always has SUPERUSER privileges
     # we use this block here to create secrets for the `postgres` user that we can mount and lookup
     - name: postgres
       databases:
         - eoapi
         - postgres
-    # if you try to grant `options: 'SUPERUSER'` below to your eoapi service user
-    # then they will not be able to connect through the pgbouncer connection pooler, so be aware
+      options: "SUPERUSER"
+    # Grant CREATEROLE privilege to eoapi user so it can create the pgstac_admin role
+    # If you grant SUPERUSER to the eoapi user, it won't be able to connect through pgbouncer
     # https://access.crunchydata.com/documentation/crunchy-postgres-containers/2.4.2/container-specifications/crunchy-pgbouncer/
-    # this user is currently unprivileged and the `pgstacBootstrap` container below will grant privileges
-    # when it boots via the `postgres` superuser above.
-    # see `/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml:initdb-sh-config`
     - name: eoapi
       databases:
         - eoapi
         - postgres
+      options: "CREATEDB CREATEROLE"
       # default `password.type` is ASCII which follows the character set US-ASCII
       # but which can contain characters that `asyncpg` dislikes
       # see https://github.com/MagicStack/asyncpg/issues/1151
@@ -158,14 +155,15 @@ postgrescluster:
 pgstacBootstrap:
   enabled: true
   image:
-    name: ghcr.io/stac-utils/pgstac
+    name: ghcr.io/stac-utils/pgstac-pypgstac
     tag: v0.9.5
-  command:
-    - "sh"
-  args:
-    - "/opt/initdb/run-migrate-and-load.sh"
   settings:
-    labels: {}
+    # General configuration options
+    loadSamples: true      # Set to false to disable sample data loading
+    ### Database connection settings TEMPORARY UNTIL WE HAVE A BETTER SOLUTION
+    ### FOR CONFIGURING THE DB CONNECTION
+    user: eoapi
+    database: eoapi
     resources:
       requests:
         cpu: "512m"
@@ -173,22 +171,10 @@ pgstacBootstrap:
       limits:
         cpu: "512m"
         memory: "1024Mi"
-    # TODO: to be deprecated in favor of `pgstacBootstrap.settings.extraEnvVars`
-    # LOAD_FIXTURES and KEEP_ALIVE should be plain settings if this is a function of the chart
+    # DEPRECATED: Use pgstacBootstrap.settings.loadSamples instead
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
-      # toggle to `true` if you want to keep the job running as db jumpbox
-      KEEP_ALIVE: "false"
-    # extra env vars to set in the pgstacBootstrap pod
-    extraEnvVars: {}
-    # extra env var from mounts to set in the pgstacBootstrap pod
-    extraEnvFrom: []
-    # extra volumes to mount in the pgstacBootstrap pod
-    extraVolumeMounts: []
-    # extra volumes to mount in the pgstacBootstrap pod
-    extraVolumes: []
-    
 
 
 ######################
@@ -367,7 +353,7 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 5.0.1
+    tag: 5.0.2
   command:
     - "uvicorn"
     - "stac_fastapi.pgstac.app:app"
@@ -398,9 +384,6 @@ stac:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
-      DB_MIN_CONN_SIZE: "1"
-    # Additional environment variables
-    extraEnvVars: {}
 
 vector:
   enabled: true

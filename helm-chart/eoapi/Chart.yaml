@@ -12,6 +12,26 @@ description: Create a full Earth Observation API with Metadata, Raster and Vecto
 type: application
 kubeVersion: ">=1.23.0-0"
 
+# Artifacthub metadata
+annotations:
+  artifacthub.io/changes: |
+    - Adds integration with Artifacthub.io
+  artifacthub.io/links: |
+    - name: GitHub Repository
+      url: https://github.com/developmentseed/eoapi-k8s
+    - name: Documentation
+      url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+  artifacthub.io/maintainers: |
+    - name: DevelopmentSeed
+      email: eoapi@developmentseed.org
+  artifacthub.io/keywords: |
+    - earth observation
+    - geospatial
+    - kubernetes
+    - stac
+    - raster
+    - vector
+
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
