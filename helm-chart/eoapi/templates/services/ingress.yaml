@@ -1,0 +1,59 @@
+{{- if .Values.ingress.enabled }}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion }}
+apiVersion: networking.k8s.io/v1beta1
+{{- else }}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: service-ingress-shared-{{ .Release.Name }}
+  labels:
+    app: sharedingress
+  annotations:
+    {{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+    {{- end }}
+    {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.certManager .Values.ingress.tls.certManagerIssuer }}
+    cert-manager.io/issuer: {{ .Values.ingress.tls.certManagerIssuer }}
+    {{- end }}
+spec:
+  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - http:
+        paths:
+          {{- range $serviceName, $v := .Values }}
+          {{- if has $serviceName $.Values.apiServices }}
+          {{- if (index $v "enabled") }}
+          - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
+            path: "/{{ $serviceName }}{{ $.Values.ingress.pathSuffix | default "" }}"
+            backend:
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if and (not $.Values.testing) (.Values.docServer.enabled) }}
+          - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
+            path: "/{{ $.Values.ingress.rootPath | default "" }}"
+            backend:
+              service:
+                name: doc-server-{{ $.Release.Name }}
+                port:
+                  number: 80
+          {{- end }}
+      {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+  {{- if and .Values.ingress.host .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+{{- end }}
