@@ -81,6 +81,7 @@ postgresql:
         username: "username"
         password: "password"
         # Optional: if these are provided in the secret
+        # Note: These values override external.host, external.port and external.database if defined
         host: "host"
         port: "port"
         database: "database"

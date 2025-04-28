@@ -345,30 +345,6 @@ Validate PostgreSQL configuration
 {{- end }}
 
 {{/*
-Map legacy configuration to new postgresql configuration
-*/}}
-{{- define "eoapi.mapLegacyPostgresql" -}}
-{{- $postgresql := dict }}
-{{- if .Values.postgrescluster.enabled }}
-  {{- $_ := set $postgresql "type" "postgrescluster" }}
-{{- else if .Values.db.enabled }}
-  {{- $_ := set $postgresql "type" "external-plaintext" }}
-  {{- $external := dict }}
-  {{- $_ := set $external "host" .Values.db.settings.secrets.POSTGRES_HOST }}
-  {{- $_ := set $external "port" .Values.db.settings.secrets.POSTGRES_PORT }}
-  {{- $_ := set $external "database" .Values.db.settings.secrets.POSTGRES_DB }}
-  {{- $credentials := dict }}
-  {{- $_ := set $credentials "username" .Values.db.settings.secrets.POSTGRES_USER }}
-  {{- $_ := set $credentials "password" .Values.db.settings.secrets.POSTGRES_PASSWORD }}
-  {{- $_ := set $external "credentials" $credentials }}
-  {{- $_ := set $postgresql "external" $external }}
-{{- else }}
-  {{- $_ := set $postgresql "type" "postgrescluster" }}
-{{- end }}
-{{- $postgresql | toYaml }}
-{{- end }}
-
-{{/*
 values.schema.json doesn't play nice combined value checks
 so we use this helper function to check autoscaling rules
 */}}
