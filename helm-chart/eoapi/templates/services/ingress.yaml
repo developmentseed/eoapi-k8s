@@ -12,6 +12,10 @@ metadata:
   labels:
     app: sharedingress
   annotations:
+    {{- if eq .Values.ingress.className "traefik" }}
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: path-rewrite-middleware-{{ $.Release.Name }}@kubernetescrd
+    {{- end }}
     {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
     {{- end }}
