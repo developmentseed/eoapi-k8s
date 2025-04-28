@@ -4,8 +4,6 @@ ingress:
   enabled: true
   className: "traefik"
   pathType: "Prefix"
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 pgstacBootstrap:
   enabled: true
   settings:

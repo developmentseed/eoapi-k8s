@@ -42,8 +42,7 @@ tests:
       ingress.pathType: "Prefix"
       ingress.annotations:
         traefik.ingress.kubernetes.io/router.entrypoints: web
-        traefik.ingress.kubernetes.io/router.pathtransform.regex: "^/([^/]+)(.*)"
-        traefik.ingress.kubernetes.io/router.pathtransform.replacement: "/$1$2"
+        traefik.ingress.kubernetes.io/router.middlewares: path-rewrite-middleware-RELEASE-NAME@kubernetescrd
       testing: true
       raster.enabled: false
       stac.enabled: true
@@ -62,8 +61,7 @@ tests:
           path: metadata.annotations
           value:
             traefik.ingress.kubernetes.io/router.entrypoints: web
-            traefik.ingress.kubernetes.io/router.pathtransform.regex: "^/([^/]+)(.*)"
-            traefik.ingress.kubernetes.io/router.pathtransform.replacement: "/$1$2"
+            traefik.ingress.kubernetes.io/router.middlewares: path-rewrite-middleware-RELEASE-NAME@kubernetescrd
       - equal:
           path: spec.ingressClassName
           value: "traefik"
@@ -74,8 +72,7 @@ tests:
       ingress.pathType: "Prefix"
       ingress.annotations:
         traefik.ingress.kubernetes.io/router.entrypoints: web
-        traefik.ingress.kubernetes.io/router.pathtransform.regex: "^/([^/]+)(.*)"
-        traefik.ingress.kubernetes.io/router.pathtransform.replacement: "/$1$2"
+        traefik.ingress.kubernetes.io/router.middlewares: path-rewrite-middleware-RELEASE-NAME@kubernetescrd
       testing: false
       raster.enabled: false
       stac.enabled: false
