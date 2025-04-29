@@ -12,6 +12,7 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       gitSha: "ABC123"
+    template: templates/services/stac/deployment.yaml
     asserts:
       - isKind:
           of: Deployment
@@ -43,6 +44,7 @@ tests:
       stac.enabled: true
       vector.enabled: false
       multidim.enabled: false
+    template: templates/services/stac/configmap.yaml
     asserts:
       - isKind:
           of: ConfigMap
