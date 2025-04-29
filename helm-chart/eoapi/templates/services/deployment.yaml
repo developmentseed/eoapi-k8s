@@ -30,8 +30,10 @@ spec:
     metadata:
       labels:
         app: {{ $serviceName }}-{{ $.Release.Name }}
+        {{- with index $v "settings" "labels" }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
-      serviceAccountName: eoapi-sa-{{ $.Release.Name }}
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
@@ -88,6 +90,15 @@ spec:
             name: {{ $secret }}
         {{- end }}
         {{- end }}
+        {{- with index $v "settings" "extraVolumeMounts" }}
+        volumeMounts:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      volumes:
+        {{- with index $v "settings" "extraVolumes" }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      serviceAccountName: {{ include "eoapi.serviceAccountName" $ }}
       {{- with index $v "settings" "affinity" }}
       affinity:
         {{- toYaml . | nindent 8 }}
