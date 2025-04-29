@@ -59,6 +59,7 @@ tests:
           path: metadata.annotations
           value:
             traefik.ingress.kubernetes.io/router.entrypoints: web
+            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-strip-prefix-middleware-RELEASE-NAME@kubernetescrd
       - equal:
           path: spec.ingressClassName
           value: "traefik"
