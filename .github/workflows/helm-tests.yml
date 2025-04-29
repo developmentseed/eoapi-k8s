@@ -196,10 +196,16 @@ jobs:
           kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
           kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.io "$name" -n "$namespace"; done
 
-          PUBLICIP='http://'$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          # Get the IP address of the Traefik service
+          PUBLICIP_VALUE=$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          PUBLICIP='http://'$PUBLICIP_VALUE
           export VECTOR_ENDPOINT=$PUBLICIP/vector
           export STAC_ENDPOINT=$PUBLICIP/stac
           export RASTER_ENDPOINT=$PUBLICIP/raster
+
+          # Add entry to /etc/hosts for eoapi.local
+          echo "Adding eoapi.local to /etc/hosts with IP: $PUBLICIP_VALUE"
+          echo "$PUBLICIP_VALUE eoapi.local" | sudo tee -a /etc/hosts
 
           echo '#################################'
           echo $VECTOR_ENDPOINT

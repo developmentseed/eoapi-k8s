@@ -49,28 +49,44 @@ For NGINX, use the following configuration:
 ingress:
   enabled: true
   className: "nginx"
-  pathType: "ImplementationSpecific"
-  pathSuffix: "(/|$)(.*)"  # Required for NGINX path rewriting
+  pathType: "Prefix"
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/enable-access-log: "true"
 ```
 
 ### Traefik Ingress Controller
 
-For Traefik, use the following configuration:
+When using Traefik, the system automatically includes the Traefik middleware to strip prefixes (e.g., `/stac`, `/raster`) from requests before forwarding them to services. This is handled by the `traefik-middleware.yaml` template.
+
+For basic Traefik configuration:
 
 ```yaml
 ingress:
   enabled: true
   className: "traefik"
   pathType: "Prefix"
+  # When using TLS, setting host is required to avoid "No domain found" warnings
+  host: "example.domain.com"  # Required to work properly with TLS
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.pathtransform.regex: "^/([^/]+)(.*)"
-    traefik.ingress.kubernetes.io/router.pathtransform.replacement: "/$1$2"
+```
+
+For Traefik with TLS:
+
+```yaml
+ingress:
+  enabled: true
+  className: "traefik"
+  pathType: "Prefix"
+  # Host is required when using TLS with Traefik
+  host: "example.domain.com"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  tls:
+    enabled: true
+    secretName: eoapi-tls
 ```
 
 ## Migration
@@ -79,7 +95,7 @@ If you're migrating from a previous version, follow these guidelines:
 
 1. Update your values to use the new unified configuration
 2. Ensure your ingress controller-specific annotations are set correctly
-3. Set the appropriate `pathType` and `pathSuffix` for your controller
+3. Set the appropriate `pathType` for your controller
 4. Test the configuration before deploying to production
 
 ## Note for Traefik Users

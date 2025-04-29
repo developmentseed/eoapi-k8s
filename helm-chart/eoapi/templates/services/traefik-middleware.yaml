@@ -2,10 +2,16 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: path-rewrite-middleware-{{ $.Release.Name }}
+  name: strip-prefix-middleware-{{ $.Release.Name }}
   namespace: {{ $.Release.Namespace }}
 spec:
-  replacePathRegex:
-    regex: "^/(raster|vector|stac|multidim)(/|$)(.*)"
-    replacement: "$1/$3"
+  stripPrefix:
+    prefixes:
+      {{- range $serviceName, $v := .Values }}
+      {{- if has $serviceName $.Values.apiServices }}
+      {{- if (index $v "enabled") }}
+      - /{{ $serviceName }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
 {{- end }}

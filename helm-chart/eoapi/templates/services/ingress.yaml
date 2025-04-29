@@ -12,12 +12,11 @@ metadata:
   labels:
     app: sharedingress
   annotations:
-    {{- if eq .Values.ingress.className "traefik" }}
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: path-rewrite-middleware-{{ $.Release.Name }}@kubernetescrd
-    {{- end }}
     {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
+    {{- end }}
+    {{- if eq .Values.ingress.className "traefik" }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-strip-prefix-middleware-{{ $.Release.Name }}@kubernetescrd
     {{- end }}
     {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.certManager .Values.ingress.tls.certManagerIssuer }}
     cert-manager.io/issuer: {{ .Values.ingress.tls.certManagerIssuer }}
@@ -27,7 +26,10 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
   rules:
-    - http:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+      http:
         paths:
           {{- range $serviceName, $v := .Values }}
           {{- if has $serviceName $.Values.apiServices }}
@@ -51,9 +53,6 @@ spec:
                 port:
                   number: 80
           {{- end }}
-      {{- if .Values.ingress.host }}
-      host: {{ .Values.ingress.host }}
-      {{- end }}
   {{- if and .Values.ingress.host .Values.ingress.tls.enabled }}
   tls:
     - hosts:

@@ -32,14 +32,38 @@ spec:
         app: {{ $serviceName }}-{{ $.Release.Name }}
     spec:
       serviceAccountName: eoapi-sa-{{ $.Release.Name }}
+      {{- if $.Values.pgstacBootstrap.enabled }}
       initContainers:
-        {{- include "eoapi.pgstacInitContainer" $ | nindent 8 }}
+      - name: wait-for-pgstac-jobs
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for pgstac-migrate job to complete..."
+          until kubectl get job pgstac-migrate -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' | grep -q "True"; do
+            echo "pgstac-migrate job not complete yet, waiting..."
+            sleep 5
+          done
+          echo "pgstac-migrate job completed successfully."
+          
+          {{- if $.Values.pgstacBootstrap.settings.loadSamples }}
+          echo "Waiting for pgstac-load-samples job to complete..."
+          until kubectl get job pgstac-load-samples -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' | grep -q "True"; do
+            echo "pgstac-load-samples job not complete yet, waiting..."
+            sleep 5
+          done
+          echo "pgstac-load-samples job completed successfully."
+          {{- end }}
+      {{- end }}
       containers:
       - image: {{ index $v "image" "name" }}:{{ index $v "image" "tag" }}
         name: {{ $serviceName }}
         command:
           {{- toYaml (index $v "command") | nindent 10 }}
           {{- if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik"))) }}
+          - "--proxy-headers"
+          - "--forwarded-allow-ips=*"
           - "--root-path=/{{ $serviceName }}"
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
