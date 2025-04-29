@@ -15,6 +15,7 @@ metadata:
     {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
     {{- end }}
+    # Temporary annotations for Traefik until uvicorn support real prefix in ASGI: https://github.com/encode/uvicorn/discussions/2490
     {{- if eq .Values.ingress.className "traefik" }}
     traefik.ingress.kubernetes.io/router.entrypoints: web
     traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-strip-prefix-middleware-{{ $.Release.Name }}@kubernetescrd
