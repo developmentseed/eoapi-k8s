@@ -1,6 +1,9 @@
 suite: service defaults configmap
 templates:
-  - templates/services/configmap.yaml
+  - templates/services/raster/configmap.yaml
+  - templates/services/stac/configmap.yaml
+  - templates/services/vector/configmap.yaml
+  - templates/services/multidim/configmap.yaml
 tests:
   - it: "vector configmap defaults"
     set:

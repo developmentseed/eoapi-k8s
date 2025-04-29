@@ -1,6 +1,9 @@
 suite: autoscaling feedback when className is not nginx
 templates:
-  - templates/services/hpa.yaml
+  - templates/services/raster/hpa.yaml
+  - templates/services/stac/hpa.yaml
+  - templates/services/vector/hpa.yaml
+  - templates/services/multidim/hpa.yaml
 tests:
   - it: "vector hpa fail for requestRate"
     set:
@@ -13,4 +16,3 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric
-

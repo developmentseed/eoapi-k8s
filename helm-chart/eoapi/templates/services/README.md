@@ -1,54 +1,53 @@
-# Helm Chart Structure Refactoring
+# Service-Specific Templates
 
-This directory contains the refactored Helm chart templates for the EOAPI services.
-
-## Overview
-
-The templates have been refactored from a loop-based approach to a service-specific approach where each service has its own dedicated template files. This improves readability, maintainability, and flexibility.
+This directory contains service-specific templates organized to improve readability, maintainability, and flexibility.
 
 ## Directory Structure
 
 ```
 services/
-├── _common.tpl                # Limited common helper functions
-├── ingress.yaml               # Single ingress for all services
-├── traefik-middleware.yaml    # Traefik middleware for path stripping
-├── raster/                    # One directory per service
+├── _common.tpl            # Limited common helper functions
+├── ingress.yaml           # Single shared ingress for all services
+├── raster/                # Raster service templates
+│   ├── deployment.yaml    # Deployment definition
+│   ├── service.yaml       # Service definition
+│   ├── configmap.yaml     # ConfigMap definition
+│   └── hpa.yaml           # HorizontalPodAutoscaler definition
+├── stac/                  # STAC service templates
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── configmap.yaml
 │   └── hpa.yaml
-├── stac/
+├── vector/                # Vector service templates
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── configmap.yaml
 │   └── hpa.yaml
-├── vector/
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── configmap.yaml
-│   └── hpa.yaml
-└── multidim/
+└── multidim/             # Multidimensional service templates
     ├── deployment.yaml
     ├── service.yaml
     ├── configmap.yaml
     └── hpa.yaml
 ```
 
-## Key Improvements
+## Common Helpers
 
-1. **Enhanced Readability**: Each service's configuration is explicitly defined in its own files, making it easier to understand.
-2. **Improved Debugging**: Errors are isolated to specific service files, making troubleshooting simpler.
-3. **Lower Risk Changes**: Changes intended for one service are contained within its files, reducing the risk of affecting other services.
-4. **True Flexibility**: Each service can evolve independently, and new services can be added by copying and modifying existing patterns.
-5. **Limited Helper Functions**: Common logic is extracted into the `_common.tpl` file but only for the most mechanical, repetitive parts.
+The `_common.tpl` file provides limited helper functions for truly common elements:
 
-## How to Use
+- `eoapi.mountServiceSecrets`: For mounting service secrets
+- `eoapi.commonEnvVars`: For common environment variables like SERVICE_NAME, RELEASE_NAME, GIT_SHA
+- `eoapi.pgstacInitContainers`: For init containers that wait for pgstac jobs
 
-The chart maintains the same values.yaml structure but templates are now organized by service. The original looping templates have been preserved with `.old` extensions for reference.
+For database environment variables, we leverage the existing `eoapi.postgresqlEnv` helper from the main `_helpers.tpl` file.
 
-For adding a new service:
-1. Create a new directory with the service name
-2. Copy and adapt the deployment, service, configmap, and hpa templates
-3. Add an entry to ingress.yaml and traefik-middleware.yaml if needed
-4. Update values.yaml with the new service configuration
+## Refactoring Benefits
+
+1. **Improved Readability**: Service configurations are explicit and clearly visible
+2. **Better Maintainability**: Changes to one service don't affect others
+3. **Enhanced Flexibility**: Each service can evolve independently
+4. **Easier Debugging**: Errors are isolated to specific service files
+5. **Safer Changes**: Template modifications can be tested on individual services
+
+## Usage
+
+No changes to `values.yaml` structure were required. The chart maintains full backward compatibility with existing deployments.

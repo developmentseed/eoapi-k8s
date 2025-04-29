@@ -1,6 +1,9 @@
 suite: service defaults deployment
 templates:
-  - templates/services/deployment.yaml
+  - templates/services/raster/deployment.yaml
+  - templates/services/stac/deployment.yaml
+  - templates/services/vector/deployment.yaml
+  - templates/services/multidim/deployment.yaml
 tests:
   - it: "vector deploy defaults"
     set:
