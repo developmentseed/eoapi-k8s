@@ -16,6 +16,7 @@ metadata:
 {{ toYaml .Values.ingress.annotations | indent 4 }}
     {{- end }}
     {{- if eq .Values.ingress.className "traefik" }}
+    traefik.ingress.kubernetes.io/router.entrypoints: web
     traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-strip-prefix-middleware-{{ $.Release.Name }}@kubernetescrd
     {{- end }}
     {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.certManager .Values.ingress.tls.certManagerIssuer }}
