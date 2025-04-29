@@ -15,7 +15,7 @@ data:
   pgstac-settings.sql: |
     {{ $.Files.Get "initdb-data/settings/pgstac-settings.sql" | nindent 4 }}
 ---
-{{- if or .Values.pgstacBootstrap.settings.loadSamples (eq .Values.pgstacBootstrap.settings.envVars.LOAD_FIXTURES "true") }}
+{{- if .Values.pgstacBootstrap.settings.loadSamples }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
