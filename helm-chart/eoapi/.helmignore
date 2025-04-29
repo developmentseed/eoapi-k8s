@@ -22,3 +22,5 @@
 *.tmproj
 .vscode/
 tests/
+# Ignore all README.md in all subdirectories 
+README.md

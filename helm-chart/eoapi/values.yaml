@@ -262,8 +262,6 @@ raster:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
-    # Additional environment variables
-    extraEnvVars: {}
 
 multidim:
   enabled: false # disabled by default
@@ -333,8 +331,6 @@ multidim:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
-    # Additional environment variables
-    extraEnvVars: {}
 
 stac:
   enabled: true
@@ -454,8 +450,6 @@ vector:
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
       WEB_CONCURRENCY: "5"
-    # Additional environment variables
-    extraEnvVars: {}
 
 docServer:
   enabled: true

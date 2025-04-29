@@ -1,0 +1,53 @@
+{{- if and .Values.multidim.enabled .Values.multidim.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: multidim-hpa-{{ .Release.Name }}
+  labels:
+    app: multidim-{{ .Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: multidim-{{ .Release.Name }}
+  minReplicas: {{ .Values.multidim.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.multidim.autoscaling.maxReplicas }}
+  behavior:
+    {{- with .Values.multidim.autoscaling.behaviour }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .scaleDown.stabilizationWindowSeconds }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .scaleUp.stabilizationWindowSeconds }}
+    {{- end }}
+  metrics:
+    {{- if eq .Values.multidim.autoscaling.type "cpu" }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.multidim.autoscaling.targets.cpu }}
+    {{- else if eq .Values.multidim.autoscaling.type "requestRate" }}
+    - type: Pods
+      pods:
+        metric:
+          name: nginx_ingress_controller_requests
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.multidim.autoscaling.targets.requestRate }}
+    {{- else if eq .Values.multidim.autoscaling.type "both" }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.multidim.autoscaling.targets.cpu }}
+    - type: Pods
+      pods:
+        metric:
+          name: nginx_ingress_controller_requests
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.multidim.autoscaling.targets.requestRate }}
+    {{- end }}
+{{- end }}

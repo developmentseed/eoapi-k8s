@@ -1,0 +1,10 @@
+{{- if .Values.vector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-envvar-configmap-{{ .Release.Name }}
+data:
+  {{- range $envKey, $envValue := .Values.vector.settings.envVars }}
+  {{ upper $envKey }}: {{ $envValue | quote }}
+  {{- end }}
+{{- end }}

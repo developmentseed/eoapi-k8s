@@ -8,9 +8,9 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: service-ingress-shared-{{ .Release.Name }}
+  name: eoapi-ingress-{{ .Release.Name }}
   labels:
-    app: sharedingress
+    app: eoapi-{{ .Release.Name }}
   annotations:
     {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
@@ -33,25 +33,52 @@ spec:
       {{- end }}
       http:
         paths:
-          {{- range $serviceName, $v := .Values }}
-          {{- if has $serviceName $.Values.apiServices }}
-          {{- if (index $v "enabled") }}
-          - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
-            path: "/{{ $serviceName }}{{ $.Values.ingress.pathSuffix | default "" }}"
+          {{- if .Values.raster.enabled }}
+          - pathType: {{ .Values.ingress.pathType }}
+            path: /raster{{ .Values.ingress.pathSuffix }}
             backend:
               service:
-                name: {{ $serviceName }}
+                name: raster
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ .Values.service.port }}
           {{- end }}
+          
+          {{- if .Values.stac.enabled }}
+          - pathType: {{ .Values.ingress.pathType }}
+            path: /stac{{ .Values.ingress.pathSuffix }}
+            backend:
+              service:
+                name: stac
+                port:
+                  number: {{ .Values.service.port }}
           {{- end }}
+          
+          {{- if .Values.vector.enabled }}
+          - pathType: {{ .Values.ingress.pathType }}
+            path: /vector{{ .Values.ingress.pathSuffix }}
+            backend:
+              service:
+                name: vector
+                port:
+                  number: {{ .Values.service.port }}
           {{- end }}
-          {{- if and (not $.Values.testing) (.Values.docServer.enabled) }}
+          
+          {{- if .Values.multidim.enabled }}
+          - pathType: {{ .Values.ingress.pathType }}
+            path: /multidim{{ .Values.ingress.pathSuffix }}
+            backend:
+              service:
+                name: multidim
+                port:
+                  number: {{ .Values.service.port }}
+          {{- end }}
+          
+          {{- if .Values.docServer.enabled }}
           - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
             backend:
               service:
-                name: doc-server-{{ $.Release.Name }}
+                name: eoapi-doc-server
                 port:
                   number: 80
           {{- end }}

@@ -1,0 +1,53 @@
+{{- if and .Values.vector.enabled .Values.vector.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vector-hpa-{{ .Release.Name }}
+  labels:
+    app: vector-{{ .Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: vector-{{ .Release.Name }}
+  minReplicas: {{ .Values.vector.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.vector.autoscaling.maxReplicas }}
+  behavior:
+    {{- with .Values.vector.autoscaling.behaviour }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .scaleDown.stabilizationWindowSeconds }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .scaleUp.stabilizationWindowSeconds }}
+    {{- end }}
+  metrics:
+    {{- if eq .Values.vector.autoscaling.type "cpu" }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.vector.autoscaling.targets.cpu }}
+    {{- else if eq .Values.vector.autoscaling.type "requestRate" }}
+    - type: Pods
+      pods:
+        metric:
+          name: nginx_ingress_controller_requests
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.vector.autoscaling.targets.requestRate }}
+    {{- else if eq .Values.vector.autoscaling.type "both" }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.vector.autoscaling.targets.cpu }}
+    - type: Pods
+      pods:
+        metric:
+          name: nginx_ingress_controller_requests
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.vector.autoscaling.targets.requestRate }}
+    {{- end }}
+{{- end }}
