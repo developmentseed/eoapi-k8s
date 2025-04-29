@@ -64,7 +64,7 @@ comment_db: >
   The `postgrescluster` specs below are pass-through values to configure those separate
   charts. For more information read https://access.crunchydata.com/documentation/postgres-operator/latest
 
-# New unified PostgreSQL configuration
+# unified PostgreSQL configuration
 postgresql:
   # Management type: "postgrescluster" (default), "external-plaintext", or "external-secret"
   type: "postgrescluster"
