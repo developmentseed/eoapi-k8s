@@ -1,4 +1,4 @@
-{{- if (and (not .Values.testing) (.Values.docServer.enabled))}}
+{{- if .Values.docServer.enabled}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
