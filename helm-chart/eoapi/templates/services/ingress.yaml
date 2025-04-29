@@ -33,7 +33,7 @@ spec:
       {{- end }}
       http:
         paths:
-          {{- if .Values.raster.enabled }}
+          {{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
           - pathType: {{ .Values.ingress.pathType }}
             path: /raster{{ .Values.ingress.pathSuffix }}
             backend:
@@ -43,7 +43,7 @@ spec:
                   number: {{ .Values.service.port }}
           {{- end }}
           
-          {{- if .Values.stac.enabled }}
+          {{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
           - pathType: {{ .Values.ingress.pathType }}
             path: /stac{{ .Values.ingress.pathSuffix }}
             backend:
@@ -53,7 +53,7 @@ spec:
                   number: {{ .Values.service.port }}
           {{- end }}
           
-          {{- if .Values.vector.enabled }}
+          {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
           - pathType: {{ .Values.ingress.pathType }}
             path: /vector{{ .Values.ingress.pathSuffix }}
             backend:
@@ -63,7 +63,7 @@ spec:
                   number: {{ .Values.service.port }}
           {{- end }}
           
-          {{- if .Values.multidim.enabled }}
+          {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
           - pathType: {{ .Values.ingress.pathType }}
             path: /multidim{{ .Values.ingress.pathSuffix }}
             backend:

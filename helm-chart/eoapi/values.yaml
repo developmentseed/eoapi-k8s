@@ -196,6 +196,8 @@ apiServices:
 
 raster:
   enabled: true
+  ingress:
+    enabled: true  # Control ingress specifically for raster service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -265,6 +267,8 @@ raster:
 
 multidim:
   enabled: false # disabled by default
+  ingress:
+    enabled: true  # Control ingress specifically for multidim service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -334,6 +338,8 @@ multidim:
 
 stac:
   enabled: true
+  ingress:
+    enabled: true  # Control ingress specifically for stac service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -391,6 +397,8 @@ stac:
 
 vector:
   enabled: true
+  ingress:
+    enabled: true  # Control ingress specifically for vector service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
