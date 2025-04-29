@@ -1,0 +1,54 @@
+suite: stac service tests
+templates:
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+  - templates/services/stac/service.yaml
+  - templates/services/stac/hpa.yaml
+tests:
+  - it: "stac deployment defaults"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      gitSha: "ABC123"
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: metadata.name
+          pattern: ^stac-RELEASE-NAME$
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "768m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "256m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "1024Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "1024Mi"
+      - equal:
+          path: metadata.labels.gitsha
+          value: "ABC123"
+          
+  - it: "stac configmap defaults"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: metadata.name
+          pattern: ^stac-envvar-configmap-RELEASE-NAME$
+      - equal:
+          path: data.WEB_CONCURRENCY
+          value: "5"

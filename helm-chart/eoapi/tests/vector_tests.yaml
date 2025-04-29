@@ -1,0 +1,66 @@
+suite: vector service tests
+templates:
+  - templates/services/vector/deployment.yaml
+  - templates/services/vector/configmap.yaml
+  - templates/services/vector/service.yaml
+  - templates/services/vector/hpa.yaml
+tests:
+  - it: "vector deployment defaults"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: true
+      multidim.enabled: false
+      gitSha: "ABC123"
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: metadata.name
+          pattern: ^vector-RELEASE-NAME$
+      - equal:
+          path: spec.strategy.type
+          value: "RollingUpdate"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "768m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "256m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "1024Mi"
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: "256Mi"
+      - equal:
+          path: metadata.labels.gitsha
+          value: "ABC123"
+          
+  - it: "vector configmap defaults"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: true
+      multidim.enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: metadata.name
+          pattern: ^vector-envvar-configmap-RELEASE-NAME$
+      - equal:
+          path: data.TIPG_CATALOG_TTL
+          value: "300"
+          
+  - it: "vector hpa fail for requestRate"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: true
+      ingress.className: "testing123"
+      vector.autoscaling.enabled: true
+      vector.autoscaling.type: "requestRate"
+    asserts:
+      - failedTemplate:
+          errorMessage: When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric
