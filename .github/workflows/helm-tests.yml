@@ -198,7 +198,7 @@ jobs:
 
           # Get the IP address of the Traefik service
           PUBLICIP_VALUE=$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          PUBLICIP='http://'$PUBLICIP_VALUE
+          PUBLICIP=http://eoapi.local
           export VECTOR_ENDPOINT=$PUBLICIP/vector
           export STAC_ENDPOINT=$PUBLICIP/stac
           export RASTER_ENDPOINT=$PUBLICIP/raster
