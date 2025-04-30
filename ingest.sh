@@ -17,7 +17,7 @@ else
 fi
 
 # Define namespaces
-NAMESPACES=("default" "eoapi", "data-access")
+NAMESPACES=("default" "eoapi" "data-access")
 EOAPI_POD_RASTER=""
 FOUND_NAMESPACE=""
 

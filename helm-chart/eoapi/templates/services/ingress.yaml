@@ -38,7 +38,7 @@ spec:
             path: /raster{{ .Values.ingress.pathSuffix }}
             backend:
               service:
-                name: raster
+                name: raster-{{ $.Release.Name }}
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -48,7 +48,7 @@ spec:
             path: /stac{{ .Values.ingress.pathSuffix }}
             backend:
               service:
-                name: stac
+                name: stac-{{ $.Release.Name }}
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -58,7 +58,7 @@ spec:
             path: /vector{{ .Values.ingress.pathSuffix }}
             backend:
               service:
-                name: vector
+                name: vector-{{ $.Release.Name }}
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -68,9 +68,20 @@ spec:
             path: /multidim{{ .Values.ingress.pathSuffix }}
             backend:
               service:
-                name: multidim
+                name: multidim-{{ $.Release.Name }}
                 port:
                   number: {{ .Values.service.port }}
+          {{- end }}
+          
+          {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
+          # We need a separate path because browser does not play well with nginx rewrite_path directive
+          - pathType: {{ .Values.ingress.pathType }}
+            path: "/browser"
+            backend:
+              service:
+                name: browser-{{ $.Release.Name }}
+                port:
+                  number: 8080
           {{- end }}
           
           {{- if .Values.docServer.enabled }}
@@ -78,7 +89,7 @@ spec:
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
             backend:
               service:
-                name: eoapi-doc-server
+                name: doc-server-{{ $.Release.Name }}
                 port:
                   number: 80
           {{- end }}
