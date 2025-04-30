@@ -1,0 +1,94 @@
+suite: unified ingress tests
+templates:
+  - templates/services/ingress.yaml
+tests:
+  - it: "vector ingress with nginx controller"
+    set:
+      ingress.className: "nginx"
+      ingress.pathType: "ImplementationSpecific"
+      ingress.pathSuffix: "(/|$)(.*)"
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/enable-access-log: "true"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: true
+      multidim.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/vector(/|$)(.*)"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "ImplementationSpecific"
+      - equal:
+          path: metadata.annotations
+          value:
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
+            nginx.ingress.kubernetes.io/use-regex: "true"
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/enable-cors: "true"
+      - equal:
+          path: spec.ingressClassName
+          value: "nginx"
+
+  - it: "stac ingress with traefik controller"
+    set:
+      ingress.className: "traefik"
+      ingress.pathType: "Prefix"
+      ingress.host: "eoapi.local"
+      testing: true
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/stac"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Prefix"
+      - equal:
+          path: metadata.annotations
+          value:
+            traefik.ingress.kubernetes.io/router.entrypoints: web
+            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-strip-prefix-middleware-RELEASE-NAME@kubernetescrd
+      - equal:
+          path: spec.ingressClassName
+          value: "traefik"
+      - equal:
+          path: spec.rules[0].host
+          value: "eoapi.local"
+      
+  - it: "multidim ingress in production (non-testing) with traefik controller"
+    set:
+      ingress.className: "traefik"
+      ingress.pathType: "Prefix"
+      ingress.host: "eoapi.local"
+      testing: false
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/multidim"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Prefix"
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: "/"
+      - equal:
+          path: spec.rules[0].http.paths[1].backend.service.name
+          value: doc-server-RELEASE-NAME

@@ -1,8 +1,8 @@
-{{- if (and (.Values.ingress.className) (eq .Values.ingress.className "nginx") (not .Values.testing)  (.Values.docServer.enabled))}}
+{{- if .Values.docServer.enabled}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-root-html-{{ .Release.Name }}
+  name: doc-server-html-{{ .Release.Name }}
 data:
   index.html: |
     <html>
@@ -11,7 +11,7 @@ data:
     </head>
     <body>
         <h2>This is the root path /</h2>
-        <p>Your service configuration is using ingress-nginx with path rewrites. So use these paths for each service:</p>
+        <p>Your service configuration is using path rewrites. So use these paths for each service:</p>
         <ul>
           <li><a href="/raster" target="_blank" rel="noopener noreferrer">/raster</a></li>
           <li><a href="/vector" target="_blank" rel="noopener noreferrer">/vector</a></li>
@@ -48,7 +48,7 @@ spec:
       volumes:
       - name: doc-html-{{ .Release.Name }}
         configMap:
-          name: nginx-root-html-{{ .Release.Name }}
+          name: doc-server-html-{{ .Release.Name }}
       {{- if .Values.docServer.settings }}
       {{- with .Values.docServer.settings.affinity }}
       affinity:

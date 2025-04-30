@@ -39,11 +39,21 @@ service:
   port: 8080
 
 ingress:
-  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP`
-  # and a single Load Balancer and path rewrites for /vector, /stac, /raster
+  # Unified ingress configuration for both nginx and traefik
   enabled: true
+  # ingressClassName: "nginx" or "traefik"
   className: "nginx"
+  # Path configuration
+  pathType: "Prefix"  # Can be "Prefix" or "ImplementationSpecific" based on controller
+  # NOTE: When using nginx ingress controller with regex in pathSuffix,
+  # you must set pathType to "ImplementationSpecific". See issue #189 for more context.
+  pathSuffix: ""      # Add a suffix to service paths (e.g. "(/|$)(.*)" for nginx regex)
+  rootPath: ""        # Root path for doc server
+  # Host configuration
   host: ""
+  # Custom annotations to add to the ingress
+  annotations: {}
+  # TLS configuration
   tls:
     enabled: false
     secretName: eoapi-tls

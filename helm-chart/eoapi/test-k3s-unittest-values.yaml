@@ -3,8 +3,8 @@ testing: true
 ingress:
   enabled: true
   className: "traefik"
-postgrescluster:
-  enabled: true
+  pathType: "Prefix"
+  host: "eoapi.local"  # Adding a host value to avoid "No domain found" warnings with Traefik
 pgstacBootstrap:
   enabled: true
   settings:
