@@ -14,7 +14,6 @@ comment_install: >
 # the correct updated value otherwise it's defaulted
 gitSha: "gitshaABC123"
 
-
 ######################
 # TESTING
 ######################
@@ -30,7 +29,6 @@ serviceAccount:
   automount: true
   annotations: {}
   labels: {}
-
 
 ######################
 # SERVICE & INGRESS
@@ -60,7 +58,6 @@ ingress:
     certManager: false
     certManagerIssuer: letsencrypt-prod
     certManagerEmail: ""
-
 
 ######################
 # DATABASE
@@ -185,7 +182,6 @@ pgstacBootstrap:
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
-
 
 ######################
 # API SERVICES
@@ -469,8 +465,8 @@ browser:
   enabled: true
   replicaCount: 1
   image:
-    # we use a custom image that overrides pathPrefix value
-    name: ghcr.io/radiantearth/stac-browser
+    # we use a custom image with pathPrefix built into it
+    name: ghcr.io/developmentseed/eoapi-k8s-stac-browser
     tag: 3.3.4
   ingress:
     enabled: true  # Control ingress specifically for browser service
