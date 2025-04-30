@@ -16,6 +16,7 @@ tests:
       stac.enabled: false
       vector.enabled: true
       multidim.enabled: false
+      browser.enabled: false
     asserts:
       - isKind:
           of: Ingress
@@ -46,6 +47,7 @@ tests:
       stac.enabled: true
       vector.enabled: false
       multidim.enabled: false
+      browser.enabled: false
     asserts:
       - isKind:
           of: Ingress
@@ -77,6 +79,7 @@ tests:
       stac.enabled: false
       vector.enabled: false
       multidim.enabled: true
+      browser.enabled: false
     asserts:
       - isKind:
           of: Ingress
