@@ -13,7 +13,7 @@ spec:
   minReplicas: {{ .Values.raster.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.raster.autoscaling.maxReplicas }}
   behavior:
-    {{- with .Values.raster.autoscaling.behaviour }}
+    {{- with .Values.raster.autoscaling.behavior }}
     scaleDown:
       stabilizationWindowSeconds: {{ .scaleDown.stabilizationWindowSeconds }}
     scaleUp:
