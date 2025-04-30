@@ -73,6 +73,17 @@ spec:
                   number: {{ .Values.service.port }}
           {{- end }}
           
+          {{- if (and (.Values.browser.enabled) (not .Values.testing) (.Values.docServer.enabled)) }}
+          # We need a separate path because browser does not play well with nginx rewrite_path directive
+          - pathType: Prefix
+            path: "/browser"
+            backend:
+              service:
+                name: browser-{{ $.Release.Name }}
+                port:
+                  number: 8080
+          {{- end }}
+          
           {{- if .Values.docServer.enabled }}
           - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
