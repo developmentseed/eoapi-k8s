@@ -13,7 +13,7 @@ spec:
   minReplicas: {{ .Values.vector.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.vector.autoscaling.maxReplicas }}
   behavior:
-    {{- with .Values.vector.autoscaling.behaviour }}
+    {{- with .Values.vector.autoscaling.behavior }}
     scaleDown:
       stabilizationWindowSeconds: {{ .scaleDown.stabilizationWindowSeconds }}
     scaleUp:
