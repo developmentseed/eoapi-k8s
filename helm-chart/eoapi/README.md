@@ -1,141 +1,121 @@
-# EOAPI Helm Chart
+# eoAPI Helm Chart
 
-This Helm chart deploys the EOAPI (Earth Observation API) stack, which includes STAC API, raster tile services, vector tile services, and a multidimensional data service.
+![Version: 0.7.0](https://img.shields.io/badge/Version-0.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 5.0.2](https://img.shields.io/badge/AppVersion-5.0.2-informational?style=flat-square)
 
-## Overview
+A Helm chart for deploying Earth Observation APIs with integrated STAC, raster, vector, and multidimensional services.
 
-The chart sets up:
+## Features
 
-- A PostgreSQL database with PostGIS and PgSTAC extensions
-- STAC API service for metadata discovery and search
-- Titiler for raster tile services
-- TIPG for vector tile services
-- Optional multidimensional data service
+- STAC API for metadata discovery and search
+- Raster tile services (TiTiler)
+- Vector tile services (TIPG)
+- Multidimensional data support
+- Built-in STAC Browser interface
+- Flexible database configuration
+- Unified ingress system
+
+## TL;DR
+
+```bash
+# Add the eoAPI repository
+helm repo add eoapi https://devseed.com/eoapi-k8s/
+
+# Install the PostgreSQL operator (required)
+helm install --set disable_check_for_upgrades=true pgo \
+  oci://registry.developers.crunchydata.com/crunchydata/pgo \
+  --version 5.7.4
+
+# Install eoAPI
+helm install eoapi eoapi/eoapi
+```
 
 ## Prerequisites
 
-- Kubernetes 1.16+
+- Kubernetes 1.23+
 - Helm 3.0+
-- PV provisioner support in the underlying infrastructure
-- CrunchyData Postgres Operator (for the PostgreSQL database)
+- PV provisioner support
+- PostgreSQL operator
 
-## Installation
-
-```bash
-# Install Postgres Operator first
-helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo
-
-# Then install eoapi
-helm install eoapi ./eoapi
-```
-
-## Configuration
-
-The chart can be configured via `values.yaml`. See the chart's `values.yaml` file for all available options and detailed descriptions.
-
-Key configuration sections:
+## Quick Start Configuration
 
 ```yaml
-# Services to enable
+# Enable desired services
 apiServices:
   - raster
   - stac
   - vector
-  # - multidim (disabled by default)
+  - stac-browser
+  # - multidim  # Optional
 
-# Ingress configuration
+# Configure ingress
 ingress:
   enabled: true
-  className: "nginx"
-  # ...
+  className: "nginx"  # or "traefik"
+  host: "your-domain.com"  # Optional
 
-# Database configuration
-postgrescluster:
-  enabled: true
-  # ...
-```
+# Database options
+postgresql:
+  type: "postgrescluster"  # or "external-plaintext" or "external-secret"
 
-## PgSTAC Bootstrap Process
-
-The chart includes a streamlined process for initializing and setting up the PgSTAC database.
-
-### PgSTAC Bootstrap Overview
-
-The setup process consists of two main jobs:
-
-1. **pgstac-migrate job**: Runs the pypgstac migrate command to initialize the database schema, applies settings, and sets necessary permissions.
-2. **pgstac-load-samples job**: (Optional) Loads sample STAC data only when sample loading is enabled.
-
-### Improvements in PgSTAC Bootstrap
-
-- Replaced custom Python script with pypgstac migrate command
-- Moved SQL settings to a dedicated SQL file for better maintainability
-- Separated sample data loading into an optional job
-- Uses standard PostgreSQL environment variables
-- Ensures the process remains idempotent for safe re-runs
-
-### PgSTAC Directory Structure
-
-The codebase has been reorganized to separate different types of files:
-
-- `initdb-data/settings/`: Contains configuration settings like the PgSTAC settings SQL file
-- `initdb-data/samples/`: Contains sample data files that are loaded only when sample loading is enabled
-
-### PgSTAC Configuration
-
-- Enable/disable the setup process through `pgstacBootstrap.enabled`
-- Control sample data loading: 
-  - New approach: `pgstacBootstrap.settings.loadSamples` (recommended)
-  - Legacy approach: `pgstacBootstrap.settings.envVars.LOAD_FIXTURES` (deprecated)
-
-Example configuration:
-
-```yaml
+# Load sample data
 pgstacBootstrap:
   enabled: true
   settings:
-    # General configuration options
-    loadSamples: true      # Set to false to disable sample data loading
-    
-    resources:
-      requests:
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "512m"
-        memory: "1024Mi"
+    loadSamples: true
 ```
 
-## Services
+## Configuration Options
 
-### STAC API
+### Key Parameters
 
-The STAC API service provides a standardized way to search and discover geospatial data.
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `postgresql.type` | Database deployment type | `postgrescluster` |
+| `ingress.enabled` | Enable ingress | `true` |
+| `ingress.className` | Ingress controller class | `nginx` |
+| `browser.enabled` | Enable STAC Browser interface | `true` |
+| `pgstacBootstrap.enabled` | Enable database initialization | `true` |
 
-### Raster Services (Titiler)
+Refer to the [values.schema.json](./values.schema.json) for the complete list of configurable parameters.
 
-Provides dynamic tiling for raster data through the TiTiler implementation.
+### Database Options
 
-### Vector Services (TIPG)
-
-Provides vector tile services for PostGIS data through the TIPG implementation.
-
-### Multidimensional Services (Optional)
-
-Provides services for multidimensional data (time series, etc.).
-
-## Persistence
-
-The chart uses PostgreSQL for data persistence. Make sure to configure appropriate storage for production use.
-
-## Upgrading
-
-When upgrading the chart, consider any changes to values.yaml and migrations that might need to be applied.
-
-## Uninstallation
-
-```bash
-helm delete eoapi
+1. Integrated PostgreSQL Operator:
+```yaml
+postgresql:
+  type: "postgrescluster"
 ```
 
-Note that PVs may need to be manually deleted if you want to remove all data.
+2. External Database:
+```yaml
+postgresql:
+  type: "external-plaintext"
+  external:
+    host: "your-db-host"
+    port: "5432"
+    database: "eoapi"
+    credentials:
+      username: "your-user"
+      password: "your-password"
+```
+
+3. External Database with Secrets:
+```yaml
+postgresql:
+  type: "external-secret"
+  external:
+    existingSecret:
+      name: "your-secret"
+```
+
+## Documentation
+
+For detailed configuration and usage:
+
+- [Configuration Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/configuration.md)
+- [Data Management](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/manage-data.md)
+- [Autoscaling Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/autoscaling.md)
+
+## License
+
+[MIT License](https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE)
