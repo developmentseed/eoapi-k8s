@@ -1,0 +1,58 @@
+Thank you for installing {{ .Chart.Name }} {{ .Chart.Version }}
+
+Your eoAPI deployment is now being set up. This may take a few minutes.
+
+{{- if .Values.ingress.enabled }}
+
+You can access the services at:
+{{- if .Values.ingress.host }}
+  Host: {{ .Values.ingress.host }}
+{{- else }}
+  Get the host using:
+  $ kubectl get ingress -n {{ .Release.Namespace }}
+{{- end }}
+
+Available endpoints:
+{{- if has "stac" .Values.apiServices }}
+- STAC API:        {{ if .Values.ingress.host }}https://{{ .Values.ingress.host }}{{ end }}/stac
+{{- end }}
+{{- if has "raster" .Values.apiServices }}
+- Raster API:      {{ if .Values.ingress.host }}https://{{ .Values.ingress.host }}{{ end }}/raster
+{{- end }}
+{{- if has "vector" .Values.apiServices }}
+- Vector API:      {{ if .Values.ingress.host }}https://{{ .Values.ingress.host }}{{ end }}/vector
+{{- end }}
+{{- if has "multidim" .Values.apiServices }}
+- MultiDim API:    {{ if .Values.ingress.host }}https://{{ .Values.ingress.host }}{{ end }}/multidim
+{{- end }}
+{{- if .Values.browser.enabled }}
+- STAC Browser:    {{ if .Values.ingress.host }}https://{{ .Values.ingress.host }}{{ end }}/browser
+{{- end }}
+
+{{- else }}
+You have disabled the ingress. To access the services, you need to:
+1. Set up your own ingress controller, or
+2. Use port forwarding:
+
+{{- if has "stac" .Values.apiServices }}
+  $ kubectl port-forward -n {{ .Release.Namespace }} svc/stac 8080:{{ .Values.service.port }}
+{{- end }}
+{{- if has "raster" .Values.apiServices }}
+  $ kubectl port-forward -n {{ .Release.Namespace }} svc/raster 8081:{{ .Values.service.port }}
+{{- end }}
+{{- if has "vector" .Values.apiServices }}
+  $ kubectl port-forward -n {{ .Release.Namespace }} svc/vector 8082:{{ .Values.service.port }}
+{{- end }}
+{{- if has "multidim" .Values.apiServices }}
+  $ kubectl port-forward -n {{ .Release.Namespace }} svc/multidim 8083:{{ .Values.service.port }}
+{{- end }}
+{{- end }}
+
+To verify the deployment status:
+  $ kubectl get pods -n {{ .Release.Namespace }}
+
+For troubleshooting:
+  $ kubectl describe pods -n {{ .Release.Namespace }}
+  $ kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ .Chart.Name }}
+
+Visit https://github.com/developmentseed/eoapi-k8s for more information.
