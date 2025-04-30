@@ -45,6 +45,8 @@ ingress:
   className: "nginx"
   # Path configuration
   pathType: "Prefix"  # Can be "Prefix" or "ImplementationSpecific" based on controller
+  # NOTE: When using nginx ingress controller with regex in pathSuffix,
+  # you must set pathType to "ImplementationSpecific". See issue #189 for more context.
   pathSuffix: ""      # Add a suffix to service paths (e.g. "(/|$)(.*)" for nginx regex)
   rootPath: ""        # Root path for doc server
   # Host configuration
