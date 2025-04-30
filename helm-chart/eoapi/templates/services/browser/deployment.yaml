@@ -1,4 +1,4 @@
-{{- if (and (.Values.browser.enabled) (not .Values.testing)  (.Values.docServer.enabled))}}
+{{- if .Values.browser.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,6 +21,4 @@ spec:
           env:
             - name: SB_catalogUrl
               value: "/stac"
-            - name: SB_prefixPath
-              value: "/stac-browser"
 {{- end }}

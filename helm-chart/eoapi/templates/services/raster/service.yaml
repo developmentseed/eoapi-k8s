@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: raster
+  name: raster-{{ $.Release.Name }}
   labels:
     app: raster-{{ .Release.Name }}
 spec:

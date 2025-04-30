@@ -465,14 +465,15 @@ vector:
 # STAC Browser
 ######################
 # It is a good idea to deploy stac-browser outside of k8s, since it's SPA with static files.
-# Please consider alternatives, such as cloud storage + CDN, for example 
 browser:
   enabled: true
   replicaCount: 1
   image:
     # we use a custom image that overrides pathPrefix value
-    name: ghcr.io/alekzvik/stac-browser-prefix
-    tag: 3.2.0
+    name: ghcr.io/radiantearth/stac-browser
+    tag: 3.3.4
+  ingress:
+    enabled: true  # Control ingress specifically for browser service
 
 docServer:
   enabled: true

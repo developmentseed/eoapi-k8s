@@ -19,7 +19,7 @@ data:
           {{- if .Values.multidim.enabled }}
           <li><a href="/multidim" target="_blank" rel="noopener noreferrer">/multidim</a></li>
           {{- end}}
-          <li><a href="/stac-browser/" target="_blank" rel="noopener noreferrer">/browser</a></li>
+          <li><a href="/browser/" target="_blank" rel="noopener noreferrer">/browser</a></li>
         </ul>
     </body>
     </html>
