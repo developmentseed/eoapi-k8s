@@ -89,7 +89,7 @@ spec:
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
             backend:
               service:
-                name: eoapi-doc-server
+                name: doc-server-{{ $.Release.Name }}
                 port:
                   number: 80
           {{- end }}
