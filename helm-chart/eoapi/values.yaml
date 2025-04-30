@@ -107,7 +107,7 @@ postgresql:
 postgrescluster:
   enabled: true
   postgresVersion: 16
-  postGISVersion: 3.4
+  postGISVersion: "3.4"
   pgBouncerReplicas: 1
   monitoring: false
   # Configure Patroni to set proper schema permissions

@@ -17,47 +17,98 @@
 
 ## What is eoAPI?
 
-[https://eoapi.dev/](https://eoapi.dev/)
+[eoAPI](https://eoapi.dev/) is a collection of REST APIs for Earth Observation data access and analysis. This repository provides a production-ready Kubernetes deployment solution with flexible database options, unified ingress configuration, and built-in monitoring.
 
-## Getting Started
+## Quick Start
 
-Make sure you have [helm](https://helm.sh/docs/intro/install/) installed on your machine.
-Additionally, you will need a cluster to deploy the eoAPI helm chart. This can be on a cloud provider, like AWS, GCP, or any other that supports Kubernetes. You can also run a local cluster using minikube.
+### Prerequisites
 
-### Local
+- [helm](https://helm.sh/docs/intro/install/)
+- A Kubernetes cluster (local or cloud-based)
+- `kubectl` configured for your cluster
 
-For a local installation you can use a preinstalled [Minikube](https://minikube.sigs.k8s.io/), and simply execute the following command:
+### Option 1: One-Command Installation
 
+The fastest way to get started is using our Makefile commands:
+
+For local development with Minikube:
 ```bash
-$ make minikube
+make minikube
 ```
 
-Once the deployment is done, the url to access eoAPI will be printed to your terminal.
+For cloud deployment:
+```bash
+make deploy
+```
 
-### Cloud
+This will automatically:
+1. Install the PostgreSQL operator
+2. Add the eoAPI helm repository
+3. Install the eoAPI helm chart
+4. Set up necessary namespaces and configurations
 
-If you don't have a k8s cluster set up on AWS or GCP then follow an IaC guide below that is relevant to you
+### Option 2: Step-by-Step Installation
 
-> &#9432; The helm chart in this repo assumes your cluster has a few third-party add-ons and controllers installed. So
-> it's in your best interest to read through the IaC guides to understand what those defaults are
+If you prefer more control over the installation process:
 
+1. Install the PostgreSQL operator:
+```bash
+helm upgrade --install \
+  --set disable_check_for_upgrades=true pgo \
+  oci://registry.developers.crunchydata.com/crunchydata/pgo \
+  --version 5.7.4
+```
+
+2. Add the eoAPI helm repository:
+```bash
+helm repo add eoapi https://devseed.com/eoapi-k8s/
+```
+
+3. Get your current git SHA:
+```bash
+export GITSHA=$(git rev-parse HEAD | cut -c1-10)
+```
+
+4. Install eoAPI:
+```bash
+helm upgrade --install \
+  --namespace eoapi \
+  --create-namespace \
+  --set gitSha=$GITSHA \
+  eoapi devseed/eoapi
+```
+
+### Post-Installation
+
+1. Enable ingress (for Minikube):
+```bash
+minikube addons enable ingress
+```
+
+2. Optional: Load sample data:
+```bash
+make ingest
+```
+
+## Cloud Provider Setup
+
+For cloud-based deployments, refer to our detailed setup guides:
 * [AWS EKS Cluster Setup](./docs/aws-eks.md)
 * [GCP GKE Cluster Setup](./docs/gcp-gke.md)
+* [Azure Setup](./docs/azure.md)
 
-Make sure you have your `kubectl` configured to point to the cluster you want to deploy eoAPI to. Then simply execute the following command:
+## Documentation
 
-```bash
-$ make deploy
-```
+* [Configuration Guide](./docs/configuration.md)
+* [Data Management](./docs/manage-data.md)
+* [Autoscaling and Monitoring](./docs/autoscaling.md)
+* [Health Checks](./docs/health.md)
+* [Unified Ingress Configuration](./docs/unified-ingress.md)
 
-### Manual step-by-step installation
+## Contributing
 
-Instead of using the `make` commands above you can also [manually `helm install` eoAPI](./docs/helm-install.md).
+We welcome contributions! See our [contributing guide](./CONTRIBUTING.md) for details.
 
+## License
 
-## More information
-
-* Read about [Default Configuration](./docs/configuration.md#default-configuration) and
-other [Configuration Options](./docs/configuration.md#additional-options)
-* [Manage your data](./docs/manage-data.md) in eoAPI
-* Learn about [Autoscaling / Monitoring / Observability](./docs/autoscaling.md)
+This project is licensed under the [MIT License](./LICENSE).

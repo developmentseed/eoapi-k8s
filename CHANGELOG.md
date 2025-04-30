@@ -5,24 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.7.0] - 2025-04-30
+
+### Breaking Changes
+- New unified ingress configuration requires migration from previous ingress setup [#219](https://github.com/developmentseed/eoapi-k8s/pull/219)
+- Refactored PostgreSQL configuration with removal of deprecated database setup [#215](https://github.com/developmentseed/eoapi-k8s/pull/215)
+- Major architectural changes with service-specific templates [#220](https://github.com/developmentseed/eoapi-k8s/pull/220)
 
 ### Added
-
+- STAC Browser integration [#168](https://github.com/developmentseed/eoapi-k8s/pull/168)
+- Azure secret vault integration for pg-stac secrets [#187](https://github.com/developmentseed/eoapi-k8s/pull/187)
+- Support for both NGINX and Traefik ingress controllers [#219](https://github.com/developmentseed/eoapi-k8s/pull/219)
+- ArtifactHub.io Integration [#216](https://github.com/developmentseed/eoapi-k8s/pull/216)
 
 ### Changed
-
-* Refactor pgstacbootstrap job and ConfigMaps to use Helm hooks for execution order [#207](https://github.com/developmentseed/eoapi-k8s/pull/207)
-* Simplify PgSTAC Bootstrap Process [#208](https://github.com/developmentseed/eoapi-k8s/pull/208)
-* Upgrade stac-fastapi-pgstac to v5.0.2 [#204](https://github.com/developmentseed/eoapi-k8s/pull/204)
-
-### Deprecated
-
-### Removed
-
+- Refactor pgstacbootstrap job and ConfigMaps to use Helm hooks for execution order [#207](https://github.com/developmentseed/eoapi-k8s/pull/207)
+- Simplify PgSTAC Bootstrap Process [#208](https://github.com/developmentseed/eoapi-k8s/pull/208)
+- Upgrade stac-fastapi-pgstac to v5.0.2 [#204](https://github.com/developmentseed/eoapi-k8s/pull/204)
 ### Fixed
-
-### Security
+- Add ArtifactHub.io Integration (Issue #16) [#216](https://github.com/developmentseed/eoapi-k8s/pull/216)
 
 ## [v0.6.0] - 2025-04-03
 
