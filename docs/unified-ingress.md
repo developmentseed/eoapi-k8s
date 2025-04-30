@@ -4,7 +4,7 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 ## Overview
 
-eoAPI now uses a consolidated, controller-agnostic ingress configuration. This approach:
+As of version 0.7.0, eoAPI uses a consolidated, controller-agnostic ingress configuration. This approach:
 
 - Eliminates code duplication between different ingress controller implementations
 - Provides consistent behavior across controllers
@@ -91,7 +91,7 @@ ingress:
 
 ## Migration
 
-If you're migrating from a previous version, follow these guidelines:
+If you're migrating from a version 0.6.0 or earlier, follow these guidelines:
 
 1. Update your values to use the new unified configuration
 2. Ensure your ingress controller-specific annotations are set correctly
