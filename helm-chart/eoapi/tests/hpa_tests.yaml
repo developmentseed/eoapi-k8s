@@ -1,16 +1,2 @@
-suite: autoscaling feedback when className is not nginx
-templates:
-  - templates/services/hpa.yaml
-tests:
-  - it: "vector hpa fail for requestRate"
-    set:
-      raster.enabled: false
-      stac.enabled: false
-      vector.enabled: true
-      ingress.className: "testing123"
-      vector.autoscaling.enabled: true
-      vector.autoscaling.type: "requestRate"
-    asserts:
-      - failedTemplate:
-          errorMessage: When using an 'ingress.className' other than 'nginx' you cannot enable autoscaling by 'requestRate' at this time b/c it's solely an nginx metric
-
+# This file is kept for backward compatibility but tests have been moved to service-specific test files:
+# - vector_tests.yaml (for HPA tests)

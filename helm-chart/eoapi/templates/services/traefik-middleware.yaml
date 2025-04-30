@@ -2,16 +2,21 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: strip-prefix-middleware-{{ $.Release.Name }}
-  namespace: {{ $.Release.Namespace }}
+  name: strip-prefix-middleware-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   stripPrefix:
     prefixes:
-      {{- range $serviceName, $v := .Values }}
-      {{- if has $serviceName $.Values.apiServices }}
-      {{- if (index $v "enabled") }}
-      - /{{ $serviceName }}
+      {{- if .Values.raster.enabled }}
+      - /raster
       {{- end }}
+      {{- if .Values.stac.enabled }}
+      - /stac
       {{- end }}
+      {{- if .Values.vector.enabled }}
+      - /vector
+      {{- end }}
+      {{- if .Values.multidim.enabled }}
+      - /multidim
       {{- end }}
 {{- end }}
