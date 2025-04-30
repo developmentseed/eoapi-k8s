@@ -13,7 +13,7 @@ type: application
 kubeVersion: ">=1.23.0-0"
 
 # Artifacthub metadata
-icon: logo.png
+icon: https://eoapi.dev/img/eoAPI.png
 annotations:
   artifacthub.io/changes: |
     - Adds integration with Artifacthub.io
