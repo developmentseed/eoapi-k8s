@@ -6,33 +6,447 @@
     "gitSha"
   ],
   "properties": {
+    "gitSha": {
+      "type": "string",
+      "description": "Git SHA of the deployment"
+    },
+    "testing": {
+      "type": "boolean",
+      "description": "Only used in CI for running parallel helm installs",
+      "default": false
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to create a service account"
+        },
+        "name": {
+          "type": "string",
+          "description": "Service account name. If not set and create is true, a name is generated"
+        },
+        "automount": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically mount service account token"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations to add to the service account"
+        },
+        "labels": {
+          "type": "object",
+          "description": "Labels to add to the service account"
+        }
+      }
+    },
     "service": {
       "type": "object",
-      "required": [
-        "port"
-      ],
+      "required": ["port"],
       "properties": {
         "port": {
           "type": "integer",
-          "pattern": "^[0-9]{4}$"
+          "description": "Service port number"
         }
       }
     },
     "ingress": {
       "type": "object",
-      "required": [
-        "className"
-      ],
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ingress"
+        },
         "className": {
           "type": "string",
-          "pattern": "^(nginx|traefik|testing123)$"
+          "enum": ["nginx", "traefik"],
+          "description": "Ingress controller class name"
+        },
+        "pathType": {
+          "type": "string",
+          "enum": ["Prefix", "ImplementationSpecific"],
+          "description": "Ingress path type"
+        },
+        "pathSuffix": {
+          "type": "string",
+          "description": "Suffix to add to service paths"
+        },
+        "rootPath": {
+          "type": "string",
+          "description": "Root path for doc server"
+        },
+        "host": {
+          "type": "string",
+          "description": "Ingress host"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Additional annotations for ingress"
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable TLS"
+            },
+            "secretName": {
+              "type": "string",
+              "description": "TLS secret name"
+            },
+            "certManager": {
+              "type": "boolean",
+              "description": "Use cert-manager for TLS"
+            },
+            "certManagerIssuer": {
+              "type": "string",
+              "description": "cert-manager issuer to use"
+            },
+            "certManagerEmail": {
+              "type": "string",
+              "description": "Email address for cert-manager"
+            }
+          }
         }
       }
     },
-    "gitSha": {
-      "type": "string",
-      "pattern": "^.+$"
+    "postgresql": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["postgrescluster", "external-plaintext", "external-secret"],
+          "description": "PostgreSQL deployment type",
+          "default": "postgrescluster"
+        },
+        "external": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "External PostgreSQL host"
+            },
+            "port": {
+              "type": "string",
+              "description": "External PostgreSQL port"
+            },
+            "database": {
+              "type": "string",
+              "description": "External PostgreSQL database name"
+            },
+            "credentials": {
+              "type": "object",
+              "properties": {
+                "username": {
+                  "type": "string",
+                  "description": "External PostgreSQL username"
+                },
+                "password": {
+                  "type": "string",
+                  "description": "External PostgreSQL password"
+                }
+              }
+            },
+            "existingSecret": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of existing secret"
+                },
+                "keys": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "description": "Username key in secret"
+                    },
+                    "password": {
+                      "type": "string",
+                      "description": "Password key in secret"
+                    },
+                    "host": {
+                      "type": "string",
+                      "description": "Host key in secret"
+                    },
+                    "port": {
+                      "type": "string",
+                      "description": "Port key in secret"
+                    },
+                    "database": {
+                      "type": "string",
+                      "description": "Database key in secret"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "postgrescluster": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable PostgreSQL cluster"
+        },
+        "postgresVersion": {
+          "type": "integer",
+          "description": "PostgreSQL version"
+        },
+        "postGISVersion": {
+          "type": "string",
+          "description": "PostGIS version"
+        },
+        "pgBouncerReplicas": {
+          "type": "integer",
+          "description": "Number of PgBouncer replicas"
+        },
+        "monitoring": {
+          "type": "boolean",
+          "description": "Enable monitoring"
+        },
+        "patroni": {
+          "type": "object",
+          "description": "Patroni configuration"
+        },
+        "databaseInitSQL": {
+          "type": "object",
+          "description": "Database initialization SQL"
+        },
+        "instances": {
+          "type": "array",
+          "description": "PostgreSQL instances configuration"
+        },
+        "users": {
+          "type": "array",
+          "description": "PostgreSQL users configuration"
+        }
+      }
+    },
+    "pgstacBootstrap": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable PgSTAC bootstrap"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "PgSTAC bootstrap image name"
+            },
+            "tag": {
+              "type": "string",
+              "description": "PgSTAC bootstrap image tag"
+            }
+          }
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "loadSamples": {
+              "type": "boolean",
+              "description": "Load sample data"
+            },
+            "user": {
+              "type": "string",
+              "description": "Database user"
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name"
+            },
+            "resources": {
+              "type": "object",
+              "description": "Resource requirements"
+            }
+          }
+        }
+      }
+    },
+    "apiServices": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["raster", "multidim", "stac", "vector"]
+      },
+      "description": "List of API services to enable"
+    },
+    "raster": {
+      "$ref": "#/definitions/apiService"
+    },
+    "multidim": {
+      "$ref": "#/definitions/apiService"
+    },
+    "stac": {
+      "$ref": "#/definitions/apiService"
+    },
+    "vector": {
+      "$ref": "#/definitions/apiService"
+    },
+    "browser": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable STAC browser"
+        },
+        "replicaCount": {
+          "type": "integer",
+          "description": "Number of replicas"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Image name"
+            },
+            "tag": {
+              "type": "string",
+              "description": "Image tag"
+            }
+          }
+        },
+        "ingress": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable ingress for browser"
+            }
+          }
+        }
+      }
+    },
+    "docServer": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable documentation server"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "apiService": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable the service"
+        },
+        "ingress": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable ingress for this service"
+            }
+          }
+        },
+        "autoscaling": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable autoscaling"
+            },
+            "minReplicas": {
+              "type": "integer",
+              "description": "Minimum number of replicas"
+            },
+            "maxReplicas": {
+              "type": "integer",
+              "description": "Maximum number of replicas"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["cpu", "requestRate", "both"],
+              "description": "Autoscaling metric type"
+            },
+            "behaviour": {
+              "type": "object",
+              "description": "Autoscaling behavior configuration"
+            },
+            "targets": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "integer",
+                  "description": "CPU utilization target"
+                },
+                "requestRate": {
+                  "type": "string",
+                  "description": "Request rate target"
+                }
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Image name"
+            },
+            "tag": {
+              "type": "string",
+              "description": "Image tag"
+            }
+          }
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Container command"
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "object",
+              "description": "Additional pod labels"
+            },
+            "resources": {
+              "type": "object",
+              "description": "Resource requirements"
+            },
+            "extraEnvFrom": {
+              "type": "array",
+              "description": "Additional environment variables from references"
+            },
+            "extraVolumeMounts": {
+              "type": "array",
+              "description": "Additional volume mounts"
+            },
+            "extraVolumes": {
+              "type": "array",
+              "description": "Additional volumes"
+            },
+            "envVars": {
+              "type": "object",
+              "description": "Environment variables"
+            }
+          }
+        }
+      }
     }
   }
 }
