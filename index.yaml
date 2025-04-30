@@ -30,7 +30,7 @@ entries:
     description: Create a full Earth Observation API with Metadata, Raster and Vector
       services
     digest: 39805c3a179f1ba28ae7eb432a0548a28af0c262982bd049d8cef57eae8ffbd4
-    icon: logo.png
+    icon: https://eoapi.dev/img/eoAPI.png
     kubeVersion: '>=1.23.0-0'
     name: eoapi
     type: application
