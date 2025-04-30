@@ -3,6 +3,27 @@ name: postgrescluster
 description: A Helm chart for eoapi database dep for k8s
 type: application
 # The version below should match the version on the PostgresCluster CRD
-version: 5.5.3
-appVersion: 5.5.3
-force: true
+# from CrunchyData's Postgres Operator
+# https://access.crunchydata.com/documentation/postgres-operator/latest/releases
+version: 5.7.4
+appVersion: 5.7.4
+# Removed invalid 'force' property
+
+# Artifacthub metadata
+annotations:
+  artifacthub.io/changes: |
+    - Adds integration with Artifacthub.io
+  artifacthub.io/links: |
+    - name: GitHub Repository
+      url: https://github.com/developmentseed/eoapi-k8s
+    - name: Documentation
+      url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+  artifacthub.io/maintainers: |
+    - name: DevelopmentSeed
+      email: eoapi@developmentseed.org
+  artifacthub.io/keywords: |
+    - postgres
+    - database
+    - postgis
+    - pgstac
+    - kubernetes

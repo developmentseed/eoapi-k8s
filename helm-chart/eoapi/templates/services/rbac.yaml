@@ -1,0 +1,27 @@
+{{- if .Values.apiServices }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: eoapi-role-{{ $.Release.Name }}
+  labels:
+    app: eoapi-{{ $.Release.Name }}
+rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: eoapi-rolebinding-{{ $.Release.Name }}
+  labels:
+    app: eoapi-{{ $.Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "eoapi.serviceAccountName" . }}
+  namespace: {{ $.Release.Namespace }}
+roleRef:
+  kind: Role
+  name: eoapi-role-{{ $.Release.Name }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

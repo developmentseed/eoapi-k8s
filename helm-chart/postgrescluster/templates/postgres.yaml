@@ -36,6 +36,7 @@ spec:
           memory: {{ default "" .Values.instanceMemory | quote }}
       {{- end }}
   {{- end }}
+  {{- if .Values.backupsEnabled }}
   backups:
     pgbackrest:
       {{- if .Values.imagePgBackRest }}
@@ -142,6 +143,7 @@ spec:
               requests:
                 storage: {{ default "1Gi" .Values.backupsSize | quote }}
       {{- end }}
+  {{- end }}
   {{- if or .Values.pgBouncerReplicas .Values.pgBouncerConfig }}
   proxy:
     pgBouncer:

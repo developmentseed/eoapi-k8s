@@ -1,0 +1,10 @@
+{{- if .Values.stac.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stac-envvar-configmap-{{ .Release.Name }}
+data:
+  {{- range $envKey, $envValue := .Values.stac.settings.envVars }}
+  {{ upper $envKey }}: {{ $envValue | quote }}
+  {{- end }}
+{{- end }}

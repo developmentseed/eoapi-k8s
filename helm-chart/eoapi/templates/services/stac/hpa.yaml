@@ -1,0 +1,53 @@
+{{- if and .Values.stac.enabled .Values.stac.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: stac-hpa-{{ .Release.Name }}
+  labels:
+    app: stac-{{ .Release.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: stac-{{ .Release.Name }}
+  minReplicas: {{ .Values.stac.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.stac.autoscaling.maxReplicas }}
+  behavior:
+    {{- with .Values.stac.autoscaling.behavior }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .scaleDown.stabilizationWindowSeconds }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .scaleUp.stabilizationWindowSeconds }}
+    {{- end }}
+  metrics:
+    {{- if eq .Values.stac.autoscaling.type "cpu" }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.stac.autoscaling.targets.cpu }}
+    {{- else if eq .Values.stac.autoscaling.type "requestRate" }}
+    - type: Pods
+      pods:
+        metric:
+          name: nginx_ingress_controller_requests
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.stac.autoscaling.targets.requestRate }}
+    {{- else if eq .Values.stac.autoscaling.type "both" }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.stac.autoscaling.targets.cpu }}
+    - type: Pods
+      pods:
+        metric:
+          name: nginx_ingress_controller_requests
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.stac.autoscaling.targets.requestRate }}
+    {{- end }}
+{{- end }}

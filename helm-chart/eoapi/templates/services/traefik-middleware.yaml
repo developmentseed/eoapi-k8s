@@ -1,0 +1,22 @@
+{{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-prefix-middleware-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  stripPrefix:
+    prefixes:
+      {{- if .Values.raster.enabled }}
+      - /raster
+      {{- end }}
+      {{- if .Values.stac.enabled }}
+      - /stac
+      {{- end }}
+      {{- if .Values.vector.enabled }}
+      - /vector
+      {{- end }}
+      {{- if .Values.multidim.enabled }}
+      - /multidim
+      {{- end }}
+{{- end }}

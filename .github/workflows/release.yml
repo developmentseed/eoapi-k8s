@@ -10,7 +10,7 @@ env:
 
 jobs:
   release:
-    if: "!startsWith(github.ref, 'refs/tags/eoapi-')"  # prevent the helm chart releaser from running this release workflow
+    if: ${{ !startsWith(github.ref, 'refs/tags/eoapi-') }}  # prevent the helm chart releaser from running this release workflow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,3 +42,4 @@ jobs:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: true
           CR_INDEX_PATH: "."
+          

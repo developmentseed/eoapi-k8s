@@ -21,6 +21,16 @@ gitSha: "gitshaABC123"
 # only used in CI for running parallel helm installs
 testing: false
 
+#######################
+# SERVICE ACCOUNT
+#######################
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+  annotations: {}
+  labels: {}
+
 
 ######################
 # SERVICE & INGRESS
@@ -29,11 +39,21 @@ service:
   port: 8080
 
 ingress:
-  # `"nginx"` will create a `kind:Service` with a `spec.port:ClusterIP`
-  # and a single Load Balancer and path rewrites for /vector, /stac, /raster
+  # Unified ingress configuration for both nginx and traefik
   enabled: true
+  # ingressClassName: "nginx" or "traefik"
   className: "nginx"
+  # Path configuration
+  pathType: "Prefix"  # Can be "Prefix" or "ImplementationSpecific" based on controller
+  # NOTE: When using nginx ingress controller with regex in pathSuffix,
+  # you must set pathType to "ImplementationSpecific". See issue #189 for more context.
+  pathSuffix: ""      # Add a suffix to service paths (e.g. "(/|$)(.*)" for nginx regex)
+  rootPath: ""        # Root path for doc server
+  # Host configuration
   host: ""
+  # Custom annotations to add to the ingress
+  annotations: {}
+  # TLS configuration
   tls:
     enabled: false
     secretName: eoapi-tls
@@ -56,47 +76,35 @@ comment_db: >
   The `postgrescluster` specs below are pass-through values to configure those separate
   charts. For more information read https://access.crunchydata.com/documentation/postgres-operator/latest
 
-# DEPRECATED: this is the backward compatible way we originally did things
-# and a temporary solution for EOEPCA. Since disabled by default most people SHOULD NOT
-# use this option as it won't be talked about explicitly in the docs
-db:
-  enabled: false
-  image:
-    name: ghcr.io/stac-utils/pgstac
-    tag: v0.8.2
-  command:
-    - "postgres"
-    - "-N"
-    - "500"
-  # toggle to true||false if you want the db test fixtures loaded
-  enable_data_fixtures: true
-  storageClassName: ""
-  accessModes:
-    - ReadWriteOnce
-  settings:
-    resources:
-      requests:
-        storage: "100Mi"
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "512m"
-        memory: "1024Mi"
-    secrets:
-      POSTGRES_DB: "postgis"
-      POSTGRES_USER: ""
-      POSTGRES_PASSWORD: ""
-      POSTGRES_PORT: "5432"
-      POSTGRES_HOST: "pgstac"
-      POSTGRES_HOST_READER: "pgstac"
-      POSTGRES_HOST_WRITER: "pgstac"
-      DB_MIN_CONN_SIZE: "1"
-      DB_MAX_CONN_SIZE: "15"
-      # default connect: https://www.postgresql.org/docs/current/libpq-envars.html
-      PGDATA: "/data/pgdata"
-      PGUSER: ""
-      PGPASSWORD: ""
-      PGDATABASE: "postgis"
+# unified PostgreSQL configuration
+postgresql:
+  # Management type: "postgrescluster" (default), "external-plaintext", or "external-secret"
+  type: "postgrescluster"
+  
+  # Configuration for external PostgreSQL (used when type is "external-plaintext" or "external-secret")
+  external:
+    # Connection information
+    host: ""
+    port: "5432"
+    database: "eoapi"
+    
+    # Credentials configuration (used when type is "external-plaintext")
+    credentials:
+      username: ""
+      password: ""
+    
+    # Secret reference (used when type is "external-secret")
+    existingSecret:
+      name: ""
+      # Key mapping for the secret
+      keys:
+        username: "username"
+        password: "password"
+        # Optional: if these are provided in the secret
+        # Note: These values override external.host, external.port and external.database if defined
+        host: "host"
+        port: "port"
+        database: "database"
 
 # this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
 postgrescluster:
@@ -105,6 +113,18 @@ postgrescluster:
   postGISVersion: 3.4
   pgBouncerReplicas: 1
   monitoring: false
+  # Configure Patroni to set proper schema permissions
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - "host all all 0.0.0.0/0 md5"
+        parameters:
+          shared_preload_libraries: pg_stat_statements, auto_explain
+  databaseInitSQL:
+    key: initdb.sql
+    name: initdb
+
   instances:
   - name: eoapi
     replicas: 1
@@ -118,22 +138,21 @@ postgrescluster:
           memory: "3048Mi"
   # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
   users:
-    # `postgres` always is a `SUPERUSER` and cannot be adjusted with `options` flag
+    # `postgres` always has SUPERUSER privileges
     # we use this block here to create secrets for the `postgres` user that we can mount and lookup
     - name: postgres
       databases:
         - eoapi
         - postgres
-    # if you try to grant `options: 'SUPERUSER'` below to your eoapi service user
-    # then they will not be able to connect through the pgbouncer connection pooler, so be aware
+      options: "SUPERUSER"
+    # Grant CREATEROLE privilege to eoapi user so it can create the pgstac_admin role
+    # If you grant SUPERUSER to the eoapi user, it won't be able to connect through pgbouncer
     # https://access.crunchydata.com/documentation/crunchy-postgres-containers/2.4.2/container-specifications/crunchy-pgbouncer/
-    # this user is currently unprivileged and the `pgstacBootstrap` container below will grant privileges
-    # when it boots via the `postgres` superuser above.
-    # see `/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml:initdb-sh-config`
     - name: eoapi
       databases:
         - eoapi
         - postgres
+      options: "CREATEDB CREATEROLE"
       # default `password.type` is ASCII which follows the character set US-ASCII
       # but which can contain characters that `asyncpg` dislikes
       # see https://github.com/MagicStack/asyncpg/issues/1151
@@ -146,13 +165,15 @@ postgrescluster:
 pgstacBootstrap:
   enabled: true
   image:
-    name: ghcr.io/stac-utils/pgstac
-    tag: v0.8.2
-  command:
-    - "sh"
-  args:
-    - "/opt/initdb/run-migrate-and-load.sh"
+    name: ghcr.io/stac-utils/pgstac-pypgstac
+    tag: v0.9.5
   settings:
+    # General configuration options
+    loadSamples: true      # Set to false to disable sample data loading
+    ### Database connection settings TEMPORARY UNTIL WE HAVE A BETTER SOLUTION
+    ### FOR CONFIGURING THE DB CONNECTION
+    user: eoapi
+    database: eoapi
     resources:
       requests:
         cpu: "512m"
@@ -160,18 +181,25 @@ pgstacBootstrap:
       limits:
         cpu: "512m"
         memory: "1024Mi"
+    # DEPRECATED: Use pgstacBootstrap.settings.loadSamples instead
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
-      # toggle to `true` if you want to keep the job running as db jumpbox
-      KEEP_ALIVE: "false"
 
 
 ######################
 # API SERVICES
 ######################
+apiServices:
+  - raster
+  - multidim
+  - stac
+  - vector
+
 raster:
   enabled: true
+  ingress:
+    enabled: true  # Control ingress specifically for raster service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -195,13 +223,15 @@ raster:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: uvicorn-1.4.0
+    tag: 1.7.1
   command:
     - "uvicorn"
     - "titiler.pgstac.main:app"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -210,6 +240,83 @@ raster:
       requests:
         cpu: "256m"
         memory: "3072Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
+    envVars:
+      ##############
+      # titiler
+      ##############
+      GDAL_CACHEMAX: "200"  # 200 mb
+      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      PYTHONWARNINGS: "ignore"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "5000000"  # 5 MB (per file-handle)
+      ##############
+      # uvicorn
+      ##############
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      # https://www.uvicorn.org/settings/#production
+      WEB_CONCURRENCY: "5"
+
+multidim:
+  enabled: false # disabled by default
+  ingress:
+    enabled: true  # Control ingress specifically for multidim service
+  autoscaling:
+    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # see ../../../docs/autoscaling.md for more information
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    # `type`: "cpu" || "requestRate" || "both"
+    type: "requestRate"
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+    targets:
+      # matches `type` value above unless `type: "both"` is selected
+      cpu: 75
+      # 'm' units here represents generic milli (one-thousandth) unit instead of 'decimal'
+      # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities
+      # so when the average unit among these pods is <requestRate>/1000 then scale
+      # you can watch the actual/target in real time using `kubectl get hpa/<name>`
+      requestRate: 100000m
+  image:
+    name: ghcr.io/developmentseed/titiler-md-demo
+    tag: dd740a700ce655e785c7bd50331f9ac857be4126
+  command:
+    - "uvicorn"
+    - "titiler_md_demo.main:app"
+    - "--host=$(HOST)"
+    - "--port=$(PORT)"
+  settings:
+    # Additional labels to add to the pod
+    labels: {}
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    resources:
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+      requests:
+        cpu: "256m"
+        memory: "3072Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # titiler
@@ -233,6 +340,8 @@ raster:
 
 stac:
   enabled: true
+  ingress:
+    enabled: true  # Control ingress specifically for stac service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -256,13 +365,15 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 2.4.9
+    tag: 5.0.2
   command:
     - "uvicorn"
     - "stac_fastapi.pgstac.app:app"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -271,6 +382,12 @@ stac:
       requests:
         cpu: "256m"
         memory: "1024Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # uvicorn
@@ -282,6 +399,8 @@ stac:
 
 vector:
   enabled: true
+  ingress:
+    enabled: true  # Control ingress specifically for vector service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -305,13 +424,15 @@ vector:
       requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/tipg
-    tag: uvicorn-0.6.1
+    tag: 1.0.1
   command:
     - "uvicorn"
     - "tipg.main:app"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
+    # Additional labels to add to the pod
+    labels: {}
     # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
     resources:
       limits:
@@ -320,6 +441,12 @@ vector:
       requests:
         cpu: "256m"
         memory: "256Mi"
+    # Additional environment variables from references like ConfigMap or Secret
+    extraEnvFrom: []
+    # Additional volume mounts
+    extraVolumeMounts: []
+    # Additional volumes
+    extraVolumes: []
     envVars:
       ##############
       # tipg

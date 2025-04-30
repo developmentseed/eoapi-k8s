@@ -1,0 +1,14 @@
+{{- if .Values.stac.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: stac
+  labels:
+    app: stac-{{ .Release.Name }}
+spec:
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+  selector:
+    app: stac-{{ .Release.Name }}
+{{- end }}

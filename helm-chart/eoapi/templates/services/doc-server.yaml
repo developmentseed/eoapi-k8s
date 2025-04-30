@@ -1,8 +1,8 @@
-{{- if (and (.Values.ingress.className) (eq .Values.ingress.className "nginx") (not .Values.testing)  (.Values.docServer.enabled))}}
+{{- if .Values.docServer.enabled}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-root-html-{{ .Release.Name }}
+  name: doc-server-html-{{ .Release.Name }}
 data:
   index.html: |
     <html>
@@ -11,12 +11,15 @@ data:
     </head>
     <body>
         <h2>This is the root path /</h2>
-        <p>Your service configuration is using ingress-nginx with path rewrites. So use these paths for each service:</p>
+        <p>Your service configuration is using path rewrites. So use these paths for each service:</p>
         <ul>
           <li><a href="/raster" target="_blank" rel="noopener noreferrer">/raster</a></li>
           <li><a href="/vector" target="_blank" rel="noopener noreferrer">/vector</a></li>
           <li><a href="/stac" target="_blank" rel="noopener noreferrer">/stac</a></li>
-          <li><a href="/browser/" target="_blank" rel="noopener noreferrer">/browser</a></li>
+          {{- if .Values.multidim.enabled }}
+          <li><a href="/multidim" target="_blank" rel="noopener noreferrer">/multidim</a></li>
+          {{- end}}
+          <li><a href="/stac-browser/" target="_blank" rel="noopener noreferrer">/browser</a></li>
         </ul>
     </body>
     </html>
@@ -46,7 +49,17 @@ spec:
       volumes:
       - name: doc-html-{{ .Release.Name }}
         configMap:
-          name: nginx-root-html-{{ .Release.Name }}
+          name: doc-server-html-{{ .Release.Name }}
+      {{- if .Values.docServer.settings }}
+      {{- with .Values.docServer.settings.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.docServer.settings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service

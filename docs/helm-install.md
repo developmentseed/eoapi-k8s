@@ -3,7 +3,7 @@
 0. `eoapi-k8s` depends on the [Crunchydata Postgresql Operator](https://access.crunchydata.com/documentation/postgres-operator/latest/installation/helm). Install that first:
 
    ```bash
-   $ helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version 5.5.2
+   $ helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version 5.7.0
    ```
 
 1. Add the eoapi repo from https://devseed.com/eoapi-k8s/:
