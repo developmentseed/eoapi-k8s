@@ -13,7 +13,7 @@ spec:
   minReplicas: {{ .Values.multidim.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.multidim.autoscaling.maxReplicas }}
   behavior:
-    {{- with .Values.multidim.autoscaling.behaviour }}
+    {{- with .Values.multidim.autoscaling.behavior }}
     scaleDown:
       stabilizationWindowSeconds: {{ .scaleDown.stabilizationWindowSeconds }}
     scaleUp:
