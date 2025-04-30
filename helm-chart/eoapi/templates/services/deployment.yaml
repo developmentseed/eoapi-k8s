@@ -64,8 +64,8 @@ spec:
         command:
           {{- toYaml (index $v "command") | nindent 10 }}
           {{- if (and ($.Values.ingress.className) (or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik"))) }}
-          - "--proxy-headers"
-          - "--forwarded-allow-ips=*"
+          - "--proxy-headers" # Needed when using reverse proxy
+          - "--forwarded-allow-ips=*" # Needed when using reverse proxy
           - "--root-path=/{{ $serviceName }}"
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
