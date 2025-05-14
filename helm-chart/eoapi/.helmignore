@@ -24,4 +24,4 @@
 tests/
 
 # Documentation files in templates
-templates/**/*.md
+templates/*/*.md
