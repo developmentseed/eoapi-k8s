@@ -22,3 +22,6 @@
 *.tmproj
 .vscode/
 tests/
+
+# Documentation files in templates
+templates/**/*.md
