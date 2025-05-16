@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 - Remove hard-coded cert-manager configuration from ingress template [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
+- Remove `pathType` and `pathSuffix` configurations in favor of controller-specific defaults
 
 ### Added
 - Add upgrade job to handle database permissions for migrations from pre-0.7.0 versions
+- Add separate ingress configuration for STAC browser
+- Support custom cluster naming via `postgrescluster.name`
 
 ### Changed
+- Improve Nginx and Traefik support with controller-specific rewrites
+- Increase bootstrap job retry limit to 3 attempts
+- Enhance secret handling with custom PostgreSQL cluster names
 - Simplify TLS configuration to allow user-controlled certificate management [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
 - Update documentation with comprehensive cert-manager setup guide [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
 

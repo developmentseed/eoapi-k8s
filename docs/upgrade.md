@@ -8,6 +8,23 @@ To upgrade your eoAPI installation, use the standard Helm upgrade command:
 helm upgrade eoapi devseed/eoapi
 ```
 
+### Notable Changes in 0.7.1
+
+#### Ingress Configuration Changes
+- Removed `pathType` and `pathSuffix` configurations in favor of controller-specific defaults
+- Added separate ingress configuration for STAC browser
+- Improved Nginx and Traefik support with controller-specific rewrites
+
+#### PostgreSQL Cluster Updates
+- Added ability to specify cluster name via `postgrescluster.name`
+- Improved handling of database secrets with custom cluster names
+- Job retry limit increased to 3 attempts for better reliability
+
+For example, to use a custom cluster name:
+```bash
+helm upgrade eoapi devseed/eoapi --set postgrescluster.name=my-pgstac
+```
+
 ## Special Considerations for Pre-0.7.0 Versions
 
 ### Database Permission Changes

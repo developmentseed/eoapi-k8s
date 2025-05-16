@@ -1,0 +1,437 @@
+
+ 
+diff --git a/docs/stac-auth-proxy.md b/docs/stac-auth-proxy.md
+index f0fd960..2c06d92 100644
+--- a/docs/stac-auth-proxy.md
++++ b/docs/stac-auth-proxy.md
+@@ -23,27 +23,6 @@ raster:
+     enabled: true
+ ```
+ 
+-### 2. Template Changes
+-
+-The ingress template now checks service-specific settings:
+-
+-```yaml
+-{{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
+-- pathType: {{ .Values.ingress.pathType }}
+-  path: /stac{{ .Values.ingress.pathSuffix }}
+-  backend:
+-    service:
+-      name: stac
+-      port:
+-        number: {{ .Values.service.port }}
+-{{- end }}
+-```
+-
+-This ensures:
+-- Service paths are only included if the service and its ingress are enabled
+-- Backward compatibility is maintained (ingress enabled by default)
+-- Clean separation of service configurations
+-
+ ## Deployment Guide
+ 
+ ### 1. Configure EOAPI-K8S
+diff --git a/docs/unified-ingress.md b/docs/unified-ingress.md
+index 77157dd..24d6391 100644
+--- a/docs/unified-ingress.md
++++ b/docs/unified-ingress.md
+@@ -23,8 +23,6 @@ ingress:
+   # ingressClassName: "nginx" or "traefik"
+   className: "nginx"
+   # Path configuration
+-  pathType: "Prefix"  # Can be "Prefix" or "ImplementationSpecific" based on controller
+-  pathSuffix: ""      # Add a suffix to service paths (e.g. "(/|$)(.*)" for nginx regex)
+   rootPath: ""        # Root path for doc server
+   # Host configuration
+   host: ""
+
+diff --git a/helm-chart/eoapi/samples/values-with-nginx.yaml b/helm-chart/eoapi/samples/values-with-nginx.yaml
+new file mode 100644
+index 0000000..737639e
+--- /dev/null
++++ b/helm-chart/eoapi/samples/values-with-nginx.yaml
+@@ -0,0 +1,21 @@
++ingress:
++  annotations:
++    nginx.ingress.kubernetes.io/rewrite-target: /$2
++  className: nginx
++  enabled: true
++  host: eoapi.local
++  tls:
++    certManager: false
++    enabled: true
++    secretName: eoapi-tls
++namespace: eoapi
++postgrescluster:
++  enabled: true
++  name: pgstac
++resources:
++  limits:
++    cpu: 1000m
++    memory: 1Gi
++  requests:
++    cpu: 200m
++    memory: 256Mi
+\ No newline at end of file
+diff --git a/helm-chart/eoapi/templates/_helpers.tpl b/helm-chart/eoapi/templates/_helpers.tpl
+index ebb38e6..df3c20a 100644
+--- a/helm-chart/eoapi/templates/_helpers.tpl
++++ b/helm-chart/eoapi/templates/_helpers.tpl
+@@ -85,80 +85,80 @@ PostgreSQL cluster secrets
+ - name: PGUSER
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: user
+ - name: PGPORT
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: port
+ - name: PGHOST
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: host
+ - name: PGPASSWORD
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: password
+ - name: PGDATABASE
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: dbname
+ - name: PGBOUNCER_URI
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: pgbouncer-uri
+ # Legacy variables for backward compatibility
+ - name: POSTGRES_USER
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: user
+ - name: POSTGRES_PORT
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: port
+ - name: POSTGRES_HOST
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: host
+ - name: POSTGRES_HOST_READER
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: host
+ - name: POSTGRES_HOST_WRITER
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: host
+ - name: POSTGRES_PASS
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: password
+ - name: POSTGRES_DBNAME
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: dbname
+ - name: DATABASE_URL
+   valueFrom:
+     secretKeyRef:
+-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
++      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
+       key: uri
+ {{- end }}
+ {{- end }}
+ - name: PGADMIN_URI
+   valueFrom:
+     secretKeyRef:
+-      name: {{ .Release.Name }}-pguser-postgres
++      name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
+       key: uri
+ {{- end }}
+ 
+diff --git a/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml b/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml
+index 2459bf2..98feb83 100644
+--- a/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml
++++ b/helm-chart/eoapi/templates/pgstacbootstrap/configmap.yaml
+@@ -50,10 +50,6 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: initdb
+-  annotations:
+-    helm.sh/hook: "post-install,post-upgrade"
+-    helm.sh/hook-weight: "-6"
+-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+ data:
+   initdb.sql: |
+     \c {{ .Values.pgstacBootstrap.settings.database }}
+
+diff --git a/helm-chart/eoapi/templates/pgstacbootstrap/job.yaml b/helm-chart/eoapi/templates/pgstacbootstrap/job.yaml
+index fa9b60f..473ef94 100644
+--- a/helm-chart/eoapi/templates/pgstacbootstrap/job.yaml
++++ b/helm-chart/eoapi/templates/pgstacbootstrap/job.yaml
+@@ -154,5 +154,5 @@ spec:
+       tolerations:
+         {{- toYaml . | nindent 8 }}
+       {{- end }}
+-  backoffLimit: 1
++  backoffLimit: 3
+ {{- end }}
+diff --git a/helm-chart/eoapi/templates/services/ingress-browser.yaml b/helm-chart/eoapi/templates/services/ingress-browser.yaml
+new file mode 100644
+index 0000000..ea79901
+--- /dev/null
++++ b/helm-chart/eoapi/templates/services/ingress-browser.yaml
+@@ -0,0 +1,53 @@
++# We need a separate ingress because browser has the prefix /browser hardcoded in the code
++{{- if and .Values.browser.enabled .Values.ingress.enabled }}
++{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
++apiVersion: networking.k8s.io/v1
++{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion }}
++apiVersion: networking.k8s.io/v1beta1
++{{- else }}
++apiVersion: extensions/v1beta1
++{{- end }}
++kind: Ingress
++metadata:
++  name: eoapi-ingress-browser-{{ .Release.Name }}
++  labels:
++    app: eoapi-{{ .Release.Name }}
++  annotations:
++    {{- if .Values.ingress.annotations }}
++{{ toYaml .Values.ingress.annotations | indent 4 }}
++    {{- end }}
++    {{- if eq .Values.ingress.className "nginx" }}
++    nginx.ingress.kubernetes.io/rewrite-target: /browser/$2
++    nginx.ingress.kubernetes.io/use-regex: "true"
++    {{- end }}
++    # Temporary annotations for Traefik until uvicorn support real prefix in ASGI: https://github.com/encode/uvicorn/discussions/2490
++    {{- if eq .Values.ingress.className "traefik" }}
++    traefik.ingress.kubernetes.io/router.entrypoints: web
++    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-strip-prefix-middleware-{{ $.Release.Name }}@kubernetescrd
++    {{- end }}
++spec:
++  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
++  ingressClassName: {{ .Values.ingress.className }}
++  {{- end }}
++  rules:
++    - {{- if .Values.ingress.host }}
++      host: {{ .Values.ingress.host }}
++      {{- end }}
++      http:
++        paths:
++          {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
++          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
++            path: "/browser{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
++            backend:
++              service:
++                name: browser-{{ $.Release.Name }}
++                port:
++                  number: 8080
++          {{- end }}
++  {{- if and .Values.ingress.host .Values.ingress.tls.enabled }}
++  tls:
++    - hosts:
++        - {{ .Values.ingress.host }}
++      secretName: {{ .Values.ingress.tls.secretName }}
++  {{- end }}
++{{- end }}
+diff --git a/helm-chart/eoapi/templates/services/ingress.yaml b/helm-chart/eoapi/templates/services/ingress.yaml
+index 3ddfa59..1609317 100644
+--- a/helm-chart/eoapi/templates/services/ingress.yaml
++++ b/helm-chart/eoapi/templates/services/ingress.yaml
+@@ -12,6 +12,10 @@ metadata:
+   labels:
+     app: eoapi-{{ .Release.Name }}
+   annotations:
++    {{- if eq .Values.ingress.className "nginx" }}
++    nginx.ingress.kubernetes.io/rewrite-target: /$2
++    nginx.ingress.kubernetes.io/use-regex: "true"
++    {{- end }}
+     {{- if .Values.ingress.annotations }}
+ {{ toYaml .Values.ingress.annotations | indent 4 }}
+     {{- end }}
+@@ -31,8 +35,8 @@ spec:
+       http:
+         paths:
+           {{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
+-          - pathType: {{ .Values.ingress.pathType }}
+-            path: /raster{{ .Values.ingress.pathSuffix }}
++          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
++            path: /raster{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+             backend:
+               service:
+                 name: raster-{{ $.Release.Name }}
+@@ -41,8 +45,8 @@ spec:
+           {{- end }}
+           
+           {{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
+-          - pathType: {{ .Values.ingress.pathType }}
+-            path: /stac{{ .Values.ingress.pathSuffix }}
++          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
++            path: /stac{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+             backend:
+               service:
+                 name: stac-{{ $.Release.Name }}
+@@ -51,8 +55,8 @@ spec:
+           {{- end }}
+           
+           {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
+-          - pathType: {{ .Values.ingress.pathType }}
+-            path: /vector{{ .Values.ingress.pathSuffix }}
++          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
++            path: /vector{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+             backend:
+               service:
+                 name: vector-{{ $.Release.Name }}
+@@ -61,8 +65,8 @@ spec:
+           {{- end }}
+           
+           {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
+-          - pathType: {{ .Values.ingress.pathType }}
+-            path: /multidim{{ .Values.ingress.pathSuffix }}
++          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
++            path: /multidim{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+             backend:
+               service:
+                 name: multidim-{{ $.Release.Name }}
+@@ -70,19 +74,8 @@ spec:
+                   number: {{ .Values.service.port }}
+           {{- end }}
+           
+-          {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
+-          # We need a separate path because browser does not play well with nginx rewrite_path directive
+-          - pathType: {{ .Values.ingress.pathType }}
+-            path: "/browser"
+-            backend:
+-              service:
+-                name: browser-{{ $.Release.Name }}
+-                port:
+-                  number: 8080
+-          {{- end }}
+-          
+           {{- if .Values.docServer.enabled }}
+-          - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
++          - pathType: Prefix
+             path: "/{{ $.Values.ingress.rootPath | default "" }}"
+             backend:
+               service:
+diff --git a/helm-chart/eoapi/templates/services/traefik-middleware.yaml b/helm-chart/eoapi/templates/services/traefik-middleware.yaml
+index 0c9718c..2e252cc 100644
+--- a/helm-chart/eoapi/templates/services/traefik-middleware.yaml
++++ b/helm-chart/eoapi/templates/services/traefik-middleware.yaml
+@@ -19,7 +19,4 @@ spec:
+       {{- if .Values.multidim.enabled }}
+       - /multidim
+       {{- end }}
+-      # {{- if .Values.browser.enabled }}
+-      # - /browser
+-      # {{- end }}
+ {{- end }}
+
+diff --git a/helm-chart/eoapi/values.schema.json b/helm-chart/eoapi/values.schema.json
+index 7d7f7a7..03af347 100644
+--- a/helm-chart/eoapi/values.schema.json
++++ b/helm-chart/eoapi/values.schema.json
+@@ -6,6 +6,10 @@
+     "gitSha"
+   ],
+   "properties": {
++    "previousVersion": {
++      "type": "string",
++      "description": "Previous version when upgrading. Used for migrations (e.g., when upgrading from pre-0.7.0 versions)"
++    },
+     "gitSha": {
+       "type": "string",
+       "description": "Git SHA of the deployment"
+@@ -65,15 +69,6 @@
+           "enum": ["nginx", "traefik"],
+           "description": "Ingress controller class name"
+         },
+-        "pathType": {
+-          "type": "string",
+-          "enum": ["Prefix", "ImplementationSpecific"],
+-          "description": "Ingress path type"
+-        },
+-        "pathSuffix": {
+-          "type": "string",
+-          "description": "Suffix to add to service paths"
+-        },
+         "rootPath": {
+           "type": "string",
+           "description": "Root path for doc server"
+diff --git a/helm-chart/eoapi/values.yaml b/helm-chart/eoapi/values.yaml
+index 96ef7c8..0472c0c 100644
+--- a/helm-chart/eoapi/values.yaml
++++ b/helm-chart/eoapi/values.yaml
+@@ -41,11 +41,6 @@ ingress:
+   enabled: true
+   # ingressClassName: "nginx" or "traefik"
+   className: "nginx"
+-  # Path configuration
+-  pathType: "Prefix"  # Can be "Prefix" or "ImplementationSpecific" based on controller
+-  # NOTE: When using nginx ingress controller with regex in pathSuffix,
+-  # you must set pathType to "ImplementationSpecific". See issue #189 for more context.
+-  pathSuffix: ""      # Add a suffix to service paths (e.g. "(/|$)(.*)" for nginx regex)
+   rootPath: ""        # Root path for doc server
+   # Host configuration
+   host: ""
+@@ -103,6 +98,8 @@ postgresql:
+ # this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
+ postgrescluster:
+   enabled: true
++  # The name of the postgres cluster
++  # name: pgstac
+   postgresVersion: 16
+   postGISVersion: "3.4"
+   pgBouncerReplicas: 1
+@@ -470,3 +467,10 @@ browser:
+ 
+ docServer:
+   enabled: true
++
++# Version being upgraded from, used for migration purposes
++# Dont set the value in the values.yaml file
++# prefer to set it in the command line
++# helm upgrade --set previousVersion=$PREVIOUS_VERSION
++# or in the CI/CD pipeline
++previousVersion: ""
+\ No newline at end of file
+diff --git a/helm-chart/postgrescluster/values.yaml b/helm-chart/postgrescluster/values.yaml
+index 4843b3d..93c1b88 100644
+--- a/helm-chart/postgrescluster/values.yaml
++++ b/helm-chart/postgrescluster/values.yaml
+@@ -10,6 +10,9 @@
+ # name is the name of the cluster. This defaults to the name of the Helm
+ # release.
+ # name: hippo
++# namespace is the namespace that the cluster will be deployed in. This defaults
++# to the namespace of the Helm release.
++# namespace: hippo
+ 
+ # postgresVersion sets the version to deploy. This version number needs to be
+ # available as one of the "RELATED_IMAGE_POSTGRES_..." images as part of the PGO
