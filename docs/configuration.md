@@ -2,60 +2,172 @@
 
 ## Required Values
 
-The required values to pass to `helm install` or `helm template` commands can be found by showing what is validated:
+The required values to pass to `helm install` or `helm template` commands can be found in our schema validation:
 
 ```bash
-$ head -n 9 <eoapi-k8s-repo>/values.schema.json
 {
-  "$schema": "http://json-schema.org/schema#",
-  "type": "object",
   "required": [
     "service",
     "gitSha"
-  ],
+  ]
+}
 ```
 
-Most of the required fields have common-sense defaults. 
-The table below and the `values.yaml` comments should explain what the options and defaults are:
+Most fields have sensible defaults. Here are the core configuration options:
 
-|                               **Values Key**                              |                                                              **Description**                                                              |  **Default** | **Choices**            |
-|:-------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------|:------------|:------------------------|
-| `service.port`                                                              | the port that all vector/raster/stac services run on<br>used in `kind: Service` and `kind: Ingress`                                       |     8080     |   your favorite port   |
-| `gitSha`                                                                    | sha attached to a `kind: Deployment` key `metadata.labels`                                                                                | gitshaABC123 | your favorite sha      |
+| **Values Key** | **Description** | **Default** | **Choices** |
+|:--------------|:----------------|:------------|:------------|
+| `service.port` | Port for all services (vector/raster/stac) | 8080 | any valid port |
+| `gitSha` | SHA for deployment tracking | gitshaABC123 | any valid SHA |
+| `previousVersion` | Previous version during upgrades | "" | semantic version |
 
+## Database Configuration
 
---- 
+### PostgreSQL Cluster (Default)
 
-## Default Configuration
+Using Crunchydata's PostgreSQL Operator (`postgresql.type: "postgrescluster"`):
 
-Running `helm install` from https://devseed.com/eoapi-k8s/ should spin up similar infrastructure in EKS or GKE:
+| **Values Key** | **Description** | **Default** | **Choices** |
+|:--------------|:----------------|:------------|:------------|
+| `postgrescluster.enabled` | Enable PostgreSQL cluster | true | true/false |
+| `postgrescluster.name` | Cluster name | Release name | any valid k8s name |
+| `postgrescluster.postgresVersion` | PostgreSQL version | 16 | supported versions |
+| `postgrescluster.postGISVersion` | PostGIS version | "3.4" | supported versions |
 
-In EKS or GKE you'll by default get:
+### External Database
 
-* a HA PostgreSQL database deployment and service via [Crunchdata's Postgresl Operator](https://access.crunchydata.com/documentation/postgres-operator)
-* the same vector and raster data fixtures used for testing loaded into the DB
-* a load balancer and nginx-compatible ingress with the following path rewrites:
-    * a `/stac` service for `stac_fastapi.pgstac`
-    * a `/raster` service for `titler.pgstac`
-    * a `/vector` service for `tipg.pgstac`
+For external databases, set `postgresql.type` to either:
 
-Here's a simplified high-level diagram to grok:
+1. Using plaintext credentials (`external-plaintext`):
+```yaml
+postgresql:
+  type: "external-plaintext"
+  external:
+    host: "your-host"
+    port: "5432"
+    database: "eoapi"
+    credentials:
+      username: "eoapi"
+      password: "your-password"
+```
+
+2. Using Kubernetes secrets (`external-secret`):
+```yaml
+postgresql:
+  type: "external-secret"
+  external:
+    existingSecret:
+      name: "your-secret"
+      keys:
+        username: "username"
+        password: "password"
+    host: "your-host"  # can also be in secret
+    port: "5432"       # can also be in secret
+    database: "eoapi"  # can also be in secret
+```
+
+## Ingress Configuration
+
+Unified ingress configuration supporting both NGINX and Traefik:
+
+| **Values Key** | **Description** | **Default** | **Choices** |
+|:--------------|:----------------|:------------|:------------|
+| `ingress.enabled` | Enable ingress | true | true/false |
+| `ingress.className` | Ingress controller | "nginx" | "nginx", "traefik" |
+| `ingress.host` | Ingress hostname | "" | valid hostname |
+| `ingress.rootPath` | Doc server root path | "" | valid path |
+
+See [Unified Ingress Configuration](./unified-ingress.md) for detailed setup.
+
+## Service Configuration
+
+Each service (stac, raster, vector, multidim) supports:
+
+| **Values Key** | **Description** | **Default** | **Choices** |
+|:--------------|:----------------|:------------|:------------|
+| `{service}.enabled` | Enable the service | varies | true/false |
+| `{service}.image.name` | Container image | varies | valid image |
+| `{service}.image.tag` | Image tag | varies | valid tag |
+| `{service}.autoscaling.enabled` | Enable HPA | false | true/false |
+| `{service}.autoscaling.type` | Scaling metric | "requestRate" | "cpu", "requestRate", "both" |
+
+Example service configuration:
+```yaml
+raster:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    type: "requestRate"
+    targets:
+      cpu: 75
+      requestRate: "100000m"
+```
+
+## STAC Browser
+
+| **Values Key** | **Description** | **Default** | **Choices** |
+|:--------------|:----------------|:------------|:------------|
+| `browser.enabled` | Enable STAC browser | true | true/false |
+| `browser.replicaCount` | Number of replicas | 1 | integer > 0 |
+| `browser.ingress.enabled` | Enable browser ingress | true | true/false |
+
+## Deployment Architecture
+
+When using default settings, the deployment looks like this:
 ![](./images/default_architecture.png)
 
----
+The deployment includes:
+- HA PostgreSQL database (via PostgreSQL Operator)
+- Sample data fixtures
+- Load balancer with path-based routing:
+  - `/stac` → STAC API
+  - `/raster` → Titiler
+  - `/vector` → TiPG
+  - `/browser` → STAC Browser
+  - `/` → Documentation
 
-## Additional Options
+## Advanced Configuration
 
----
+### Autoscaling Behavior
 
-### Key `autoscaling`
+Fine-tune scaling behavior:
 
-#### `autoscaling.type`
+```yaml
+autoscaling:
+  behaviour:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+```
 
-|   **Values Key**  |                                                                 **Description**                                                                 | **Default** | **Choices**  |
-|:-----------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|:-----------|:--------------|
-| `autoscaling.type` | a simple example of a default metric (`cpu`) and custom metric (`requestRate`) to scale by. If selecting `both` the metric that results in the "highest amount of change" wins. See [k8s documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#scaling-on-multiple-metrics) for more info  | requestRate       | requestRate<br>cpu<br>both<br> |
+See [Kubernetes HPA documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior) for details.
 
-#### `autoscaling.behaviour.[scaleDown||scaleUp]`
+### Resource Requirements
 
-These are normal k8s autoscaling pass throughs. They are stablization windows in seconds to for scaling up or down to prevent flapping from happening. Read more about [the options on the k8s documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#configurable-scaling-behavior)
+Each service can have custom resource limits:
+
+```yaml
+settings:
+  resources:
+    limits:
+      cpu: "768m"
+      memory: "1024Mi"
+    requests:
+      cpu: "256m"
+      memory: "512Mi"
+```
+
+### Additional Service Settings
+
+Each service also supports:
+```yaml
+settings:
+  labels: {}                # Additional pod labels
+  extraEnvFrom: []         # Additional environment variables from references
+  extraVolumeMounts: []    # Additional volume mounts
+  extraVolumes: []         # Additional volumes
+  envVars: {}             # Environment variables
+```
