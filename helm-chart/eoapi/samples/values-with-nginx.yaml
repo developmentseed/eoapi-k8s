@@ -11,6 +11,7 @@ ingress:
 namespace: eoapi
 postgrescluster:
   enabled: true
+  name: pgstac
 resources:
   limits:
     cpu: 1000m

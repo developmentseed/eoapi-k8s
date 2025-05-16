@@ -467,3 +467,10 @@ browser:
 
 docServer:
   enabled: true
+
+# Version being upgraded from, used for migration purposes
+# Dont set the value in the values.yaml file
+# prefer to set it in the command line
+# helm upgrade --set previousVersion=$PREVIOUS_VERSION
+# or in the CI/CD pipeline
+previousVersion: ""
