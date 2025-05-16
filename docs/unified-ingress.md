@@ -4,7 +4,7 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 ## Overview
 
-As of version 0.7.0, eoAPI uses an even more streamlined ingress configuration with smart defaults for different controllers. This approach:
+eoAPI includes a streamlined ingress configuration with smart defaults for different controllers. This approach:
 
 - Eliminates manual pathType and suffix configurations
 - Uses controller-specific optimizations for NGINX and Traefik
