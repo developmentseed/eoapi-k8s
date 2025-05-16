@@ -16,7 +16,10 @@ kubeVersion: ">=1.23.0-0"
 icon: https://eoapi.dev/img/eoAPI.png
 annotations:
   artifacthub.io/changes: |
-    - Adds integration with Artifacthub.io
+    - Remove pathType and pathSuffix configurations
+    - Add upgrade job for pre-0.7.0 migrations
+    - Add separate browser ingress configuration
+    - Support custom PostgreSQL cluster naming
   artifacthub.io/links: |
     - name: GitHub Repository
       url: https://github.com/developmentseed/eoapi-k8s
@@ -36,7 +39,7 @@ annotations:
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: "0.7.0"
+version: "0.7.1"
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to

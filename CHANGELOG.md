@@ -5,21 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.7.1] - Unreleased
+## [v0.7.1] - 2025-05-16
 
 ### Breaking Changes
 - Remove hard-coded cert-manager configuration from ingress template [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
-- Remove `pathType` and `pathSuffix` configurations in favor of controller-specific defaults
+- Remove `pathType` and `pathSuffix` configurations in favor of controller-specific defaults [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
 
 ### Added
-- Add upgrade job to handle database permissions for migrations from pre-0.7.0 versions
-- Add separate ingress configuration for STAC browser
-- Support custom cluster naming via `postgrescluster.name`
+- Add upgrade job to handle database permissions for migrations from pre-0.7.0 versions [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
+- Add separate ingress configuration for STAC browser [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
+- Support custom cluster naming via `postgrescluster.name` [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
 
 ### Changed
-- Improve Nginx and Traefik support with controller-specific rewrites
-- Increase bootstrap job retry limit to 3 attempts
-- Enhance secret handling with custom PostgreSQL cluster names
+- Improve Nginx and Traefik support with controller-specific rewrites [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
+- Increase bootstrap job retry limit to 3 attempts [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
+- Enhance secret handling with custom PostgreSQL cluster names [#228](https://github.com/developmentseed/eoapi-k8s/pull/228)
 - Simplify TLS configuration to allow user-controlled certificate management [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
 - Update documentation with comprehensive cert-manager setup guide [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
 
