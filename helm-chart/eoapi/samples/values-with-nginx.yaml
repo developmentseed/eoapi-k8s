@@ -1,0 +1,21 @@
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  className: nginx
+  enabled: true
+  host: eoapi.local
+  tls:
+    certManager: false
+    enabled: true
+    secretName: eoapi-tls
+namespace: eoapi
+postgrescluster:
+  enabled: true
+  name: pgstac
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi

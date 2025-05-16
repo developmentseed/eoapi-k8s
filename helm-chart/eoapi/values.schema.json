@@ -6,6 +6,10 @@
     "gitSha"
   ],
   "properties": {
+    "previousVersion": {
+      "type": "string",
+      "description": "Previous version when upgrading. Used for migrations (e.g., when upgrading from pre-0.7.0 versions)"
+    },
     "gitSha": {
       "type": "string",
       "description": "Git SHA of the deployment"
@@ -64,15 +68,6 @@
           "type": "string",
           "enum": ["nginx", "traefik"],
           "description": "Ingress controller class name"
-        },
-        "pathType": {
-          "type": "string",
-          "enum": ["Prefix", "ImplementationSpecific"],
-          "description": "Ingress path type"
-        },
-        "pathSuffix": {
-          "type": "string",
-          "description": "Suffix to add to service paths"
         },
         "rootPath": {
           "type": "string",

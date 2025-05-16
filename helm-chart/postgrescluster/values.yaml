@@ -10,6 +10,9 @@
 # name is the name of the cluster. This defaults to the name of the Helm
 # release.
 # name: hippo
+# namespace is the namespace that the cluster will be deployed in. This defaults
+# to the namespace of the Helm release.
+# namespace: hippo
 
 # postgresVersion sets the version to deploy. This version number needs to be
 # available as one of the "RELATED_IMAGE_POSTGRES_..." images as part of the PGO

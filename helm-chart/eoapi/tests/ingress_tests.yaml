@@ -5,11 +5,7 @@ tests:
   - it: "vector ingress with nginx controller"
     set:
       ingress.className: "nginx"
-      ingress.pathType: "ImplementationSpecific"
-      ingress.pathSuffix: "(/|$)(.*)"
       ingress.annotations:
-        nginx.ingress.kubernetes.io/use-regex: "true"
-        nginx.ingress.kubernetes.io/rewrite-target: /$2
         nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/enable-access-log: "true"
       raster.enabled: false

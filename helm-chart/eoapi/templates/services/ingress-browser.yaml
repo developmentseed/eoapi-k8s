@@ -1,0 +1,53 @@
+# We need a separate ingress because browser has the prefix /browser hardcoded in the code
+{{- if and .Values.browser.enabled .Values.ingress.enabled }}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion }}
+apiVersion: networking.k8s.io/v1beta1
+{{- else }}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: eoapi-ingress-browser-{{ .Release.Name }}
+  labels:
+    app: eoapi-{{ .Release.Name }}
+  annotations:
+    {{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+    {{- end }}
+    {{- if eq .Values.ingress.className "nginx" }}
+    nginx.ingress.kubernetes.io/rewrite-target: /browser/$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    {{- end }}
+    # Temporary annotations for Traefik until uvicorn support real prefix in ASGI: https://github.com/encode/uvicorn/discussions/2490
+    {{- if eq .Values.ingress.className "traefik" }}
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-strip-prefix-middleware-{{ $.Release.Name }}@kubernetescrd
+    {{- end }}
+spec:
+  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+      http:
+        paths:
+          {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: "/browser{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
+            backend:
+              service:
+                name: browser-{{ $.Release.Name }}
+                port:
+                  number: 8080
+          {{- end }}
+  {{- if and .Values.ingress.host .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+{{- end }}

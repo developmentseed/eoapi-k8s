@@ -12,6 +12,10 @@ metadata:
   labels:
     app: eoapi-{{ .Release.Name }}
   annotations:
+    {{- if eq .Values.ingress.className "nginx" }}
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    {{- end }}
     {{- if .Values.ingress.annotations }}
 {{ toYaml .Values.ingress.annotations | indent 4 }}
     {{- end }}
@@ -31,8 +35,8 @@ spec:
       http:
         paths:
           {{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
-          - pathType: {{ .Values.ingress.pathType }}
-            path: /raster{{ .Values.ingress.pathSuffix }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: /raster{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: raster-{{ $.Release.Name }}
@@ -41,8 +45,8 @@ spec:
           {{- end }}
           
           {{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
-          - pathType: {{ .Values.ingress.pathType }}
-            path: /stac{{ .Values.ingress.pathSuffix }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: /stac{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: stac-{{ $.Release.Name }}
@@ -51,8 +55,8 @@ spec:
           {{- end }}
           
           {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
-          - pathType: {{ .Values.ingress.pathType }}
-            path: /vector{{ .Values.ingress.pathSuffix }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: /vector{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: vector-{{ $.Release.Name }}
@@ -61,8 +65,8 @@ spec:
           {{- end }}
           
           {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
-          - pathType: {{ .Values.ingress.pathType }}
-            path: /multidim{{ .Values.ingress.pathSuffix }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: /multidim{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: multidim-{{ $.Release.Name }}
@@ -70,19 +74,8 @@ spec:
                   number: {{ .Values.service.port }}
           {{- end }}
           
-          {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
-          # We need a separate path because browser does not play well with nginx rewrite_path directive
-          - pathType: {{ .Values.ingress.pathType }}
-            path: "/browser"
-            backend:
-              service:
-                name: browser-{{ $.Release.Name }}
-                port:
-                  number: 8080
-          {{- end }}
-          
           {{- if .Values.docServer.enabled }}
-          - pathType: {{ $.Values.ingress.pathType | default "Prefix" }}
+          - pathType: Prefix
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
             backend:
               service:

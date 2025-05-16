@@ -23,27 +23,6 @@ raster:
     enabled: true
 ```
 
-### 2. Template Changes
-
-The ingress template now checks service-specific settings:
-
-```yaml
-{{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
-- pathType: {{ .Values.ingress.pathType }}
-  path: /stac{{ .Values.ingress.pathSuffix }}
-  backend:
-    service:
-      name: stac
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-```
-
-This ensures:
-- Service paths are only included if the service and its ingress are enabled
-- Backward compatibility is maintained (ingress enabled by default)
-- Clean separation of service configurations
-
 ## Deployment Guide
 
 ### 1. Configure EOAPI-K8S

@@ -1,0 +1,83 @@
+{{- if and .Values.postgrescluster.enabled .Values.pgstacBootstrap.enabled .Release.IsUpgrade (semverCompare "< 0.7.0" .Values.previousVersion) }}
+---
+# This job is part of the upgrade process from pre-0.7.0 versions.
+# Prior to 0.7.0, database schema updates were run with superuser privileges.
+# This job ensures proper permissions are granted to the eoapi user during upgrade.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgstac-eoapiuser-permissions-upgrade
+  labels:
+    app: pgstac-eoapiuser-permissions-upgrade
+  annotations:
+    helm.sh/hook: "post-upgrade"
+    helm.sh/hook-weight: "-7"
+    helm.sh/hook-delete-policy: "before-hook-creation"
+spec:
+  template:
+    metadata:
+      labels:
+        app: pgstac-eoapiuser-permissions-upgrade
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pgstac-eoapiuser-permissions
+          image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
+          command:
+            - "/bin/sh"
+            - "-c"
+          args:
+            - |
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+              
+              # Run permission setup with superuser
+              echo "Applying superuser permissions for upgrade from version {{ .Values.previousVersion }}..."
+              PGUSER=postgres psql -f /opt/sql/initdb.sql
+              
+              echo "Permissions upgrade complete"
+          resources:
+            {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /opt/sql
+              name: initdb-config
+          env:
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  key: user
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  key: port
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  key: host
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  key: dbname
+      volumes:
+        - name: initdb-config
+          configMap:
+            name: initdb
+      {{- with .Values.pgstacBootstrap.settings.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pgstacBootstrap.settings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  backoffLimit: 1
+{{- end }}

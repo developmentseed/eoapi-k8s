@@ -85,80 +85,80 @@ PostgreSQL cluster secrets
 - name: PGUSER
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: user
 - name: PGPORT
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: port
 - name: PGHOST
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: host
 - name: PGPASSWORD
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: password
 - name: PGDATABASE
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: dbname
 - name: PGBOUNCER_URI
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: pgbouncer-uri
 # Legacy variables for backward compatibility
 - name: POSTGRES_USER
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: user
 - name: POSTGRES_PORT
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: port
 - name: POSTGRES_HOST
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: host
 - name: POSTGRES_HOST_READER
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: host
 - name: POSTGRES_HOST_WRITER
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: host
 - name: POSTGRES_PASS
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: password
 - name: POSTGRES_DBNAME
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: dbname
 - name: DATABASE_URL
   valueFrom:
     secretKeyRef:
-      name: {{ $.Release.Name }}-pguser-{{ index $v "name" }}
+      name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-{{ index $v "name" }}
       key: uri
 {{- end }}
 {{- end }}
 - name: PGADMIN_URI
   valueFrom:
     secretKeyRef:
-      name: {{ .Release.Name }}-pguser-postgres
+      name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
       key: uri
 {{- end }}
 

@@ -19,7 +19,4 @@ spec:
       {{- if .Values.multidim.enabled }}
       - /multidim
       {{- end }}
-      # {{- if .Values.browser.enabled }}
-      # - /browser
-      # {{- end }}
 {{- end }}
