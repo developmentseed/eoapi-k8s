@@ -99,7 +99,7 @@ postgresql:
 postgrescluster:
   enabled: true
   # The name of the postgres cluster
-  name: pgstac
+  # name: pgstac
   postgresVersion: 16
   postGISVersion: "3.4"
   pgBouncerReplicas: 1

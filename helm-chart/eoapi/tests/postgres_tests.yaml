@@ -1,0 +1,70 @@
+suite: postgresql tests
+templates:
+  - templates/services/stac/deployment.yaml
+tests:
+  - it: should use custom cluster name for secret references when specified
+    set:
+      postgresql:
+        type: postgrescluster
+      postgrescluster:
+        enabled: true
+        name: custom-cluster
+        users:
+          - name: postgres
+            databases: ["postgres"]
+          - name: my-user
+            databases: ["my-db"]
+      stac:
+        enabled: true
+      raster:
+        enabled: false
+      vector:
+        enabled: false
+      multidim:
+        enabled: false
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: custom-cluster-pguser-my-user
+                key: user
+
+  - it: should fallback to release name when no custom cluster name is specified
+    release:
+      name: test-release
+    set:
+      postgresql:
+        type: postgrescluster
+      postgrescluster:
+        enabled: true
+        users:
+          - name: postgres
+            databases: ["postgres"]
+          - name: my-user
+            databases: ["my-db"]
+      stac:
+        enabled: true
+      raster:
+        enabled: false
+      vector:
+        enabled: false
+      multidim:
+        enabled: false
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: test-release-pguser-my-user
+                key: user
