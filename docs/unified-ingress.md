@@ -34,9 +34,6 @@ ingress:
   tls:
     enabled: false
     secretName: eoapi-tls
-    certManager: false
-    certManagerIssuer: letsencrypt-prod
-    certManagerEmail: ""
 ```
 
 ## Controller-Specific Configurations
@@ -87,6 +84,77 @@ ingress:
   tls:
     enabled: true
     secretName: eoapi-tls
+```
+
+## Setting up TLS with cert-manager
+
+[cert-manager](https://cert-manager.io) can be used to automatically obtain and manage TLS certificates. Here's how to set it up with Let's Encrypt:
+
+1. First, install cert-manager in your cluster:
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --set installCRDs=true
+```
+
+2. Create a ClusterIssuer for Let's Encrypt (staging first for testing):
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # Use Let's Encrypt staging environment first
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: your-email@example.com
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: nginx  # or traefik, depending on your setup
+```
+
+3. After testing with staging, create the production issuer:
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: your-email@example.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx  # or traefik, depending on your setup
+```
+
+4. Configure your eoAPI ingress to use cert-manager:
+```yaml
+ingress:
+  enabled: true
+  className: "nginx"  # or "traefik"
+  host: "eoapi.example.com"
+  annotations:
+    # Add cert-manager annotations
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: eoapi-tls  # cert-manager will create this secret
+```
+
+The certificate will be automatically obtained and renewed by cert-manager. The process typically takes a few minutes. You can check the certificate status with:
+```bash
+kubectl get certificate
 ```
 
 ## Migration

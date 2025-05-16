@@ -55,9 +55,6 @@ ingress:
   tls:
     enabled: false
     secretName: eoapi-tls
-    certManager: false
-    certManagerIssuer: letsencrypt-prod
-    certManagerEmail: ""
 
 ######################
 # DATABASE
