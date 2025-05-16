@@ -65,15 +65,6 @@
           "enum": ["nginx", "traefik"],
           "description": "Ingress controller class name"
         },
-        "pathType": {
-          "type": "string",
-          "enum": ["Prefix", "ImplementationSpecific"],
-          "description": "Ingress path type"
-        },
-        "pathSuffix": {
-          "type": "string",
-          "description": "Suffix to add to service paths"
-        },
         "rootPath": {
           "type": "string",
           "description": "Root path for doc server"

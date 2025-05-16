@@ -23,8 +23,6 @@ ingress:
   # ingressClassName: "nginx" or "traefik"
   className: "nginx"
   # Path configuration
-  pathType: "Prefix"  # Can be "Prefix" or "ImplementationSpecific" based on controller
-  pathSuffix: ""      # Add a suffix to service paths (e.g. "(/|$)(.*)" for nginx regex)
   rootPath: ""        # Root path for doc server
   # Host configuration
   host: ""
