@@ -104,6 +104,9 @@ For cloud-based deployments, refer to our detailed setup guides:
 * [Autoscaling and Monitoring](./docs/autoscaling.md)
 * [Health Checks](./docs/health.md)
 * [Unified Ingress Configuration](./docs/unified-ingress.md)
+* [Upgrade Guide](./docs/upgrade.md)
+
+> **Important Notice**: If you're upgrading from a version prior to 0.7.0, please read the [upgrade guide](./docs/upgrade.md) for important database permission changes.
 
 ## Contributing
 
