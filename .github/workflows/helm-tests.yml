@@ -91,6 +91,45 @@ jobs:
 
           exit $?
 
+      - name: debug pgstac-eoapiuser-permissions-upgrade job failure
+        if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          echo "Extracting pgstac-eoapiuser-permissions-upgrade job info and logs for debugging..."
+          
+          # Get job details
+          echo "===== pgstac-eoapiuser-permissions-upgrade Job Details ====="
+          kubectl get job pgstac-eoapiuser-permissions-upgrade -o yaml || echo "Could not get job details"
+          
+          # Get pod details
+          echo "===== Pod Details ====="
+          kubectl get pods --selector=app=pgstac-eoapiuser-permissions-upgrade -o wide || echo "Could not find pods"
+          
+          # Extract logs from pods
+          echo "===== Pod Logs ====="
+          PODS=$(kubectl get pods --selector=app=pgstac-eoapiuser-permissions-upgrade -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          if [ -n "$PODS" ]; then
+            for POD in $PODS; do
+              echo "--- Logs from pod $POD ---"
+              kubectl logs $POD --previous || true  # Get logs from previous container if it exists
+              kubectl logs $POD || echo "Could not get logs from pod $POD"
+            done
+          else
+            echo "No pods found for pgstac-eoapiuser-permissions-upgrade job"
+          fi
+          
+          # Get pod descriptions for more details
+          echo "===== Pod Descriptions ====="
+          kubectl describe pods --selector=app=pgstac-eoapiuser-permissions-upgrade || echo "Could not describe pods"
+          
+          # Check the configmap contents
+          echo "===== initdb ConfigMap Contents ====="
+          kubectl get configmap initdb -o yaml || echo "Could not get initdb configmap"
+          
+          # Check for any related events
+          echo "===== Related Kubernetes Events ====="
+          kubectl get events | grep -E "pgstac-eoapiuser-permissions-upgrade|initdb" || echo "No relevant events found"
+
       - name: debug pgstac-migrate job failure
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
