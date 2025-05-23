@@ -1,8 +1,10 @@
-{{- if and .Values.postgrescluster.enabled .Values.pgstacBootstrap.enabled (semverCompare "< 0.7.0" .Values.previousVersion) }}
+{{- if and .Values.postgrescluster.enabled .Values.pgstacBootstrap.enabled }}
 ---
 # This job is part of the upgrade process from pre-0.7.0 versions.
 # Prior to 0.7.0, database schema updates were run with superuser privileges.
 # This job ensures proper permissions are granted to the eoapi user during upgrade.
+# TODO: Remove with the next mayor verson and add to documentation that one needs to
+# through 0.7.x when upgrading.
 apiVersion: batch/v1
 kind: Job
 metadata:
