@@ -1,4 +1,4 @@
-{{- if and .Values.postgrescluster.enabled .Values.pgstacBootstrap.enabled .Release.IsUpgrade (semverCompare "< 0.7.0" .Values.previousVersion) }}
+{{- if and .Values.postgrescluster.enabled .Values.pgstacBootstrap.enabled (semverCompare "< 0.7.0" .Values.previousVersion) }}
 ---
 # This job is part of the upgrade process from pre-0.7.0 versions.
 # Prior to 0.7.0, database schema updates were run with superuser privileges.
@@ -30,11 +30,11 @@ spec:
             - |
               # Exit immediately if a command exits with a non-zero status
               set -e
-              
+
               # Run permission setup with superuser
               echo "Applying superuser permissions for upgrade from version {{ .Values.previousVersion }}..."
               PGUSER=postgres psql -f /opt/sql/initdb.sql
-              
+
               echo "Permissions upgrade complete"
           resources:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
