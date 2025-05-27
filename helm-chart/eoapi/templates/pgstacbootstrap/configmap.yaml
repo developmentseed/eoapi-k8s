@@ -61,6 +61,7 @@ data:
     CREATE ROLE pgstac_ingest;
     ALTER DATABASE {{ .Values.pgstacBootstrap.settings.database }} OWNER TO {{ .Values.pgstacBootstrap.settings.user }};
     ALTER USER {{ .Values.pgstacBootstrap.settings.user }} SET search_path TO pgstac, public;
+    ALTER ROLE {{ .Values.pgstacBootstrap.settings.user }} WITH CREATEROLE;
     ALTER DATABASE {{ .Values.pgstacBootstrap.settings.database }} set search_path to pgstac, public;
     GRANT CONNECT ON DATABASE {{ .Values.pgstacBootstrap.settings.database }} TO {{ .Values.pgstacBootstrap.settings.user }};
     GRANT ALL PRIVILEGES ON TABLES TO {{ .Values.pgstacBootstrap.settings.user }};
