@@ -190,7 +190,6 @@ raster:
   enabled: true
   ingress:
     enabled: true  # Control ingress specifically for raster service
-    path: "/raster"  # Configurable path prefix for the raster service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -262,7 +261,6 @@ multidim:
   enabled: false # disabled by default
   ingress:
     enabled: true  # Control ingress specifically for multidim service
-    path: "/multidim"  # Configurable path prefix for the multidim service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -334,7 +332,6 @@ stac:
   enabled: true
   ingress:
     enabled: true  # Control ingress specifically for stac service
-    path: "/stac"  # Configurable path prefix for the stac service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information
@@ -394,7 +391,6 @@ vector:
   enabled: true
   ingress:
     enabled: true  # Control ingress specifically for vector service
-    path: "/vector"  # Configurable path prefix for the vector service
   autoscaling:
     # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
     # see ../../../docs/autoscaling.md for more information

@@ -36,7 +36,7 @@ spec:
         paths:
           {{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.raster.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            path: /raster{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: raster-{{ $.Release.Name }}
@@ -46,7 +46,7 @@ spec:
           
           {{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.stac.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            path: /stac{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: stac-{{ $.Release.Name }}
@@ -56,7 +56,7 @@ spec:
           
           {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.vector.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            path: /vector{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: vector-{{ $.Release.Name }}
@@ -66,7 +66,7 @@ spec:
           
           {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.multidim.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            path: /multidim{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: multidim-{{ $.Release.Name }}
