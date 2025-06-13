@@ -8,15 +8,15 @@ spec:
   stripPrefix:
     prefixes:
       {{- if .Values.raster.enabled }}
-      - /raster
+      - {{ .Values.raster.ingress.path }}
       {{- end }}
       {{- if .Values.stac.enabled }}
-      - /stac
+      - {{ .Values.stac.ingress.path }}
       {{- end }}
       {{- if .Values.vector.enabled }}
-      - /vector
+      - {{ .Values.vector.ingress.path }}
       {{- end }}
       {{- if .Values.multidim.enabled }}
-      - /multidim
+      - {{ .Values.multidim.ingress.path }}
       {{- end }}
 {{- end }}

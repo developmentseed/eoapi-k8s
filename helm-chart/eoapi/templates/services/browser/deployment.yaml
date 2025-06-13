@@ -20,5 +20,5 @@ spec:
           - containerPort: 8080
           env:
             - name: SB_catalogUrl
-              value: "/stac"
+              value: "{{ .Values.stac.ingress.path }}"
 {{- end }}
