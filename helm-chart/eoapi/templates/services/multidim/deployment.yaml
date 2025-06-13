@@ -40,7 +40,7 @@ spec:
           {{- if (and (.Values.ingress.className) (or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik"))) }}
           - "--proxy-headers"
           - "--forwarded-allow-ips=*"
-          - "--root-path=/multidim"
+          - "--root-path={{ .Values.multidim.ingress.path }}"
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
           tcpSocket:
