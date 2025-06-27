@@ -53,20 +53,4 @@ metadata:
 data:
   initdb.sql: |
     \c {{ .Values.pgstacBootstrap.settings.database }}
-    CREATE EXTENSION IF NOT EXISTS postgis;
-    CREATE EXTENSION IF NOT EXISTS btree_gist;
-    CREATE EXTENSION IF NOT EXISTS unaccent;
-    CREATE ROLE pgstac_admin;
-    CREATE ROLE pgstac_read;
-    CREATE ROLE pgstac_ingest;
-    ALTER DATABASE {{ .Values.pgstacBootstrap.settings.database }} OWNER TO {{ .Values.pgstacBootstrap.settings.user }};
-    ALTER USER {{ .Values.pgstacBootstrap.settings.user }} SET search_path TO pgstac, public;
-    ALTER ROLE {{ .Values.pgstacBootstrap.settings.user }} WITH CREATEROLE;
-    ALTER DATABASE {{ .Values.pgstacBootstrap.settings.database }} set search_path to pgstac, public;
-    GRANT CONNECT ON DATABASE {{ .Values.pgstacBootstrap.settings.database }} TO {{ .Values.pgstacBootstrap.settings.user }};
-    GRANT ALL PRIVILEGES ON TABLES TO {{ .Values.pgstacBootstrap.settings.user }};
-    GRANT ALL PRIVILEGES ON SEQUENCES TO {{ .Values.pgstacBootstrap.settings.user }};
-    GRANT pgstac_read TO {{ .Values.pgstacBootstrap.settings.user }} WITH ADMIN OPTION;
-    GRANT pgstac_ingest TO {{ .Values.pgstacBootstrap.settings.user }} WITH ADMIN OPTION;
-    GRANT pgstac_admin TO {{ .Values.pgstacBootstrap.settings.user }} WITH ADMIN OPTION;
 {{- end }}
