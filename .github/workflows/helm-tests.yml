@@ -91,23 +91,23 @@ jobs:
 
           exit $?
 
-      - name: debug pgstac-eoapiuser-permissions-upgrade job failure
+      - name: debug pgstac-eoapi-superuser-init-db job failure
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
         run: |
-          echo "Extracting pgstac-eoapiuser-permissions-upgrade job info and logs for debugging..."
-          
+          echo "Extracting pgstac-eoapi-superuser-init-db job info and logs for debugging..."
+
           # Get job details
-          echo "===== pgstac-eoapiuser-permissions-upgrade Job Details ====="
-          kubectl get job pgstac-eoapiuser-permissions-upgrade -o yaml || echo "Could not get job details"
-          
+          echo "===== pgstac-eoapi-superuser-init-db Job Details ====="
+          kubectl get job pgstac-eoapi-superuser-init-db -o yaml || echo "Could not get job details"
+
           # Get pod details
           echo "===== Pod Details ====="
-          kubectl get pods --selector=app=pgstac-eoapiuser-permissions-upgrade -o wide || echo "Could not find pods"
-          
+          kubectl get pods --selector=app=pgstac-eoapi-superuser-init-db -o wide || echo "Could not find pods"
+
           # Extract logs from pods
           echo "===== Pod Logs ====="
-          PODS=$(kubectl get pods --selector=app=pgstac-eoapiuser-permissions-upgrade -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          PODS=$(kubectl get pods --selector=app=pgstac-eoapi-superuser-init-db -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
           if [ -n "$PODS" ]; then
             for POD in $PODS; do
               echo "--- Logs from pod $POD ---"
@@ -115,35 +115,35 @@ jobs:
               kubectl logs $POD || echo "Could not get logs from pod $POD"
             done
           else
-            echo "No pods found for pgstac-eoapiuser-permissions-upgrade job"
+            echo "No pods found for pgstac-eoapi-superuser-init-db job"
           fi
-          
+
           # Get pod descriptions for more details
           echo "===== Pod Descriptions ====="
-          kubectl describe pods --selector=app=pgstac-eoapiuser-permissions-upgrade || echo "Could not describe pods"
-          
+          kubectl describe pods --selector=app=pgstac-eoapi-superuser-init-db || echo "Could not describe pods"
+
           # Check the configmap contents
           echo "===== initdb ConfigMap Contents ====="
           kubectl get configmap initdb -o yaml || echo "Could not get initdb configmap"
-          
+
           # Check for any related events
           echo "===== Related Kubernetes Events ====="
-          kubectl get events | grep -E "pgstac-eoapiuser-permissions-upgrade|initdb" || echo "No relevant events found"
+          kubectl get events | grep -E "pgstac-eoapi-superuser-init-db|initdb" || echo "No relevant events found"
 
       - name: debug pgstac-migrate job failure
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
         run: |
           echo "Extracting pgstac-migrate job info and logs for debugging..."
-          
+
           # Get job details
           echo "===== pgstac-migrate Job Details ====="
           kubectl get job pgstac-migrate -o yaml || echo "Could not get pgstac-migrate job details"
-          
+
           # Get pod details
           echo "===== pgstac-migrate Pod Details ====="
           kubectl get pods -l app=pgstac-migrate --all-namespaces || echo "Could not find pgstac-migrate pods"
-          
+
           # Extract logs from pgstac-migrate pod(s)
           echo "===== pgstac-migrate Pod Logs ====="
           echo "Looking for completed pods from pgstac-migrate job..."
@@ -157,14 +157,14 @@ jobs:
           else
             echo "No completed pods found for pgstac-migrate job"
           fi
-          
+
           # Get details about the database pods/services
           echo "===== Database Pod/Service Details ====="
           # Find database service
           kubectl get svc | grep "db" || echo "Could not find database services"
           # Find database pods
           kubectl get pods | grep "db-" || echo "Could not find database pods"
-          
+
           # Check for any events related to the job or pods
           echo "===== Related Kubernetes Events ====="
           kubectl get events | grep -E "pgstac|db" || echo "No relevant events found"
@@ -195,31 +195,31 @@ jobs:
         if: steps.watchservices.outcome == 'failure'
         run: |
           echo "The watchservices step failed or timed out. Extracting pod logs for debugging..."
-          
+
           # Get and display all pods status
           echo "===== Pod Status ====="
           kubectl get pods
-          
+
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
           kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstacbootstrap --tail=100 || echo "Could not get raster init container logs"
-          
+
           # Extract logs from raster pod main container
           echo "===== Raster Pod Main Container Logs ====="
           kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster main container logs"
-          
+
           # Extract logs from vector pod
           echo "===== Vector Pod Logs ====="
           kubectl get pod | grep "^vector-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get vector logs"
-          
+
           # Extract logs from stac pod
           echo "===== STAC Pod Logs ====="
           kubectl get pod | grep "^stac-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get STAC logs"
-          
+
           # Check if pods are in pending state or have issues
           echo "===== Pod Descriptions for Troubleshooting ====="
           kubectl get pod | grep "$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl describe pod/{} || echo "Could not describe pods"
-          
+
           # force GH action to show failed result
           exit 128
 
@@ -263,31 +263,31 @@ jobs:
         if: steps.testrunner.outcome == 'failure'
         run: |
           echo "The tests failed. Extracting pod logs for debugging..."
-          
+
           # Get and display all pods status
           echo "===== Pod Status ====="
           kubectl get pods
-          
+
           # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
           echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
           kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstacbootstrap --tail=100 || echo "Could not get raster init container logs"
-          
+
           # Extract logs from raster pod main container
           echo "===== Raster Pod Main Container Logs ====="
           kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster main container logs"
-          
+
           # Extract logs from vector pod
           echo "===== Vector Pod Logs ====="
           kubectl get pod | grep "^vector-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get vector logs"
-          
+
           # Extract logs from stac pod
           echo "===== STAC Pod Logs ====="
           kubectl get pod | grep "^stac-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get STAC logs"
-          
+
           # Check if pods are in pending state or have issues
           echo "===== Pod Descriptions for Troubleshooting ====="
           kubectl get pod | grep "$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl describe pod/{} || echo "Could not describe pods"
-          
+
           # force GH action to show failed result
           exit 128
 

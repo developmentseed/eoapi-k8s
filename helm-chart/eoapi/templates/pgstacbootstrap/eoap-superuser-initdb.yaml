@@ -1,25 +1,23 @@
 {{- if and .Values.postgrescluster.enabled .Values.pgstacBootstrap.enabled }}
 ---
-# This job is part of the upgrade process from pre-0.7.0 versions.
-# Prior to 0.7.0, database schema updates were run with superuser privileges.
-# This job ensures proper permissions are granted to the eoapi user during upgrade.
-# TODO: Remove with the next mayor verson and add to documentation that one needs to
-# through 0.7.x when upgrading.
+# The eoapi database user runs normally pgstac migrate.
+# But before some initial grants need to be given with a super user.
+# https://stac-utils.github.io/pgstac/pypgstac/#option-2-create-user-with-initial-grants
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pgstac-eoapiuser-permissions-upgrade
+  name: pgstac-eoapi-superuser-init-db
   labels:
-    app: pgstac-eoapiuser-permissions-upgrade
+    app: pgstac-eoapi-superuser-init-db
   annotations:
-    helm.sh/hook: "post-upgrade"
+    helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation"
 spec:
   template:
     metadata:
       labels:
-        app: pgstac-eoapiuser-permissions-upgrade
+        app: pgstac-eoapi-superuser-init-db
     spec:
       restartPolicy: Never
       containers:
@@ -33,11 +31,9 @@ spec:
               # Exit immediately if a command exits with a non-zero status
               set -e
 
-              # Run permission setup with superuser
-              echo "Applying superuser permissions for upgrade from version {{ .Values.previousVersion }}..."
+              # Run the initial setup with superuser
               PGUSER=postgres psql -f /opt/sql/initdb.sql
 
-              echo "Permissions upgrade complete"
           resources:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
