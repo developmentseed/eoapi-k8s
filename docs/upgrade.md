@@ -96,7 +96,7 @@ helm list -n eoapi
 kubectl get pods -n eoapi
 
 # For subchart users, check the upgrade job status:
-kubectl get jobs -n eoapi | grep eoapiuser-permissions-upgrade
+kubectl get jobs -n eoapi | grep eoapi-superuser-init-db
 ```
 
 ### Troubleshooting
@@ -105,7 +105,7 @@ If you encounter issues during the upgrade:
 
 1. For subchart users, check the upgrade job logs:
 ```bash
-kubectl logs -n eoapi -l app=pgstac-eoapiuser-permissions-upgrade
+kubectl logs -n eoapi -l app=pgstac-eoapi-superuser-init-db
 ```
 
 2. Verify database permissions:

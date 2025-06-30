@@ -69,19 +69,19 @@ comment_db: >
 postgresql:
   # Management type: "postgrescluster" (default), "external-plaintext", or "external-secret"
   type: "postgrescluster"
-  
+
   # Configuration for external PostgreSQL (used when type is "external-plaintext" or "external-secret")
   external:
     # Connection information
     host: ""
     port: "5432"
     database: "eoapi"
-    
+
     # Credentials configuration (used when type is "external-plaintext")
     credentials:
       username: ""
       password: ""
-    
+
     # Secret reference (used when type is "external-secret")
     existingSecret:
       name: ""
