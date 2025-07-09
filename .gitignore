@@ -2,3 +2,4 @@
 helm-chart/config.yaml
 config_ingress.yaml
 helm-chart/eoapi/charts/*.tgz
+.vscode/

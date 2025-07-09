@@ -53,3 +53,7 @@ dependencies:
     version: 5.7.4
     repository: "https://devseed.com/eoapi-k8s/"
     condition: postgrescluster.enabled
+  - name: eoapi-support
+    version: 0.1.8
+    repository: "file://../eoapi-support"
+    condition: eoapi-support.enabled

@@ -1,12 +1,12 @@
 apiVersion: v2
 name: eoapi-support
 
-appVersion: "0.1.7"
-version: "0.1.7"
+appVersion: "0.1.8"
+version: "0.1.8"
 
 dependencies:
   - name: metrics-server
-    version: 7.2.8
+    version: 7.4.9
     repository: https://charts.bitnami.com/bitnami
 
   # Prometheus for collection of metrics.

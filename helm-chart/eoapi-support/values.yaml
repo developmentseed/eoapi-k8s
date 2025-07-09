@@ -1,3 +1,8 @@
+ingress:
+  enabled: true
+  className: "nginx"
+  host: &ingressHost ""
+
 # most of this was cribbed from https://github.com/2i2c-org/infrastructure/blob/master/helm-charts/support/
 # so giving props where props are due to Yuvi Panda :sparkles:
 prometheus-adapter:
@@ -5,7 +10,7 @@ prometheus-adapter:
     # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
     # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
     # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
-    url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
+    url: http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local
     port: 80
     path: ""
   rules:
@@ -91,6 +96,12 @@ prometheus:
       type: LoadBalancer
 
 grafana:
+  grafana.ini:
+    server:
+      domain: *ingressHost
+      root_url: "%(protocol)s://%(domain)s/dashboard/"
+      protocol: http
+      serve_from_sub_path: true
   persistence:
     enabled: false
   deploymentStrategy:
@@ -100,6 +111,7 @@ grafana:
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
       service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+
   rbac:
     namespaced: true
     pspEnabled: false
@@ -139,7 +151,8 @@ grafana:
         # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
         # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
         # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
-        url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
+        # TODO consider using a templated value here
+        url: http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local
         access: proxy
         jsonData:
           timeInterval: "5s"
@@ -156,7 +169,7 @@ grafana:
         folder: ''
         type: file
         disableDeletion: false
-        editable: true
+        editable: false
         options:
           path: /var/lib/grafana/dashboards/default
 

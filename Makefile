@@ -8,18 +8,26 @@ PGO_CHART_VERSION=5.7.4
 .PHONY: all deploy minikube ingest help
 
 # Default target
-all: deploy
+all: deploy deploy-support
 
 deploy:
 	@echo "Installing dependencies."
 	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
-	helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version $(PGO_CHART_VERSION)
+	helm upgrade --install --set monitoring=true --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version $(PGO_CHART_VERSION)
 	@echo "Adding eoAPI helm repository."
 	@helm repo add eoapi $(HELM_REPO_URL)
 	@echo "Installing eoAPI helm chart."
 	@cd ./helm-chart && \
 	helm dependency build ./eoapi && \
 	helm upgrade --install --namespace eoapi --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) eoapi ./eoapi
+
+deploy-support:
+	@echo "Adding eoAPI-support helm repositories."
+	@helm repo add eoapi-support $(HELM_REPO_URL)
+	@cd ./helm-chart && \
+	helm dependency build ./eoapi-support && \
+	helm upgrade --install --namespace eoapi-support --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) --set prometheus-adapter.prometheus.url='http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local' \
+     eoapi-support ./eoapi-support 
 
 minikube:
 	@echo "Starting minikube."
@@ -28,6 +36,7 @@ minikube:
 	# Deploy eoAPI via the regular helm install routine
 	@make deploy
 	minikube addons enable ingress
+	@make deploy-support
 	@echo "eoAPI is now available at:"
 	@minikube service ingress-nginx-controller -n ingress-nginx --url | head -n 1
 

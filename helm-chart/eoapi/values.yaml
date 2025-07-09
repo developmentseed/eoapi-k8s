@@ -36,12 +36,12 @@ serviceAccount:
 service:
   port: 8080
 
-ingress:
+ingress: &eoapiIngress
   # Unified ingress configuration for both nginx and traefik
   enabled: true
   # ingressClassName: "nginx" or "traefik"
   className: "nginx"
-  rootPath: ""        # Root path for doc server
+  rootPath: "" # Root path for doc server
   # Host configuration
   host: ""
   # Custom annotations to add to the ingress
@@ -50,6 +50,36 @@ ingress:
   tls:
     enabled: false
     secretName: eoapi-tls
+
+eoapi-support:
+  enabled: true
+  grafana:
+    enabled: true
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+        # Automatically add the prometheus server in the same namespace as the grafana as a datasource
+        - name: prometheus
+          orgId: 1
+          type: prometheus
+          # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
+          # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
+          # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
+          # TODO consider using a templated value here
+          url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
+          access: proxy
+          jsonData:
+            timeInterval: "5s"
+          isDefault: true
+          editable: true
+          version: 1 # This number should be increased when changes are made to update the datasource
+  prometheus-adapter:
+    prometheus:
+      url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
+  ingress: 
+    <<: *eoapiIngress
+
 
 ######################
 # DATABASE

@@ -38,9 +38,8 @@ postgresVersion: 16
 # pgBouncerReplicas: 1
 
 # monitoring enables the ability to monitor the Postgres cluster through a
-# metrics exporter that can be scraped by Prometheus. This defaults to the value
-# below.
-# monitoring: false
+# metrics exporter that can be scraped by Prometheus.
+monitoring: true
 
 ###################
 # Image Overrides #
