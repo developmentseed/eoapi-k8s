@@ -40,7 +40,11 @@ spec:
           {{- if (and (.Values.ingress.className) (or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik"))) }}
           - "--proxy-headers"
           - "--forwarded-allow-ips=*"
+          {{- if .Values.raster.overrideRootPath}}
+          - "--root-path={{ .Values.raster.overrideRootPath }}"
+          {{- else }}
           - "--root-path={{ .Values.raster.ingress.path }}"
+          {{- end }}
           {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
         livenessProbe:
           tcpSocket:
@@ -51,14 +55,22 @@ spec:
           timeoutSeconds: 1
         readinessProbe:
           httpGet:
+            {{- if .Values.raster.overrideRootPath}}
+            path: {{ .Values.raster.overrideRootPath }}/healthz
+            {{- else}}
             path: /healthz
+            {{- end}}
             port: {{ .Values.service.port }}
           failureThreshold: 3
           periodSeconds: 15
           successThreshold: 1
         startupProbe:
           httpGet:
+            {{- if .Values.raster.overrideRootPath}}
+            path: {{ .Values.raster.overrideRootPath }}/healthz
+            {{- else}}
             path: /healthz
+            {{- end}}
             port: {{ .Values.service.port }}
           # check every sec for 1 minute
           periodSeconds: 1

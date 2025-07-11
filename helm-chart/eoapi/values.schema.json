@@ -108,6 +108,7 @@
         }
       }
     },
+
     "postgresql": {
       "type": "object",
       "properties": {
@@ -411,6 +412,10 @@
             "type": "string"
           },
           "description": "Container command"
+        },
+        "overrideRootPath": {
+          "type": "string",
+          "description": "Override root path for this service"
         },
         "settings": {
           "type": "object",
