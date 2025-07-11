@@ -53,3 +53,7 @@ dependencies:
     version: 5.7.4
     repository: "https://devseed.com/eoapi-k8s/"
     condition: postgrescluster.enabled
+  - name: stac-manager
+    version: 0.0.11
+    repository: "https://stac-manager.ds.io/"
+    condition: manager.enabled

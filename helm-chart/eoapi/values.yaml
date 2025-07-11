@@ -469,6 +469,17 @@ browser:
   ingress:
     enabled: true  # Control ingress specifically for browser service
 
+######################
+# STAC Manager
+######################
+stac-manager:
+  enabled: false # disabled by default
+  replicaCount: 1
+  ingress:
+    enabled: true # Control ingress specifically for manager service
+  publicUrl: /manager/
+  stacApi: https://earth-search.aws.element84.com/v1/
+
 docServer:
   enabled: true
 
