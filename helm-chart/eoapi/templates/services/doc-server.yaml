@@ -20,6 +20,9 @@ data:
           <li><a href="/multidim" target="_blank" rel="noopener noreferrer">/multidim</a></li>
           {{- end}}
           <li><a href="/browser/" target="_blank" rel="noopener noreferrer">/browser</a></li>
+          {{- if .Values.stac-manager.enabled }}
+          <li><a href="/manager" target="_blank" rel="noopener noreferrer">/manager</a></li>
+          {{- end}}
         </ul>
     </body>
     </html>
