@@ -95,7 +95,7 @@ postgresql:
         port: "port"
         database: "database"
 
-# this is declared as a dependency of eoapi in helm-chart/eoapi/Chart.yaml
+# this is declared as a dependency of eoapi in charts/eoapi/Chart.yaml
 postgrescluster:
   enabled: true
   # The name of the postgres cluster

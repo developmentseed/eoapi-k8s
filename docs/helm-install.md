@@ -40,7 +40,7 @@
    $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
    ```
 
-5. or check out this repo and `helm install` from this repo's `helm-chart/` folder:
+5. or check out this repo and `helm install` from this repo's `charts/` folder:
 
     ```bash
       ######################################################
@@ -48,7 +48,7 @@
       ######################################################
       $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
 
-      $ cd ./helm-chart
+      $ cd ./charts
 
       $ helm install \
           --namespace eoapi \

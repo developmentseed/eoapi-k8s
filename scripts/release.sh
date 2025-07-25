@@ -11,11 +11,9 @@ helm upgrade --install \
   eoapi/eoapi-support --version 0.1.5 \
   --set prometheus-adapter.prometheus.url=$PROMETHEUS_SERVER \
   --set grafana.datasources.datasources\\.yaml.datasources[0].url=$PROMETHEUS_SERVER \
-  -f /Users/ranchodeluxe/apps/eoapi-k8s/helm-chart/eoapi-support/values.yaml
+  -f ./charts/eoapi-support/values.yaml
 
 helm upgrade --install \
   -n $RELEASE_NS --create-namespace $RELEASE_NAME \
   eoapi/eoapi --version 0.4.8 \
-  -f /Users/ranchodeluxe/apps/eoapi-k8s/helm-chart/eoapi/values.yaml
-
-
+  -f ./charts/eoapi/values.yaml

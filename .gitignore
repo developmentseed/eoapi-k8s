@@ -1,6 +1,6 @@
 .idea/
 .vscode/
 .pytest_cache
-helm-chart/config.yaml
+charts/config.yaml
+charts/eoapi/charts/*.tgz
 config_ingress.yaml
-helm-chart/eoapi/charts/*.tgz

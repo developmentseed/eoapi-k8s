@@ -23,7 +23,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          cd helm-chart
+          cd charts
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
   k3s-integration-tests:
     if: github.event.pull_request.head.repo.full_name == github.repository
@@ -80,7 +80,7 @@ jobs:
         run: |
           export GITSHA='${{github.sha}}'
 
-          cd helm-chart
+          cd charts
 
           helm dependency build eoapi
 
