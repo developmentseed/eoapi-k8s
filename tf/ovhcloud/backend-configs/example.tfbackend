@@ -1,0 +1,4 @@
+bucket = "eoapi-tfstate-ovh-example"
+key    = "terraform"
+region = "GRA"
+endpoint = "https://s3.gra.cloud.ovh.net"
