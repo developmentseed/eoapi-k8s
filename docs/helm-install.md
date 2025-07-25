@@ -17,8 +17,8 @@
    ```bash
    $ helm search repo eoapi --versions
    NAME            CHART VERSION   APP VERSION     DESCRIPTION
-   eoapi/eoapi     0.2.14          0.3.1           Create a full Earth Observation API with Metada...
-   eoapi/eoapi     0.1.13          0.2.11          Create a full Earth Observation API with Metada...
+   eoapi/eoapi     0.7.5           5.0.2           Create a full Earth Observation API with Metada...
+   eoapi/eoapi     0.7.4           5.0.2           Create a full Earth Observation API with Metada...
    ```
 
 3. Optionally override keys/values in the default `values.yaml` with a custom `config.yaml` like below:
@@ -37,7 +37,7 @@
 4. Then `helm install` with those `config.yaml` values:
 
    ```bash
-   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.1.2 -f config.yaml
+   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.7.5 -f config.yaml
    ```
 
 5. or check out this repo and `helm install` from this repo's `charts/` folder:
