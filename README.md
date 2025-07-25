@@ -106,8 +106,6 @@ For cloud-based deployments, refer to our detailed setup guides:
 * [Unified Ingress Configuration](./docs/unified-ingress.md)
 * [Upgrade Guide](./docs/upgrade.md)
 
-> **Important Notice**: If you're upgrading from a version prior to 0.7.0, please read the [upgrade guide](./docs/upgrade.md) for important database permission changes.
-
 ## Contributing
 
 We welcome contributions! See our [contributing guide](./CONTRIBUTING.md) for details.
