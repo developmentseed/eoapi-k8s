@@ -19,7 +19,8 @@ deploy:
 	@echo "Installing eoAPI helm chart."
 	@cd ./charts && \
 	helm dependency build ./eoapi && \
-	helm upgrade --install --namespace eoapi --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) eoapi ./eoapi
+	helm upgrade --install --set gitsha=$$(git rev-parse head | cut -c1-10) eoapi ./eoapi
+	helm upgrade --install --set gitsha=$$(git rev-parse head | cut -c1-10) eoapi ./eoapi-support
 
 minikube:
 	@echo "Starting minikube."
