@@ -34,7 +34,7 @@ minikube:
 ingest:
 	@echo "Ingesting STAC collections and items into the database."
 	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
-	@./ingest.sh || { echo "Ingestion failed."; exit 1; }
+	@./scripts/ingest.sh || { echo "Ingestion failed."; exit 1; }
 
 tests:
 	@echo "Running tests."
