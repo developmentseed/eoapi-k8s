@@ -1,13 +1,13 @@
 # Autoscaling / Monitoring / Observability
 
 Autoscaling is both art and science. To test out your application's autoscaling requirements you often need to consider
-your data volume, data usage patterns, bottlenecks (such as the database) among many, many other things. Load testing, 
-metrics, monitoring and observability will help you explore what those needs are. 
+your data volume, data usage patterns, bottlenecks (such as the database) among many, many other things. Load testing,
+metrics, monitoring and observability will help you explore what those needs are.
 
 
-> &#9432; The `eoapi-support` chart in this repository (see `../helm-chart/eoapi-support`) is required to be installed to 
-enable any of the eoAPI service autoscaling. It cannot be listed as a dependecy of `eoapi` chart 
-b/c of the limitations in `prometheus-adapter` and `grafana` for constructing the Prometheus internal 
+> &#9432; The `eoapi-support` chart in this repository (see `../charts/eoapi-support`) is required to be installed to
+enable any of the eoAPI service autoscaling. It cannot be listed as a dependecy of `eoapi` chart
+b/c of the limitations in `prometheus-adapter` and `grafana` for constructing the Prometheus internal
 service domains dynamically.
 
 If you are comfortable with k8s you probably only need to `helm install` the support chart and be on your way. Other folks
@@ -21,17 +21,17 @@ The following instructions assume you've gone through the [AWS](./docs/aws-eks.m
 and installed the `eoapi` chart.
 
 
-1. Go to the [releases section](https://github.com/developmentseed/eoapi-k8s/releases) of this repository and find the latest 
+1. Go to the [releases section](https://github.com/developmentseed/eoapi-k8s/releases) of this repository and find the latest
 `eoapi-support-<version>` version to install. The example below assumes we're working with `eoapi-support-0.1.4`
 
 
-2. Decide on a release name and `namespace` for your support chart. The next steps assume we've 
+2. Decide on a release name and `namespace` for your support chart. The next steps assume we've
 chosen a release name of `eoapi-support` and a similar namespace of `eoapi-support`
 
 
 3. Then do a normal `helm install` but you'll want to parameterize and pass overrides for the prometheus URL to include
-the release name and namespace chosen above. This allows other third-party dependencies used in the chart 
-(`prometheus-adpater` and `grafana`) know where to find the prometheus service internally. This is unfortunately a 
+the release name and namespace chosen above. This allows other third-party dependencies used in the chart
+(`prometheus-adpater` and `grafana`) know where to find the prometheus service internally. This is unfortunately a
 manual step that cannot be automated
 
    ```bash
@@ -60,9 +60,9 @@ manual step that cannot be automated
    service/eoapi-support-kube-state-metrics         ClusterIP      10.123.241.247   <none>           8080/TCP       79s
    service/eoapi-support-prometheus-adapter         ClusterIP      10.123.249.21    <none>           443/TCP        79s
    service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.249.90    <none>           9100/TCP       79s
-   service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s 
+   service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s
    ```
-   
+
 
 5. If anything in steps 1 through 3 seems confusing then here is a quick bash script to clear it up:
 
@@ -158,16 +158,16 @@ based on the nginx ingress controller's request rate under the `prometheus-adpat
          metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
    ```
 
-Prometheus adapter is a bridge for metrics between Prometheus (which scrapes nginx) and the k8s metrics server so it can autoscale deployments using these custom metrics. 
+Prometheus adapter is a bridge for metrics between Prometheus (which scrapes nginx) and the k8s metrics server so it can autoscale deployments using these custom metrics.
 If you've chosen `both` or `requestRate` as a autoscaling `type:` for those values then these custom metrics are used to template an `hpa.yaml` for each service
 
 ### Log into Grafana
 
 When you `helm install` the support chart you by default get a Grafana dashboard set up with different default metrics charts
-to help you load test and explore your service autoscaling. Grafana creates a new username `admin` and password for you 
+to help you load test and explore your service autoscaling. Grafana creates a new username `admin` and password for you
 that you'll have to retrieve to login.
 
-> &#9432; Note that the `service/eoapi-support-grafana` has an EXTERNAL-IP that we can use to view it. 
+> &#9432; Note that the `service/eoapi-support-grafana` has an EXTERNAL-IP that we can use to view it.
 This is just a quick way to work with it. You'll want to set it up with an ingress in the future
 
 
@@ -180,17 +180,17 @@ with the `release` name we installed the chart with below `<release-name>-grafan
    kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
      # <not-showing-output>
    ```
-   
+
 2. To find the URL for the load balancer for where to log in with Grafana you can query the services:
 
    ```sh
    kubectl get svc -n eoapi-support
    ```
-   
+
 3. Login and you should be default be able to see the eoapi-k8s grafana dashboard
 
    ![](./images/gfdashboard.png)
-   
+
 ### Install or Upgrade Autoscaling Changes to `eoapi` Chart
 
 1. If you haven't already decide which services (`vector` || `raster` || `stac`) you want to enable `autoscaling` on change your values yaml for these and redeploy
@@ -227,7 +227,7 @@ with the `release` name we installed the chart with below `<release-name>-grafan
            cpu: "256m"
            memory: "1024Mi"
    ```
-   
+
 2. Review what the heck the unit `m` means for your [autoscaling values in the k8s docs](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities)
 
 
@@ -257,7 +257,7 @@ to set up a simple host
    ```sh
    kubectl edit ingress nginx-service-ingress-shared-eoapi -n eoapi
    ```
-   
+
    ```yaml
    # BEFORE
    spec:

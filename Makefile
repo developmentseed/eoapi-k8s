@@ -17,7 +17,7 @@ deploy:
 	@echo "Adding eoAPI helm repository."
 	@helm repo add eoapi $(HELM_REPO_URL)
 	@echo "Installing eoAPI helm chart."
-	@cd ./helm-chart && \
+	@cd ./charts && \
 	helm dependency build ./eoapi && \
 	helm upgrade --install --namespace eoapi --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) eoapi ./eoapi
 
@@ -34,12 +34,12 @@ minikube:
 ingest:
 	@echo "Ingesting STAC collections and items into the database."
 	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
-	@./ingest.sh || { echo "Ingestion failed."; exit 1; }
+	@./scripts/ingest.sh || { echo "Ingestion failed."; exit 1; }
 
 tests:
 	@echo "Running tests."
 	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
-	@helm unittest helm-chart/eoapi -f 'tests/*.yaml' -v helm-chart/eoapi/test-helm-values.yaml
+	@helm unittest charts/eoapi -f 'tests/*.yaml' -v charts/eoapi/test-helm-values.yaml
 
 help:
 	@echo "Makefile commands:"
