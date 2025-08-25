@@ -77,6 +77,13 @@
           "type": "string",
           "description": "Ingress host"
         },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of multiple ingress host domains array - if specified, takes precedence over single host"
+        },
         "annotations": {
           "type": "object",
           "description": "Additional annotations for ingress"
