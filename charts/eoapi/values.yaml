@@ -42,8 +42,10 @@ ingress:
   # ingressClassName: "nginx" or "traefik"
   className: "nginx"
   rootPath: ""        # Root path for doc server
-  # Host configuration
+  # Single host domain configuration (default)
   host: ""
+  # Multiple host domains array - if specified, takes precedence over single host
+  # hosts: []
   # Custom annotations to add to the ingress
   annotations: {}
   # TLS configuration
