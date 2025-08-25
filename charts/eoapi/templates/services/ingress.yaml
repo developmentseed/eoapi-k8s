@@ -29,6 +29,62 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
   rules:
+    {{- if .Values.ingress.hosts }}
+    {{- range .Values.ingress.hosts }}
+    - host: {{ . }}
+      http:
+        paths:
+          {{- if and $.Values.raster.enabled (or (not (hasKey $.Values.raster "ingress")) $.Values.raster.ingress.enabled) }}
+          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.raster.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: raster-{{ $.Release.Name }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+
+          {{- if and $.Values.stac.enabled (or (not (hasKey $.Values.stac "ingress")) $.Values.stac.ingress.enabled) }}
+          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.stac.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: stac-{{ $.Release.Name }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+
+          {{- if and $.Values.vector.enabled (or (not (hasKey $.Values.vector "ingress")) $.Values.vector.ingress.enabled) }}
+          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.vector.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: vector-{{ $.Release.Name }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+
+          {{- if and $.Values.multidim.enabled (or (not (hasKey $.Values.multidim "ingress")) $.Values.multidim.ingress.enabled) }}
+          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.multidim.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: multidim-{{ $.Release.Name }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+
+          {{- if $.Values.docServer.enabled }}
+          - pathType: Prefix
+            path: "/{{ $.Values.ingress.rootPath | default "" }}"
+            backend:
+              service:
+                name: doc-server-{{ $.Release.Name }}
+                port:
+                  number: 80
+          {{- end }}
+    {{- end }}
+    {{- else }}
     - {{- if .Values.ingress.host }}
       host: {{ .Values.ingress.host }}
       {{- end }}
@@ -43,7 +99,7 @@ spec:
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
-          
+
           {{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
             path: {{ .Values.stac.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
@@ -53,7 +109,7 @@ spec:
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
-          
+
           {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
             path: {{ .Values.vector.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
@@ -63,7 +119,7 @@ spec:
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
-          
+
           {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
             path: {{ .Values.multidim.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
@@ -73,7 +129,7 @@ spec:
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
-          
+
           {{- if .Values.docServer.enabled }}
           - pathType: Prefix
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
@@ -83,10 +139,17 @@ spec:
                 port:
                   number: 80
           {{- end }}
-  {{- if and .Values.ingress.host .Values.ingress.tls.enabled }}
+    {{- end }}
+  {{- if and .Values.ingress.tls.enabled (or .Values.ingress.hosts .Values.ingress.host) }}
   tls:
     - hosts:
+        {{- if .Values.ingress.hosts }}
+        {{- range .Values.ingress.hosts }}
+        - {{ . }}
+        {{- end }}
+        {{- else if .Values.ingress.host }}
         - {{ .Values.ingress.host }}
+        {{- end }}
       secretName: {{ .Values.ingress.tls.secretName }}
   {{- end }}
 {{- end }}
