@@ -43,23 +43,28 @@ initContainers:
   - |
     set -eu
     
+    BOOTSTRAP_JOB="pgstac-eoapi-superuser-init-db"
     MIGRATE_JOB="${RELEASE_NAME:-eoapi}-pgstac-migrate"
     SAMPLES_JOB="${RELEASE_NAME:-eoapi}-pgstac-load-samples"
     
     wait_complete () {
       job="$1"
       echo "Waiting for $job to complete..."
-      # Optional: fail fast after 15 min so CI doesn't hang forever
       deadline=$(( $(date +%s) + 900 ))
       while :; do
-        # If job doesn't exist yet or SA can't read it, jsonpath may be empty
-        status="$(kubectl get job "$job" -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' 2>/dev/null || true)"
-        [ "$status" = "True" ] && { echo "$job completed"; return 0; }
+        conds="$(kubectl get job "$job" -o jsonpath='{range .status.conditions[*]}{.type}={.status}{"\n"}{end}' 2>/dev/null || true)"
+        echo "$conds" | grep -q '^Complete=True$' && { echo "$job completed"; return 0; }
+        echo "$conds" | grep -q '^Failed=True$'   && {
+          echo "$job FAILED"; kubectl describe job "$job" || true
+          kubectl logs -l job-name="$job" --tail=200 || true
+          exit 1
+        }
         [ $(date +%s) -ge $deadline ] && { echo "Timeout waiting for $job"; exit 1; }
         sleep 5
       done
     }
     
+    wait_complete "$BOOTSTRAP_JOB"
     wait_complete "$MIGRATE_JOB"
     {{- if .Values.pgstacBootstrap.settings.loadSamples }}
     wait_complete "$SAMPLES_JOB"
