@@ -23,7 +23,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pgstac-migrate
+  name: {{ .Release.Name }}-pgstac-migrate
   labels:
     app: pgstac-migrate
   annotations:
@@ -91,7 +91,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pgstac-load-samples
+  name: {{ .Release.Name }}-pgstac-load-samples
   labels:
     app: pgstac-load-samples
   annotations:

@@ -91,6 +91,13 @@ jobs:
 
           exit $?
 
+      - name: show jobs and pods
+        run: |
+          echo "===== Jobs ====="
+          kubectl get jobs -o wide
+          echo "===== Pods (pgstac) ====="
+          kubectl get pods | grep -i pgstac || true
+
       - name: debug pgstac-eoapi-superuser-init-db job failure
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
@@ -99,7 +106,7 @@ jobs:
 
           # Get job details
           echo "===== pgstac-eoapi-superuser-init-db Job Details ====="
-          kubectl get job pgstac-eoapi-superuser-init-db -o yaml || echo "Could not get job details"
+          kubectl get job "$RELEASE_NAME-pgstac-eoapi-superuser-init-db" -o yaml || echo "Could not get job details"
 
           # Get pod details
           echo "===== Pod Details ====="
@@ -138,7 +145,7 @@ jobs:
 
           # Get job details
           echo "===== pgstac-migrate Job Details ====="
-          kubectl get job pgstac-migrate -o yaml || echo "Could not get pgstac-migrate job details"
+          kubectl get job "$RELEASE_NAME-pgstac-migrate" -o yaml || echo "Could not get pgstac-migrate job details"
 
           # Get pod details
           echo "===== pgstac-migrate Pod Details ====="
@@ -147,7 +154,7 @@ jobs:
           # Extract logs from pgstac-migrate pod(s)
           echo "===== pgstac-migrate Pod Logs ====="
           echo "Looking for completed pods from pgstac-migrate job..."
-          COMPLETED_PODS=$(kubectl get pods --selector=job-name=pgstac-migrate --field-selector=status.phase=Succeeded,status.phase=Failed -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          COMPLETED_PODS=$(kubectl get pods --selector=job-name="$RELEASE_NAME-pgstac-migrate" --field-selector=status.phase=Succeeded,status.phase=Failed -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
           if [ -n "$COMPLETED_PODS" ]; then
             echo "Found completed pods from pgstac-migrate job. Extracting logs from each:"
             for POD in $COMPLETED_PODS; do
@@ -174,22 +181,18 @@ jobs:
         timeout-minutes: 3
         continue-on-error: true
         run: |
-          # Now wait for services to boot up
-          while [[ -z "$(kubectl get pod  | grep "^raster-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{}  kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
-            echo "still waiting for raster service to start..."
-            sleep 1
-          done
-          echo "raster service has started, moving on..."
-          while [[ -z "$(kubectl get pod  | grep "^vector-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /.*/healthz" | head -n 1)" ]]; do
-            echo "still waiting for vector service to start..."
-            sleep 1
-          done
-          echo "vector service has started, moving on..."
-          while [[ -z "$(kubectl get pod  | grep "^stac-$RELEASE_NAME-.*$" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} | grep "GET /.*/_mgmt/ping" | head -n 1)" ]]; do
-            echo "still waiting for stac service to start..."
-            sleep 1
-          done
-          echo "all services have started, moving on..."
+          # Wait for services to be ready using native readiness checks
+          echo "Waiting for raster service to be ready..."
+          kubectl wait --for=condition=Ready pod -l app=raster-${RELEASE_NAME} --timeout=180s
+          echo "raster service is ready, moving on..."
+          
+          echo "Waiting for vector service to be ready..."
+          kubectl wait --for=condition=Ready pod -l app=vector-${RELEASE_NAME} --timeout=180s
+          echo "vector service is ready, moving on..."
+          
+          echo "Waiting for stac service to be ready..."
+          kubectl wait --for=condition=Ready pod -l app=stac-${RELEASE_NAME} --timeout=180s
+          echo "all services are ready, moving on..."
 
       - name: cleanup if services fail to boot
         if: steps.watchservices.outcome == 'failure'
@@ -200,9 +203,9 @@ jobs:
           echo "===== Pod Status ====="
           kubectl get pods
 
-          # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
-          echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstacbootstrap --tail=100 || echo "Could not get raster init container logs"
+          # Extract logs from raster pod init container (wait-for-pgstac-jobs)
+          echo "===== Raster Pod Init Container Logs (wait-for-pgstac-jobs) ====="
+          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstac-jobs --tail=100 || echo "Could not get raster init container logs"
 
           # Extract logs from raster pod main container
           echo "===== Raster Pod Main Container Logs ====="
@@ -268,9 +271,9 @@ jobs:
           echo "===== Pod Status ====="
           kubectl get pods
 
-          # Extract logs from raster pod init container (wait-for-pgstacbootstrap)
-          echo "===== Raster Pod Init Container Logs (wait-for-pgstacbootstrap) ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstacbootstrap --tail=100 || echo "Could not get raster init container logs"
+          # Extract logs from raster pod init container (wait-for-pgstac-jobs)
+          echo "===== Raster Pod Init Container Logs (wait-for-pgstac-jobs) ====="
+          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstac-jobs --tail=100 || echo "Could not get raster init container logs"
 
           # Extract logs from raster pod main container
           echo "===== Raster Pod Main Container Logs ====="
