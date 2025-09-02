@@ -95,8 +95,21 @@ jobs:
         run: |
           echo "===== Jobs ====="
           kubectl get jobs -o wide
+          echo ""
+          echo "===== Job Status Details ====="
+          kubectl get jobs -o custom-columns='NAME:.metadata.name,COMPLETIONS:.spec.completions,SUCCESSFUL:.status.succeeded,FAILED:.status.failed,AGE:.metadata.creationTimestamp'
+          echo ""
+          echo "===== All Pods ====="
+          kubectl get pods -o wide
+          echo ""
           echo "===== Pods (pgstac) ====="
           kubectl get pods | grep -i pgstac || true
+          echo ""
+          echo "===== Pod Phase Summary ====="
+          kubectl get pods --no-headers | awk '{print $3}' | sort | uniq -c
+          echo ""
+          echo "===== Events (last 10 minutes) ====="
+          kubectl get events --sort-by='.lastTimestamp' | tail -20
 
       - name: debug pgstac-eoapi-superuser-init-db job failure
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
@@ -141,40 +154,68 @@ jobs:
         if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
         continue-on-error: true
         run: |
-          echo "Extracting pgstac-migrate job info and logs for debugging..."
+          echo "Extracting comprehensive pgstac-migrate job info and logs for debugging..."
 
-          # Get job details
-          echo "===== pgstac-migrate Job Details ====="
-          kubectl get job "$RELEASE_NAME-pgstac-migrate" -o yaml || echo "Could not get pgstac-migrate job details"
+          # Get all jobs with details
+          echo "===== All Jobs Status ====="
+          kubectl get jobs -o wide
+          echo ""
 
-          # Get pod details
-          echo "===== pgstac-migrate Pod Details ====="
-          kubectl get pods -l app=pgstac-migrate --all-namespaces || echo "Could not find pgstac-migrate pods"
+          # Get specific job details using labels
+          echo "===== pgstac-migrate Job Details (by label) ====="
+          kubectl get jobs -l app=pgstac-migrate -o yaml || echo "Could not get pgstac-migrate job details"
+          echo ""
 
-          # Extract logs from pgstac-migrate pod(s)
+          # Get pod details - both by label and by job-name
+          echo "===== pgstac-migrate Pod Details (by label) ====="
+          kubectl get pods -l app=pgstac-migrate --all-namespaces -o wide || echo "Could not find pgstac-migrate pods by label"
+          echo ""
+
+          echo "===== pgstac-migrate Pod Details (by app label) ====="
+          kubectl get pods -l app=pgstac-migrate -o wide || echo "Could not find pgstac-migrate pods by app label"
+          echo ""
+
+          # Extract logs from all pgstac-migrate pods (running, completed, failed)
           echo "===== pgstac-migrate Pod Logs ====="
-          echo "Looking for completed pods from pgstac-migrate job..."
-          COMPLETED_PODS=$(kubectl get pods --selector=job-name="$RELEASE_NAME-pgstac-migrate" --field-selector=status.phase=Succeeded,status.phase=Failed -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-          if [ -n "$COMPLETED_PODS" ]; then
-            echo "Found completed pods from pgstac-migrate job. Extracting logs from each:"
-            for POD in $COMPLETED_PODS; do
-              echo "--- Logs from completed pod $POD ---"
-              kubectl logs pod/$POD || echo "Could not get logs from pod $POD"
+          ALL_PODS=$(kubectl get pods -l app=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          if [ -n "$ALL_PODS" ]; then
+            echo "Found pgstac-migrate job pods. Extracting logs from each:"
+            for POD in $ALL_PODS; do
+              echo "--- Pod $POD status ---"
+              kubectl get pod "$POD" -o wide
+              echo "--- Logs from pod $POD ---"
+              kubectl logs pod/$POD --tail=100 || echo "Could not get logs from pod $POD"
+              echo "--- Previous logs from pod $POD (if container restarted) ---"
+              kubectl logs pod/$POD --previous --tail=50 || echo "No previous logs for pod $POD"
+              echo ""
             done
           else
-            echo "No completed pods found for pgstac-migrate job"
+            echo "No pods found for pgstac-migrate jobs"
+            echo "Checking for pods with broader label search..."
+            LABEL_PODS=$(kubectl get pods -l app=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+            if [ -n "$LABEL_PODS" ]; then
+              for POD in $LABEL_PODS; do
+                echo "--- Pod $POD (found by label) ---"
+                kubectl describe pod "$POD"
+                kubectl logs pod/$POD --tail=50 || true
+              done
+            fi
           fi
 
           # Get details about the database pods/services
           echo "===== Database Pod/Service Details ====="
-          # Find database service
-          kubectl get svc | grep "db" || echo "Could not find database services"
-          # Find database pods
-          kubectl get pods | grep "db-" || echo "Could not find database pods"
+          kubectl get svc | grep -E "db|postgres" || echo "Could not find database services"
+          kubectl get pods | grep -E "db-|postgres" || echo "Could not find database pods"
+          echo ""
+
+          # Check ConfigMaps and Secrets
+          echo "===== Relevant ConfigMaps ====="
+          kubectl get configmaps | grep -E "pgstac|initdb" || echo "No pgstac configmaps found"
+          echo ""
 
           # Check for any events related to the job or pods
-          echo "===== Related Kubernetes Events ====="
-          kubectl get events | grep -E "pgstac|db" || echo "No relevant events found"
+          echo "===== Related Kubernetes Events (last 50) ====="
+          kubectl get events --sort-by='.lastTimestamp' | grep -E "pgstac|db|migrate" || echo "No relevant events found"
 
       - id: watchservices
         name: watch services boot
@@ -182,46 +223,96 @@ jobs:
         continue-on-error: true
         run: |
           # Wait for services to be ready using native readiness checks
+          echo "===== Current Pod Status ====="
+          kubectl get pods -o wide
+          echo ""
+
           echo "Waiting for raster service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=raster-${RELEASE_NAME} --timeout=180s
+          kubectl wait --for=condition=Ready pod -l app=raster-${RELEASE_NAME} --timeout=180s || {
+            echo "Raster service failed to become ready. Checking status..."
+            kubectl get pods -l app=raster-${RELEASE_NAME} -o wide
+            kubectl describe pods -l app=raster-${RELEASE_NAME}
+            exit 1
+          }
           echo "raster service is ready, moving on..."
-          
+
           echo "Waiting for vector service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=vector-${RELEASE_NAME} --timeout=180s
+          kubectl wait --for=condition=Ready pod -l app=vector-${RELEASE_NAME} --timeout=180s || {
+            echo "Vector service failed to become ready. Checking status..."
+            kubectl get pods -l app=vector-${RELEASE_NAME} -o wide
+            kubectl describe pods -l app=vector-${RELEASE_NAME}
+            exit 1
+          }
           echo "vector service is ready, moving on..."
-          
+
           echo "Waiting for stac service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=stac-${RELEASE_NAME} --timeout=180s
+          kubectl wait --for=condition=Ready pod -l app=stac-${RELEASE_NAME} --timeout=180s || {
+            echo "STAC service failed to become ready. Checking status..."
+            kubectl get pods -l app=stac-${RELEASE_NAME} -o wide
+            kubectl describe pods -l app=stac-${RELEASE_NAME}
+            exit 1
+          }
           echo "all services are ready, moving on..."
 
       - name: cleanup if services fail to boot
         if: steps.watchservices.outcome == 'failure'
         run: |
-          echo "The watchservices step failed or timed out. Extracting pod logs for debugging..."
+          echo "The watchservices step failed or timed out. Extracting comprehensive debugging info..."
 
-          # Get and display all pods status
-          echo "===== Pod Status ====="
-          kubectl get pods
+          # Get and display all pods status with more detail
+          echo "===== Pod Status (detailed) ====="
+          kubectl get pods -o wide
+          echo ""
+          
+          echo "===== Pod Readiness Summary ====="
+          kubectl get pods --no-headers | awk '{print $2, $3}' | sort | uniq -c
+          echo ""
 
-          # Extract logs from raster pod init container (wait-for-pgstac-jobs)
-          echo "===== Raster Pod Init Container Logs (wait-for-pgstac-jobs) ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstac-jobs --tail=100 || echo "Could not get raster init container logs"
+          # Check init container logs for all services
+          for SERVICE in raster vector stac multidim; do
+            echo "===== $SERVICE Service Pod Status ====="
+            kubectl get pods -l app=$SERVICE-$RELEASE_NAME -o wide || echo "No $SERVICE pods found"
+            
+            POD_NAME=$(kubectl get pod -l app=$SERVICE-$RELEASE_NAME -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+            if [ -n "$POD_NAME" ]; then
+              echo "===== $SERVICE Pod ($POD_NAME) Init Container Logs ====="
+              kubectl logs pod/$POD_NAME -c wait-for-pgstac-jobs --tail=100 || echo "Could not get $SERVICE init container logs"
+              echo ""
+              
+              echo "===== $SERVICE Pod ($POD_NAME) Main Container Logs ====="
+              kubectl logs pod/$POD_NAME --tail=100 || echo "Could not get $SERVICE main container logs"
+              echo ""
+              
+              echo "===== $SERVICE Pod ($POD_NAME) Description ====="
+              kubectl describe pod/$POD_NAME
+              echo ""
+            fi
+          done
 
-          # Extract logs from raster pod main container
-          echo "===== Raster Pod Main Container Logs ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster main container logs"
+          # Show job status that init containers might be waiting for
+          echo "===== Job Status (what init containers are waiting for) ====="
+          kubectl get jobs -o wide
+          echo ""
+          
+          # Check pgstac jobs using labels instead of hardcoded names
+          for APP_LABEL in pgstac-migrate pgstac-load-samples; do
+            echo "===== Jobs with app=$APP_LABEL Status ====="
+            JOBS=$(kubectl get jobs -l app=$APP_LABEL -o name 2>/dev/null || true)
+            if [ -n "$JOBS" ]; then
+              for JOB in $JOBS; do
+                echo "--- Job $JOB ---"
+                kubectl get "$JOB" -o yaml 2>/dev/null | grep -A 10 -E "conditions|status:" || echo "Could not get status for $JOB"
+              done
+            else
+              echo "No jobs found with app=$APP_LABEL label"
+            fi
+            echo ""
+          done
 
-          # Extract logs from vector pod
-          echo "===== Vector Pod Logs ====="
-          kubectl get pod | grep "^vector-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get vector logs"
-
-          # Extract logs from stac pod
-          echo "===== STAC Pod Logs ====="
-          kubectl get pod | grep "^stac-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get STAC logs"
-
-          # Check if pods are in pending state or have issues
-          echo "===== Pod Descriptions for Troubleshooting ====="
-          kubectl get pod | grep "$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl describe pod/{} || echo "Could not describe pods"
+          # Check recent events
+          echo "===== Recent Events (last 50) ====="
+          kubectl get events --sort-by='.lastTimestamp' | tail -50
+          echo ""
 
           # force GH action to show failed result
           exit 128

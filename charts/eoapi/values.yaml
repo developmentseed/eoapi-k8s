@@ -161,6 +161,15 @@ pgstacBootstrap:
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
+    
+    # Wait configuration for init containers waiting for pgstac jobs
+    # These parameters control how long services wait for pgstac migration jobs to complete
+    waitConfig:
+      # Sleep interval between job status checks (in seconds)
+      sleepInterval: 5
+      # Maximum time to wait for jobs to complete (in seconds) 
+      # Default: 900 seconds (15 minutes)
+      timeout: 900
     ### Database connection settings TEMPORARY UNTIL WE HAVE A BETTER SOLUTION
     ### FOR CONFIGURING THE DB CONNECTION
     user: eoapi
