@@ -35,24 +35,34 @@ Helper function for common init containers to wait for pgstac jobs
 initContainers:
 - name: wait-for-pgstac-jobs
   image: bitnami/kubectl:latest
+  env:
+  {{- include "eoapi.commonEnvVars" (dict "service" "init" "root" .) | nindent 2 }}
   command:
   - /bin/sh
   - -c
   - |
-    echo "Waiting for pgstac-migrate job to complete..."
-    until kubectl get job pgstac-migrate -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' | grep -q "True"; do
-      echo "pgstac-migrate job not complete yet, waiting..."
-      sleep 5
-    done
-    echo "pgstac-migrate job completed successfully."
+    set -eu
     
+    MIGRATE_JOB="${RELEASE_NAME:-eoapi}-pgstac-migrate"
+    SAMPLES_JOB="${RELEASE_NAME:-eoapi}-pgstac-load-samples"
+    
+    wait_complete () {
+      job="$1"
+      echo "Waiting for $job to complete..."
+      # Optional: fail fast after 15 min so CI doesn't hang forever
+      deadline=$(( $(date +%s) + 900 ))
+      while :; do
+        # If job doesn't exist yet or SA can't read it, jsonpath may be empty
+        status="$(kubectl get job "$job" -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' 2>/dev/null || true)"
+        [ "$status" = "True" ] && { echo "$job completed"; return 0; }
+        [ $(date +%s) -ge $deadline ] && { echo "Timeout waiting for $job"; exit 1; }
+        sleep 5
+      done
+    }
+    
+    wait_complete "$MIGRATE_JOB"
     {{- if .Values.pgstacBootstrap.settings.loadSamples }}
-    echo "Waiting for pgstac-load-samples job to complete..."
-    until kubectl get job pgstac-load-samples -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' | grep -q "True"; do
-      echo "pgstac-load-samples job not complete yet, waiting..."
-      sleep 5
-    done
-    echo "pgstac-load-samples job completed successfully."
+    wait_complete "$SAMPLES_JOB"
     {{- end }}
 {{- end }}
 {{- end -}}
