@@ -5,11 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.6] - UNRELEASED
+## [Unreleased]
+
+## [0.7.6] - 2025-09-03
 
 ### Added
 
 - Added support for multiple hosts in ingress configuration via `ingress.hosts` array [#248](https://github.com/developmentseed/eoapi-k8s/pull/248)
+- Notes on M1 flavour Macs and pulling images [#250](https://github.com/developmentseed/eoapi-k8s/pull/250)
+- Ability to apply annotations to STAC Browser service [#255](https://github.com/developmentseed/eoapi-k8s/pull/255)
+
+### Fixed
+
+- Issues regarding timeouts waiting for postgres initialisation [#251](https://github.com/developmentseed/eoapi-k8s/pull/251) [#252](https://github.com/developmentseed/eoapi-k8s/pull/252)
+- Aligned STAC Browser metadata to other services [#255](https://github.com/developmentseed/eoapi-k8s/pull/255)
 
 ## [0.7.5] - 2025-07-11
 
