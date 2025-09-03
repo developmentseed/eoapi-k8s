@@ -26,6 +26,7 @@
 - [helm](https://helm.sh/docs/intro/install/)
 - A Kubernetes cluster (local or cloud-based)
 - `kubectl` configured for your cluster
+- [helm unittest](https://github.com/helm-unittest/helm-unittest?tab=readme-ov-file#install) if contributing to the repository and running `make tests`
 
 ### Option 1: One-Command Installation
 
