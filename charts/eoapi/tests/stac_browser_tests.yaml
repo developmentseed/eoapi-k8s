@@ -1,0 +1,53 @@
+suite: stac browser service tests
+templates:
+  - templates/services/browser/deployment.yaml
+  - templates/services/browser/service.yaml
+tests:
+  - it: "stac browser deployment"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - matchRegex:
+          path: metadata.name
+          pattern: ^browser-RELEASE-NAME$
+      - matchRegex:
+          path: metadata.labels.app
+          pattern: ^browser-RELEASE-NAME$
+      - equal:
+          path: metadata.labels.gitsha
+          value: "ABC123"
+  - it: "stac browser service"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.annotations:
+        annotation1: hello
+        annotation2: world
+      gitSha: "ABC123"
+    template: templates/services/browser/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - matchRegex:
+          path: metadata.name
+          pattern: ^browser-RELEASE-NAME$
+      - matchRegex:
+          path: metadata.labels.app
+          pattern: ^browser-RELEASE-NAME$
+      - equal:
+          path: metadata.annotations.annotation1
+          value: hello
+      - equal:
+          path: metadata.annotations.annotation2
+          value: world
