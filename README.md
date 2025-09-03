@@ -47,6 +47,15 @@ This will automatically:
 3. Install the eoAPI helm chart
 4. Set up necessary namespaces and configurations
 
+> [!WARNING]
+> Some images do not provide a `linux/arm64` compatible download (You may see image pull failures) which causes failures on M1 etc Macs, to get around this, you can pre-pull the image with:
+> ```
+> docker pull --platform=linux/amd64 <image>
+> minikube image load <image>
+> ```
+> You can then re-deploy the service and it will now use the local image.
+
+
 ### Option 2: Step-by-Step Installation
 
 If you prefer more control over the installation process:
