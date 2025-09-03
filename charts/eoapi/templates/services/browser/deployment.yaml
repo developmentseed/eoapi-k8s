@@ -3,6 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: browser-{{ .Release.Name }}
+  labels:
+    app: browser-{{ .Release.Name }}
+    gitsha: {{ .Values.gitSha }}
 spec:
   replicas: {{.Values.browser.replicaCount}}
   selector:
