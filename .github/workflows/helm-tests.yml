@@ -25,6 +25,13 @@ jobs:
       - run: |
           cd charts
           helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
+          # Run autoscaling-specific unit tests
+          helm unittest eoapi -f 'tests/autoscaling_tests.yaml' -v eoapi/test-autoscaling-values.yaml
+          # Run observability chart tests if they exist
+          if [ -d "eoapi-observability/tests" ]; then
+            helm unittest eoapi-observability -f 'tests/*.yaml'
+          fi
+
   k3s-integration-tests:
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
@@ -263,7 +270,7 @@ jobs:
           echo "===== Pod Status (detailed) ====="
           kubectl get pods -o wide
           echo ""
-          
+
           echo "===== Pod Readiness Summary ====="
           kubectl get pods --no-headers | awk '{print $2, $3}' | sort | uniq -c
           echo ""
@@ -272,17 +279,17 @@ jobs:
           for SERVICE in raster vector stac multidim; do
             echo "===== $SERVICE Service Pod Status ====="
             kubectl get pods -l app=$RELEASE_NAME-$SERVICE -o wide || echo "No $SERVICE pods found"
-            
+
             POD_NAME=$(kubectl get pod -l app=$RELEASE_NAME-$SERVICE -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
             if [ -n "$POD_NAME" ]; then
               echo "===== $SERVICE Pod ($POD_NAME) Init Container Logs ====="
               kubectl logs pod/$POD_NAME -c wait-for-pgstac-jobs --tail=100 || echo "Could not get $SERVICE init container logs"
               echo ""
-              
+
               echo "===== $SERVICE Pod ($POD_NAME) Main Container Logs ====="
               kubectl logs pod/$POD_NAME --tail=100 || echo "Could not get $SERVICE main container logs"
               echo ""
-              
+
               echo "===== $SERVICE Pod ($POD_NAME) Description ====="
               kubectl describe pod/$POD_NAME
               echo ""
@@ -293,7 +300,7 @@ jobs:
           echo "===== Job Status (what init containers are waiting for) ====="
           kubectl get jobs -o wide
           echo ""
-          
+
           # Check pgstac jobs using labels instead of hardcoded names
           for APP_LABEL in pgstac-migrate pgstac-load-samples; do
             echo "===== Jobs with app=$RELEASE_NAME-$APP_LABEL Status ====="

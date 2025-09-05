@@ -1,0 +1,159 @@
+# Test values for autoscaling scenarios
+testing: true
+
+# Enable monitoring stack for testing
+monitoring:
+  metricsServer:
+    enabled: true
+    apiService:
+      create: true
+
+  prometheus:
+    enabled: true
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kube-state-metrics:
+      enabled: true
+    prometheus-node-exporter:
+      enabled: true
+      resources:
+        limits:
+          cpu: 10m
+          memory: 30Mi
+        requests:
+          cpu: 10m
+          memory: 30Mi
+    server:
+      service:
+        type: ClusterIP
+      # Lightweight resource configuration for testing
+      resources:
+        limits:
+          cpu: 200m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+
+  prometheusAdapter:
+    enabled: true
+    # URL will be auto-configured for same-release Prometheus
+    prometheus:
+      url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
+      port: 80
+      path: ""
+    rules:
+      default: false
+      custom:
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_vector_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_raster_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_stac_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+# Ingress configuration for testing
+ingress:
+  enabled: true
+  className: "traefik"
+  pathType: "Prefix"
+  host: "eoapi.local"
+
+# Database configuration for testing
+pgstacBootstrap:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+
+# Service configurations with autoscaling enabled for testing
+stac:
+  enabled: true
+  autoscaling:
+    enabled: true
+    type: "both"  # Test both CPU and request rate scaling
+    minReplicas: 1
+    maxReplicas: 5
+    targets:
+      cpu: 70
+      requestRate: "50000m"
+  settings:
+    resources:
+      limits:
+        cpu: "1280m"
+        memory: "1536Mi"
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+
+raster:
+  enabled: true
+  autoscaling:
+    enabled: true
+    type: "requestRate"  # Test request rate scaling only
+    minReplicas: 1
+    maxReplicas: 3
+    targets:
+      requestRate: "30000m"
+  settings:
+    resources:
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+
+vector:
+  enabled: true
+  autoscaling:
+    enabled: true
+    type: "cpu"  # Test CPU scaling only
+    minReplicas: 1
+    maxReplicas: 3
+    targets:
+      cpu: 80
+  settings:
+    resources:
+      limits:
+        cpu: "768m"
+        memory: "1536Mi"
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+    envVars:
+      TIPG_DEBUG: "True"
+
+# Leave multidim disabled to test mixed scenarios
+multidim:
+  enabled: false
+  autoscaling:
+    enabled: false
+
+# Git SHA for testing
+gitSha: "AUTOSCALING_TEST"

@@ -1,0 +1,99 @@
+######################
+# EOAPI OBSERVABILITY
+######################
+# This chart provides observability and dashboarding tools for eoAPI monitoring.
+# It expects a Prometheus instance to already be available (deployed by main eoapi chart or externally).
+
+grafana:
+  enabled: true
+  persistence:
+    enabled: false
+  deploymentStrategy:
+    type: Recreate
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+  rbac:
+    namespaced: true
+    pspEnabled: false
+  # initChownData refers to an init container enabled by default that isn't
+  # needed as we don't reconfigure the linux user the grafana server will run as.
+  initChownData:
+    enabled: false
+
+  # Resources for grafana based on observed usage patterns
+  # Memory use increases over time but stays reasonable below 200Mi
+  # CPU use is minimal with peaks at up to 9m during dashboard browsing
+  resources:
+    limits:
+      cpu: 100m
+      memory: 200Mi
+    requests:
+      cpu: 10m
+      memory: 200Mi
+
+  # Prometheus datasource configuration
+  # Configure this to point to your Prometheus instance
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: prometheus
+
+        orgId: 1
+        type: prometheus
+        # Default: assumes Prometheus deployed by main eoapi chart in same namespace
+        # Override prometheusUrl to point to external Prometheus if needed
+        url: "{{ .Values.prometheusUrl | default (printf \"http://%s-prometheus-server.%s.svc.cluster.local\" .Release.Name .Release.Namespace) }}"
+        access: proxy
+        jsonData:
+          timeInterval: "5s"
+        isDefault: true
+        editable: true
+        version: 1
+
+  # Dashboard providers configuration
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+  # Dashboard ConfigMaps
+  dashboardsConfigMaps:
+    # References the ConfigMap created by templates/dashboard.config.yaml
+    default: "{{ .Release.Name }}-dashboards"
+
+# Prometheus connection configuration
+# Override this if connecting to external Prometheus instance
+prometheusUrl: ""
+
+# Advanced Prometheus features (optional)
+# These can be enabled if you want additional Prometheus functionality
+# beyond what's provided by the main eoapi chart
+prometheus:
+  enabled: false
+  # If enabled, provides alertmanager functionality
+  alertmanager:
+    enabled: false
+  # If enabled, provides pushgateway functionality
+  prometheus-pushgateway:
+    enabled: false
+  # Prometheus server - only enable if you want a separate instance
+  # for advanced monitoring beyond the core metrics in main chart
+  server:
+    enabled: false
+    service:
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+      type: LoadBalancer

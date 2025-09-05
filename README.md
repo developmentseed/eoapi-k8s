@@ -17,7 +17,7 @@
 
 ## What is eoAPI?
 
-[eoAPI](https://eoapi.dev/) is a collection of REST APIs for Earth Observation data access and analysis. This repository provides a production-ready Kubernetes deployment solution with flexible database options, unified ingress configuration, and built-in monitoring.
+[eoAPI](https://eoapi.dev/) is a collection of REST APIs for Earth Observation data access and analysis. This repository provides a production-ready Kubernetes deployment solution with flexible database options, unified ingress configuration, optional monitoring and autoscaling capabilities, and observability tools.
 
 ## Quick Start
 
