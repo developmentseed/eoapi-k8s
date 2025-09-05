@@ -1,0 +1,241 @@
+suite: autoscaling tests
+templates:
+  - templates/services/stac/hpa.yaml
+  - templates/services/raster/hpa.yaml
+  - templates/services/vector/hpa.yaml
+  - templates/services/multidim/hpa.yaml
+tests:
+  - it: "autoscaling disabled by default"
+    set:
+      stac.autoscaling.enabled: false
+      raster.autoscaling.enabled: false
+      vector.autoscaling.enabled: false
+      multidim.autoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "stac hpa not created when autoscaling disabled"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: false
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "stac hpa created with cpu autoscaling"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "cpu"
+      stac.autoscaling.targets.cpu: 70
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: metadata.name
+          value: "RELEASE-NAME-stac-hpa"
+      - equal:
+          path: spec.minReplicas
+          value: 1
+      - isNotEmpty:
+          path: spec.maxReplicas
+      - equal:
+          path: spec.metrics[0].type
+          value: "Resource"
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: "cpu"
+      - equal:
+          path: spec.metrics[0].resource.target.averageUtilization
+          value: 70
+
+  - it: "stac hpa created with request rate autoscaling"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "requestRate"
+      stac.autoscaling.targets.requestRate: "50000m"
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.minReplicas
+          value: 1
+      - isNotEmpty:
+          path: spec.maxReplicas
+      - equal:
+          path: spec.metrics[0].type
+          value: "Pods"
+      - equal:
+          path: spec.metrics[0].pods.metric.name
+          value: "nginx_ingress_controller_requests"
+      - equal:
+          path: spec.metrics[0].pods.target.averageValue
+          value: "50000m"
+
+  - it: "stac hpa created with both cpu and request rate autoscaling"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "both"
+      stac.autoscaling.targets.cpu: 70
+      stac.autoscaling.targets.requestRate: "50000m"
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.metrics[0].type
+          value: "Resource"
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: "cpu"
+      - equal:
+          path: spec.metrics[1].type
+          value: "Pods"
+      - equal:
+          path: spec.metrics[1].pods.metric.name
+          value: "nginx_ingress_controller_requests"
+
+  - it: "raster hpa created with request rate autoscaling"
+    set:
+      raster.enabled: true
+      raster.autoscaling.enabled: true
+      raster.autoscaling.type: "requestRate"
+      raster.autoscaling.targets.requestRate: "30000m"
+    template: templates/services/raster/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.metrics[0].pods.metric.name
+          value: "nginx_ingress_controller_requests"
+      - equal:
+          path: spec.metrics[0].pods.target.averageValue
+          value: "30000m"
+
+  - it: "vector hpa created with request rate autoscaling"
+    set:
+      vector.enabled: true
+      vector.autoscaling.enabled: true
+      vector.autoscaling.type: "requestRate"
+      vector.autoscaling.targets.requestRate: "40000m"
+    template: templates/services/vector/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.metrics[0].pods.metric.name
+          value: "nginx_ingress_controller_requests"
+      - equal:
+          path: spec.metrics[0].pods.target.averageValue
+          value: "40000m"
+
+  - it: "multidim hpa not created when service disabled"
+    set:
+      multidim.enabled: false
+      multidim.autoscaling.enabled: true
+    template: templates/services/multidim/hpa.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "multidim hpa created when enabled"
+    set:
+      multidim.enabled: true
+      multidim.autoscaling.enabled: true
+      multidim.autoscaling.type: "cpu"
+      multidim.autoscaling.targets.cpu: 80
+    template: templates/services/multidim/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.metrics[0].resource.target.averageUtilization
+          value: 80
+
+  - it: "hpa scaleTargetRef points to correct deployment"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "cpu"
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: "RELEASE-NAME-stac"
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: "Deployment"
+
+  - it: "hpa custom replica configuration"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "cpu"
+      stac.autoscaling.minReplicas: 2
+      stac.autoscaling.maxReplicas: 20
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 20
+
+  - it: "hpa includes proper labels"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "cpu"
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - equal:
+          path: metadata.labels.app
+          value: "RELEASE-NAME-stac"
+
+  - it: "hpa behavior configuration applied when set"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: "cpu"
+      stac.autoscaling.behavior.scaleUp.stabilizationWindowSeconds: 120
+      stac.autoscaling.behavior.scaleDown.stabilizationWindowSeconds: 300
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - equal:
+          path: spec.behavior.scaleUp.stabilizationWindowSeconds
+          value: 120
+      - equal:
+          path: spec.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+
+  - it: "stac hpa production configuration with higher minReplicas"
+    set:
+      stac.enabled: true
+      stac.autoscaling.enabled: true
+      stac.autoscaling.minReplicas: 2
+      stac.autoscaling.maxReplicas: 20
+      stac.autoscaling.type: "requestRate"
+      stac.autoscaling.targets.requestRate: "50000m"
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 20
+      - equal:
+          path: spec.metrics[0].type
+          value: "Pods"
+      - equal:
+          path: spec.metrics[0].pods.target.averageValue
+          value: "50000m"

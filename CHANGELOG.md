@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added code formatting and linting with pre-commit hooks [#283](https://github.com/developmentseed/eoapi-k8s/pull/283)
 - Added values.schema.json validation [#296](https://github.com/developmentseed/eoapi-k8s/pull/296)
 
+### Changed
+
+- Excluded renovate.json from CHANGELOG.md edits [#301](https://github.com/developmentseed/eoapi-k8s/pull/301)
+- Refactores eoapi-support into core eoapi chart [#262](https://github.com/developmentseed/eoapi-k8s/pull/262)
+
+
 ## [0.7.8] - 2025-09-10
 
 ### Added
