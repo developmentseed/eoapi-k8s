@@ -13,6 +13,8 @@ A Helm chart for deploying Earth Observation APIs with integrated STAC, raster, 
 - Built-in STAC Browser interface
 - Flexible database configuration
 - Unified ingress system
+- Autoscaling
+- Integrated observability (Prometheus & Grafana)
 
 ## TL;DR
 
