@@ -24,6 +24,45 @@ entries:
           email: eoapi@developmentseed.org
     apiVersion: v2
     appVersion: 5.0.2
+    created: "2025-09-05T13:40:36.871942029Z"
+    dependencies:
+    - condition: postgrescluster.enabled
+      name: postgrescluster
+      repository: https://devseed.com/eoapi-k8s/
+      version: 5.7.4
+    description: Create a full Earth Observation API with Metadata, Raster and Vector
+      services
+    digest: a37ea67097b2b6de8904d3fef24e52c99f343cca2092625c0eb44e5e4c96e94a
+    icon: https://eoapi.dev/img/eoAPI.png
+    kubeVersion: '>=1.23.0-0'
+    name: eoapi
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-0.7.7/eoapi-0.7.7.tgz
+    version: 0.7.7
+  - annotations:
+      artifacthub.io/changes: |
+        - Remove pathType and pathSuffix configurations
+        - Add upgrade job for pre-0.7.0 migrations
+        - Add separate browser ingress configuration
+        - Support custom PostgreSQL cluster naming
+      artifacthub.io/keywords: |
+        - earth observation
+        - geospatial
+        - kubernetes
+        - stac
+        - raster
+        - vector
+      artifacthub.io/links: |
+        - name: GitHub Repository
+          url: https://github.com/developmentseed/eoapi-k8s
+        - name: Documentation
+          url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+      artifacthub.io/maintainers: |
+        - name: DevelopmentSeed
+          email: eoapi@developmentseed.org
+    apiVersion: v2
+    appVersion: 5.0.2
     created: "2025-09-03T13:58:17.649704253Z"
     dependencies:
     - condition: postgrescluster.enabled
@@ -856,4 +895,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2025-09-03T13:58:18.160383299Z"
+generated: "2025-09-05T13:40:36.872427085Z"
