@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.7] - 2025-09-05
+
+### Fixed
+
+- Order of hook execution [#257](https://github.com/developmentseed/eoapi-k8s/pull/257)
+
 ## [0.7.6] - 2025-09-03
 
 ### Added
