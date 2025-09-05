@@ -1,0 +1,44 @@
+suite: eoapi-observability chart tests
+templates:
+  - templates/dashboard.config.yaml
+tests:
+  - it: "dashboard config created with default values"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: "RELEASE-NAME-dashboards"
+      - equal:
+          path: metadata.labels.eoapi_dashboard
+          value: "1"
+
+  - it: "dashboard config includes eoapi dashboard json"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - isNotEmpty:
+          path: data["kubernetes.json"]
+
+  - it: "observability chart works with different release names"
+    release:
+      name: "my-eoapi-obs"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: "my-eoapi-obs-dashboards"
+      - equal:
+          path: metadata.labels.eoapi_dashboard
+          value: "1"
+
+  - it: "dashboard configmap structure is correct"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - hasDocuments:
+          count: 1
+      - exists:
+          path: data["kubernetes.json"]
+      - equal:
+          path: metadata.labels.eoapi_dashboard
+          value: "1"

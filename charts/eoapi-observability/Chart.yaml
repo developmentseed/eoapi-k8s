@@ -1,0 +1,16 @@
+apiVersion: v2
+name: eoapi-observability
+description: Observability tools for eoAPI monitoring
+
+appVersion: "0.2.0"
+version: "0.2.0"
+
+dependencies:
+  # Grafana for observability and dashboarding of metrics
+  # NOTE: Connects to Prometheus instance deployed by main eoapi chart
+  # https://github.com/grafana/helm-charts/tree/main/charts/grafana
+  #
+  - name: grafana
+    version: 7.3.3
+    repository: https://grafana.github.io/helm-charts
+    condition: grafana.enabled

@@ -5,7 +5,7 @@ HELM_REPO_URL=https://devseed.com/eoapi-k8s/
 HELM_CHART_NAME=eoapi/eoapi
 PGO_CHART_VERSION=5.7.4
 
-.PHONY: all deploy minikube ingest help
+.PHONY: all deploy minikube ingest tests help
 
 # Default target
 all: deploy
@@ -46,4 +46,5 @@ help:
 	@echo "  make deploy         -  Install eoAPI on a cluster kubectl is connected to."
 	@echo "  make minikube       -  Install eoAPI on minikube."
 	@echo "  make ingest         -  Ingest STAC collections and items into the database."
+	@echo "  make tests          -  Run basic Helm unit tests."
 	@echo "  make help           -  Show this help message."
