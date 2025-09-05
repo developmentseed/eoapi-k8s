@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: stac-{{ .Release.Name }}
+    app: {{ .Release.Name }}-stac
     gitsha: {{ .Values.gitSha }}
-  name: stac-{{ .Release.Name }}
+  name: {{ .Release.Name }}-stac
   {{- if .Values.stac.annotations }}
   annotations:
     {{- with .Values.stac.annotations }}
@@ -22,11 +22,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: stac-{{ .Release.Name }}
+      app: {{ .Release.Name }}-stac
   template:
     metadata:
       labels:
-        app: stac-{{ .Release.Name }}
+        app: {{ .Release.Name }}-stac
         {{- with .Values.stac.settings.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -85,7 +85,7 @@ spec:
           {{- include "eoapi.commonEnvVars" (dict "service" "stac" "root" .) | nindent 10 }}
         envFrom:
           - configMapRef:
-              name: stac-envvar-configmap-{{ .Release.Name }}
+              name: {{ .Release.Name }}-stac-envvar-configmap
           {{- if .Values.stac.settings.extraEnvFrom }}
           {{- toYaml .Values.stac.settings.extraEnvFrom | nindent 10 }}
           {{- end }}

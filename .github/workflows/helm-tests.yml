@@ -228,28 +228,28 @@ jobs:
           echo ""
 
           echo "Waiting for raster service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=raster-${RELEASE_NAME} --timeout=180s || {
+          kubectl wait --for=condition=Ready pod -l app=${RELEASE_NAME}-raster --timeout=180s || {
             echo "Raster service failed to become ready. Checking status..."
-            kubectl get pods -l app=raster-${RELEASE_NAME} -o wide
-            kubectl describe pods -l app=raster-${RELEASE_NAME}
+            kubectl get pods -l app=${RELEASE_NAME}-raster -o wide
+            kubectl describe pods -l app=${RELEASE_NAME}-raster
             exit 1
           }
           echo "raster service is ready, moving on..."
 
           echo "Waiting for vector service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=vector-${RELEASE_NAME} --timeout=180s || {
+          kubectl wait --for=condition=Ready pod -l app=${RELEASE_NAME}-vector --timeout=180s || {
             echo "Vector service failed to become ready. Checking status..."
-            kubectl get pods -l app=vector-${RELEASE_NAME} -o wide
-            kubectl describe pods -l app=vector-${RELEASE_NAME}
+            kubectl get pods -l app=${RELEASE_NAME}-vector -o wide
+            kubectl describe pods -l app=${RELEASE_NAME}-vector
             exit 1
           }
           echo "vector service is ready, moving on..."
 
           echo "Waiting for stac service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=stac-${RELEASE_NAME} --timeout=180s || {
+          kubectl wait --for=condition=Ready pod -l app=${RELEASE_NAME}-stac --timeout=180s || {
             echo "STAC service failed to become ready. Checking status..."
-            kubectl get pods -l app=stac-${RELEASE_NAME} -o wide
-            kubectl describe pods -l app=stac-${RELEASE_NAME}
+            kubectl get pods -l app=${RELEASE_NAME}-stac -o wide
+            kubectl describe pods -l app=${RELEASE_NAME}-stac
             exit 1
           }
           echo "all services are ready, moving on..."
@@ -271,9 +271,9 @@ jobs:
           # Check init container logs for all services
           for SERVICE in raster vector stac multidim; do
             echo "===== $SERVICE Service Pod Status ====="
-            kubectl get pods -l app=$SERVICE-$RELEASE_NAME -o wide || echo "No $SERVICE pods found"
+            kubectl get pods -l app=$RELEASE_NAME-$SERVICE -o wide || echo "No $SERVICE pods found"
             
-            POD_NAME=$(kubectl get pod -l app=$SERVICE-$RELEASE_NAME -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+            POD_NAME=$(kubectl get pod -l app=$RELEASE_NAME-$SERVICE -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
             if [ -n "$POD_NAME" ]; then
               echo "===== $SERVICE Pod ($POD_NAME) Init Container Logs ====="
               kubectl logs pod/$POD_NAME -c wait-for-pgstac-jobs --tail=100 || echo "Could not get $SERVICE init container logs"
@@ -296,15 +296,15 @@ jobs:
           
           # Check pgstac jobs using labels instead of hardcoded names
           for APP_LABEL in pgstac-migrate pgstac-load-samples; do
-            echo "===== Jobs with app=$APP_LABEL Status ====="
-            JOBS=$(kubectl get jobs -l app=$APP_LABEL -o name 2>/dev/null || true)
+            echo "===== Jobs with app=$RELEASE_NAME-$APP_LABEL Status ====="
+            JOBS=$(kubectl get jobs -l app=$RELEASE_NAME-$APP_LABEL -o name 2>/dev/null || true)
             if [ -n "$JOBS" ]; then
               for JOB in $JOBS; do
                 echo "--- Job $JOB ---"
                 kubectl get "$JOB" -o yaml 2>/dev/null | grep -A 10 -E "conditions|status:" || echo "Could not get status for $JOB"
               done
             else
-              echo "No jobs found with app=$APP_LABEL label"
+              echo "No jobs found with app=$RELEASE_NAME-$APP_LABEL label"
             fi
             echo ""
           done

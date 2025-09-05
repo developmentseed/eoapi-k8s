@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: eoapi-dashboards
+  name: {{ .Release.Name }}-dashboards
   labels:
     eoapi_dashboard: "1"
 data:

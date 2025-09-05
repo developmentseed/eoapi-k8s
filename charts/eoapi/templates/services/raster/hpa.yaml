@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: raster-hpa-{{ .Release.Name }}
+  name: {{ .Release.Name }}-raster-hpa
   labels:
-    app: raster-{{ .Release.Name }}
+    app: {{ .Release.Name }}-raster
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: raster-{{ .Release.Name }}
+    name: {{ .Release.Name }}-raster
   minReplicas: {{ .Values.raster.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.raster.autoscaling.maxReplicas }}
   behavior:

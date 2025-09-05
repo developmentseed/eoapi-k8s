@@ -1,2 +1,0 @@
-# This file is kept for backward compatibility but tests have been moved to service-specific test files:
-# - vector_tests.yaml (for HPA tests)

@@ -109,9 +109,9 @@ initContainers:
       done
     }
     
-    wait_for_job_by_label "app=pgstac-migrate" "pgstac-migrate"
+    wait_for_job_by_label "app={{ .Release.Name }}-pgstac-migrate" "pgstac-migrate"
     {{- if .Values.pgstacBootstrap.settings.loadSamples }}
-    wait_for_job_by_label "app=pgstac-load-samples" "pgstac-load-samples"
+    wait_for_job_by_label "app={{ .Release.Name }}-pgstac-load-samples" "pgstac-load-samples"
     {{- end }}
 {{- end }}
 {{- end -}}

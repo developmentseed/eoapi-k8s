@@ -18,7 +18,7 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^raster-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-raster$
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
@@ -50,7 +50,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: metadata.name
-          pattern: ^raster-envvar-configmap-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-raster-envvar-configmap$
       - equal:
           path: data.GDAL_HTTP_MULTIPLEX
           value: "YES"

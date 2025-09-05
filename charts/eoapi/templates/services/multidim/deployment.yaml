@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: multidim-{{ .Release.Name }}
+    app: {{ .Release.Name }}-multidim
     gitsha: {{ .Values.gitSha }}
-  name: multidim-{{ .Release.Name }}
+  name: {{ .Release.Name }}-multidim
   {{- if .Values.multidim.annotations }}
   annotations:
     {{- with .Values.multidim.annotations }}
@@ -22,11 +22,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: multidim-{{ .Release.Name }}
+      app: {{ .Release.Name }}-multidim
   template:
     metadata:
       labels:
-        app: multidim-{{ .Release.Name }}
+        app: {{ .Release.Name }}-multidim
         {{- with .Values.multidim.settings.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -85,7 +85,7 @@ spec:
           {{- include "eoapi.commonEnvVars" (dict "service" "multidim" "root" .) | nindent 10 }}
         envFrom:
           - configMapRef:
-              name: multidim-envvar-configmap-{{ .Release.Name }}
+              name: {{ .Release.Name }}-multidim-envvar-configmap
           {{- if .Values.multidim.settings.extraEnvFrom }}
           {{- toYaml .Values.multidim.settings.extraEnvFrom | nindent 10 }}
           {{- end }}

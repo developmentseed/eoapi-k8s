@@ -25,7 +25,7 @@ kind: Job
 metadata:
   name: {{ .Release.Name }}-pgstac-migrate
   labels:
-    app: pgstac-migrate
+    app: {{ .Release.Name }}-pgstac-migrate
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-5"
@@ -34,7 +34,7 @@ spec:
   template:
     metadata:
       labels:
-        app: pgstac-migrate
+        app: {{ .Release.Name }}-pgstac-migrate
     spec:
       restartPolicy: Never
       containers:
@@ -68,13 +68,13 @@ spec:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /opt/settings
-              name: pgstac-settings-volume-{{ .Release.Name }}
+              name: {{ .Release.Name }}-pgstac-settings-volume
           env:
             {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
       volumes:
-        - name: pgstac-settings-volume-{{ .Release.Name }}
+        - name: {{ .Release.Name }}-pgstac-settings-volume
           configMap:
-            name: pgstac-settings-config-{{ .Release.Name }}
+            name: {{ .Release.Name }}-pgstac-settings-config
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -93,7 +93,7 @@ kind: Job
 metadata:
   name: {{ .Release.Name }}-pgstac-load-samples
   labels:
-    app: pgstac-load-samples
+    app: {{ .Release.Name }}-pgstac-load-samples
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-4"
@@ -102,7 +102,7 @@ spec:
   template:
     metadata:
       labels:
-        app: pgstac-load-samples
+        app: {{ .Release.Name }}-pgstac-load-samples
     spec:
       restartPolicy: Never
       containers:
@@ -134,18 +134,18 @@ spec:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /opt/sql
-              name: initdb-sql-volume-{{ .Release.Name }}
+              name: {{ .Release.Name }}-initdb-sql-volume
             - mountPath: /opt/data
-              name: initdb-json-volume-{{ .Release.Name }}
+              name: {{ .Release.Name }}-initdb-json-volume
           env:
             {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
       volumes:
-        - name: initdb-sql-volume-{{ .Release.Name }}
+        - name: {{ .Release.Name }}-initdb-sql-volume
           configMap:
-            name: initdb-sql-config-{{ .Release.Name }}
-        - name: initdb-json-volume-{{ .Release.Name }}
+            name: {{ .Release.Name }}-initdb-sql-config
+        - name: {{ .Release.Name }}-initdb-json-volume
           configMap:
-            name: initdb-json-config-{{ .Release.Name }}
+            name: {{ .Release.Name }}-initdb-json-config
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

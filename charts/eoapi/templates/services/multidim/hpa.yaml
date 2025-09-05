@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: multidim-hpa-{{ .Release.Name }}
+  name: {{ .Release.Name }}-multidim-hpa
   labels:
-    app: multidim-{{ .Release.Name }}
+    app: {{ .Release.Name }}-multidim
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: multidim-{{ .Release.Name }}
+    name: {{ .Release.Name }}-multidim
   minReplicas: {{ .Values.multidim.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.multidim.autoscaling.maxReplicas }}
   behavior:

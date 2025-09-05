@@ -1,5 +1,0 @@
-# This file is kept for backward compatibility but tests have been moved to service-specific test files:
-# - raster_tests.yaml
-# - stac_tests.yaml
-# - vector_tests.yaml
-# - multidim_tests.yaml

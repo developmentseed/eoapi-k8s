@@ -6,9 +6,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pgstac-eoapi-superuser-init-db
+  name: {{ .Release.Name }}-pgstac-superuser-init-db
   labels:
-    app: pgstac-eoapi-superuser-init-db
+    app: {{ .Release.Name }}-pgstac-superuser-init-db
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-6"
@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       labels:
-        app: pgstac-eoapi-superuser-init-db
+        app: {{ .Release.Name }}-pgstac-superuser-init-db
     spec:
       restartPolicy: Never
       containers:
@@ -42,7 +42,7 @@ spec:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /opt/sql
-              name: initdb-config
+              name: {{ .Release.Name }}-initdb-config
           env:
             - name: PGUSER
               valueFrom:
@@ -70,9 +70,9 @@ spec:
                   name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
                   key: dbname
       volumes:
-        - name: initdb-config
+        - name: {{ .Release.Name }}-initdb-config
           configMap:
-            name: initdb
+            name: {{ .Release.Name }}-initdb
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

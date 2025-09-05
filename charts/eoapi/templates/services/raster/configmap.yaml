@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: raster-envvar-configmap-{{ .Release.Name }}
+  name: {{ .Release.Name }}-raster-envvar-configmap
 data:
   {{- range $envKey, $envValue := .Values.raster.settings.envVars }}
   {{ upper $envKey }}: {{ $envValue | quote }}

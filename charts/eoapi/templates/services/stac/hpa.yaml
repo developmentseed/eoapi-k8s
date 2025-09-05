@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: stac-hpa-{{ .Release.Name }}
+  name: {{ .Release.Name }}-stac-hpa
   labels:
-    app: stac-{{ .Release.Name }}
+    app: {{ .Release.Name }}-stac
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: stac-{{ .Release.Name }}
+    name: {{ .Release.Name }}-stac
   minReplicas: {{ .Values.stac.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.stac.autoscaling.maxReplicas }}
   behavior:

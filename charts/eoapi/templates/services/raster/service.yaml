@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: raster-{{ $.Release.Name }}
+  name: {{ .Release.Name }}-raster
   labels:
-    app: raster-{{ .Release.Name }}
+    app: {{ .Release.Name }}-raster
 spec:
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.port }}
   selector:
-    app: raster-{{ .Release.Name }}
+    app: {{ .Release.Name }}-raster
 {{- end }}

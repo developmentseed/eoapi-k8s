@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: stac-{{ $.Release.Name }}
+  name: {{ .Release.Name }}-stac
   labels:
-    app: stac-{{ .Release.Name }}
+    app: {{ .Release.Name }}-stac
 spec:
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.port }}
   selector:
-    app: stac-{{ .Release.Name }}
+    app: {{ .Release.Name }}-stac
 {{- end }}

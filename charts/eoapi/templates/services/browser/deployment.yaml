@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: browser-{{ .Release.Name }}
+  name: {{ .Release.Name }}-browser
   labels:
-    app: browser-{{ .Release.Name }}
+    app: {{ .Release.Name }}-browser
     gitsha: {{ .Values.gitSha }}
 spec:
   replicas: {{.Values.browser.replicaCount}}
   selector:
     matchLabels:
-      app: browser-{{ .Release.Name }}
+      app: {{ .Release.Name }}-browser
   template:
     metadata:
       labels:
-        app: browser-{{ .Release.Name }}
+        app: {{ .Release.Name }}-browser
     spec:
       containers:
         - name: browser

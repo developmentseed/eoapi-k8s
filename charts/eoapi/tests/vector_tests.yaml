@@ -18,7 +18,7 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^vector-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-vector$
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
@@ -50,7 +50,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: metadata.name
-          pattern: ^vector-envvar-configmap-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-vector-envvar-configmap$
       - equal:
           path: data.TIPG_CATALOG_TTL
           value: "300"

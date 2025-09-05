@@ -2,9 +2,10 @@
 # so giving props where props are due to Yuvi Panda :sparkles:
 prometheus-adapter:
   prometheus:
-    # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
-    # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
-    # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
+    # NOTE: the `url` below makes assumptions about release name and namespace:
+    # 1) Release name is "eoapi-support" (follows RELEASE_NAME-prometheus-server pattern)
+    # 2) Deployed in "eoapi" namespace
+    # 3) If using different release name, update to: http://YOUR_RELEASE_NAME-prometheus-server.YOUR_NAMESPACE.svc.cluster.local
     url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
     port: 80
     path: ""
@@ -136,9 +137,10 @@ grafana:
       - name: prometheus
         orgId: 1
         type: prometheus
-        # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
-        # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
-        # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
+        # NOTE: the `url` below makes assumptions about release name and namespace:
+        # 1) Release name is "eoapi-support" (follows RELEASE_NAME-prometheus-server pattern)
+        # 2) Deployed in "eoapi" namespace
+        # 3) If using different release name, update to: http://YOUR_RELEASE_NAME-prometheus-server.YOUR_NAMESPACE.svc.cluster.local
         url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
         access: proxy
         jsonData:
@@ -161,7 +163,11 @@ grafana:
           path: /var/lib/grafana/dashboards/default
 
   dashboardsConfigMaps:
-    default: "eoapi-dashboards"
+    # NOTE: This must match the ConfigMap name created in templates/dashboard.config.yaml
+    # The template creates: {{ .Release.Name }}-dashboards
+    # If release name is "eoapi-support", this should be "eoapi-support-dashboards"
+    # Update this value to match your actual release name + "-dashboards"
+    default: "eoapi-support-dashboards"
 
 metrics-server:
   apiService:

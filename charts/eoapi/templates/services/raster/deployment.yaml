@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: raster-{{ .Release.Name }}
+    app: {{ .Release.Name }}-raster
     gitsha: {{ .Values.gitSha }}
-  name: raster-{{ .Release.Name }}
+  name: {{ .Release.Name }}-raster
   {{- if .Values.raster.annotations }}
   annotations:
     {{- with .Values.raster.annotations }}
@@ -22,11 +22,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: raster-{{ .Release.Name }}
+      app: {{ .Release.Name }}-raster
   template:
     metadata:
       labels:
-        app: raster-{{ .Release.Name }}
+        app: {{ .Release.Name }}-raster
         {{- with .Values.raster.settings.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -85,7 +85,7 @@ spec:
           {{- include "eoapi.commonEnvVars" (dict "service" "raster" "root" .) | nindent 10 }}
         envFrom:
           - configMapRef:
-              name: raster-envvar-configmap-{{ .Release.Name }}
+              name: {{ .Release.Name }}-raster-envvar-configmap
           {{- if .Values.raster.settings.extraEnvFrom }}
           {{- toYaml .Values.raster.settings.extraEnvFrom | nindent 10 }}
           {{- end }}
