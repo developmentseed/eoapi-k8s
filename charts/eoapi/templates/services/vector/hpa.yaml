@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: vector-hpa-{{ .Release.Name }}
+  name: {{ .Release.Name }}-vector-hpa
   labels:
-    app: vector-{{ .Release.Name }}
+    app: {{ .Release.Name }}-vector
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: vector-{{ .Release.Name }}
+    name: {{ .Release.Name }}-vector
   minReplicas: {{ .Values.vector.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.vector.autoscaling.maxReplicas }}
   behavior:

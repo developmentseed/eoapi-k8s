@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: doc-server-html-{{ .Release.Name }}
+  name: {{ .Release.Name }}-doc-server-html
 data:
   index.html: |
     <html>
@@ -27,29 +27,29 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: doc-server-{{ .Release.Name }}
+  name: {{ .Release.Name }}-doc-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: doc-server-{{ .Release.Name }}
+      app: {{ .Release.Name }}-doc-server
   template:
     metadata:
       labels:
-        app: doc-server-{{ .Release.Name }}
+        app: {{ .Release.Name }}-doc-server
     spec:
       containers:
       - name: doc-server
         image: nginx:alpine
         volumeMounts:
-        - name: doc-html-{{ .Release.Name }}
+        - name: {{ .Release.Name }}-doc-html
           mountPath: /usr/share/nginx/html
         ports:
         - containerPort: 80
       volumes:
-      - name: doc-html-{{ .Release.Name }}
+      - name: {{ .Release.Name }}-doc-html
         configMap:
-          name: doc-server-html-{{ .Release.Name }}
+          name: {{ .Release.Name }}-doc-server-html
       {{- if .Values.docServer.settings }}
       {{- with .Values.docServer.settings.affinity }}
       affinity:
@@ -64,10 +64,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: doc-server-{{ .Release.Name }}
+  name: {{ .Release.Name }}-doc-server
 spec:
   selector:
-    app: doc-server-{{ .Release.Name }}
+    app: {{ .Release.Name }}-doc-server
   ports:
     - protocol: TCP
       port: 80

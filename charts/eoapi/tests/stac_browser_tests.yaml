@@ -17,10 +17,10 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^browser-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-browser$
       - matchRegex:
           path: metadata.labels.app
-          pattern: ^browser-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-browser$
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"
@@ -41,10 +41,10 @@ tests:
           of: Service
       - matchRegex:
           path: metadata.name
-          pattern: ^browser-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-browser$
       - matchRegex:
           path: metadata.labels.app
-          pattern: ^browser-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-browser$
       - equal:
           path: metadata.annotations.annotation1
           value: hello

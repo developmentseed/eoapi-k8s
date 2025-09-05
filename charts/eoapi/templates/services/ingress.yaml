@@ -8,9 +8,9 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: eoapi-ingress-{{ .Release.Name }}
+  name: {{ .Release.Name }}-ingress
   labels:
-    app: eoapi-{{ .Release.Name }}
+    app: {{ .Release.Name }}-ingress
   annotations:
     {{- if eq .Values.ingress.className "nginx" }}
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -22,7 +22,7 @@ metadata:
     # Temporary annotations for Traefik until uvicorn support real prefix in ASGI: https://github.com/encode/uvicorn/discussions/2490
     {{- if eq .Values.ingress.className "traefik" }}
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-strip-prefix-middleware-{{ $.Release.Name }}@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-{{ $.Release.Name }}-strip-prefix-middleware@kubernetescrd
     {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
@@ -39,7 +39,7 @@ spec:
             path: {{ $.Values.raster.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: raster-{{ $.Release.Name }}
+                name: {{ $.Release.Name }}-raster
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
@@ -49,7 +49,7 @@ spec:
             path: {{ $.Values.stac.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: stac-{{ $.Release.Name }}
+                name: {{ $.Release.Name }}-stac
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
@@ -59,7 +59,7 @@ spec:
             path: {{ $.Values.vector.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: vector-{{ $.Release.Name }}
+                name: {{ $.Release.Name }}-vector
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
@@ -69,7 +69,7 @@ spec:
             path: {{ $.Values.multidim.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: multidim-{{ $.Release.Name }}
+                name: {{ $.Release.Name }}-multidim
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
@@ -79,7 +79,7 @@ spec:
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
             backend:
               service:
-                name: doc-server-{{ $.Release.Name }}
+                name: {{ $.Release.Name }}-doc-server
                 port:
                   number: 80
           {{- end }}
@@ -95,7 +95,7 @@ spec:
             path: {{ .Values.raster.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: raster-{{ $.Release.Name }}
+                name: {{ .Release.Name }}-raster
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -105,7 +105,7 @@ spec:
             path: {{ .Values.stac.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: stac-{{ $.Release.Name }}
+                name: {{ .Release.Name }}-stac
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -115,7 +115,7 @@ spec:
             path: {{ .Values.vector.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: vector-{{ $.Release.Name }}
+                name: {{ .Release.Name }}-vector
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -125,7 +125,7 @@ spec:
             path: {{ .Values.multidim.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
-                name: multidim-{{ $.Release.Name }}
+                name: {{ .Release.Name }}-multidim
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -135,7 +135,7 @@ spec:
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
             backend:
               service:
-                name: doc-server-{{ $.Release.Name }}
+                name: {{ .Release.Name }}-doc-server
                 port:
                   number: 80
           {{- end }}
