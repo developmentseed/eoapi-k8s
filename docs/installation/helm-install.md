@@ -3,6 +3,7 @@
 0. `eoapi-k8s` depends on the [Crunchydata Postgresql Operator](https://access.crunchydata.com/documentation/postgres-operator/latest/installation/helm). Install that first:
 
    ```bash
+   # Check latest version at: https://github.com/CrunchyData/postgres-operator/releases
    $ helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version 5.7.0
    ```
 
@@ -16,9 +17,7 @@
 
    ```bash
    $ helm search repo eoapi --versions
-   NAME            CHART VERSION   APP VERSION     DESCRIPTION
-   eoapi/eoapi     0.7.5           5.0.2           Create a full Earth Observation API with Metada...
-   eoapi/eoapi     0.7.4           5.0.2           Create a full Earth Observation API with Metada...
+   # Use latest stable version from output above
    ```
 
 3. Optionally override keys/values in the default `values.yaml` with a custom `config.yaml` like below:
@@ -37,7 +36,9 @@
 4. Then `helm install` with those `config.yaml` values:
 
    ```bash
-   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version 0.7.5 -f config.yaml
+   # Replace VERSION with latest from `helm search repo eoapi`
+   $ export CHART_VERSION=$(helm search repo eoapi/eoapi --versions | head -2 | tail -1 | awk '{print $2}')
+   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version $CHART_VERSION -f config.yaml
    ```
 
 5. or check out this repo and `helm install` from this repo's `charts/` folder:
