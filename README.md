@@ -29,11 +29,11 @@
 
 ### Get started
 
-* [Quick start guide](./docs/quick-start.md)
+* [Quick start guide](./docs/installation/quick-start.md)
 
 ### `eoAPI-k8s` documentation
 
-* [Overview of docs](./docs/README.md)
+* [Overview of docs](./docs/index.md)
 
 ### General eoAPI documentation
 * [eoapi.dev](https://eoapi.dev) website.

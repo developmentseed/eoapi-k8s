@@ -77,7 +77,7 @@ Unified ingress configuration supporting both NGINX and Traefik:
 | `ingress.host` | Ingress hostname | "" | valid hostname |
 | `ingress.rootPath` | Doc server root path | "" | valid path |
 
-See [Unified Ingress Configuration](./unified-ingress.md) for detailed setup.
+See [Unified Ingress Configuration](unified-ingress.md) for detailed setup.
 
 ## Service Configuration
 
@@ -116,7 +116,7 @@ raster:
 ## Deployment Architecture
 
 When using default settings, the deployment looks like this:
-![](./images/default_architecture.png)
+![](../images/default_architecture.png)
 
 The deployment includes:
 - HA PostgreSQL database (via PostgreSQL Operator)

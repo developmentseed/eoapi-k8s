@@ -17,7 +17,7 @@ might want to read through the verbose walkthrough material below to familiarize
 
 ## Helm Install `eoapi-support`
 
-The following instructions assume you've gone through the [AWS](./docs/aws-eks.md) or [GCP](./docs/gcp-gke.md) cluster set up
+The following instructions assume you've gone through the [AWS](../installation/providers/aws-eks.md) or [GCP](../installation/providers/gcp-gke.md) cluster set up
 and installed the `eoapi` chart.
 
 
@@ -99,9 +99,9 @@ manual step that cannot be automated
 
 ---
 
-### Review [Default Configuration and Options](configuration.md)
+### Review [Default Configuration and Options](../installation/configuration.md)
 
-[This document](configuration.md) will explain the differences in the `autoscaling` block for each service:
+[This document](../installation/configuration.md) will explain the differences in the `autoscaling` block for each service:
 
    ```yaml
    autoscaling:
@@ -199,7 +199,7 @@ with the `release` name we installed the chart with below `<release-name>-grafan
 
 3. Login and you should be default be able to see the eoapi-k8s grafana dashboard
 
-   ![](./images/gfdashboard.png)
+   ![](../images/gfdashboard.png)
 
 ### Install or Upgrade Autoscaling Changes to `eoapi` Chart
 
@@ -353,7 +353,7 @@ that you're deploying using `ingress.className: "nginx"`.
 
 4. **Monitor autoscaling in Grafana** - Go back to your Grafana dashboard and watch your services autoscale for the endpoints you're hitting:
 
-   ![Grafana Autoscaling Dashboard](./images/grafanaautoscale.png)
+   ![Grafana Autoscaling Dashboard](../images/grafanaautoscale.png)
 
 ### Load Testing Best Practices
 
