@@ -128,6 +128,18 @@ The deployment includes:
   - `/browser` → STAC Browser
   - `/` → Documentation
 
+### Health Monitoring
+
+All services include health check endpoints with automatic liveness probes:
+
+| **Service** | **Health Endpoint** | **Response** |
+|:------------|:-------------------|:-------------|
+| STAC API | `/stac/_mgmt/ping` | HTTP 200, no auth required |
+| Raster API | `/raster/healthz` | HTTP 200, no auth required |
+| Vector API | `/vector/healthz` | HTTP 200, no auth required |
+
+The Kubernetes deployment templates automatically configure `livenessProbe` settings for regular health checks. See the [deployment template](https://github.com/developmentseed/eoapi-k8s/blob/main/charts/eoapi/templates/services/deployment.yaml) for probe configuration details.
+
 ## Advanced Configuration
 
 ### Autoscaling Behavior
