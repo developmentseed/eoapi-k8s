@@ -22,7 +22,12 @@ and installed the `eoapi` chart.
 
 
 1. Go to the [releases section](https://github.com/developmentseed/eoapi-k8s/releases) of this repository and find the latest
-`eoapi-support-<version>` version to install. The example below assumes we're working with `eoapi-support-0.1.4`
+`eoapi-support-<version>` version to install, or use the following command to get the latest version:
+
+   ```bash
+   # Get latest eoapi-support chart version
+   export SUPPORT_VERSION=$(helm search repo eoapi/eoapi-support --versions | head -2 | tail -1 | awk '{print $2}')
+   ```
 
 
 2. Decide on a release name and `namespace` for your support chart. The next steps assume we've
@@ -36,7 +41,7 @@ manual step that cannot be automated
 
    ```bash
    helm upgrade --install -n eoapi-support \
-     --create-namespace eoapi-support eoapi/eoapi-support --version 0.1.4 \
+     --create-namespace eoapi-support eoapi/eoapi-support --version $SUPPORT_VERSION \
      --set prometheus-adapter.prometheus.url='http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local' \
      --set grafana.datasources.datasources\\.yaml.datasources[0].url='http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local'
    ```
@@ -71,18 +76,23 @@ manual step that cannot be automated
    export RELEASE_NS=eoapi
    export SUPPORT_RELEASE_NAME=eoapi-support
    export SUPPORT_RELEASE_NS=eoapi-support
+
+   # Get latest chart versions
+   export SUPPORT_VERSION=$(helm search repo eoapi/eoapi-support --versions | head -2 | tail -1 | awk '{print $2}')
+   export EOAPI_VERSION=$(helm search repo eoapi/eoapi --versions | head -2 | tail -1 | awk '{print $2}')
+
    PROMETHEUS_URL="http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local"
 
    helm upgrade --install \
      -n $SUPPORT_RELEASE_NS --create-namespace $SUPPORT_RELEASE_NAME \
-     eoapi/eoapi-support --version 0.1.4 \
+     eoapi/eoapi-support --version $SUPPORT_VERSION \
      --set prometheus-adapter.prometheus.url=$PROMETHEUS_URL \
      --set grafana.datasources.datasources\\.yaml.datasources[0].url=$PROMETHEUS_URL \
      -f /tmp/values-overrides.yaml
 
    helm upgrade --install \
      -n $RELEASE_NS --create-namespace $RELEASE_NAME \
-     eoapi/eoapi --version 0.4.6 \
+     eoapi/eoapi --version $EOAPI_VERSION \
      -f /tmp/support-values-overrides.yaml
    ```
 
@@ -288,4 +298,84 @@ And then finally roll out the deployment.
 
 ---
 
-### Now move onto the [Load Testing](loadtesting.md) document
+## Load Testing
+
+#### Load Testing with `hey`
+
+Everything mentioned below assumes you've already gone through the autoscaling setup above and
+that you're deploying using `ingress.className: "nginx"`.
+
+### Install and Run Load Tests
+
+1. Install `hey` utility locally:
+
+   ```bash
+   # macOS
+   brew install hey
+
+   # Linux
+   wget https://github.com/rakyll/hey/releases/latest/download/hey_linux_amd64
+   chmod +x hey_linux_amd64 && sudo mv hey_linux_amd64 /usr/local/bin/hey
+
+   # Or use Docker
+   alias hey='docker run --rm rcmorano/hey'
+   ```
+
+2. Find the external IP of your shared nginx ingress:
+
+   ```bash
+   # For GKE clusters
+   export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx get ingress/nginx-service-ingress-shared-eoapi -o=jsonpath='{.spec.rules[0].host}')
+   # Example output: eoapi-35.234.254.12.nip.io
+
+   # For EKS clusters
+   export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+   # Example output: k8s-eoapi-ingressn-404721dbb4-e6dec70321c3eddd.elb.us-west-2.amazonaws.com
+   ```
+
+3. Run load tests against different endpoints in separate terminals:
+
+   ```bash
+   # Test Vector API
+   hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/vector/collections/public.my_data/items?f=geojson"
+
+   # Test STAC API
+   hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/stac/"
+
+   # Test Raster API
+   hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/raster/collections"
+   ```
+
+   **Load testing parameters:**
+   - `-n`: Total number of requests (2M for sustained testing)
+   - `-q`: Rate limit (150 requests/second per worker)
+   - `-c`: Number of concurrent workers (20)
+
+4. **Monitor autoscaling in Grafana** - Go back to your Grafana dashboard and watch your services autoscale for the endpoints you're hitting:
+
+   ![Grafana Autoscaling Dashboard](./images/grafanaautoscale.png)
+
+### Load Testing Best Practices
+
+- **Start small**: Begin with lower request rates and gradually increase
+- **Monitor resources**: Watch CPU, memory, and request rate metrics
+- **Test realistic scenarios**: Use actual data access patterns when possible
+- **Verify autoscaling**: Ensure HPA triggers and pods scale up/down appropriately
+- **Database bottlenecks**: Monitor PostgreSQL performance under load
+- **Clean up**: Stop load tests gracefully to avoid overwhelming services
+
+### Troubleshooting Load Tests
+
+If autoscaling isn't triggering:
+- Verify HPA is configured: `kubectl get hpa -n eoapi`
+- Check custom metrics: `kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq .`
+- Ensure prometheus-adapter is running: `kubectl get pods -n eoapi-support`
+- Validate ingress metrics: Check Grafana for nginx request rates
+
+### Advanced Load Testing
+
+For more sophisticated testing consider:
+- **[k6](https://k6.io/)** - JavaScript-based load testing with scenarios
+- **[Artillery](https://artillery.io/)** - Node.js load testing toolkit
+- **[JMeter](https://jmeter.apache.org/)** - GUI-based load testing with complex scenarios
+- **[Locust](https://locust.io/)** - Python-based distributed load testing
