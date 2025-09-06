@@ -197,9 +197,17 @@ with the `release` name we installed the chart with below `<release-name>-grafan
    kubectl get svc -n eoapi-support
    ```
 
-3. Login and you should be default be able to see the eoapi-k8s grafana dashboard
+3. Login and you should be default be able to see the eoapi-k8s grafana dashboard. The Prometheus datasource will already be configured for you:
+
+   ![Grafana Datasource Configuration](../images/datasource.png)
+
+   You can then view the main eoAPI dashboard:
 
    ![](../images/gfdashboard.png)
+
+   To add additional custom dashboards, you can use the dashboard import functionality:
+
+   ![Adding Custom Grafana Dashboards](../images/add-grafana-dashboard.png)
 
 ### Install or Upgrade Autoscaling Changes to `eoapi` Chart
 
