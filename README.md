@@ -19,106 +19,30 @@
 
 [eoAPI](https://eoapi.dev/) is a collection of REST APIs for Earth Observation data access and analysis. This repository provides a production-ready Kubernetes deployment solution with flexible database options, unified ingress configuration, and built-in monitoring.
 
-## Quick Start
+## Prerequisites
 
-### Prerequisites
-
-- [helm](https://helm.sh/docs/intro/install/)
-- A Kubernetes cluster (local or cloud-based)
-- `kubectl` configured for your cluster
-- [helm unittest](https://github.com/helm-unittest/helm-unittest?tab=readme-ov-file#install) if contributing to the repository and running `make tests`
-
-### Option 1: One-Command Installation
-
-The fastest way to get started is using our Makefile commands:
-
-For local development with Minikube:
-```bash
-make minikube
-```
-
-For cloud deployment:
-```bash
-make deploy
-```
-
-This will automatically:
-1. Install the PostgreSQL operator
-2. Add the eoAPI helm repository
-3. Install the eoAPI helm chart
-4. Set up necessary namespaces and configurations
-
-> [!WARNING]
-> Some images do not provide a `linux/arm64` compatible download (You may see image pull failures) which causes failures on M1 etc Macs, to get around this, you can pre-pull the image with:
-> ```
-> docker pull --platform=linux/amd64 <image>
-> minikube image load <image>
-> ```
-> You can then re-deploy the service and it will now use the local image.
-
-
-### Option 2: Step-by-Step Installation
-
-If you prefer more control over the installation process:
-
-1. Install the PostgreSQL operator:
-```bash
-helm upgrade --install \
-  --set disable_check_for_upgrades=true pgo \
-  oci://registry.developers.crunchydata.com/crunchydata/pgo \
-  --version 5.7.4
-```
-
-2. Add the eoAPI helm repository:
-```bash
-helm repo add eoapi https://devseed.com/eoapi-k8s/
-```
-
-3. Get your current git SHA:
-```bash
-export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-```
-
-4. Install eoAPI:
-```bash
-helm upgrade --install \
-  --namespace eoapi \
-  --create-namespace \
-  --set gitSha=$GITSHA \
-  eoapi devseed/eoapi
-```
-
-### Post-Installation
-
-1. Enable ingress (for Minikube):
-```bash
-minikube addons enable ingress
-```
-
-2. Optional: Load sample data:
-```bash
-make ingest
-```
-
-## Cloud Provider Setup
-
-For cloud-based deployments, refer to our detailed setup guides:
-* [AWS EKS Cluster Setup](./docs/aws-eks.md)
-* [GCP GKE Cluster Setup](./docs/gcp-gke.md)
-* [Azure Setup](./docs/azure.md)
+- Kubernetes cluster (1.21+)
+- Helm 3.x
+- `kubectl` configured for cluster access
 
 ## Documentation
 
-* [Configuration Guide](./docs/configuration.md)
-* [Data Management](./docs/manage-data.md)
-* [Autoscaling and Monitoring](./docs/autoscaling.md)
-* [Health Checks](./docs/health.md)
-* [Unified Ingress Configuration](./docs/unified-ingress.md)
-* [Upgrade Guide](./docs/upgrade.md)
+### Get started
+
+* [Quick start guide](./docs/quick-start.md)
+
+### `eoAPI-k8s` documentation
+
+* [Overview of docs](./docs/README.md)
+
+### General eoAPI documentation
+* [eoapi.dev](https://eoapi.dev) website.
 
 ## Contributing
 
-We welcome contributions! See our [contributing guide](./CONTRIBUTING.md) for details.
+* **We would :heart: to hear from you!** Please [join the discussion](https://github.com/developmentseed/eoAPI/discussions/209) and let us know how you're using eoAPI! This helps us improve the project for you and others. If you prefer to remain anonymous, you can email us at eoapi@developmentseed.org, and we'll be happy to post a summary on your behalf.
+
+* **We welcome contributions** from the community! Feel free to open an issue or submit a pull request.
 
 ## License
 
