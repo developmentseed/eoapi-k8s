@@ -20,6 +20,7 @@ An example command below. See the [eksctl docs](https://eksctl.io/usage/creating
 
    ```sh
    # Useful ssh-access if you want to ssh into your nodes
+   # Check latest supported versions: eksctl get clusters --region us-west-2
    eksctl create cluster \
        --name sandbox \
        --region us-west-2 \
@@ -28,7 +29,7 @@ An example command below. See the [eksctl docs](https://eksctl.io/usage/creating
        --nodegroup-name=hub-node \
        --node-type=t2.medium \
        --nodes=1 --nodes-min=1 --nodes-max=5 \
-       --version 1.27 \
+       --version 1.28 \
        --asg-access
    ```
 
@@ -51,7 +52,7 @@ You might need to iterate on the command above, so to delete the cluster:
 
 ## Check OIDC provider set up for you cluster <a name="check-oidc"></a>
 
-For k8s `ServiceAccount`(s) to do things on behalf of pods in AWS you need an OIDC provider set up. Best to walk through 
+For k8s `ServiceAccount`(s) to do things on behalf of pods in AWS you need an OIDC provider set up. Best to walk through
 the [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html) for this
 but below are the relevant bits. Note that `eksctl` "should" set up an OIDC provider for you by default
 
@@ -102,20 +103,18 @@ First, create an IAM Role for the future EBS CSI `ServiceAccount` binding:
        --role-name eksctl-veda-sandbox-addon-aws-ebs-csi-driver # arbitrary, the naming is up to you
    ```
 
-Then check how to see what the compatible EBS CSI addon version works for you cluster version. [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html).
-Below is an example with sample output:
+Check the compatible EBS CSI addon version for your cluster version using [AWS docs](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html).
 
    ```sh
+   # Get your cluster version
+   export CLUSTER_VERSION=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION --query "cluster.version" --output text)
+
+   # Find compatible addon versions
    aws eks describe-addon-versions \
        --addon-name aws-ebs-csi-driver \
-       --region us-west-2 | grep -e addonVersion -e clusterVersion
-
-   # "addonVersion": "v1.6.0-eksbuild.1",
-   #         "clusterVersion": "1.24",
-   # ...
-   # "addonVersion": "v1.4.0-eksbuild.preview",
-   #         "clusterVersion": "1.21",
-   #         "clusterVersion": "1.20",
+       --kubernetes-version $CLUSTER_VERSION \
+       --region $REGION \
+       --query "addons[0].addonVersions[0].addonVersion" --output text
    ```
 
 Then create the EBS CSI Addon:
@@ -123,17 +122,22 @@ Then create the EBS CSI Addon:
 >  &#9432; note that this step creates k8 `ServiceAccount` and ebs-csi pods and `kind: Controller`
 
    ```sh
-   # this is the ARN of the role you created two steps ago
+   # Get the latest compatible addon version and install
    export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+   export CLUSTER_VERSION=$(aws eks describe-cluster --name $CLUSTER_NAME --region $REGION --query "cluster.version" --output text)
+   export EBS_CSI_VERSION=$(aws eks describe-addon-versions \
+       --addon-name aws-ebs-csi-driver \
+       --kubernetes-version $CLUSTER_VERSION \
+       --region $REGION \
+       --query "addons[0].addonVersions[0].addonVersion" --output text)
 
    eksctl create addon \
        --name aws-ebs-csi-driver \
-       --region us-west-2 \
-       --cluster sandbox \
-       --version "v1.23.1-eksbuild.1" \
+       --region $REGION \
+       --cluster $CLUSTER_NAME \
+       --version $EBS_CSI_VERSION \
        --service-account-role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/eksctl-veda-sandbox-addon-aws-ebs-csi-driver \
        --force
-   ## In case error in  aws-ebs-csi-driver addon, comment out --version "v1.23.1-eksbuild.1"
    ```
 
 Finally, do some checking to assert things are set up correctly:
@@ -175,7 +179,7 @@ Please look through the [Nginx Docs](https://github.com/kubernetes/ingress-nginx
    # helm delete ingress-nginx -n ingress-nginx
    ```
 
-Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/). 
+Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/).
 Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
 
    ```sh
@@ -183,7 +187,7 @@ Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
 
    # kubectl get cm --all-namespaces| grep ingress-nginx-controller | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
 
-   kubectl get deploy --all-namespaces | grep ingress-nginx-conto | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}   
+   kubectl get deploy --all-namespaces | grep ingress-nginx-conto | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}
 
    # kubectl get deploy --all-namespaces| grep ingress-nginx-controller | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
    ```
