@@ -112,9 +112,9 @@ postgresql:
 
 For detailed configuration and usage:
 
-- [Configuration Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/configuration.md)
-- [Data Management](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/manage-data.md)
-- [Autoscaling Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/autoscaling.md)
+- [Configuration Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/installation/configuration.md)
+- [Data Management](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/operations/manage-data.md)
+- [Autoscaling Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/operations/autoscaling.md)
 
 ## License
 
