@@ -2,13 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "Renovate configuration for eoAPI Kubernetes charts",
   "extends": [
-    "config:base",
+    "config:recommended",
     ":dependencyDashboard",
     ":semanticCommits",
     ":separatePatchReleases"
   ],
   "timezone": "UTC",
-  "schedule": ["after 10pm and before 5am every weekday"],
+  "schedule": ["after 10pm every weekday", "before 5am every weekday"],
   "prConcurrentLimit": 10,
   "prHourlyLimit": 5,
   "commitMessagePrefix": "",
@@ -16,7 +16,7 @@
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "to {{newVersion}}.",
   "branchPrefix": "renovate/",
-  "includeForks": false,
+  "forkProcessing": "disabled",
   "assigneesFromCodeOwners": true,
   "reviewersFromCodeOwners": true,
   "platformAutomerge": false,
@@ -27,11 +27,12 @@
   },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
+    {"matchCategories": ["docker"], "enabled": true, "pinDigests": false},
     {
       "description": "Helm chart dependencies - individual PRs",
       "matchManagers": ["helmv3"],
       "matchFileNames": ["charts/**/Chart.yaml"],
-      "schedule": ["after 10pm and before 5am every weekday"],
+      "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "automerge": false,
       "platformAutomerge": false,
       "labels": ["dependencies", "helm"]
@@ -39,12 +40,12 @@
     {
       "description": "STAC ecosystem container images - individual PRs",
       "matchManagers": ["helm-values"],
-      "matchPackagePatterns": [
-        "ghcr.io/stac-utils/pgstac-pypgstac",
-        "ghcr.io/stac-utils/titiler-pgstac",
-        "ghcr.io/stac-utils/stac-fastapi-pgstac"
+      "schedule": ["after 10pm every weekday", "before 5am every weekday"],
+      "matchPackageNames": [
+        "/ghcr.io/stac-utils/pgstac-pypgstac/",
+        "/ghcr.io/stac-utils/titiler-pgstac/",
+        "/ghcr.io/stac-utils/stac-fastapi-pgstac/"
       ],
-      "schedule": ["after 10pm and before 5am every weekday"],
       "automerge": false,
       "platformAutomerge": false,
       "labels": ["dependencies", "container-images", "stac"]
@@ -52,12 +53,12 @@
     {
       "description": "Development Seed container images - individual PRs",
       "matchManagers": ["helm-values"],
-      "matchPackagePatterns": [
-        "ghcr.io/developmentseed/tipg",
-        "ghcr.io/developmentseed/titiler-md-demo",
-        "ghcr.io/developmentseed/eoapi-k8s-stac-browser"
+      "schedule": ["after 10pm every weekday", "before 5am every weekday"],
+      "matchPackageNames": [
+        "/ghcr.io/developmentseed/tipg/",
+        "/ghcr.io/developmentseed/titiler-md-demo/",
+        "/ghcr.io/developmentseed/eoapi-k8s-stac-browser/"
       ],
-      "schedule": ["after 10pm and before 5am every weekday"],
       "automerge": false,
       "platformAutomerge": false,
       "labels": ["dependencies", "container-images", "developmentseed"]
@@ -66,9 +67,9 @@
       "description": "Patch updates - no automerge, individual PRs",
       "matchManagers": ["helm-values"],
       "matchUpdateTypes": ["patch"],
-      "matchPackagePatterns": [
-        "ghcr.io/stac-utils/*",
-        "ghcr.io/developmentseed/*"
+      "matchPackageNames": [
+        "/ghcr.io/stac-utils/*/",
+        "/ghcr.io/developmentseed/*/"
       ],
       "automerge": false,
       "platformAutomerge": false,
@@ -77,7 +78,7 @@
     {
       "description": "Minor updates - individual PRs",
       "matchUpdateTypes": ["minor"],
-      "schedule": ["after 10pm and before 5am every weekday"],
+      "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "automerge": false,
       "platformAutomerge": false,
       "labels": ["dependencies", "minor-update"]
@@ -85,7 +86,7 @@
     {
       "description": "Major updates - individual PRs",
       "matchUpdateTypes": ["major"],
-      "schedule": ["after 10pm and before 5am every weekday"],
+      "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "automerge": false,
       "platformAutomerge": false,
       "labels": ["dependencies", "major-update", "manual-review"],
@@ -93,24 +94,16 @@
     }
   ],
   "helm-values": {
-    "fileMatch": [
-      "charts/**/values.yaml",
-      "charts/**/values.yml"
-    ]
+    "managerFilePatterns": ["/charts/.+/values\\.ya?ml$/"]
   },
   "helmv3": {
-    "fileMatch": [
-      "charts/**/Chart.yaml",
-      "charts/**/Chart.yml"
-    ]
+    "managerFilePatterns": ["/charts/.+/Chart\\.ya?ml$/"]
   },
   "customManagers": [
     {
       "customType": "regex",
       "description": "Update container image tags in Helm values files",
-      "fileMatch": [
-        "charts/.+/values\\.ya?ml$"
-      ],
+      "managerFilePatterns": ["/charts/.+/values\\.ya?ml$/"],
       "matchStrings": [
         "(?<depName>ghcr\\.io/[^\\s]+?)\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
       ],
@@ -119,23 +112,7 @@
       "versioningTemplate": "docker"
     }
   ],
-  "docker": {
-    "enabled": true,
-    "pinDigests": false
-  },
-  "regexManagers": [
-    {
-      "description": "Update image tags in values.yaml files",
-      "fileMatch": [
-        "charts/.+/values\\.ya?ml$"
-      ],
-      "matchStrings": [
-        "name:\\s*[\"']?(?<depName>ghcr\\.io/.+?)[\"']?\\s*\\n.*?tag:\\s*[\"']?(?<currentValue>.+?)[\"']?"
-      ],
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "docker"
-    }
-  ],
+
   "labels": ["dependencies"],
   "assignees": [],
   "reviewers": [],
@@ -143,6 +120,6 @@
   "prFooter": "---\n\n**Need help?** Check the [Renovate documentation](https://docs.renovatebot.com/) or [eoAPI documentation](https://eoapi.dev/).",
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["after 10pm and before 5am on sunday"]
+    "schedule": ["after 10pm on sunday", "before 5am on monday"]
   }
 }
