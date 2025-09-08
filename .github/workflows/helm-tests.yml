@@ -15,7 +15,7 @@ jobs:
   helm-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: d3adb5/helm-unittest-action@v2
         with:
@@ -33,7 +33,7 @@ jobs:
     needs: helm-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Start a local k3s cluster
         uses: jupyterhub/action-k3s-helm@v4
