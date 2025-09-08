@@ -46,7 +46,7 @@ version: "0.7.7"
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 # We use the stac-fastapi-pgstac version as the app version
-appVersion: "5.0.2"
+appVersion: "6.0.0"
 
 dependencies:
   - name: postgrescluster
