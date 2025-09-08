@@ -18,7 +18,7 @@ tests:
           of: Deployment
       - matchRegex:
           path: metadata.name
-          pattern: ^multidim-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-multidim$
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
@@ -50,7 +50,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: metadata.name
-          pattern: ^multidim-envvar-configmap-RELEASE-NAME$
+          pattern: ^RELEASE-NAME-multidim-envvar-configmap$
       - equal:
           path: data.GDAL_HTTP_MULTIPLEX
           value: "YES"
