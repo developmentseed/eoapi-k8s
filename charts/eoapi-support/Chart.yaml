@@ -6,7 +6,7 @@ version: "0.1.7"
 
 dependencies:
   - name: metrics-server
-    version: 7.2.8
+    version: 7.4.12
     repository: https://charts.bitnami.com/bitnami
 
   # Prometheus for collection of metrics.
