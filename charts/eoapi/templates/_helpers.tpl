@@ -374,6 +374,51 @@ so we use this helper function to check autoscaling rules
 {{- end -}}
 
 {{/*
+Init containers to wait for pgstac bootstrap completion
+*/}}
+{{- define "eoapi.pgstacInitContainers" -}}
+{{- if .Values.pgstacBootstrap.enabled }}
+initContainers:
+- name: wait-for-pgstac-migration
+  image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
+  command:
+    - "/bin/sh"
+    - "-c"
+  args:
+    - |
+      set -e
+      echo "Waiting for pgstac migration job to complete..."
+
+      # Wait for the database to be ready first
+      echo "Checking database connectivity..."
+      pypgstac pgready
+
+      # Check if pgstac schema exists (indicates migration completed)
+      while true; do
+        echo "Checking if pgstac schema exists..."
+        if psql -t -c "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'pgstac';" | grep -q 1; then
+          echo "pgstac schema found - migration completed!"
+          break
+        else
+          echo "pgstac schema not found, waiting 5 seconds..."
+          sleep 5
+        fi
+      done
+
+      echo "pgstac initialization verified, starting application..."
+  env:
+    {{- include "eoapi.postgresqlEnv" . | nindent 4 }}
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+{{- end }}
+{{- end -}}
+
+{{/*
 validate:
 1. the .Values.postgrescluster.users array does not have more than two elements.
 2. at least one of the users is named "postgres".
