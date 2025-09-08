@@ -8,7 +8,7 @@ When deployed with default settings, eoAPI provides:
 - High-availability PostgreSQL cluster (via PostgreSQL Operator)
 - Load balancer with path-based routing:
   - `/stac` → STAC API
-  - `/raster` → Titiler raster API
+  - `/raster` → TiTiler raster API
   - `/vector` → TiPG vector API
   - `/browser` → STAC Browser
   - `/` → Documentation server
@@ -16,7 +16,6 @@ When deployed with default settings, eoAPI provides:
 - Persistent storage with dynamic volume provisioning
 - TLS termination and certificate management
 - Health checks at `/stac/_mgmt/ping`, `/raster/healthz`, `/vector/healthz`
-- Uses Crunchydata PostgreSQL Operator for HA database clusters
 
 ## Quick Start
 
