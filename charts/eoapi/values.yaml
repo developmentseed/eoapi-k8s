@@ -225,7 +225,7 @@ raster:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: 1.7.1
+    tag: 1.7.2
   command:
     - "uvicorn"
     - "titiler.pgstac.main:app"
