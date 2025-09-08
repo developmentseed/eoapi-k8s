@@ -159,7 +159,7 @@ pgstacBootstrap:
   enabled: true
   image:
     name: ghcr.io/stac-utils/pgstac-pypgstac
-    tag: v0.9.5
+    tag: v0.9.8
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
