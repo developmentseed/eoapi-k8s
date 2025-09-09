@@ -77,7 +77,7 @@ Unified ingress configuration supporting both NGINX and Traefik:
 | `ingress.host` | Ingress hostname | "" | valid hostname |
 | `ingress.rootPath` | Doc server root path | "" | valid path |
 
-See [Unified Ingress Configuration](./unified-ingress.md) for detailed setup.
+See [Unified Ingress Configuration](unified-ingress.md) for detailed setup.
 
 ## Service Configuration
 
@@ -116,7 +116,7 @@ raster:
 ## Deployment Architecture
 
 When using default settings, the deployment looks like this:
-![](./images/default_architecture.png)
+![](../images/default_architecture.png)
 
 The deployment includes:
 - HA PostgreSQL database (via PostgreSQL Operator)
@@ -127,6 +127,18 @@ The deployment includes:
   - `/vector` → TiPG
   - `/browser` → STAC Browser
   - `/` → Documentation
+
+### Health Monitoring
+
+All services include health check endpoints with automatic liveness probes:
+
+| **Service** | **Health Endpoint** | **Response** |
+|:------------|:-------------------|:-------------|
+| STAC API | `/stac/_mgmt/ping` | HTTP 200, no auth required |
+| Raster API | `/raster/healthz` | HTTP 200, no auth required |
+| Vector API | `/vector/healthz` | HTTP 200, no auth required |
+
+The Kubernetes deployment templates automatically configure `livenessProbe` settings for regular health checks. See the [deployment template](../../charts/eoapi/templates/services/deployment.yaml) for probe configuration details.
 
 ## Advanced Configuration
 
