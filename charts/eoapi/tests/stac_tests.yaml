@@ -37,7 +37,7 @@ tests:
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"
-          
+
   - it: "stac configmap defaults"
     set:
       raster.enabled: false

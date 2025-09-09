@@ -3,8 +3,8 @@
 # This job initializes the PostgreSQL database with the necessary schema and data.
 # Instead of using an initContainer in the deployment to wait for this job to complete,
 # we use Helm hooks to control the execution order:
-# 
-# 1. The "post-install,post-upgrade" hook ensures this job runs after the postgres 
+#
+# 1. The "post-install,post-upgrade" hook ensures this job runs after the postgres
 #    dependency is installed but before other resources (like deployments)
 # 2. The "-5" hook-weight ensures this job runs after its ConfigMaps (weight -6)
 # 3. The "before-hook-creation,hook-succeeded" delete policy ensures the job is recreated
@@ -17,7 +17,7 @@
 # 3. Check for pgstac migration errors - examine container logs for migration failures
 # 4. Verify database initialization - ensure postgres extensions and roles are created
 #
-# The CI workflow has been enhanced with a debug step that captures comprehensive logs 
+# The CI workflow has been enhanced with a debug step that captures comprehensive logs
 # from all pgstac-migrate pods to help diagnose failures during testing.
 #
 apiVersion: batch/v1
@@ -54,11 +54,11 @@ spec:
 
               # Exit immediately if a command exits with a non-zero status
               set -e
-              
+
               # Run migration
               echo "Running PgSTAC migrations..."
               pypgstac migrate
-              
+
               # Apply settings
               echo "Applying PgSTAC settings..."
               psql -f /opt/settings/pgstac-settings.sql
@@ -115,20 +115,20 @@ spec:
             - |
               # Exit immediately if a command exits with a non-zero status
               set -e
-              
+
               # Database connection configured through standard PG* environment variables
               # Environment variables are already set by the container
-              
+
               # Load sample data
               echo "Loading sample collections..."
               pypgstac load collections /opt/data/noaa-emergency-response.json --method insert_ignore
-              
+
               echo "Loading sample items..."
               pypgstac load items /opt/data/noaa-eri-nashville2020.json --method insert_ignore
-              
+
               echo "Running custom SQL..."
               psql -f /opt/sql/initdb.sql
-              
+
               echo "Sample data loading complete"
           resources:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}

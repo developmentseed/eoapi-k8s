@@ -117,18 +117,17 @@ postgrescluster:
   databaseInitSQL:
     key: initdb.sql
     name: initdb
-
   instances:
-  - name: eoapi
-    replicas: 1
-    dataVolumeClaimSpec:
-      accessModes:
-      - "ReadWriteOnce"
-      resources:
-        requests:
-          storage: "10Gi"
-          cpu: "1024m"
-          memory: "3048Mi"
+    - name: eoapi
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "10Gi"
+            cpu: "1024m"
+            memory: "3048Mi"
   # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
   users:
     # `postgres` always has SUPERUSER privileges
@@ -163,13 +162,13 @@ pgstacBootstrap:
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
-    
+
     # Wait configuration for init containers waiting for pgstac jobs
     # These parameters control how long services wait for pgstac migration jobs to complete
     waitConfig:
       # Sleep interval between job status checks (in seconds)
       sleepInterval: 5
-      # Maximum time to wait for jobs to complete (in seconds) 
+      # Maximum time to wait for jobs to complete (in seconds)
       # Default: 900 seconds (15 minutes)
       timeout: 900
     ### Database connection settings TEMPORARY UNTIL WE HAVE A BETTER SOLUTION

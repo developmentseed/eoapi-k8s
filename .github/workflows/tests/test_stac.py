@@ -74,12 +74,12 @@ def test_stac_custom_path(stac_endpoint):
     """test stac with custom ingress path."""
     # If we're using a custom path (e.g., /api instead of /stac)
     base_path = stac_endpoint.split("://")[1]
-    
+
     # Landing page
     resp = client.get(stac_endpoint)
     assert resp.status_code == 200
     landing = resp.json()
-    
+
     # All links should use the custom path
     for link in landing["links"]:
         if link["href"].startswith("/"):
@@ -90,7 +90,7 @@ def test_stac_custom_path(stac_endpoint):
     resp = client.get(f"{stac_endpoint}/collections")
     assert resp.status_code == 200
     collections = resp.json()["collections"]
-    
+
     for collection in collections:
         for link in collection["links"]:
             if link["href"].startswith("/"):
@@ -101,7 +101,7 @@ def test_stac_custom_path(stac_endpoint):
     resp = client.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
     assert resp.status_code == 200
     items = resp.json()
-    
+
     # Item links should also use the custom path
     for feature in items["features"]:
         for link in feature["links"]:

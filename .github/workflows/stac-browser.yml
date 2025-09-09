@@ -32,10 +32,12 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo VERSION=${TAG_NAME#v} >> $GITHUB_ENV
-          echo IMAGE_NAME=$REGISTRY/$(echo ${GITHUB_REPOSITORY,,})/stac-browser >> $GITHUB_ENV
-          echo COMMITED_AT=$(git show -s --format=%cI `git rev-parse HEAD`) >> $GITHUB_ENV
-          echo REVISION=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+          {
+            echo "VERSION=${TAG_NAME#v}"
+            echo "IMAGE_NAME=$REGISTRY/${GITHUB_REPOSITORY,,}/stac-browser"
+            echo "COMMITED_AT=$(git show -s --format=%cI "$(git rev-parse HEAD)")"
+            echo "REVISION=$(git rev-parse --short HEAD)"
+          } >> "$GITHUB_ENV"
 
       - name: Collect Docker image metadata
         id: meta
