@@ -30,14 +30,14 @@ def test_mosaic_api(raster_endpoint):
 
     searchid = resp.json()["id"]
 
-    resp = client.get(f"{raster_endpoint}/searches/{searchid}/-85.6358,36.1624/assets")
+    resp = client.get(f"{raster_endpoint}/searches/{searchid}/point/-85.6358,36.1624/assets")
     assert resp.status_code == 200
     assert len(resp.json()) == 1
     assert list(resp.json()[0]) == ["id", "bbox", "assets", "collection"]
     assert resp.json()[0]["id"] == "20200307aC0853900w361030"
 
     resp = client.get(
-        f"{raster_endpoint}/searches/{searchid}/tiles/15/8589/12849/assets"
+        f"{raster_endpoint}/searches/{searchid}/tiles/WebMercatorQuad/15/8589/12849/assets"
     )
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -46,7 +46,7 @@ def test_mosaic_api(raster_endpoint):
 
     z, x, y = 15, 8589, 12849
     resp = client.get(
-        f"{raster_endpoint}/searches/{searchid}/tiles/{z}/{x}/{y}",
+        f"{raster_endpoint}/searches/{searchid}/tiles/WebMercatorQuad/{z}/{x}/{y}",
         params={"assets": "cog"},
         headers={"Accept-Encoding": "br, gzip"},
         timeout=10.0,
@@ -59,7 +59,7 @@ def test_mosaic_api(raster_endpoint):
 def test_mosaic_collection_api(raster_endpoint):
     """test mosaic collection."""
     resp = client.get(
-        f"{raster_endpoint}/collections/noaa-emergency-response/-85.6358,36.1624/assets"
+        f"{raster_endpoint}/collections/noaa-emergency-response/point/-85.6358,36.1624/assets"
     )
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -67,7 +67,7 @@ def test_mosaic_collection_api(raster_endpoint):
     assert resp.json()[0]["id"] == "20200307aC0853900w361030"
 
     resp = client.get(
-        f"{raster_endpoint}/collections/noaa-emergency-response/tiles/15/8589/12849/assets"
+        f"{raster_endpoint}/collections/noaa-emergency-response/tiles/WebMercatorQuad/15/8589/12849/assets"
     )
     assert resp.status_code == 200
     assert len(resp.json()) == 1
@@ -76,7 +76,7 @@ def test_mosaic_collection_api(raster_endpoint):
 
     z, x, y = 15, 8589, 12849
     resp = client.get(
-        f"{raster_endpoint}/collections/noaa-emergency-response/tiles/{z}/{x}/{y}",
+        f"{raster_endpoint}/collections/noaa-emergency-response/tiles/WebMercatorQuad/{z}/{x}/{y}",
         params={"assets": "cog"},
         headers={"Accept-Encoding": "br, gzip"},
         timeout=10.0,
@@ -214,7 +214,7 @@ def test_item(raster_endpoint):
     assert resp.json() == ["cog"]
 
     resp = client.get(
-        f"{raster_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/tilejson.json",
+        f"{raster_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/WebMercatorQuad/tilejson.json",
         params={
             "assets": "cog",
         },
