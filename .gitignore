@@ -4,3 +4,4 @@
 charts/config.yaml
 charts/eoapi/charts/*.tgz
 config_ingress.yaml
+__pycache__

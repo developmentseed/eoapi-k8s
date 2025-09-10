@@ -12,379 +12,131 @@ env:
   PGO_VERSION: 5.7.4
 
 jobs:
-  helm-tests:
+  test:
+    name: Helm tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - uses: d3adb5/helm-unittest-action@v2
+      - name: Install Helm
+        uses: azure/setup-helm@v3
         with:
-          helm-version: ${{ env.HELM_VERSION }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ env.HELM_VERSION }}
 
-      - run: |
-          cd charts
-          helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
-  k3s-integration-tests:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+      - name: Run Helm unit tests
+        run: make tests
+
+  integration:
+    name: Integration Tests (K3s)
+    # if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: 'read'
       id-token: 'write'
-    needs: helm-tests
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - name: Start a local k3s cluster
+      - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
         with:
-          # See available:
-          # - k3s release channels at https://github.com/k3s-io/k3s/blob/HEAD/channel.yaml
-          # - k3s versions at https://github.com/k3s-io/k3s/tags
-          # - helm versions at https://github.com/helm/helm/tags
           k3s-channel: latest
           helm-version: ${{ env.HELM_VERSION }}
           metrics-enabled: false
           docker-enabled: true
 
-      - name: last commit sha if PR
-        if: ${{ github.event_name == 'pull_request' }}
-        shell: bash
+      - name: Set release name
         run: |
-          echo "LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> ${GITHUB_ENV}
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA::8}"
+          SALT=$(echo "$RANDOM" | cut -c1-3)
+          echo "RELEASE_NAME=eoapi-$SHORT_SHA-$SALT" >> "$GITHUB_ENV"
 
-      - name: last commit sha if push
-        if: ${{ github.event_name == 'push' }}
-        shell: bash
-        run: |
-          echo "LAST_COMMIT_SHA=${GITHUB_SHA}" >> ${GITHUB_ENV}
-
-      - name: set k8s .release.name suffix
-        run: |
-          # salt for randomness per test run
-          COMMITSHA=$(echo $LAST_COMMIT_SHA | cut -c 1-6)
-          SALT=$(echo "${RANDOM}${RANDOM}${RANDOM}" | cut -c1-3)
-          echo "RELEASE_NAME=eoapi$COMMITSHA$SALT" >> $GITHUB_ENV
-
-      - name: helm install crunchydata postgres operator
-        run: |
-          helm upgrade --install \
-            --set disable_check_for_upgrades=true \
-            pgo \
-            oci://registry.developers.crunchydata.com/crunchydata/pgo \
-            --version ${{ env.PGO_VERSION }}
-
-      - id: helm-render-install-eoapi-templates
-        name: helm render/install eoapi templates
+      - name: Deploy eoAPI
+        id: deploy
         continue-on-error: true
         run: |
-          export GITSHA='${{github.sha}}'
+          echo "=== Starting eoAPI deployment ==="
+          export RELEASE_NAME="$RELEASE_NAME"
+          export PGO_VERSION="${{ env.PGO_VERSION }}"
+          export GITHUB_SHA="${{ github.sha }}"
+          ./scripts/deploy.sh --ci
 
-          cd charts
-
-          helm dependency build eoapi
-
-          helm install $RELEASE_NAME \
-            -f ./eoapi/values.yaml \
-            -f ./eoapi/test-k3s-unittest-values.yaml \
-            ./eoapi
-
-          exit $?
-
-      - name: show jobs and pods
+      - name: Check deployment status
+        id: check
+        if: steps.deploy.outcome == 'success'
         run: |
-          echo "===== Jobs ====="
-          kubectl get jobs -o wide
-          echo ""
-          echo "===== Job Status Details ====="
-          kubectl get jobs -o custom-columns='NAME:.metadata.name,COMPLETIONS:.spec.completions,SUCCESSFUL:.status.succeeded,FAILED:.status.failed,AGE:.metadata.creationTimestamp'
-          echo ""
-          echo "===== All Pods ====="
-          kubectl get pods -o wide
-          echo ""
-          echo "===== Pods (pgstac) ====="
-          kubectl get pods | grep -i pgstac || true
-          echo ""
-          echo "===== Pod Phase Summary ====="
-          kubectl get pods --no-headers | awk '{print $3}' | sort | uniq -c
-          echo ""
-          echo "===== Events (last 10 minutes) ====="
-          kubectl get events --sort-by='.lastTimestamp' | tail -20
+          echo "=== Checking deployment status ==="
+          export RELEASE_NAME="$RELEASE_NAME"
+          ./scripts/test.sh check-deployment --debug
 
-      - name: debug pgstac-eoapi-superuser-init-db job failure
-        if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
+      - name: Debug pgstac jobs if deployment failed
+        if: steps.deploy.outcome == 'failure'
         continue-on-error: true
         run: |
-          echo "Extracting pgstac-eoapi-superuser-init-db job info and logs for debugging..."
+          echo "=== Debugging pgstac job failures ==="
 
-          # Get job details
-          echo "===== pgstac-eoapi-superuser-init-db Job Details ====="
-          kubectl get job "$RELEASE_NAME-pgstac-eoapi-superuser-init-db" -o yaml || echo "Could not get job details"
+          # Check pgstac-migrate job
+          echo "===== pgstac-migrate Job Status ====="
+          kubectl get jobs -l app.kubernetes.io/name=pgstac-migrate -o wide || echo "No pgstac-migrate jobs found"
 
-          # Get pod details
-          echo "===== Pod Details ====="
-          kubectl get pods --selector=app=pgstac-eoapi-superuser-init-db -o wide || echo "Could not find pods"
-
-          # Extract logs from pods
-          echo "===== Pod Logs ====="
-          PODS=$(kubectl get pods --selector=app=pgstac-eoapi-superuser-init-db -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-          if [ -n "$PODS" ]; then
-            for POD in $PODS; do
-              echo "--- Logs from pod $POD ---"
-              kubectl logs $POD --previous || true  # Get logs from previous container if it exists
-              kubectl logs $POD || echo "Could not get logs from pod $POD"
+          MIGRATE_PODS=$(kubectl get pods -l app.kubernetes.io/name=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          if [ -n "$MIGRATE_PODS" ]; then
+            for POD in $MIGRATE_PODS; do
+              echo "--- Logs from migrate pod $POD ---"
+              kubectl logs "$POD" --tail=100 || true
+              echo "--- Description of migrate pod $POD ---"
+              kubectl describe pod "$POD"
             done
-          else
-            echo "No pods found for pgstac-eoapi-superuser-init-db job"
           fi
 
-          # Get pod descriptions for more details
-          echo "===== Pod Descriptions ====="
-          kubectl describe pods --selector=app=pgstac-eoapi-superuser-init-db || echo "Could not describe pods"
+          # Check pgstac-load-samples job
+          echo "===== pgstac-load-samples Job Status ====="
+          kubectl get jobs -l app.kubernetes.io/name=pgstac-load-samples -o wide || echo "No pgstac-load-samples jobs found"
 
-          # Check the configmap contents
-          echo "===== initdb ConfigMap Contents ====="
-          kubectl get configmap initdb -o yaml || echo "Could not get initdb configmap"
-
-          # Check for any related events
-          echo "===== Related Kubernetes Events ====="
-          kubectl get events | grep -E "pgstac-eoapi-superuser-init-db|initdb" || echo "No relevant events found"
-
-      - name: debug pgstac-migrate job failure
-        if: steps.helm-render-install-eoapi-templates.outcome == 'failure'
-        continue-on-error: true
-        run: |
-          echo "Extracting comprehensive pgstac-migrate job info and logs for debugging..."
-
-          # Get all jobs with details
-          echo "===== All Jobs Status ====="
-          kubectl get jobs -o wide
-          echo ""
-
-          # Get specific job details using labels
-          echo "===== pgstac-migrate Job Details (by label) ====="
-          kubectl get jobs -l app=pgstac-migrate -o yaml || echo "Could not get pgstac-migrate job details"
-          echo ""
-
-          # Get pod details - both by label and by job-name
-          echo "===== pgstac-migrate Pod Details (by label) ====="
-          kubectl get pods -l app=pgstac-migrate --all-namespaces -o wide || echo "Could not find pgstac-migrate pods by label"
-          echo ""
-
-          echo "===== pgstac-migrate Pod Details (by app label) ====="
-          kubectl get pods -l app=pgstac-migrate -o wide || echo "Could not find pgstac-migrate pods by app label"
-          echo ""
-
-          # Extract logs from all pgstac-migrate pods (running, completed, failed)
-          echo "===== pgstac-migrate Pod Logs ====="
-          ALL_PODS=$(kubectl get pods -l app=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-          if [ -n "$ALL_PODS" ]; then
-            echo "Found pgstac-migrate job pods. Extracting logs from each:"
-            for POD in $ALL_PODS; do
-              echo "--- Pod $POD status ---"
-              kubectl get pod "$POD" -o wide
-              echo "--- Logs from pod $POD ---"
-              kubectl logs pod/$POD --tail=100 || echo "Could not get logs from pod $POD"
-              echo "--- Previous logs from pod $POD (if container restarted) ---"
-              kubectl logs pod/$POD --previous --tail=50 || echo "No previous logs for pod $POD"
-              echo ""
+          SAMPLES_PODS=$(kubectl get pods -l app.kubernetes.io/name=pgstac-load-samples -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+          if [ -n "$SAMPLES_PODS" ]; then
+            for POD in $SAMPLES_PODS; do
+              echo "--- Logs from samples pod $POD ---"
+              kubectl logs "$POD" --tail=100 || true
+              echo "--- Description of samples pod $POD ---"
+              kubectl describe pod "$POD"
             done
-          else
-            echo "No pods found for pgstac-migrate jobs"
-            echo "Checking for pods with broader label search..."
-            LABEL_PODS=$(kubectl get pods -l app=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-            if [ -n "$LABEL_PODS" ]; then
-              for POD in $LABEL_PODS; do
-                echo "--- Pod $POD (found by label) ---"
-                kubectl describe pod "$POD"
-                kubectl logs pod/$POD --tail=50 || true
-              done
-            fi
           fi
 
-          # Get details about the database pods/services
-          echo "===== Database Pod/Service Details ====="
-          kubectl get svc | grep -E "db|postgres" || echo "Could not find database services"
-          kubectl get pods | grep -E "db-|postgres" || echo "Could not find database pods"
-          echo ""
+          # Check database status
+          echo "===== Database Pod Status ====="
+          kubectl get pods -l postgres-operator.crunchydata.com/cluster -o wide
+          kubectl get postgrescluster -o wide
 
-          # Check ConfigMaps and Secrets
+          # Check ConfigMaps
           echo "===== Relevant ConfigMaps ====="
-          kubectl get configmaps | grep -E "pgstac|initdb" || echo "No pgstac configmaps found"
-          echo ""
+          kubectl get configmaps | grep -E "initdb|pgstac" || echo "No relevant configmaps found"
 
-          # Check for any events related to the job or pods
-          echo "===== Related Kubernetes Events (last 50) ====="
-          kubectl get events --sort-by='.lastTimestamp' | grep -E "pgstac|db|migrate" || echo "No relevant events found"
+          exit 1
 
-      - id: watchservices
-        name: watch services boot
-        timeout-minutes: 3
-        continue-on-error: true
+      - name: Run integration tests
+        if: steps.deploy.outcome == 'success'
         run: |
-          # Wait for services to be ready using native readiness checks
-          echo "===== Current Pod Status ====="
+          echo "=== Running integration tests ==="
+          export RELEASE_NAME="$RELEASE_NAME"
+          ./scripts/test.sh integration --debug
+
+      - name: Debug deployment status
+        if: always()
+        run: |
+          echo "=== Final Deployment Status ==="
           kubectl get pods -o wide
-          echo ""
+          kubectl get services
+          kubectl get ingress
 
-          echo "Waiting for raster service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=${RELEASE_NAME}-raster --timeout=180s || {
-            echo "Raster service failed to become ready. Checking status..."
-            kubectl get pods -l app=${RELEASE_NAME}-raster -o wide
-            kubectl describe pods -l app=${RELEASE_NAME}-raster
-            exit 1
-          }
-          echo "raster service is ready, moving on..."
-
-          echo "Waiting for vector service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=${RELEASE_NAME}-vector --timeout=180s || {
-            echo "Vector service failed to become ready. Checking status..."
-            kubectl get pods -l app=${RELEASE_NAME}-vector -o wide
-            kubectl describe pods -l app=${RELEASE_NAME}-vector
-            exit 1
-          }
-          echo "vector service is ready, moving on..."
-
-          echo "Waiting for stac service to be ready..."
-          kubectl wait --for=condition=Ready pod -l app=${RELEASE_NAME}-stac --timeout=180s || {
-            echo "STAC service failed to become ready. Checking status..."
-            kubectl get pods -l app=${RELEASE_NAME}-stac -o wide
-            kubectl describe pods -l app=${RELEASE_NAME}-stac
-            exit 1
-          }
-          echo "all services are ready, moving on..."
-
-      - name: cleanup if services fail to boot
-        if: steps.watchservices.outcome == 'failure'
+      - name: Debug on failure
+        if: failure()
         run: |
-          echo "The watchservices step failed or timed out. Extracting comprehensive debugging info..."
+          echo "=== Additional failure debugging (integration script provides comprehensive debugging) ==="
+          kubectl get events --sort-by='.lastTimestamp' | tail -20 || true
 
-          # Get and display all pods status with more detail
-          echo "===== Pod Status (detailed) ====="
-          kubectl get pods -o wide
-          echo ""
-          
-          echo "===== Pod Readiness Summary ====="
-          kubectl get pods --no-headers | awk '{print $2, $3}' | sort | uniq -c
-          echo ""
-
-          # Check init container logs for all services
-          for SERVICE in raster vector stac multidim; do
-            echo "===== $SERVICE Service Pod Status ====="
-            kubectl get pods -l app=$RELEASE_NAME-$SERVICE -o wide || echo "No $SERVICE pods found"
-            
-            POD_NAME=$(kubectl get pod -l app=$RELEASE_NAME-$SERVICE -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
-            if [ -n "$POD_NAME" ]; then
-              echo "===== $SERVICE Pod ($POD_NAME) Init Container Logs ====="
-              kubectl logs pod/$POD_NAME -c wait-for-pgstac-jobs --tail=100 || echo "Could not get $SERVICE init container logs"
-              echo ""
-              
-              echo "===== $SERVICE Pod ($POD_NAME) Main Container Logs ====="
-              kubectl logs pod/$POD_NAME --tail=100 || echo "Could not get $SERVICE main container logs"
-              echo ""
-              
-              echo "===== $SERVICE Pod ($POD_NAME) Description ====="
-              kubectl describe pod/$POD_NAME
-              echo ""
-            fi
-          done
-
-          # Show job status that init containers might be waiting for
-          echo "===== Job Status (what init containers are waiting for) ====="
-          kubectl get jobs -o wide
-          echo ""
-          
-          # Check pgstac jobs using labels instead of hardcoded names
-          for APP_LABEL in pgstac-migrate pgstac-load-samples; do
-            echo "===== Jobs with app=$RELEASE_NAME-$APP_LABEL Status ====="
-            JOBS=$(kubectl get jobs -l app=$RELEASE_NAME-$APP_LABEL -o name 2>/dev/null || true)
-            if [ -n "$JOBS" ]; then
-              for JOB in $JOBS; do
-                echo "--- Job $JOB ---"
-                kubectl get "$JOB" -o yaml 2>/dev/null | grep -A 10 -E "conditions|status:" || echo "Could not get status for $JOB"
-              done
-            else
-              echo "No jobs found with app=$RELEASE_NAME-$APP_LABEL label"
-            fi
-            echo ""
-          done
-
-          # Check recent events
-          echo "===== Recent Events (last 50) ====="
-          kubectl get events --sort-by='.lastTimestamp' | tail -50
-          echo ""
-
-          # force GH action to show failed result
-          exit 128
-
-      - name: install python unit-test dependencies
+      - name: Cleanup
+        if: always()
         run: |
-          python -m pip install pytest httpx
-
-      - name: run the tests
-        id: testrunner
-        # continue-on-error: true
-        run: |
-          kubectl get svc --all-namespaces
-          kubectl get ingress --all-namespaces -o jsonpath='{range .items[0]}kubectl describe ingress {.metadata.name} -n {.metadata.namespace}{end}' | sh
-          kubectl get middleware.traefik.io --all-namespaces -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name' --no-headers | while read -r namespace name; do kubectl describe middleware.traefik.io "$name" -n "$namespace"; done
-
-          # Get the IP address of the Traefik service
-          PUBLICIP_VALUE=$(kubectl -n kube-system get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-          PUBLICIP=http://eoapi.local
-          export VECTOR_ENDPOINT=$PUBLICIP/vector
-          export STAC_ENDPOINT=$PUBLICIP/stac
-          export RASTER_ENDPOINT=$PUBLICIP/raster
-
-          # Add entry to /etc/hosts for eoapi.local
-          echo "Adding eoapi.local to /etc/hosts with IP: $PUBLICIP_VALUE"
-          echo "$PUBLICIP_VALUE eoapi.local" | sudo tee -a /etc/hosts
-
-          echo '#################################'
-          echo $VECTOR_ENDPOINT
-          echo $STAC_ENDPOINT
-          echo $RASTER_ENDPOINT
-          echo '#################################'
-
-          # Run tests with proper failure propagation
-          set -e  # Make sure any command failure causes the script to exit with error
-          pytest .github/workflows/tests/test_vector.py || { kubectl logs svc/vector; exit 1; }
-          pytest .github/workflows/tests/test_stac.py || { kubectl logs svc/stac; exit 1; }
-          # TODO: fix raster tests
-          #pytest .github/workflows/tests/test_raster.py || { kubectl logs svc/raster; exit 1; }
-
-      - name: error if tests failed
-        if: steps.testrunner.outcome == 'failure'
-        run: |
-          echo "The tests failed. Extracting pod logs for debugging..."
-
-          # Get and display all pods status
-          echo "===== Pod Status ====="
-          kubectl get pods
-
-          # Extract logs from raster pod init container (wait-for-pgstac-jobs)
-          echo "===== Raster Pod Init Container Logs (wait-for-pgstac-jobs) ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} -c wait-for-pgstac-jobs --tail=100 || echo "Could not get raster init container logs"
-
-          # Extract logs from raster pod main container
-          echo "===== Raster Pod Main Container Logs ====="
-          kubectl get pod | grep "^raster-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get raster main container logs"
-
-          # Extract logs from vector pod
-          echo "===== Vector Pod Logs ====="
-          kubectl get pod | grep "^vector-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get vector logs"
-
-          # Extract logs from stac pod
-          echo "===== STAC Pod Logs ====="
-          kubectl get pod | grep "^stac-$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl logs pod/{} --tail=100 || echo "Could not get STAC logs"
-
-          # Check if pods are in pending state or have issues
-          echo "===== Pod Descriptions for Troubleshooting ====="
-          kubectl get pod | grep "$RELEASE_NAME" | cut -d' ' -f1 | xargs -I{} kubectl describe pod/{} || echo "Could not describe pods"
-
-          # force GH action to show failed result
-          exit 128
-
-      - name: helm uninstall eoapi templates
-        run: |
-          helm uninstall $RELEASE_NAME
+          helm uninstall "$RELEASE_NAME" || true
