@@ -1,8 +1,11 @@
 # eoapi-k8s
 
 <p align="center">
-    <img height=200 src="https://raw.githubusercontent.com/developmentseed/eoapi-k8s/refs/heads/main/docs/eoapi-k8s.svg" alt="eoapi-k8s">
+    <img height=200 src="https://raw.githubusercontent.com/developmentseed/eoapi-k8s/refs/heads/main/docs/images/eoapi-k8s.svg" alt="eoapi-k8s">
 </p>
+
+[eoAPI](https://eoapi.dev/) is a progressive platform for hosting Earth Observation data. It offers a suite of APIs (OGC and STAC-based) for data access and analysis. This repository includes a production-ready Kubernetes deployment with flexible database options, unified ingress configuration, and built-in monitoring.
+
 <p>
   <a href="https://github.com/developmentseed/eoapi-k8s/actions?query=workflow%3ACI" target="_blank">
       <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/helm-tests.yml/badge.svg?branch=main" alt="Test">
@@ -14,10 +17,6 @@
       <img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/eoapi" alt="Artifact Hub">
   </a>
 </p>
-
-## What is eoAPI?
-
-[eoAPI](https://eoapi.dev/) is a collection of REST APIs for Earth Observation data access and analysis. This repository provides a production-ready Kubernetes deployment solution with flexible database options, unified ingress configuration, and built-in monitoring.
 
 ## Prerequisites
 
