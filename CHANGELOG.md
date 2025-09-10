@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.8] - 2025-09-10
+
+### Added
+
+- Renovate for dependency management [#261](https://github.com/developmentseed/eoapi-k8s/pull/261)
+
+### Changed
+
+- Naming consistency [#259](https://github.com/developmentseed/eoapi-k8s/pull/259)
+- Dependency version upgrades [#269](https://github.com/developmentseed/eoapi-k8s/pull/269)[#268](https://github.com/developmentseed/eoapi-k8s/pull/268)[#266](https://github.com/developmentseed/eoapi-k8s/pull/266)[#271](https://github.com/developmentseed/eoapi-k8s/pull/271)[#267](https://github.com/developmentseed/eoapi-k8s/pull/267)[#277](https://github.com/developmentseed/eoapi-k8s/pull/277)[#278](https://github.com/developmentseed/eoapi-k8s/pull/278)[#276](https://github.com/developmentseed/eoapi-k8s/pull/276)[#282](https://github.com/developmentseed/eoapi-k8s/pull/282)[#281](https://github.com/developmentseed/eoapi-k8s/pull/281)[#273](https://github.com/developmentseed/eoapi-k8s/pull/273)[#280](https://github.com/developmentseed/eoapi-k8s/pull/280)[#279](https://github.com/developmentseed/eoapi-k8s/pull/279)[#272](https://github.com/developmentseed/eoapi-k8s/pull/272)
+- Docs refreshed [#260](https://github.com/developmentseed/eoapi-k8s/pull/260)[#285](https://github.com/developmentseed/eoapi-k8s/pull/285)
+
 ### Fixed
 
 - `multidim`, `raster`, `stac`, and `vector` now allow annotations [#286](https://github.com/developmentseed/eoapi-k8s/pull/286)
-
 
 ## [0.7.7] - 2025-09-05
 
