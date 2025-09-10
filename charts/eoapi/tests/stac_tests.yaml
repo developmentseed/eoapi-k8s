@@ -54,3 +54,31 @@ tests:
       - equal:
           path: data.WEB_CONCURRENCY
           value: "5"
+
+  - it: "stac browser service"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      stac.annotations:
+        annotation1: hello
+        annotation2: world
+      gitSha: "ABC123"
+    template: templates/services/stac/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - matchRegex:
+          path: metadata.name
+          pattern: ^RELEASE-NAME-stac$
+      - matchRegex:
+          path: metadata.labels.app
+          pattern: ^RELEASE-NAME-stac$
+      - equal:
+          path: metadata.annotations.annotation1
+          value: hello
+      - equal:
+          path: metadata.annotations.annotation2
+          value: world

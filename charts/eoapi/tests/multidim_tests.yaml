@@ -54,3 +54,31 @@ tests:
       - equal:
           path: data.GDAL_HTTP_MULTIPLEX
           value: "YES"
+
+  - it: "multidim browser service"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: true
+      browser.enabled: false
+      multidim.annotations:
+        annotation1: hello
+        annotation2: world
+      gitSha: "ABC123"
+    template: templates/services/multidim/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - matchRegex:
+          path: metadata.name
+          pattern: ^RELEASE-NAME-multidim$
+      - matchRegex:
+          path: metadata.labels.app
+          pattern: ^RELEASE-NAME-multidim$
+      - equal:
+          path: metadata.annotations.annotation1
+          value: hello
+      - equal:
+          path: metadata.annotations.annotation2
+          value: world

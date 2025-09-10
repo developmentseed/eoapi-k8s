@@ -54,3 +54,31 @@ tests:
       - equal:
           path: data.GDAL_HTTP_MULTIPLEX
           value: "YES"
+
+  - it: "raster browser service"
+    set:
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      raster.annotations:
+        annotation1: hello
+        annotation2: world
+      gitSha: "ABC123"
+    template: templates/services/raster/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - matchRegex:
+          path: metadata.name
+          pattern: ^RELEASE-NAME-raster$
+      - matchRegex:
+          path: metadata.labels.app
+          pattern: ^RELEASE-NAME-raster$
+      - equal:
+          path: metadata.annotations.annotation1
+          value: hello
+      - equal:
+          path: metadata.annotations.annotation2
+          value: world

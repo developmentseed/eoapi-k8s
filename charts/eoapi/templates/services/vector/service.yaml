@@ -5,6 +5,12 @@ metadata:
   name: {{ .Release.Name }}-vector
   labels:
     app: {{ .Release.Name }}-vector
+  {{- if .Values.vector.annotations }}
+  annotations:
+    {{- with .Values.vector.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
   ports:
     - port: {{ .Values.service.port }}
