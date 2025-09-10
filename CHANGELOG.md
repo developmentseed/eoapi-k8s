@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `multidim`, `raster`, `stac`, and `vector` now allow annotations [#255](https://github.com/developmentseed/eoapi-k8s/pull/255)
+- `multidim`, `raster`, `stac`, and `vector` now allow annotations [#286](https://github.com/developmentseed/eoapi-k8s/pull/286)
 
 
 ## [0.7.7] - 2025-09-05
