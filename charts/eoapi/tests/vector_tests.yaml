@@ -11,6 +11,7 @@ tests:
       stac.enabled: false
       vector.enabled: true
       multidim.enabled: false
+
       gitSha: "ABC123"
     template: templates/services/vector/deployment.yaml
     asserts:
@@ -55,3 +56,30 @@ tests:
           path: data.TIPG_CATALOG_TTL
           value: "300"
           
+  - it: "vector browser service"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: true
+      multidim.enabled: false
+      browser.enabled: false
+      vector.annotations:
+        annotation1: hello
+        annotation2: world
+      gitSha: "ABC123"
+    template: templates/services/vector/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - matchRegex:
+          path: metadata.name
+          pattern: ^RELEASE-NAME-vector$
+      - matchRegex:
+          path: metadata.labels.app
+          pattern: ^RELEASE-NAME-vector$
+      - equal:
+          path: metadata.annotations.annotation1
+          value: hello
+      - equal:
+          path: metadata.annotations.annotation2
+          value: world

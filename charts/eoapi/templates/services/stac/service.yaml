@@ -5,6 +5,12 @@ metadata:
   name: {{ .Release.Name }}-stac
   labels:
     app: {{ .Release.Name }}-stac
+  {{- if .Values.stac.annotations }}
+  annotations:
+    {{- with .Values.stac.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
   ports:
     - port: {{ .Values.service.port }}
