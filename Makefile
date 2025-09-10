@@ -5,21 +5,15 @@ HELM_REPO_URL=https://devseed.com/eoapi-k8s/
 HELM_CHART_NAME=eoapi/eoapi
 PGO_CHART_VERSION=5.7.4
 
-.PHONY: all deploy minikube ingest help
+.PHONY: all deploy minikube ingest test-integration tests help
 
 # Default target
 all: deploy
 
 deploy:
-	@echo "Installing dependencies."
-	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
-	helm upgrade --install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version $(PGO_CHART_VERSION)
-	@echo "Adding eoAPI helm repository."
-	@helm repo add eoapi $(HELM_REPO_URL)
-	@echo "Installing eoAPI helm chart."
-	@cd ./charts && \
-	helm dependency build ./eoapi && \
-	helm upgrade --install --namespace eoapi --create-namespace --set gitSha=$$(git rev-parse HEAD | cut -c1-10) eoapi ./eoapi
+	@echo "Deploying eoAPI."
+	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
+	@./scripts/deploy.sh
 
 minikube:
 	@echo "Starting minikube."
@@ -37,13 +31,21 @@ ingest:
 	@./scripts/ingest.sh || { echo "Ingestion failed."; exit 1; }
 
 tests:
-	@echo "Running tests."
+	@echo "Running Helm unit tests..."
 	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
-	@helm unittest charts/eoapi -f 'tests/*.yaml' -v charts/eoapi/test-helm-values.yaml
+	@./scripts/deploy.sh setup
+	@./scripts/test.sh helm
+
+integration:
+	@echo "Running integration tests against Kubernetes cluster..."
+	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
+	@./scripts/test.sh integration
 
 help:
 	@echo "Makefile commands:"
-	@echo "  make deploy         -  Install eoAPI on a cluster kubectl is connected to."
+	@echo "  make deploy         -  Deploy eoAPI with on connected Kubernetes cluster."
 	@echo "  make minikube       -  Install eoAPI on minikube."
 	@echo "  make ingest         -  Ingest STAC collections and items into the database."
+	@echo "  make integration    -  Run integration tests on connected Kubernetes cluster."
+	@echo "  make tests          -  Run lint + unit tests."
 	@echo "  make help           -  Show this help message."
