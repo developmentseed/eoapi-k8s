@@ -39,21 +39,33 @@ def test_vector_api(vector_endpoint):
         "collections",
     ]
 
-    total_timeout = 60 * 5
+    total_timeout = 60 * 2
     start_time = time.time()
     while True:
-        if resp.json()["numberMatched"] == 7:
+        collections_data = resp.json()
+        current_count = collections_data.get("numberMatched", 0)
+        print(f"Current collections count: {current_count}/7")
+
+        if current_count == 7:
             break
 
-        if time.time() - start_time > total_timeout:
-            print("Timeout exceeded")
-            assert False
+        elapsed_time = time.time() - start_time
+        if elapsed_time > total_timeout:
+            print(f"Timeout exceeded after {elapsed_time:.1f}s. Expected 7 collections, got {current_count}")
+            if "collections" in collections_data:
+                available_collections = [c.get("id", "unknown") for c in collections_data["collections"]]
+                print(f"Available collections: {available_collections}")
+            assert False, f"Expected 7 collections but found {current_count} after {elapsed_time:.1f}s timeout"
 
-        time.sleep(20)
+        time.sleep(10)
         resp = client.get(f"{vector_endpoint}/collections")
 
-    assert resp.json()["numberMatched"] == 7  # one public table + 5 functions
-    assert resp.json()["numberReturned"] == 7
+    collections_data = resp.json()
+    matched_count = collections_data.get("numberMatched", 0)
+    returned_count = collections_data.get("numberReturned", 0)
+
+    assert matched_count == 7, f"Expected 7 matched collections, got {matched_count}. Available: {[c.get('id', 'unknown') for c in collections_data.get('collections', [])]}"
+    assert returned_count == 7, f"Expected 7 returned collections, got {returned_count}"
 
     collections = resp.json()["collections"]
     ids = [c["id"] for c in collections]
