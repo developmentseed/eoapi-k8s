@@ -43,6 +43,8 @@
 
 * **We welcome contributions** from the community! Feel free to open an issue or submit a pull request.
 
+* **Please ensure:** that pull requests make an update to `CHANGELOG.md` and that your pull request **title** adheres to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+
 ## License
 
 This project is licensed under the [MIT License](./LICENSE).

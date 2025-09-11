@@ -1,0 +1,24 @@
+
+name: PR Checks
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+jobs:
+  pr-title-and-changelog:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Changelog
+        uses: dangoslen/changelog-enforcer@v3
+        with:
+          skipLabels: "skip-changelog"
+          expectedLatestVersion: ""
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
