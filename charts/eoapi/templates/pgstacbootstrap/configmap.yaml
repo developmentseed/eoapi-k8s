@@ -14,6 +14,9 @@ metadata:
 data:
   pgstac-settings.sql: |
     {{ $.Files.Get "initdb-data/settings/pgstac-settings.sql" | nindent 4 }}
+    {{- if .Values.notifications.sources.pgstac }}
+    {{ $.Files.Get "initdb-data/settings/pgstac-notification-triggers.sql" | nindent 4 }}
+    {{- end }}
 ---
 {{- if .Values.pgstacBootstrap.settings.loadSamples }}
 apiVersion: v1

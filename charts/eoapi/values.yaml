@@ -488,3 +488,10 @@ docServer:
 # helm upgrade --set previousVersion=$PREVIOUS_VERSION
 # or in the CI/CD pipeline
 previousVersion: ""
+
+######################
+# NOTIFICATIONS
+######################
+notifications:
+  sources:
+    pgstac: false
