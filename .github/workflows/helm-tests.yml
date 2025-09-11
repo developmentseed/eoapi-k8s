@@ -28,7 +28,7 @@ jobs:
 
   integration:
     name: Integration Tests (K3s)
-    # if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -49,8 +49,7 @@ jobs:
         run: |
           SHORT_SHA="${{ github.sha }}"
           SHORT_SHA="${SHORT_SHA::8}"
-          SALT=$(echo "$RANDOM" | cut -c1-3)
-          echo "RELEASE_NAME=eoapi-$SHORT_SHA-$SALT" >> "$GITHUB_ENV"
+          echo "RELEASE_NAME=eoapi-$SHORT_SHA" >> "$GITHUB_ENV"
 
       - name: Deploy eoAPI
         id: deploy

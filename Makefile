@@ -43,7 +43,7 @@ integration:
 
 help:
 	@echo "Makefile commands:"
-	@echo "  make deploy         -  Deploy eoAPI with on connected Kubernetes cluster."
+	@echo "  make deploy         -  Deploy eoAPI to the configured Kubernetes cluster."
 	@echo "  make minikube       -  Install eoAPI on minikube."
 	@echo "  make ingest         -  Ingest STAC collections and items into the database."
 	@echo "  make integration    -  Run integration tests on connected Kubernetes cluster."
