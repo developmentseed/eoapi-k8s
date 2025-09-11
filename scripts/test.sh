@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck source=lib/common.sh
 
 # eoAPI Test Suite
 # Combined Helm and Integration Testing Script
@@ -601,6 +602,54 @@ run_integration_tests() {
         log_warn "Could not get raster service logs"
     else
         log_info "Raster tests passed"
+    fi
+
+    # PgSTAC notification tests
+    log_info "=== Running PgSTAC notification tests ==="
+
+    # Get database credentials from secret
+    local db_name db_user db_password
+    if db_name=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.dbname}' 2>/dev/null | base64 -d 2>/dev/null) && \
+       db_user=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.user}' 2>/dev/null | base64 -d 2>/dev/null) && \
+       db_password=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null); then
+
+        log_debug "Database credentials retrieved for pgstac notifications test"
+
+        # Set up port forwarding to database
+        log_debug "Setting up port forwarding to database..."
+        kubectl port-forward -n "$NAMESPACE" "svc/${RELEASE_NAME}-pgbouncer" 5433:5432 >/dev/null 2>&1 &
+        local port_forward_pid=$!
+
+        # Give port forwarding time to establish
+        sleep 3
+
+        # Run the test with proper environment variables
+        local pgstac_test_env
+        pgstac_test_env=$(cat << EOF
+PGHOST=localhost
+PGPORT=5433
+PGDATABASE=$db_name
+PGUSER=$db_user
+PGPASSWORD=$db_password
+EOF
+        )
+
+        if env "$pgstac_test_env" $python_cmd -m pytest "$test_dir/test_pgstac_notifications.py" -v; then
+            log_info "PgSTAC notification tests passed"
+        else
+            log_warn "PgSTAC notification tests failed"
+            failed_tests+=("pgstac-notifications")
+        fi
+
+        # Clean up port forwarding
+        if [ -n "$port_forward_pid" ]; then
+            kill "$port_forward_pid" 2>/dev/null || true
+            wait "$port_forward_pid" 2>/dev/null || true
+        fi
+
+    else
+        log_warn "Could not retrieve database credentials for PgSTAC notification tests"
+        failed_tests+=("pgstac-notifications")
     fi
 
     # Report results
