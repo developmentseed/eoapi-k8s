@@ -53,6 +53,13 @@ repos:
         files: ^charts/.+\.(yaml|yml)$
         pass_filenames: false
 
+      - id: helm-schema-validation
+        name: Helm Schema Validation
+        entry: make validate-schema
+        language: system
+        files: ^charts/.+\.(json|yaml|yml)$
+        pass_filenames: false
+
 # Exclude directories
 exclude: |
   (?x)^(
