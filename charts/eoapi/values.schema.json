@@ -342,6 +342,21 @@
           "description": "Enable documentation server"
         }
       }
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "object",
+          "properties": {
+            "pgstac": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable PostgreSQL notification triggers for STAC item changes"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
