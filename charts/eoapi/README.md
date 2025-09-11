@@ -12,6 +12,7 @@ A Helm chart for deploying Earth Observation APIs with integrated STAC, raster, 
 - Multidimensional data support
 - Built-in STAC Browser interface
 - Flexible database configuration
+- Real-time PostgreSQL notifications for STAC item changes
 - Unified ingress system
 
 ## TL;DR
@@ -75,6 +76,7 @@ pgstacBootstrap:
 | `ingress.className` | Ingress controller class | `nginx` |
 | `browser.enabled` | Enable STAC Browser interface | `true` |
 | `pgstacBootstrap.enabled` | Enable database initialization | `true` |
+| `notifications.sources.pgstac` | Enable PostgreSQL notification triggers for STAC item changes | `false` |
 
 Refer to the [values.schema.json](./values.schema.json) for the complete list of configurable parameters.
 
