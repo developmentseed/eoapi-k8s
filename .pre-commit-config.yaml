@@ -1,0 +1,62 @@
+# Pre-commit configuration for eoAPI Kubernetes charts
+# Fast, essential checks only - heavy validation moved to CI
+
+repos:
+  # Basic file formatting and validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+        exclude: ^charts/.+/templates/
+      - id: check-added-large-files
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        files: \.(yaml|yml)$
+        exclude: ^charts/.+/templates/
+
+  # Shell script validation
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: ['-e', 'SC1091']
+
+  # GitHub Actions linting
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+
+  # Fast Helm syntax check only
+  - repo: local
+    hooks:
+      - id: helm-lint-syntax
+        name: Helm Syntax Check
+        entry: >
+          bash -c 'for chart in charts/*/; do
+          if [ -f "$chart/Chart.yaml" ]; then
+          if grep -q "dependencies:" "$chart/Chart.yaml" 2>/dev/null; then
+          if [ -d "$chart/charts" ] && [ -n "$(find "$chart/charts" -name "*.tgz" 2>/dev/null)" ]; then
+          echo "Linting $chart (dependencies available)...";
+          helm lint "$chart" --strict || exit 1;
+          else echo "Skipping $chart (dependencies not built - run make deploy or scripts/helm-setup.sh first)";
+          fi; else echo "Linting $chart (no dependencies)...";
+          helm lint "$chart" --strict || exit 1; fi; fi; done'
+        language: system
+        files: ^charts/.+\.(yaml|yml)$
+        pass_filenames: false
+
+# Exclude directories
+exclude: |
+  (?x)^(
+      \.git/.*|
+      charts/.+/charts/.*|
+      charts/.+/tmpcharts.*/.*
+  )$

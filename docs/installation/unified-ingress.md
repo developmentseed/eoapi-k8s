@@ -22,7 +22,7 @@ ingress:
   # ingressClassName: "nginx" or "traefik"
   className: "nginx"
   # Root path for doc server
-  rootPath: ""        
+  rootPath: ""
   # Host configuration
   host: ""
   # Custom annotations to add to the ingress

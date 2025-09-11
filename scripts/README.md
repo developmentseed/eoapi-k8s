@@ -41,12 +41,12 @@ export PGO_VERSION=5.7.4           # PostgreSQL operator version
 export TIMEOUT=15m                  # Deployment timeout
 
 # Override auto-detection (usually not needed)
-export NAMESPACE=my-eoapi           # Target namespace  
+export NAMESPACE=my-eoapi           # Target namespace
 export RELEASE_NAME=my-release      # Helm release name
 
 # Testing endpoints (auto-detected by test.sh)
 export STAC_ENDPOINT=http://...     # Override STAC API endpoint
-export RASTER_ENDPOINT=http://...   # Override Raster API endpoint  
+export RASTER_ENDPOINT=http://...   # Override Raster API endpoint
 export VECTOR_ENDPOINT=http://...   # Override Vector API endpoint
 ```
 

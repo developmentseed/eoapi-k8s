@@ -1,0 +1,56 @@
+# yamllint configuration for Kubernetes/Helm YAML files
+# See https://yamllint.readthedocs.io/en/stable/configuration.html
+
+extends: default
+
+rules:
+  # Allow longer lines for Kubernetes manifests (image names, URLs, etc.)
+  line-length:
+    max: 180
+    level: warning
+
+  # Allow multiple documents in single files (common in K8s)
+  document-start: disable
+
+  # Relax indentation rules - K8s manifests can have complex nesting
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
+    check-multi-line-strings: false
+
+  # Allow empty values (common in Helm templates)
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false
+
+  # Allow truthy values like "yes", "no", "on", "off" (common in K8s)
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
+
+  # Be more lenient with comments
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+
+  # Allow quoted strings (often necessary for Helm templating)
+  quoted-strings:
+    quote-type: any
+    required: false
+
+  # Allow brackets for flow sequences/mappings
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Allow braces for flow mappings
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+# Ignore certain files/patterns
+ignore: |
+  charts/*/charts/
+  charts/*/tmpcharts/
+  charts/*/templates/
+  .github/workflows/tests/

@@ -38,7 +38,7 @@ tests:
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"
-          
+
   - it: "vector configmap defaults"
     set:
       raster.enabled: false
@@ -55,7 +55,7 @@ tests:
       - equal:
           path: data.TIPG_CATALOG_TTL
           value: "300"
-          
+
   - it: "vector browser service"
     set:
       raster.enabled: false

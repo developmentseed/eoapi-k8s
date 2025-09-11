@@ -15,7 +15,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 ### Logging
 - `log_info "message"` - Info messages (green)
-- `log_warn "message"` - Warning messages (yellow) 
+- `log_warn "message"` - Warning messages (yellow)
 - `log_error "message"` - Error messages (red)
 - `log_debug "message"` - Debug messages (blue)
 
