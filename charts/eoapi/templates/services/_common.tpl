@@ -34,7 +34,7 @@ Helper function for common init containers to wait for pgstac jobs
 {{- if .Values.pgstacBootstrap.enabled }}
 initContainers:
 - name: wait-for-pgstac-jobs
-  image: bitnami/kubectl:latest
+  image: alpine/k8s:1.28.0
   env:
   {{- include "eoapi.commonEnvVars" (dict "service" "init" "root" .) | nindent 2 }}
   resources:

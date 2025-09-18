@@ -5,7 +5,7 @@ tests:
   - it: "pgstac settings should include notification function when enabled"
     set:
       pgstacBootstrap.enabled: true
-      notifications.sources.pgstac: true
+      eoapi-notifier.enabled: true
     documentIndex: 0
     asserts:
       - isKind:
@@ -26,7 +26,7 @@ tests:
   - it: "pgstac settings should include INSERT trigger when enabled"
     set:
       pgstacBootstrap.enabled: true
-      notifications.sources.pgstac: true
+      eoapi-notifier.enabled: true
     documentIndex: 0
     asserts:
       - isKind:
@@ -47,7 +47,7 @@ tests:
   - it: "pgstac settings should include UPDATE trigger when enabled"
     set:
       pgstacBootstrap.enabled: true
-      notifications.sources.pgstac: true
+      eoapi-notifier.enabled: true
     documentIndex: 0
     asserts:
       - isKind:
@@ -65,7 +65,7 @@ tests:
   - it: "pgstac settings should include DELETE trigger when enabled"
     set:
       pgstacBootstrap.enabled: true
-      notifications.sources.pgstac: true
+      eoapi-notifier.enabled: true
     documentIndex: 0
     asserts:
       - isKind:
@@ -83,7 +83,7 @@ tests:
   - it: "notification function should include operation and items in payload when enabled"
     set:
       pgstacBootstrap.enabled: true
-      notifications.sources.pgstac: true
+      eoapi-notifier.enabled: true
     documentIndex: 0
     asserts:
       - isKind:
@@ -121,7 +121,7 @@ tests:
   - it: "notification triggers should not be included when disabled"
     set:
       pgstacBootstrap.enabled: true
-      notifications.sources.pgstac: false
+      eoapi-notifier.enabled: false
     documentIndex: 0
     asserts:
       - isKind:
