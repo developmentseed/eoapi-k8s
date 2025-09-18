@@ -60,6 +60,15 @@ eoapi-notifier:
       - type: pgstac
         config:
           channel: pgstac_items_change
+          connection:
+            existingSecret:
+              name: "eoapi-test-pguser-eoapi"
+              keys:
+                username: "user"
+                password: "password"
+                host: "host"
+                port: "port"
+                database: "dbname"
     outputs:
       - type: cloudevents
         config:
@@ -77,14 +86,3 @@ eoapi-notifier:
     limits:
       cpu: "200m"
       memory: "128Mi"
-  secrets:
-    postgresql:
-      create: false
-      existingSecret:
-        name: "eoapi-test-pguser-eoapi"
-        keys:
-          username: "user"
-          password: "password"
-          host: "host"
-          port: "port"
-          database: "dbname"
