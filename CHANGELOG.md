@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Fixed renovate.json CHANGELOG.md edit [#300](https://github.com/developmentseed/eoapi-k8s/pull/300)
+- Excluded renovate.json from CHANGELOG.md edits [#301](https://github.com/developmentseed/eoapi-k8s/pull/301)
 
 ## [0.7.8] - 2025-09-10
 

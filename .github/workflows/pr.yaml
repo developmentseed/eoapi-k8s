@@ -14,7 +14,7 @@ jobs:
       - name: Check Changelog
         uses: dangoslen/changelog-enforcer@v3
         with:
-          skipLabels: "skip-changelog"
+          skipLabels: "skip-changelog, dependencies"
           expectedLatestVersion: ""
 
       - name: Validate PR title
