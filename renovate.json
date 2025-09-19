@@ -10,6 +10,10 @@
   "timezone": "UTC",
   "schedule": ["after 10pm every weekday", "before 5am every weekday"],
   "prConcurrentLimit": 10,
+  "allowedPostUpgradeCommands": [
+    "^sed .* CHANGELOG\\.md \\|\\| true$",
+    "^git add CHANGELOG\\.md$"
+  ],
   "prHourlyLimit": 5,
   "commitMessagePrefix": "",
   "commitMessageAction": "Updated",

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added code formatting and linting with pre-commit hooks [#283](https://github.com/developmentseed/eoapi-k8s/pull/283)
 - Adjusted Renovate Configuration to fit conventional commits [#295](https://github.com/developmentseed/eoapi-k8s/pull/295)
 
+### Changed
+
+- Fixed renovate.json CHANGELOG.md edit [#300](https://github.com/developmentseed/eoapi-k8s/pull/300)
+
 ## [0.7.8] - 2025-09-10
 
 ### Added
