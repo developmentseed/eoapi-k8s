@@ -1,0 +1,114 @@
+name: Update Changelog on Renovate Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-changelog:
+    name: Update changelog for merged Renovate PRs
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'renovate/') || github.event.pull_request.user.login == 'renovate[bot]')
+
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Extract dependency information
+        id: extract-info
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "PR Title: $PR_TITLE"
+
+          # Create a simple changelog entry from the PR title
+          CHANGELOG_ENTRY="- $PR_TITLE"
+
+          echo "Changelog entry: $CHANGELOG_ENTRY"
+          echo "changelog_entry=$CHANGELOG_ENTRY" >> "$GITHUB_OUTPUT"
+
+      - name: Update CHANGELOG.md
+        run: |
+          CHANGELOG_ENTRY="${{ steps.extract-info.outputs.changelog_entry }}"
+
+          # Check if CHANGELOG.md exists
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "CHANGELOG.md not found, skipping update"
+            exit 0
+          fi
+
+          # Check if there's an [Unreleased] section
+          if ! grep -q "## \[Unreleased\]" CHANGELOG.md; then
+            echo "No [Unreleased] section found in CHANGELOG.md, skipping update"
+            exit 0
+          fi
+
+          # Create a temporary script to handle the sed command
+          cat > update_changelog.sh << 'EOF'
+          #!/bin/bash
+          CHANGELOG_ENTRY="$1"
+
+          # Check if ### Changed exists in Unreleased section
+          if sed -n '/## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | grep -q "### Changed"; then
+            # Add after existing ### Changed line
+            sed -i '/^### Changed$/a\
+          '"$CHANGELOG_ENTRY"'' CHANGELOG.md
+          else
+            # Add ### Changed section after ### Added
+            sed -i '/^### Added$/,/^$/{
+              /^$/i\
+          \
+          ### Changed\
+          \
+          '"$CHANGELOG_ENTRY"'
+            }' CHANGELOG.md
+          fi
+          EOF
+
+          chmod +x update_changelog.sh
+          ./update_changelog.sh "$CHANGELOG_ENTRY"
+          rm update_changelog.sh
+
+          echo "Updated CHANGELOG.md with: $CHANGELOG_ENTRY"
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changes to CHANGELOG.md"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "CHANGELOG.md has been modified"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md for merged Renovate PR #${{ github.event.pull_request.number }}
+
+          ${{ steps.extract-info.outputs.changelog_entry }}
+
+          Automatically updated by GitHub Actions after merging Renovate PR."
+
+          git push origin main
+
+      - name: Summary
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          echo "✅ Successfully updated CHANGELOG.md with Renovate dependency update"
+          echo "Entry added: ${{ steps.extract-info.outputs.changelog_entry }}"
