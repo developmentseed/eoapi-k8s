@@ -17,21 +17,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.13'
+          node-version: '18'
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli ajv-formats
 
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
           version: ${{ env.HELM_VERSION }}
 
+      - name: Setup Helm dependencies
+        run: ./scripts/deploy.sh setup
+
       - name: Run linters
-        run: |
-          export PATH="$HOME/.cargo/bin:$PATH"
-          make lint
+        run: make lint
+
+      - name: Validate Helm values schema
+        run: make validate-schema
