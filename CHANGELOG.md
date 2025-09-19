@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Fixed Renovate postUpgradeTasks configuration by removing disallowed commands and adding GitHub Action for automatic changelog updates
 - Fixed renovate.json CHANGELOG.md edit [#300](https://github.com/developmentseed/eoapi-k8s/pull/300)
 
 ## [0.7.8] - 2025-09-10
