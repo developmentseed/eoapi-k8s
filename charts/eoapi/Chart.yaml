@@ -53,3 +53,7 @@ dependencies:
     version: 5.7.4
     repository: "https://devseed.com/eoapi-k8s/"
     condition: postgrescluster.enabled
+  - name: eoapi-notifier
+    version: 0.0.5
+    repository: "oci://ghcr.io/developmentseed/charts"
+    condition: eoapi-notifier.enabled

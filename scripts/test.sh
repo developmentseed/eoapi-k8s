@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck source=lib/common.sh
 
 # eoAPI Test Suite
 # Combined Helm and Integration Testing Script
@@ -535,6 +536,8 @@ setup_test_environment() {
     log_info "  Vector: $VECTOR_ENDPOINT"
 }
 
+
+
 # Run integration tests
 run_integration_tests() {
     log_info "=== Running Integration Tests ==="
@@ -602,6 +605,128 @@ run_integration_tests() {
     else
         log_info "Raster tests passed"
     fi
+
+    # Notification system tests
+    log_info "=== Running notification system tests ==="
+
+    # Deploy CloudEvents sink for notification tests
+    if kubectl apply -f "$SCRIPT_DIR/../charts/eoapi/samples/cloudevents-sink.yaml" >/dev/null 2>&1; then
+        log_debug "CloudEvents sink deployed for notification tests"
+        # Wait for the service to be ready
+        kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n "$NAMESPACE" --timeout=60s >/dev/null 2>&1 || true
+    else
+        log_debug "CloudEvents sink already exists or failed to deploy"
+    fi
+
+    # Get database credentials for end-to-end tests
+    local db_name db_user db_password port_forward_pid
+    if db_name=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.dbname}' 2>/dev/null | base64 -d 2>/dev/null) && \
+       db_user=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.user}' 2>/dev/null | base64 -d 2>/dev/null) && \
+       db_password=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null); then
+
+        log_debug "Setting up database connection for end-to-end notification tests..."
+        kubectl port-forward -n "$NAMESPACE" "svc/${RELEASE_NAME}-pgbouncer" 5433:5432 >/dev/null 2>&1 &
+        port_forward_pid=$!
+        sleep 3
+
+        # Run tests with database connection
+        local notification_test_env
+        notification_test_env=$(cat << EOF
+PGHOST=localhost
+PGPORT=5433
+PGDATABASE=$db_name
+PGUSER=$db_user
+PGPASSWORD=$db_password
+NAMESPACE=$NAMESPACE
+RELEASE_NAME=$RELEASE_NAME
+EOF
+        )
+
+        if env "$notification_test_env" $python_cmd -m pytest "$test_dir/test_notifications.py" -v; then
+            log_info "Notification system tests passed"
+        else
+            log_warn "Notification system tests failed"
+            failed_tests+=("notifications")
+
+            # Show eoapi-notifier logs on failure
+            log_info "=== eoapi-notifier service logs ==="
+            kubectl logs -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE" --tail=50 2>/dev/null || \
+            log_warn "Could not get eoapi-notifier service logs"
+
+            # Show CloudEvents sink logs on failure
+            log_info "=== CloudEvents sink logs ==="
+            kubectl logs -l serving.knative.dev/service -n "$NAMESPACE" --tail=50 2>/dev/null || \
+            log_warn "Could not get Knative CloudEvents sink logs"
+        fi
+
+        # Clean up port forwarding
+        if [ -n "$port_forward_pid" ]; then
+            kill "$port_forward_pid" 2>/dev/null || true
+            wait "$port_forward_pid" 2>/dev/null || true
+        fi
+    else
+        log_warn "Could not retrieve database credentials, running basic notification tests only"
+        if ! $python_cmd -m pytest "$test_dir/test_notifications.py" -v -k "not end_to_end"; then
+            log_warn "Basic notification system tests failed"
+            failed_tests+=("notifications")
+        else
+            log_info "Basic notification system tests passed"
+        fi
+    fi
+
+    # PgSTAC notification tests
+    log_info "=== Running PgSTAC notification tests ==="
+
+    # Get database credentials from secret
+    local db_name db_user db_password
+    if db_name=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.dbname}' 2>/dev/null | base64 -d 2>/dev/null) && \
+       db_user=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.user}' 2>/dev/null | base64 -d 2>/dev/null) && \
+       db_password=$(kubectl get secret -n "$NAMESPACE" "${RELEASE_NAME}-pguser-eoapi" -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null); then
+
+        log_debug "Database credentials retrieved for pgstac notifications test"
+
+        # Set up port forwarding to database
+        log_debug "Setting up port forwarding to database..."
+        kubectl port-forward -n "$NAMESPACE" "svc/${RELEASE_NAME}-pgbouncer" 5433:5432 >/dev/null 2>&1 &
+        local port_forward_pid=$!
+
+        # Give port forwarding time to establish
+        sleep 3
+
+        # Run the test with proper environment variables
+        export PGHOST=localhost
+        export PGPORT=5433
+        export PGDATABASE=$db_name
+        export PGUSER=$db_user
+        export PGPASSWORD=$db_password
+
+        if $python_cmd -m pytest "$test_dir/test_pgstac_notifications.py" -v; then
+            log_info "PgSTAC notification tests passed"
+        else
+            log_warn "PgSTAC notification tests failed"
+            failed_tests+=("pgstac-notifications")
+        fi
+
+        # Also run end-to-end notification test with same DB connection
+        log_info "Running end-to-end notification flow test..."
+        if NAMESPACE="$NAMESPACE" RELEASE_NAME="$RELEASE_NAME" $python_cmd -m pytest "$test_dir/test_notifications.py::test_end_to_end_notification_flow" -v; then
+            log_info "End-to-end notification test passed"
+        else
+            log_warn "End-to-end notification test failed"
+            failed_tests+=("e2e-notifications")
+        fi
+
+        # Clean up port forwarding
+        if [ -n "$port_forward_pid" ]; then
+            kill "$port_forward_pid" 2>/dev/null || true
+            wait "$port_forward_pid" 2>/dev/null || true
+        fi
+
+    else
+        log_warn "Could not retrieve database credentials for PgSTAC notification tests"
+        failed_tests+=("pgstac-notifications")
+    fi
+
 
     # Report results
     if [ ${#failed_tests[@]} -eq 0 ]; then

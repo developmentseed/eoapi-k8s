@@ -1,0 +1,150 @@
+suite: pgstac notification triggers tests
+templates:
+  - templates/pgstacbootstrap/configmap.yaml
+tests:
+  - it: "pgstac settings should include notification function when enabled"
+    set:
+      pgstacBootstrap.enabled: true
+      eoapi-notifier.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-settings-config
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: CREATE OR REPLACE FUNCTION notify_items_change_func\(\)
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: RETURNS TRIGGER AS \$\$
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: PERFORM pg_notify\('pgstac_items_change'::text
+
+  - it: "pgstac settings should include INSERT trigger when enabled"
+    set:
+      pgstacBootstrap.enabled: true
+      eoapi-notifier.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: CREATE OR REPLACE TRIGGER notify_items_change_insert
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: AFTER INSERT ON pgstac\.items
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: REFERENCING NEW TABLE AS data
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: FOR EACH STATEMENT EXECUTE FUNCTION notify_items_change_func\(\)
+
+  - it: "pgstac settings should include UPDATE trigger when enabled"
+    set:
+      pgstacBootstrap.enabled: true
+      eoapi-notifier.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: CREATE OR REPLACE TRIGGER notify_items_change_update
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: AFTER UPDATE ON pgstac\.items
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: REFERENCING NEW TABLE AS data
+
+  - it: "pgstac settings should include DELETE trigger when enabled"
+    set:
+      pgstacBootstrap.enabled: true
+      eoapi-notifier.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: CREATE OR REPLACE TRIGGER notify_items_change_delete
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: AFTER DELETE ON pgstac\.items
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: REFERENCING OLD TABLE AS data
+
+  - it: "notification function should include operation and items in payload when enabled"
+    set:
+      pgstacBootstrap.enabled: true
+      eoapi-notifier.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: json_build_object\(
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "'operation', TG_OP"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "'items', jsonb_agg\\("
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "'collection', data\\.collection"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "'id', data\\.id"
+
+  - it: "notification triggers should not be included by default (disabled by default)"
+    set:
+      pgstacBootstrap.enabled: true
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-settings-config
+      - notMatchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: CREATE OR REPLACE FUNCTION notify_items_change_func\(\)
+
+  - it: "notification triggers should not be included when disabled"
+    set:
+      pgstacBootstrap.enabled: true
+      eoapi-notifier.enabled: false
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-settings-config
+      - notMatchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: CREATE OR REPLACE FUNCTION notify_items_change_func\(\)
+      - notMatchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: notify_items_change_insert
+      - notMatchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: notify_items_change_update
+      - notMatchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: notify_items_change_delete
+
+  - it: "pgstac settings configmap should not be created when pgstacBootstrap is disabled"
+    set:
+      pgstacBootstrap.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1

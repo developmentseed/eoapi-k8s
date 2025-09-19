@@ -488,3 +488,30 @@ docServer:
 # helm upgrade --set previousVersion=$PREVIOUS_VERSION
 # or in the CI/CD pipeline
 previousVersion: ""
+
+######################
+# NOTIFICATIONS
+######################
+eoapi-notifier:
+  enabled: false
+  config:
+    logLevel: INFO
+    sources:
+      - type: postgres
+        config:
+          channel: pgstac_items_change
+    outputs:
+      - type: cloudevents
+        config:
+          source: /eoapi/pgstac
+          event_type: org.eoapi.stac.item
+          destination:
+            ref:
+              apiVersion: serving.knative.dev/v1
+              kind: Service
+              name: eoapi-cloudevents-sink
+  secrets:
+    postgresql:
+      create: false
+  env:
+    POSTGRES_CHANNEL: "pgstac_items_change"

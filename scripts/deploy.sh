@@ -147,6 +147,7 @@ deploy_eoapi() {
     fi
 
     # Set git SHA if available
+    GITHUB_SHA=${GITHUB_SHA:-}
     if [ -n "$GITHUB_SHA" ]; then
         HELM_CMD="$HELM_CMD --set gitSha=$GITHUB_SHA"
     elif [ -n "$(git rev-parse HEAD 2>/dev/null)" ]; then

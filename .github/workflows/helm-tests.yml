@@ -112,6 +112,11 @@ jobs:
           echo "===== Related Kubernetes Events ====="
           kubectl get events | grep -E "pgstac|initdb" || echo "No relevant events found"
 
+          # Check notification system status
+          echo "===== Notification System Status ====="
+          kubectl get deployments -l app.kubernetes.io/name=eoapi-notifier -o wide || echo "No eoapi-notifier deployment found"
+          kubectl get ksvc -l app.kubernetes.io/component=cloudevents-sink -o wide || echo "No Knative CloudEvents sink found"
+
           exit 1
 
       - name: Run integration tests
@@ -129,6 +134,19 @@ jobs:
           kubectl get jobs -o wide
           kubectl get services -o wide
           kubectl get ingress
+
+          # Check notification system final status
+          echo "=== Notification System Final Status ==="
+          kubectl get deployments -l app.kubernetes.io/name=eoapi-notifier -o wide || echo "No eoapi-notifier deployment"
+          kubectl get pods -l app.kubernetes.io/name=eoapi-notifier -o wide || echo "No eoapi-notifier pods"
+          kubectl get ksvc -l app.kubernetes.io/component=cloudevents-sink -o wide || echo "No Knative CloudEvents sink"
+          kubectl get pods -l serving.knative.dev/service -o wide || echo "No Knative CloudEvents sink pods"
+
+          # Show notification logs if they exist
+          echo "=== eoapi-notifier Logs ==="
+          kubectl logs -l app.kubernetes.io/name=eoapi-notifier --tail=20 || echo "No eoapi-notifier logs"
+          echo "=== Knative CloudEvents Sink Logs ==="
+          kubectl logs -l serving.knative.dev/service --tail=20 || echo "No Knative CloudEvents sink logs"
 
 
       - name: Cleanup
