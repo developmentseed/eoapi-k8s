@@ -343,9 +343,14 @@
         }
       }
     },
-    "notifications": {
+    "eoapi-notifier": {
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable eoAPI notifier for database notifications to CloudEvents"
+        },
         "sources": {
           "type": "object",
           "properties": {
@@ -355,6 +360,51 @@
               "description": "Enable PostgreSQL notification triggers for STAC item changes"
             }
           }
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "logLevel": {
+              "type": "string",
+              "enum": ["DEBUG", "INFO", "WARNING", "ERROR"],
+              "default": "INFO",
+              "description": "Log level for eoapi-notifier"
+            },
+            "sources": {
+              "type": "array",
+              "description": "Notification source configurations"
+            },
+            "outputs": {
+              "type": "array",
+              "description": "Notification output configurations"
+            }
+          }
+        },
+        "secrets": {
+          "type": "object",
+          "properties": {
+            "postgresql": {
+              "type": "object",
+              "properties": {
+                "create": {
+                  "type": "boolean",
+                  "description": "Create PostgreSQL secret"
+                }
+              }
+            }
+          }
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables for eoapi-notifier"
+        },
+        "envFrom": {
+          "type": "array",
+          "description": "Environment variables from references"
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requirements for eoapi-notifier"
         }
       }
     }
