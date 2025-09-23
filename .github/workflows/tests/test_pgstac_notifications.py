@@ -9,22 +9,6 @@ import subprocess
 from datetime import datetime, timezone
 
 
-@pytest.fixture(scope='session')
-def db_connection():
-    """Create database connection for testing."""
-    # Use the same environment variables as the pgstac bootstrap
-    connection_params = {
-        'host': os.getenv('PGHOST', 'localhost'),
-        'port': int(os.getenv('PGPORT', '5432')),
-        'database': os.getenv('PGDATABASE', 'postgres'),
-        'user': os.getenv('PGUSER', 'postgres'),
-        'password': os.getenv('PGPASSWORD', 'password')
-    }
-
-    conn = psycopg2.connect(**connection_params)
-    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-    yield conn
-    conn.close()
 
 
 @pytest.fixture(scope='session')

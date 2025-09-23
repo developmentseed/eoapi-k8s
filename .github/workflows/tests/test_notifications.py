@@ -10,6 +10,8 @@ import pytest
 from datetime import datetime
 
 
+
+
 def test_eoapi_notifier_deployment():
     """Test that eoapi-notifier deployment is running."""
     # Check if eoapi-notifier deployment exists and is ready
@@ -98,23 +100,9 @@ def test_eoapi_notifier_logs_show_connection():
     assert "Authentication failed" not in logs, "Should not have auth errors"
 
 
-def test_database_notification_triggers_exist():
+def test_database_notification_triggers_exist(db_connection):
     """Test that pgstac notification triggers are installed."""
-    # Port forward to database if not already done
-    import psycopg2
-    import os
-
-    try:
-        # Try to connect using environment variables set by the test runner
-        conn = psycopg2.connect(
-            host=os.getenv('PGHOST', 'localhost'),
-            port=int(os.getenv('PGPORT', '5432')),
-            database=os.getenv('PGDATABASE', 'eoapi'),
-            user=os.getenv('PGUSER', 'eoapi'),
-            password=os.getenv('PGPASSWORD', '')
-        )
-
-        with conn.cursor() as cur:
+    with db_connection.cursor() as cur:
             # Check if the notification function exists
             cur.execute("""
                 SELECT EXISTS(
@@ -139,13 +127,10 @@ def test_database_notification_triggers_exist():
             trigger_count = result[0] if result else 0
             assert trigger_count >= 3, f"Should have at least 3 triggers (INSERT, UPDATE, DELETE), found {trigger_count}"
 
-        conn.close()
-
-    except (psycopg2.Error, ConnectionError, OSError):
-        pytest.skip("Cannot connect to database for trigger verification")
 
 
-def test_end_to_end_notification_flow():
+
+def test_end_to_end_notification_flow(db_connection):
     """Test complete flow: database → eoapi-notifier → Knative CloudEvents sink."""
 
     # Skip if notifications not enabled
@@ -160,23 +145,10 @@ def test_end_to_end_notification_flow():
 
     sink_pod = result.stdout.strip()
 
-    # Connect to database using test environment
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv('PGHOST', 'localhost'),
-            port=int(os.getenv('PGPORT', '5432')),
-            database=os.getenv('PGDATABASE', 'eoapi'),
-            user=os.getenv('PGUSER', 'eoapi'),
-            password=os.getenv('PGPASSWORD', '')
-        )
-        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-    except psycopg2.Error as e:
-        pytest.skip(f"Cannot connect to database: {e}")
-
     # Insert test item and check for CloudEvent
     test_item_id = f"e2e-test-{int(time.time())}"
     try:
-        with conn.cursor() as cursor:
+        with db_connection.cursor() as cursor:
             cursor.execute("SELECT pgstac.create_item(%s);", (json.dumps({
                 "id": test_item_id,
                 "type": "Feature",
@@ -201,9 +173,8 @@ def test_end_to_end_notification_flow():
 
     finally:
         # Cleanup
-        with conn.cursor() as cursor:
+        with db_connection.cursor() as cursor:
             cursor.execute("SELECT pgstac.delete_item(%s);", (test_item_id,))
-        conn.close()
 
 
 def test_k_sink_injection():
