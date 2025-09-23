@@ -48,3 +48,41 @@ vector:
     envVars:
       # needs to on so we can call /refresh for integration tests
       TIPG_DEBUG: "True"
+
+######################
+# NOTIFICATIONS
+######################
+eoapi-notifier:
+  enabled: true
+  config:
+    logLevel: DEBUG
+    sources:
+      - type: pgstac
+        config:
+          channel: pgstac_items_change
+          connection:
+            existingSecret:
+              name: "eoapi-test-pguser-eoapi"
+              keys:
+                username: "user"
+                password: "password"
+                host: "host"
+                port: "port"
+                database: "dbname"
+    outputs:
+      - type: cloudevents
+        config:
+          source: /eoapi/pgstac
+          event_type: org.eoapi.stac.item
+          destination:
+            ref:
+              apiVersion: serving.knative.dev/v1
+              kind: Service
+              name: eoapi-cloudevents-sink
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"

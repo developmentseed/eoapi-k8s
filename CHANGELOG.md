@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enforcement of `CHANGELOG.md` entries for PRs and Conventional Commits for PR titles [#288](https://github.com/developmentseed/eoapi-k8s/pull/288)
 - Added code formatting and linting with pre-commit hooks [#283](https://github.com/developmentseed/eoapi-k8s/pull/283)
 - Added values.schema.json validation [#296](https://github.com/developmentseed/eoapi-k8s/pull/296)
+- Adjusted Renovate Configuration to fit conventional commits [#295](https://github.com/developmentseed/eoapi-k8s/pull/295)
+- Notification triggers in database [#289](https://github.com/developmentseed/eoapi-k8s/pull/289)
+
+### Changed
+
+- Excluded renovate.json from CHANGELOG.md edits [#301](https://github.com/developmentseed/eoapi-k8s/pull/301)
 
 ## [0.7.8] - 2025-09-10
 
