@@ -24,6 +24,49 @@ entries:
           email: eoapi@developmentseed.org
     apiVersion: v2
     appVersion: 6.0.0
+    created: "2025-09-26T15:02:08.894317161Z"
+    dependencies:
+    - condition: postgrescluster.enabled
+      name: postgrescluster
+      repository: https://devseed.com/eoapi-k8s/
+      version: 5.7.4
+    - condition: eoapi-notifier.enabled
+      name: eoapi-notifier
+      repository: oci://ghcr.io/developmentseed/charts
+      version: 0.0.5
+    description: Create a full Earth Observation API with Metadata, Raster and Vector
+      services
+    digest: 31f064c08166b43f8509ee30b1738eb45a1691bba0907c424cc3dc38e6565e65
+    icon: https://eoapi.dev/img/eoAPI.png
+    kubeVersion: '>=1.23.0-0'
+    name: eoapi
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-0.7.9/eoapi-0.7.9.tgz
+    version: 0.7.9
+  - annotations:
+      artifacthub.io/changes: |
+        - Remove pathType and pathSuffix configurations
+        - Add upgrade job for pre-0.7.0 migrations
+        - Add separate browser ingress configuration
+        - Support custom PostgreSQL cluster naming
+      artifacthub.io/keywords: |
+        - earth observation
+        - geospatial
+        - kubernetes
+        - stac
+        - raster
+        - vector
+      artifacthub.io/links: |
+        - name: GitHub Repository
+          url: https://github.com/developmentseed/eoapi-k8s
+        - name: Documentation
+          url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+      artifacthub.io/maintainers: |
+        - name: DevelopmentSeed
+          email: eoapi@developmentseed.org
+    apiVersion: v2
+    appVersion: 6.0.0
     created: "2025-09-10T15:06:03.38063047Z"
     dependencies:
     - condition: postgrescluster.enabled
@@ -934,4 +977,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2025-09-10T15:06:03.552035726Z"
+generated: "2025-09-26T15:02:09.141720871Z"
