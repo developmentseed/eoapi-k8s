@@ -40,8 +40,10 @@ spec:
           {{- if (and (.Values.ingress.className) (or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik"))) }}
           - "--proxy-headers"
           - "--forwarded-allow-ips=*"
-          {{- if .Values.stac.overrideRootPath}}
+          {{- if hasKey .Values.stac "overrideRootPath" }}
+          {{- if ne .Values.stac.overrideRootPath "" }}
           - "--root-path={{ .Values.stac.overrideRootPath }}"
+          {{- end }}
           {{- else }}
           - "--root-path={{ .Values.stac.ingress.path }}"
           {{- end }}
@@ -55,8 +57,12 @@ spec:
           timeoutSeconds: 1
         readinessProbe:
           httpGet:
-            {{- if .Values.stac.overrideRootPath}}
+            {{- if hasKey .Values.stac "overrideRootPath" }}
+            {{- if ne .Values.stac.overrideRootPath "" }}
             path: {{ .Values.stac.overrideRootPath }}/_mgmt/ping
+            {{- else }}
+            path: /_mgmt/ping
+            {{- end }}
             {{- else}}
             path: /_mgmt/ping
             {{- end}}
@@ -66,8 +72,12 @@ spec:
           successThreshold: 1
         startupProbe:
           httpGet:
-            {{- if .Values.stac.overrideRootPath}}
+            {{- if hasKey .Values.stac "overrideRootPath" }}
+            {{- if ne .Values.stac.overrideRootPath "" }}
             path: {{ .Values.stac.overrideRootPath }}/_mgmt/ping
+            {{- else }}
+            path: /_mgmt/ping
+            {{- end }}
             {{- else}}
             path: /_mgmt/ping
             {{- end}}
