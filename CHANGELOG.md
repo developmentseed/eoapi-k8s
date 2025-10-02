@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Excluded renovate.json from CHANGELOG.md edits [#301](https://github.com/developmentseed/eoapi-k8s/pull/301)
 
+### Fixed
+
+- Pin `metrics-server` to `bitnamilegacy` registry due to https://github.com/bitnami/charts/issues/35164 [#309](https://github.com/developmentseed/eoapi-k8s/pull/309)
+
 ## [0.7.8] - 2025-09-10
 
 ### Added
