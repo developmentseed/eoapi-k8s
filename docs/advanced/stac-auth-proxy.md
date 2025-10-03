@@ -1,4 +1,4 @@
-# STAC Auth Proxy Integration with EOAPI-K8S
+# STAC Auth Proxy Integration with eoAPI-K8S
 
 ## Solution Overview
 
@@ -25,7 +25,7 @@ raster:
 
 ## Deployment Guide
 
-### 1. Configure EOAPI-K8S
+### 1. Configure eoAPI-K8S
 
 ```yaml
 # values.yaml for eoapi-k8s
@@ -102,9 +102,9 @@ Expected behavior:
 
 ### Understanding usage of overrideRootPath with stac-auth-proxy
 
-When deploying the EOAPI-K8S with the STAC service behind a stac-auth-proxy, you may want to configure the `stac.overrideRootPath` parameter to control how the FastAPI application handles root path prefixes. This is particularly useful when the auth proxy is responsible for managing the `/stac` path prefix.
+When deploying the eoAPI-K8S with the STAC service behind a stac-auth-proxy, you may want to configure the `stac.overrideRootPath` parameter to control how the FastAPI application handles root path prefixes. This is particularly useful when the auth proxy is responsible for managing the `/stac` path prefix.
 
-When deploying stac-auth-proxy in front of the EOAPI service, you may need to configure the root path behavior to avoid URL conflicts. The `stac.overrideRootPath` parameter allows you to control how the STAC FastAPI application handles root path prefixes.
+When deploying stac-auth-proxy in front of the eoAPI service, you may need to configure the root path behavior to avoid URL conflicts. The `stac.overrideRootPath` parameter allows you to control how the STAC FastAPI application handles root path prefixes.
 
 ### Setting overrideRootPath to Empty String
 
