@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.12] - 2025-10-17
+
 - Bumped eoapi-notifier dependency version to 0.0.7
 
 ## [0.7.11] - 2025-10-17
