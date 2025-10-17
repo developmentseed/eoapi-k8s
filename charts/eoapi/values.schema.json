@@ -352,14 +352,38 @@
           "description": "Enable eoAPI notifier for database notifications to CloudEvents"
         },
         "sources": {
-          "type": "object",
-          "properties": {
-            "pgstac": {
-              "type": "boolean",
-              "default": false,
-              "description": "Enable PostgreSQL notification triggers for STAC item changes"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Source type (e.g., pgstac)"
+              },
+              "config": {
+                "type": "object",
+                "description": "Source-specific configuration"
+              }
             }
-          }
+          },
+          "description": "Notification source configurations"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Output type (e.g., cloudevents, mqtt)"
+              },
+              "config": {
+                "type": "object",
+                "description": "Output-specific configuration"
+              }
+            }
+          },
+          "description": "Notification output configurations"
         },
         "config": {
           "type": "object",
@@ -369,14 +393,6 @@
               "enum": ["DEBUG", "INFO", "WARNING", "ERROR"],
               "default": "INFO",
               "description": "Log level for eoapi-notifier"
-            },
-            "sources": {
-              "type": "array",
-              "description": "Notification source configurations"
-            },
-            "outputs": {
-              "type": "array",
-              "description": "Notification output configurations"
             }
           }
         },

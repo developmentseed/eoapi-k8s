@@ -482,36 +482,49 @@ browser:
 docServer:
   enabled: true
 
+######################
+# NOTIFICATIONS
+######################
+eoapi-notifier:
+  enabled: false
+  sources:
+    - type: pgstac
+      config:
+        # Database connection from existing Kubernetes secret
+        connection:
+          existingSecret:
+            name: ""
+            keys:
+              username: "user"
+              password: "password"
+              host: "host"
+              port: "port"
+              database: "dbname"
+
+  # Outputs: Define where notifications are sent
+  outputs:
+    - type: mqtt
+      config:
+        broker_host: mqtt-broker
+        broker_port: 1883
+        # Optional: username, password, use_tls, topic, qos
+
+    - type: cloudevents
+      config:
+        source: /eoapi/pgstac
+        event_type: org.eoapi.stac.item
+        # For KNative SinkBinding:
+        destination:
+          ref:
+            apiVersion: messaging.knative.dev/v1
+            kind: Broker
+            name: my-channel-1
+            namespace: serverless
+        # For HTTP endpoints, use: endpoint: https://webhook.example.com
+
 # Version being upgraded from, used for migration purposes
 # Dont set the value in the values.yaml file
 # prefer to set it in the command line
 # helm upgrade --set previousVersion=$PREVIOUS_VERSION
 # or in the CI/CD pipeline
 previousVersion: ""
-
-######################
-# NOTIFICATIONS
-######################
-eoapi-notifier:
-  enabled: false
-  config:
-    logLevel: INFO
-    sources:
-      - type: postgres
-        config:
-          channel: pgstac_items_change
-    outputs:
-      - type: cloudevents
-        config:
-          source: /eoapi/pgstac
-          event_type: org.eoapi.stac.item
-          destination:
-            ref:
-              apiVersion: serving.knative.dev/v1
-              kind: Service
-              name: eoapi-cloudevents-sink
-  secrets:
-    postgresql:
-      create: false
-  env:
-    POSTGRES_CHANNEL: "pgstac_items_change"
