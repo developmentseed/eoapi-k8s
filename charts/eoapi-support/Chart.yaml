@@ -29,5 +29,5 @@ dependencies:
   #
   - name: grafana
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.grafana` values
-    version: 10.0.0
+    version: 10.1.2
     repository: https://grafana.github.io/helm-charts
