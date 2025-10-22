@@ -14,7 +14,7 @@ dependencies:
   #
   - name: prometheus
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus` values
-    version: 27.39.0
+    version: 27.41.2
     repository: https://prometheus-community.github.io/helm-charts
 
   # used to create custom metrics to autoscale on
