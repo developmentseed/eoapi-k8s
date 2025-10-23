@@ -164,8 +164,67 @@ deploy_eoapi() {
     log_info "Verifying deployment..."
     kubectl get pods -n "$NAMESPACE" -o wide
 
+    # Wait for pgstac jobs to complete first
+    if kubectl get job -n "$NAMESPACE" -l "app=$RELEASE_NAME-pgstac-migrate" >/dev/null 2>&1; then
+        log_info "Waiting for pgstac-migrate job to complete..."
+        if ! kubectl wait --for=condition=complete job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" --timeout=600s; then
+            log_error "pgstac-migrate job failed to complete"
+            kubectl describe job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE"
+            kubectl logs -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" --tail=50 || true
+            exit 1
+        fi
+    fi
+
+    if kubectl get job -n "$NAMESPACE" -l "app=$RELEASE_NAME-pgstac-load-samples" >/dev/null 2>&1; then
+        log_info "Waiting for pgstac-load-samples job to complete..."
+        if ! kubectl wait --for=condition=complete job -l "app=$RELEASE_NAME-pgstac-load-samples" -n "$NAMESPACE" --timeout=300s; then
+            log_error "pgstac-load-samples job failed to complete"
+            kubectl describe job -l "app=$RELEASE_NAME-pgstac-load-samples" -n "$NAMESPACE"
+            kubectl logs -l "app=$RELEASE_NAME-pgstac-load-samples" -n "$NAMESPACE" --tail=50 || true
+            exit 1
+        fi
+    fi
+
+    # Wait for service pods to be ready
+    log_info "Waiting for eoAPI services to be ready..."
+    local services=("stac" "raster" "vector")
+    local failed_services=()
+
+    for service in "${services[@]}"; do
+        # Try different label patterns to find pods
+        local found=false
+        local patterns=(
+            "app.kubernetes.io/instance=$RELEASE_NAME,app.kubernetes.io/name=$service"
+            "app=$RELEASE_NAME-$service"
+        )
+
+        for pattern in "${patterns[@]}"; do
+            if kubectl get pods -n "$NAMESPACE" -l "$pattern" >/dev/null 2>&1; then
+                log_info "Waiting for $service service pods to be ready..."
+                if kubectl wait --for=condition=Ready pod -l "$pattern" -n "$NAMESPACE" --timeout=300s; then
+                    found=true
+                    break
+                else
+                    log_warn "$service service pods found but failed readiness check"
+                    kubectl describe pods -n "$NAMESPACE" -l "$pattern" || true
+                fi
+            fi
+        done
+
+        if [ "$found" = false ]; then
+            failed_services+=("$service")
+        fi
+    done
+
+    if [ ${#failed_services[@]} -ne 0 ]; then
+        log_error "Failed to start services: ${failed_services[*]}"
+        kubectl get pods -n "$NAMESPACE" -o wide
+        kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -20 || true
+        exit 1
+    fi
+
     log_info "eoAPI deployment completed successfully!"
-    log_info "Services available in namespace: $NAMESPACE"
+    log_info "All services are ready in namespace: $NAMESPACE"
 
     if [ "$CI_MODE" != true ]; then
         log_info "To run integration tests: make integration"
