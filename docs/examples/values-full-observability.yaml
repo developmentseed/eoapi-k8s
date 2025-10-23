@@ -1,0 +1,303 @@
+# Example values for eoAPI with full observability stack
+# This configuration includes both core monitoring (in main chart) and observability tools
+# Deploy main chart with these values, then deploy eoapi-observability chart separately
+
+# Git SHA for deployments (set via CI/CD or command line)
+gitSha: "latest"
+
+######################
+# INGRESS
+######################
+ingress:
+  enabled: true
+  className: "nginx"
+  # IMPORTANT: Set a proper hostname for metrics collection
+  host: "eoapi.example.com"  # Replace with your domain
+  tls:
+    enabled: true
+    secretName: eoapi-tls
+
+######################
+# DATABASE
+######################
+postgrescluster:
+  enabled: true
+  monitoring: true  # Enable PostgreSQL monitoring
+  instances:
+  - name: eoapi
+    replicas: 2  # HA setup for production
+    dataVolumeClaimSpec:
+      accessModes:
+      - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "100Gi"
+          cpu: "2048m"
+          memory: "8192Mi"
+
+######################
+# COMPREHENSIVE MONITORING
+######################
+monitoring:
+  # Essential components
+  metricsServer:
+    enabled: true
+    apiService:
+      create: true
+
+  # Full Prometheus setup with all collectors
+  prometheus:
+    enabled: true
+    # Keep alertmanager disabled - we'll use Grafana alerting instead
+    alertmanager:
+      enabled: false
+    # Enable pushgateway for advanced metrics
+    prometheus-pushgateway:
+      enabled: true
+    # Full metrics collection
+    kube-state-metrics:
+      enabled: true
+    prometheus-node-exporter:
+      enabled: true
+      # Production-ready resource allocation
+      resources:
+        limits:
+          cpu: 50m
+          memory: 64Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+    # Prometheus server configuration
+    server:
+      # Expose Prometheus for external access (optional)
+      service:
+        type: LoadBalancer
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+      # Persistent storage for metrics
+      persistentVolume:
+        enabled: true
+        size: 50Gi
+        storageClass: "gp3"  # Adjust for your cloud provider
+      # Retention and performance settings
+      retention: "30d"  # Keep 30 days of metrics
+      resources:
+        limits:
+          cpu: "2000m"
+          memory: "4096Mi"
+        requests:
+          cpu: "1000m"
+          memory: "2048Mi"
+
+  # Advanced prometheus-adapter configuration
+  prometheusAdapter:
+    enabled: true
+    # Enhanced resource allocation
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+######################
+# SERVICES WITH ADVANCED AUTOSCALING
+######################
+
+stac:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 3  # Higher minimum for HA
+    maxReplicas: 30
+    type: "both"    # Scale on both CPU and request rate
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 600  # 10 minutes
+        policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 300
+      scaleUp:
+        stabilizationWindowSeconds: 60
+        policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    targets:
+      cpu: 70
+      requestRate: 40000m
+  settings:
+    resources:
+      limits:
+        cpu: "1500m"
+        memory: "3072Mi"
+      requests:
+        cpu: "750m"
+        memory: "1536Mi"
+
+raster:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 25
+    type: "both"
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 900  # 15 minutes - raster workloads are bursty
+      scaleUp:
+        stabilizationWindowSeconds: 120  # 2 minutes
+    targets:
+      cpu: 60  # Lower CPU target due to intensive processing
+      requestRate: 20000m
+  settings:
+    resources:
+      limits:
+        cpu: "2048m"
+        memory: "8192Mi"
+      requests:
+        cpu: "1024m"
+        memory: "4096Mi"
+    envVars:
+      GDAL_CACHEMAX: "1024"  # 1GB cache
+      WEB_CONCURRENCY: "4"   # Conservative for memory usage
+      GDAL_HTTP_MAX_RETRY: "3"
+      GDAL_HTTP_RETRY_DELAY: "1"
+
+vector:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 15
+    type: "both"
+    targets:
+      cpu: 75
+      requestRate: 60000m
+  settings:
+    resources:
+      limits:
+        cpu: "1200m"
+        memory: "2560Mi"
+      requests:
+        cpu: "600m"
+        memory: "1280Mi"
+
+multidim:
+  enabled: true  # Enable for comprehensive setup
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    type: "cpu"  # CPU-based scaling for multidim workloads
+    targets:
+      cpu: 50  # Very conservative due to resource intensity
+  settings:
+    resources:
+      limits:
+        cpu: "4096m"
+        memory: "16384Mi"  # 16GB for large multidim datasets
+      requests:
+        cpu: "2048m"
+        memory: "8192Mi"
+
+######################
+# STAC BROWSER
+######################
+browser:
+  enabled: true
+  replicaCount: 3  # HA setup
+
+######################
+# PGSTAC BOOTSTRAP
+######################
+pgstacBootstrap:
+  enabled: true
+  settings:
+    loadSamples: false  # No samples in production
+  waitConfig:
+    timeout: 1800  # 30 minutes timeout for large migrations
+  resources:
+    requests:
+      cpu: "1024m"
+      memory: "2048Mi"
+    limits:
+      cpu: "2048m"
+      memory: "4096Mi"
+
+######################
+# INTEGRATED OBSERVABILITY
+######################
+# Grafana dashboards integrated with main chart (replaces separate eoapi-observability chart)
+observability:
+  grafana:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 10Gi
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+    resources:
+      limits:
+        cpu: 100m
+        memory: 200Mi
+      requests:
+        cpu: 50m
+        memory: 100Mi
+
+######################
+# ADDITIONAL PRODUCTION SETTINGS
+######################
+
+# Service account with monitoring permissions
+serviceAccount:
+  create: true
+  annotations:
+  # Add cloud provider annotations if needed
+  # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/eoapi-monitoring-role
+
+######################
+# DEPLOYMENT NOTES
+######################
+#
+# This configuration provides comprehensive observability including:
+# - Core metrics collection and autoscaling (included in main chart)
+# - Persistent Prometheus storage with 30-day retention
+# - Advanced HPA policies with both CPU and request-rate scaling
+# - Production-ready resource allocations
+# - High availability setup with multiple replicas
+#
+# To deploy the full stack:
+#
+# 1. Deploy main chart with monitoring:
+#    helm install eoapi eoapi/eoapi -f values-full-observability.yaml --namespace eoapi --create-namespace
+#
+# 2. Deploy observability chart separately:
+#    helm install eoapi-obs eoapi/eoapi-observability --namespace eoapi
+#
+# 3. Optional: Configure external integrations
+#    - DataDog: Set up prometheus scraping
+#    - New Relic: Deploy NR Kubernetes integration
+#    - External Grafana: Point to the exposed Prometheus service
+#
+# Monitoring endpoints (if LoadBalancer is used):
+# - Prometheus: http://<prometheus-lb-ip>:9090
+# - Grafana: http://<grafana-lb-ip> (from observability chart)
+#
+# Security considerations:
+# - Use internal LoadBalancers for Prometheus in production
+# - Set up proper RBAC for service accounts
+# - Configure network policies to restrict access
+# - Enable TLS for all external endpoints
+#
+# Performance tuning:
+# - Monitor actual resource usage and adjust requests/limits
+# - Tune HPA scaling policies based on traffic patterns
+# - Adjust Prometheus retention based on storage costs
+# - Consider using remote storage for Prometheus (S3, GCS, etc.)

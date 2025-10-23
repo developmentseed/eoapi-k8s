@@ -14,6 +14,8 @@ A Helm chart for deploying Earth Observation APIs with integrated STAC, raster, 
 - Flexible database configuration
 - Real-time PostgreSQL notifications for STAC item changes
 - Unified ingress system
+- Autoscaling
+- Integrated observability (Prometheus & Grafana)
 
 ## TL;DR
 

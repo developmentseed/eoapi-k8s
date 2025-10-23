@@ -27,11 +27,12 @@ Please refer to our [quick start guide](./installation/quick-start.md)
 2. Install the PostgreSQL Operator dependency
 3. Configure your deployment using the [Configuration Options](./installation/configuration.md)
 4. Deploy using [Helm Installation](./installation/helm-install.md) instructions
-5. Set up monitoring with [Autoscaling & Monitoring](./operations/autoscaling.md)
+5. Set up monitoring with [Autoscaling](./operations/autoscaling.md) & [Observability](./operations/observability.md)
 
 ## Detailed documenation
 
 ### Cloud Provider Guides
+
 - **[AWS EKS Setup](./installation/providers/aws-eks.md)** - Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and NGINX ingress
 - **[GCP GKE Setup](./installation/providers/gcp-gke.md)** - GKE cluster creation with CSI driver, NGINX ingress, and cert-manager
 - **[Azure AKS Setup](./installation/providers/azure.md)** - Azure configuration with managed PostgreSQL, Key Vault integration, and Workload Identity
@@ -42,13 +43,11 @@ Please refer to our [quick start guide](./installation/quick-start.md)
 - **[Manual Helm Installation](./installation/helm-install.md)** - Step-by-step Helm deployment process with custom configurations
 - **[Unified Ingress Configuration](./installation/unified-ingress.md)** - NGINX and Traefik ingress setup with TLS and cert-manager integration
 
-## Database Management
-
-- **[Data Management](./operations/manage-data.md)** - Loading STAC collections and items into PostgreSQL using pypgstac
-
 ## Operations & Monitoring
 
-- **[Autoscaling & Monitoring](./operations/autoscaling.md)** - HPA setup with custom metrics, Grafana dashboards, Prometheus configuration, and load testing
+- **[Autoscaling](./operations/autoscaling.md)** - Horizontal Pod Autoscaler configuration with CPU and request-rate metrics, scaling policies, and load testing strategies
+- **[Observability](./operations/observability.md)** - Monitoring stack with Prometheus, Grafana dashboards, metrics collection, and custom metrics API integration
+- **[Data Management](./operations/manage-data.md)** - Loading STAC collections and items into PostgreSQL using pypgstac
 
 ## Advanced Features
 

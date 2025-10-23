@@ -1,0 +1,80 @@
+{{/*
+Common monitoring configurations to avoid duplication across values files
+*/}}
+
+{{/*
+Basic monitoring stack configuration
+*/}}
+{{- define "eoapi.monitoring.basic" -}}
+metricsServer:
+  enabled: true
+  apiService:
+    create: true
+prometheus:
+  enabled: true
+  alertmanager:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+    resources: {{- include "eoapi.resources.small" . | nindent 6 }}
+  server:
+    service:
+      type: ClusterIP
+{{- end -}}
+
+{{/*
+Production monitoring with persistence
+*/}}
+{{- define "eoapi.monitoring.production" -}}
+metricsServer:
+  enabled: true
+  apiService:
+    create: true
+prometheus:
+  enabled: true
+  alertmanager:
+    enabled: true
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+    resources: {{- include "eoapi.resources.small" . | nindent 6 }}
+  server:
+    service:
+      type: ClusterIP
+    persistentVolume:
+      enabled: true
+      size: 10Gi
+{{- end -}}
+
+{{/*
+Testing monitoring with minimal resources
+*/}}
+{{- define "eoapi.monitoring.testing" -}}
+metricsServer:
+  enabled: true
+  apiService:
+    create: true
+prometheus:
+  enabled: true
+  alertmanager:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+    resources: {{- include "eoapi.resources.small" . | nindent 6 }}
+  server:
+    service:
+      type: ClusterIP
+    persistentVolume:
+      enabled: false
+{{- end -}}

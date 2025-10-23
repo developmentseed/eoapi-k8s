@@ -202,7 +202,7 @@ raster:
     enabled: true  # Control ingress specifically for raster service
     path: "/raster"  # Configurable path prefix for the raster service
   autoscaling:
-    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
@@ -274,7 +274,7 @@ multidim:
     enabled: true  # Control ingress specifically for multidim service
     path: "/multidim"  # Configurable path prefix for the multidim service
   autoscaling:
-    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
@@ -346,7 +346,7 @@ stac:
     enabled: true  # Control ingress specifically for stac service
     path: "/stac"  # Configurable path prefix for the stac service
   autoscaling:
-    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
@@ -406,7 +406,7 @@ vector:
     enabled: true  # Control ingress specifically for vector service
     path: "/vector"  # Configurable path prefix for the vector service
   autoscaling:
-    # NOTE: to have autoscaling working you'll need to install the `eoapi-support` chart
+    # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
     enabled: false
     minReplicas: 1
@@ -522,9 +522,114 @@ eoapi-notifier:
             namespace: serverless
         # For HTTP endpoints, use: endpoint: https://webhook.example.com
 
+######################
+# MONITORING
+######################
+# Core monitoring components for metrics collection and autoscaling
+monitoring:
+  # Metrics server - essential for HPA functionality
+  metricsServer:
+    enabled: false
+    apiService:
+      create: true
+
+  # Prometheus - core metrics collection for autoscaling
+  prometheus:
+    enabled: false
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kube-state-metrics:
+      enabled: true
+    prometheus-node-exporter:
+      enabled: true
+      resources:
+        limits:
+          cpu: 10m
+          memory: 30Mi
+        requests:
+          cpu: 10m
+          memory: 30Mi
+    server:
+      service:
+        type: ClusterIP  # Internal service, no external exposure by default
+
+  # Prometheus adapter - enables custom HPA metrics
+  prometheusAdapter:
+    enabled: false
+    prometheus:
+      # URL to Prometheus server - will be auto-configured for same-release Prometheus
+      # If using external Prometheus, set this to your Prometheus URL
+      # Example: http://my-prometheus-server.monitoring.svc.cluster.local
+      url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
+      port: 80
+      path: ""
+    rules:
+      default: false
+      # Custom metrics for eoapi service autoscaling
+      custom:
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_vector_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_raster_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_stac_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+######################
+# OBSERVABILITY
+######################
+# Grafana dashboards and visualization (requires monitoring.prometheus.enabled=true)
+observability:
+  grafana:
+    enabled: false
+    persistence:
+      enabled: false
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+    resources:
+      limits:
+        cpu: 100m
+        memory: 200Mi
+      requests:
+        cpu: 50m
+        memory: 100Mi
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Prometheus
+            type: prometheus
+            url: "http://{{ .Release.Name }}-prometheus-server"
+            access: proxy
+            isDefault: true
+    dashboardsConfigMaps:
+      default: "{{ .Release.Name }}-dashboards"
+
 # Version being upgraded from, used for migration purposes
 # Dont set the value in the values.yaml file
-# prefer to set it in the command line
+# Instead, set it during upgrade using --set previousVersion=<version>
 # helm upgrade --set previousVersion=$PREVIOUS_VERSION
 # or in the CI/CD pipeline
 previousVersion: ""

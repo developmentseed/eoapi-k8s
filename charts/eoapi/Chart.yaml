@@ -57,3 +57,27 @@ dependencies:
     version: 0.0.7
     repository: "oci://ghcr.io/developmentseed/charts"
     condition: eoapi-notifier.enabled
+
+  # Optional monitoring components for metrics collection and autoscaling
+  # These are disabled by default to keep deployments lightweight
+  # Enable via: monitoring.prometheus.enabled=true, monitoring.metricsServer.enabled=true
+  - name: metrics-server
+    version: 7.2.8
+    repository: https://charts.bitnami.com/bitnami
+    condition: monitoring.metricsServer.enabled
+
+  - name: prometheus
+    version: 25.3.1
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheus.enabled
+
+  - name: prometheus-adapter
+    version: 4.7.1
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheusAdapter.enabled
+
+  # Observability components - Grafana dashboards and visualization
+  - name: grafana
+    version: 7.3.3
+    repository: https://grafana.github.io/helm-charts
+    condition: observability.grafana.enabled
