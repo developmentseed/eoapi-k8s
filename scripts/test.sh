@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 # Global variables
 DEBUG_MODE=false
-NAMESPACE=""
+NAMESPACE="${NAMESPACE:-}"
 COMMAND=""
 
 # Auto-detect CI environment
@@ -226,27 +226,50 @@ detect_deployment() {
 show_debug_info() {
     log_info "=== Enhanced Debug Information ==="
 
-    log_info "=== Current Pod Status ==="
+    log_info "=== Environment Variables ==="
+    log_info "RELEASE_NAME: ${RELEASE_NAME:-<not set>}"
+    log_info "NAMESPACE: ${NAMESPACE:-<not set>}"
+    log_info "CI: ${CI:-<not set>}"
+
+    log_info "=== All Namespaces ==="
+    kubectl get namespaces || true
+
+    log_info "=== All Pods Across All Namespaces ==="
+    kubectl get pods -A -o wide || true
+
+    log_info "=== Release-Specific Resources ==="
+    if [ -n "${RELEASE_NAME:-}" ]; then
+        log_info "Looking for resources with release name: $RELEASE_NAME"
+        kubectl get pods -A -l "app.kubernetes.io/instance=$RELEASE_NAME" -o wide || true
+        kubectl get pods -A | grep "$RELEASE_NAME" || echo "No pods found with release name $RELEASE_NAME"
+        kubectl get jobs -A -l "app=$RELEASE_NAME-pgstac-migrate" -o wide || true
+        kubectl get jobs -A -l "app=$RELEASE_NAME-pgstac-load-samples" -o wide || true
+    fi
+
+    log_info "=== Current Namespace ($NAMESPACE) Pod Status ==="
     kubectl get pods -n "$NAMESPACE" -o wide || true
 
-    log_info "=== Pod Phase Summary ==="
+    log_info "=== Pod Phase Summary in $NAMESPACE ==="
     kubectl get pods -n "$NAMESPACE" --no-headers | awk '{print $3}' | sort | uniq -c || true
 
     log_info "=== Services Status ==="
-    kubectl get services -n "$NAMESPACE" || true
+    kubectl get services -n "$NAMESPACE" -o wide || true
 
     log_info "=== Ingress Status ==="
-    kubectl get ingress -n "$NAMESPACE" || true
+    kubectl get ingress -n "$NAMESPACE" -o wide || true
 
     log_info "=== Jobs Status ==="
     kubectl get jobs -n "$NAMESPACE" -o wide || true
 
     log_info "=== PostgreSQL Status ==="
-    kubectl get postgrescluster -o wide || true
-    kubectl get pods -l postgres-operator.crunchydata.com/cluster -o wide || true
+    kubectl get postgrescluster -A
+    kubectl get pods -l postgres-operator.crunchydata.com/cluster -A -o wide
 
-    log_info "=== Recent Events ==="
-    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -30 || true
+    log_info "=== Recent Events in $NAMESPACE ==="
+    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -10 || true
+
+    log_info "=== Recent Events Across All Namespaces ==="
+    kubectl get events -A --sort-by='.lastTimestamp' | tail -20 || true
 }
 
 # Check if eoapi is deployed
