@@ -1,0 +1,59 @@
+######################
+# MONITORING BASE CONFIG
+######################
+# Base monitoring configuration - import in values files with:
+# monitoring: !include values/monitoring.yaml
+
+monitoring:
+  enabled: true
+
+  # Metrics server for HPA
+  metricsServer:
+    enabled: true
+    apiService:
+      create: true
+    resources: &small_resources
+      limits:
+        cpu: 10m
+        memory: 30Mi
+      requests:
+        cpu: 10m
+        memory: 30Mi
+
+  # Prometheus stack
+  prometheus:
+    enabled: true
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+
+    kube-state-metrics:
+      enabled: true
+      resources: *small_resources
+
+    prometheus-node-exporter:
+      enabled: true
+      resources: *small_resources
+
+    server:
+      service:
+        type: ClusterIP
+      persistentVolume:
+        enabled: false
+        size: 8Gi
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 200m
+          memory: 256Mi
+
+# Autoscaling defaults
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80

@@ -1,3 +1,4 @@
+{{- if .Values.observability.grafana.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,3 +8,4 @@ metadata:
 data:
   kubernetes.json: |-
 {{ .Files.Get "dashboards/eoAPI-Dashboard.json" | indent 4 }}
+{{- end }}
