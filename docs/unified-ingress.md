@@ -1,3 +1,17 @@
+---
+title: "Unified Ingress Configuration"
+description: "NGINX and Traefik ingress setup with TLS and cert-manager integration"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "NGINX Ingress Controller"
+    url: "https://kubernetes.github.io/ingress-nginx/"
+  - name: "Traefik Documentation"
+    url: "https://doc.traefik.io/traefik/"
+  - name: "cert-manager"
+    url: "https://cert-manager.io/"
+---
+
 # Unified Ingress Configuration
 
 This document describes the unified ingress approach implemented in the eoAPI Helm chart.
