@@ -1,0 +1,162 @@
+name: Validate Documentation Links
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: [ 'docs/**/*.md' ]
+  pull_request:
+    branches: [ main, master ]
+    paths: [ 'docs/**/*.md' ]
+
+jobs:
+  validate-links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Create markdown-link-check config
+        run: |
+          cat > .markdown-link-check.json << 'EOF'
+          {
+            "ignorePatterns": [
+              {
+                "pattern": "^https://github.com/developmentseed/eoapi-k8s"
+              },
+              {
+                "pattern": "localhost"
+              },
+              {
+                "pattern": "127.0.0.1"
+              }
+            ],
+            "replacementPatterns": [
+              {
+                "pattern": "^./",
+                "replacement": "{{BASEURL}}/"
+              }
+            ],
+            "httpHeaders": [
+              {
+                "urls": ["https://github.com"],
+                "headers": {
+                  "Accept": "text/html"
+                }
+              }
+            ],
+            "timeout": "20s",
+            "retryOn429": true,
+            "retryCount": 3,
+            "fallbackRetryDelay": "30s",
+            "aliveStatusCodes": [200, 206, 301, 302, 403, 999]
+          }
+          EOF
+
+      - name: Validate internal links
+        run: |
+          echo "Checking internal link patterns..."
+          broken_links_found=0
+
+          while IFS= read -r -d '' file; do
+            echo "Checking internal links in: $file"
+
+            # Check for broken relative links
+            while IFS=: read -r line_num link; do
+              # Extract the link path
+              link_path=$(echo "$link" | sed -n 's/.*](\.\///; s/).*//p')
+
+              # Check if it's an image link
+              if [[ "$link_path" == images/* ]]; then
+                full_path="docs/$link_path"
+              else
+                full_path="docs/$link_path"
+              fi
+
+              if [[ ! -e "$full_path" ]]; then
+                echo "❌ Broken internal link in $file:$line_num -> $link_path (resolved to: $full_path)"
+                broken_links_found=1
+              else
+                echo "✅ Valid internal link: $link_path"
+              fi
+            done < <(grep -n "](\./" "$file" || true)
+          done < <(find docs -name "*.md" -type f -print0)
+
+          if [[ $broken_links_found -eq 1 ]]; then
+            echo "❌ Found broken internal links!"
+            exit 1
+          else
+            echo "✅ All internal links are valid!"
+          fi
+
+      - name: Validate external links
+        run: |
+          echo "Validating external links..."
+          find docs -name "*.md" -type f | while read -r file; do
+            echo "Checking external links in: $file"
+            markdown-link-check "$file" --config .markdown-link-check.json || echo "Some external links failed in $file"
+          done
+
+      - name: Check for consistent link patterns
+        run: |
+          echo "Checking for inconsistent link patterns..."
+          inconsistent_found=false
+
+          # Check for bad patterns
+          if find docs -name "*.md" -exec grep -l "](docs/" {} \;; then
+            echo "❌ Found links using 'docs/' prefix - use relative paths instead"
+            find docs -name "*.md" -exec grep -Hn "](docs/" {} \;
+            inconsistent_found=true
+          fi
+
+          if find docs -name "*.md" -exec grep -l "](\.\./" {} \;; then
+            echo "❌ Found links using '../' - use relative paths from docs root instead"
+            find docs -name "*.md" -exec grep -Hn "](\.\./" {} \;
+            inconsistent_found=true
+          fi
+
+          if [[ "$inconsistent_found" == "true" ]]; then
+            echo "❌ Found inconsistent link patterns!"
+            echo "Use these patterns instead:"
+            echo "  - [Installation Guide](./installation.md)"
+            echo "  - [AWS Setup](./aws-eks.md)"
+            echo "  - [Images](./images/diagram.png)"
+            exit 1
+          else
+            echo "✅ All link patterns are consistent!"
+          fi
+
+      - name: Validate frontmatter
+        run: |
+          echo "Checking that all markdown files have frontmatter..."
+          missing_frontmatter_found=0
+
+          while IFS= read -r -d '' file; do
+            if ! head -1 "$file" | grep -q "^---$"; then
+              echo "❌ Missing frontmatter in: $file"
+              missing_frontmatter_found=1
+            fi
+          done < <(find docs -name "*.md" -not -path "docs/_includes/*" -type f -print0)
+
+          if [[ $missing_frontmatter_found -eq 1 ]]; then
+            echo "❌ Some files are missing frontmatter!"
+            echo "Add frontmatter like:"
+            echo "---"
+            echo "title: \"Page Title\""
+            echo "description: \"Page description\""
+            echo "external_links:"
+            echo "  - name: \"Link Name\""
+            echo "    url: \"https://example.com\""
+            echo "---"
+            exit 1
+          else
+            echo "✅ All markdown files have frontmatter!"
+          fi

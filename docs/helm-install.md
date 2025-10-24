@@ -1,3 +1,15 @@
+---
+title: "Manual Helm Installation"
+description: "Step-by-step Helm deployment process with custom configurations"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "PostgreSQL Operator Documentation"
+    url: "https://access.crunchydata.com/documentation/postgres-operator/"
+  - name: "Helm Charts Repository"
+    url: "https://devseed.com/eoapi-k8s/"
+---
+
 # Manual Helm Install
 
 0. `eoapi-k8s` depends on the [Crunchydata Postgresql Operator](https://access.crunchydata.com/documentation/postgres-operator/latest/installation/helm). Install that first:

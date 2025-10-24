@@ -5,7 +5,7 @@ HELM_REPO_URL=https://devseed.com/eoapi-k8s/
 HELM_CHART_NAME=eoapi/eoapi
 PGO_CHART_VERSION=5.7.4
 
-.PHONY: all deploy minikube ingest tests integration lint validate-schema help
+.PHONY: all deploy minikube ingest tests integration lint validate-schema docs help
 
 # Default target
 all: deploy
@@ -24,6 +24,11 @@ minikube:
 	minikube addons enable ingress
 	@echo "eoAPI is now available at:"
 	@minikube service ingress-nginx-controller -n ingress-nginx --url | head -n 1
+
+docs:
+	@echo "Generating portable documentation package."
+	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
+	@./scripts/generate-portable-docs.sh
 
 ingest:
 	@echo "Ingesting STAC collections and items into the database."

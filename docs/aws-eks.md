@@ -1,3 +1,17 @@
+---
+title: "AWS EKS Setup"
+description: "Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and NGINX ingress"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "AWS EKS Documentation"
+    url: "https://docs.aws.amazon.com/eks/"
+  - name: "eksctl Documentation"
+    url: "https://eksctl.io/"
+  - name: "Terraform Alternative"
+    url: "https://github.com/developmentseed/eoapi-k8s-terraform"
+---
+
 # AWS EKS Cluster Walkthrough
 
 This is a verbose walkthrough. It uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.

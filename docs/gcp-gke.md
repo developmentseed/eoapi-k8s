@@ -1,4 +1,18 @@
- # GCP GKE Cluster Setup
+---
+title: "GCP GKE Setup"
+description: "GKE cluster creation with CSI driver, NGINX ingress, and cert-manager"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "Google Cloud Documentation"
+    url: "https://cloud.google.com/kubernetes-engine/docs"
+  - name: "gcloud CLI"
+    url: "https://cloud.google.com/sdk/gcloud"
+  - name: "Terraform Alternative"
+    url: "https://github.com/developmentseed/eoapi-k8s-terraform"
+---
+
+# GCP GKE Cluster Setup
 
 This is a verbose walkthrough. It uses `gcloud` and assumes you already have an GCP account and project where you want to run eoapi. We also assume that you have some prerequisites installed including `gcloud`, `kubectl` and `helm`.
 
@@ -109,4 +123,4 @@ helm upgrade --install cert-manager jetstack/cert-manager \
   --set installCRDs=true
 ```
 
-Now we are ready to install eoapi. See the [eoapi installation instructions](../README.md/#helm-installation) for more details.
+Now we are ready to install eoapi. See the [eoapi installation instructions](./helm-install.md) for more details.
