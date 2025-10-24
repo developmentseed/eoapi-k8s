@@ -22,7 +22,7 @@ fi
 # Show help message
 show_help() {
     cat << EOF
-eoAPI Test Suite - Combined Helm and Integration Testing
+eoAPI Test Suite - Combined Helm, Integration, and Observability Testing
 
 USAGE:
     $(basename "$0") [COMMAND] [OPTIONS]
@@ -30,7 +30,8 @@ USAGE:
 COMMANDS:
     helm              Run Helm tests only (lint, unit tests, template validation)
     integration       Run integration tests only (requires deployed eoAPI)
-    all               Run both Helm and integration tests [default]
+    observability     Run observability and autoscaling tests only
+    all               Run Helm, integration, and observability tests [default]
     check-deps        Check and install dependencies only
     check-deployment  Check eoAPI deployment status only
 
@@ -50,12 +51,19 @@ DESCRIPTION:
     Integration Tests:
     - Deployment verification
     - Service readiness checks
+
+    Observability Tests:
+    - Monitoring stack deployment verification (Prometheus, Grafana, etc.)
+    - HPA (Horizontal Pod Autoscaler) configuration validation
+    - Metrics collection and custom metrics API testing
+    - Autoscaling behavior validation
     - API endpoint testing
     - Comprehensive failure debugging
 
 REQUIREMENTS:
     Helm Tests: helm, helm unittest plugin
     Integration Tests: kubectl, python/pytest, deployed eoAPI instance
+    Observability Tests: kubectl, python/pytest, deployed eoAPI with monitoring enabled
 
 ENVIRONMENT VARIABLES:
     RELEASE_NAME             Override release name detection
@@ -69,10 +77,12 @@ EXAMPLES:
     $(basename "$0")                    # Run all tests
     $(basename "$0") helm               # Run only Helm tests
     $(basename "$0") integration        # Run only integration tests
+    $(basename "$0") observability      # Run only observability tests
     $(basename "$0") check-deps         # Check dependencies only
     $(basename "$0") check-deployment   # Check deployment status only
     $(basename "$0") all --debug        # Run all tests with debug output
     $(basename "$0") integration --debug # Run integration tests with enhanced logging
+    $(basename "$0") observability --debug # Run observability tests with debug output
     $(basename "$0") --help             # Show this help
 
 EOF
@@ -82,7 +92,7 @@ EOF
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            helm|integration|all|check-deps|check-deployment)
+            helm|integration|observability|all|check-deps|check-deployment)
                 COMMAND="$1"; shift ;;
             --debug)
                 DEBUG_MODE=true; shift ;;
@@ -116,6 +126,11 @@ check_helm_dependencies() {
 # Check dependencies for integration tests
 check_integration_dependencies() {
     preflight_test "integration" || exit 1
+}
+
+# Check dependencies for observability tests
+check_observability_dependencies() {
+    preflight_test "observability" || exit 1
 }
 
 # Install Python test dependencies
@@ -749,6 +764,176 @@ EOF
     fi
 }
 
+# Run observability tests
+run_observability_tests() {
+    log_info "=== Running Observability Tests ==="
+
+    local python_cmd="python"
+    if command_exists python3; then
+        python_cmd="python3"
+    fi
+
+    local test_dir=".github/workflows/tests"
+    if [ ! -d "$test_dir" ]; then
+        log_error "Test directory not found: $test_dir"
+        log_info "Expected observability test files:"
+        log_info "  - $test_dir/test_observability.py"
+        log_info "  - $test_dir/test_autoscaling.py"
+        return 1
+    fi
+
+    # Check if observability test files exist
+    local obs_tests=("test_observability.py" "test_autoscaling.py")
+    local available_tests=()
+
+    for test_file in "${obs_tests[@]}"; do
+        if [ -f "$test_dir/$test_file" ]; then
+            available_tests+=("$test_dir/$test_file")
+        else
+            log_warning "Test file not found: $test_dir/$test_file"
+        fi
+    done
+
+    if [ ${#available_tests[@]} -eq 0 ]; then
+        log_error "No observability test files found in $test_dir"
+        return 1
+    fi
+
+    # Install test dependencies
+    log_info "Installing Python test dependencies..."
+    $python_cmd -m pip install --upgrade pip >/dev/null 2>&1 || log_warning "Could not upgrade pip"
+    $python_cmd -m pip install pytest requests >/dev/null 2>&1 || {
+        log_error "Failed to install pytest and requests"
+        return 1
+    }
+
+    # Check monitoring stack health first
+    check_monitoring_stack_health
+
+    # Set environment variables for tests
+    export NAMESPACE="${NAMESPACE:-eoapi}"
+    export RELEASE_NAME="${RELEASE_NAME:-eoapi}"
+
+    log_info "Running observability tests..."
+    log_info "Namespace: $NAMESPACE"
+    log_info "Release: $RELEASE_NAME"
+
+    local failed_tests=()
+
+    # Run each test file
+    for test_file in "${available_tests[@]}"; do
+        local test_name
+        test_name=$(basename "$test_file" .py)
+        log_info "Running $test_name..."
+
+        local test_result=0
+        if [ "$DEBUG_MODE" = true ]; then
+            $python_cmd -m pytest "$test_file" -v --tb=short || test_result=$?
+        else
+            $python_cmd -m pytest "$test_file" -v --tb=line || test_result=$?
+        fi
+
+        if [ $test_result -ne 0 ]; then
+            failed_tests+=("$test_name")
+            log_error "❌ $test_name failed"
+        else
+            log_info "✅ $test_name passed"
+        fi
+    done
+
+    # Final results
+    if [ ${#failed_tests[@]} -eq 0 ]; then
+        log_info "✅ All observability tests completed successfully!"
+    else
+        log_error "Some tests failed: ${failed_tests[*]}"
+
+        if [ "$DEBUG_MODE" = true ]; then
+            show_observability_debug_info
+        fi
+
+        return 1
+    fi
+}
+
+# Check monitoring stack health
+check_monitoring_stack_health() {
+    log_info "Checking monitoring stack health..."
+
+    local components="prometheus:app.kubernetes.io/name=prometheus grafana:app.kubernetes.io/name=grafana prometheus-adapter:app.kubernetes.io/name=prometheus-adapter kube-state-metrics:app.kubernetes.io/name=kube-state-metrics"
+
+    local healthy_components=""
+    local healthy_count=0
+    local unhealthy_components=""
+
+    for component_spec in $components; do
+        local component_name=${component_spec%%:*}
+        local selector=${component_spec#*:}
+
+        if kubectl get pods -n "$NAMESPACE" -l "$selector" >/dev/null 2>&1; then
+            local running_pods
+            running_pods=$(kubectl get pods -n "$NAMESPACE" -l "$selector" --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+            if [ "$running_pods" -gt 0 ]; then
+                healthy_components="$healthy_components $component_name"
+                healthy_count=$((healthy_count + 1))
+                log_info "✅ $component_name is running ($running_pods pods)"
+            else
+                unhealthy_components="$unhealthy_components $component_name"
+                log_warning "⚠️  $component_name found but not running"
+            fi
+        else
+            log_info "ℹ️  $component_name not deployed (monitoring may be disabled)"
+        fi
+    done
+
+    # Check HPA resources
+    if kubectl get hpa -n "$NAMESPACE" >/dev/null 2>&1; then
+        local hpa_count
+        hpa_count=$(kubectl get hpa -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
+        log_info "✅ Found $hpa_count HPA resources"
+    else
+        log_info "ℹ️  No HPA resources found (autoscaling may be disabled)"
+    fi
+
+    # Check custom metrics API
+    if kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" >/dev/null 2>&1; then
+        log_info "✅ Custom metrics API is available"
+    else
+        log_warning "⚠️  Custom metrics API not available"
+    fi
+
+    if [ $healthy_count -gt 0 ]; then
+        log_info "Monitoring stack health check completed"
+        return 0
+    else
+        log_warning "No monitoring components found - some tests may be skipped"
+        return 0  # Don't fail, just warn
+    fi
+}
+
+# Show observability debug information
+show_observability_debug_info() {
+    log_info "=== Observability Debug Information ==="
+
+    log_info "=== Monitoring Pods Status ==="
+    kubectl get pods -n "$NAMESPACE" -l 'app.kubernetes.io/name in (prometheus,grafana,prometheus-adapter,kube-state-metrics)' -o wide 2>/dev/null || true
+
+    log_info "=== HPA Status ==="
+    kubectl get hpa -n "$NAMESPACE" -o wide 2>/dev/null || true
+    kubectl describe hpa -n "$NAMESPACE" 2>/dev/null || true
+
+    log_info "=== Custom Metrics API ==="
+    kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" 2>/dev/null || true
+
+    log_info "=== Pod Resource Metrics ==="
+    kubectl top pods -n "$NAMESPACE" 2>/dev/null || true
+
+    log_info "=== Monitoring Services ==="
+    kubectl get services -n "$NAMESPACE" -l 'app.kubernetes.io/name in (prometheus,grafana)' 2>/dev/null || true
+
+    log_info "=== Recent Events ==="
+    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' 2>/dev/null | tail -20 || true
+}
+
 # Main function
 main() {
     parse_args "$@"
@@ -799,8 +984,25 @@ main() {
 
             run_integration_tests
             ;;
+        observability)
+            log_info "Running observability and autoscaling tests"
+
+            check_observability_dependencies
+            check_cluster
+            install_test_deps
+            detect_deployment
+
+            # Show enhanced debugging in debug mode
+            if [ "$DEBUG_MODE" = true ]; then
+                show_debug_info
+            fi
+
+            check_eoapi_deployment
+
+            run_observability_tests
+            ;;
         all)
-            log_info "Running comprehensive test suite (Helm + Integration tests)"
+            log_info "Running comprehensive test suite (Helm + Integration + Observability tests)"
 
             # Run Helm tests first
             log_info "=== Phase 1: Helm Tests ==="
@@ -825,6 +1027,12 @@ main() {
             setup_test_environment
 
             run_integration_tests
+
+            # Run Observability tests third
+            log_info "=== Phase 3: Observability Tests ==="
+            check_observability_dependencies
+
+            run_observability_tests
             ;;
         *)
             log_error "Unknown command: $COMMAND"

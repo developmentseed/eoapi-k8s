@@ -225,6 +225,10 @@ preflight_test() {
             validate_tools kubectl python3 || return 1
             validate_cluster || return 1
             ;;
+        observability)
+            validate_tools kubectl python3 || return 1
+            validate_cluster || return 1
+            ;;
         *)
             log_error "Unknown test type: $test_type"
             return 1

@@ -58,6 +58,13 @@ dependencies:
     repository: "oci://ghcr.io/developmentseed/charts"
     condition: eoapi-notifier.enabled
 
+  # Optional Knative components for CloudEvents and serverless workloads
+  # Required for eoapi-notifier CloudEvents output
+  - name: knative-operator
+    version: 1.19.4
+    repository: https://knative.github.io/operator
+    condition: knative.enabled
+
   # Optional monitoring components for metrics collection and autoscaling
   # These are disabled by default to keep deployments lightweight
   # Enable via: monitoring.prometheus.enabled=true, monitoring.metricsServer.enabled=true

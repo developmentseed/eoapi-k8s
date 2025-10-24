@@ -523,6 +523,16 @@ eoapi-notifier:
         # For HTTP endpoints, use: endpoint: https://webhook.example.com
 
 ######################
+# KNATIVE
+######################
+# Optional Knative components for CloudEvents and serverless workloads
+# Required when using eoapi-notifier with CloudEvents output
+knative:
+  enabled: false
+
+  version: "v1.19.6"
+
+######################
 # MONITORING
 ######################
 # Core monitoring components for metrics collection and autoscaling
@@ -633,3 +643,28 @@ observability:
 # helm upgrade --set previousVersion=$PREVIOUS_VERSION
 # or in the CI/CD pipeline
 previousVersion: ""
+
+# Metrics Server sub-chart configuration
+# These values are passed directly to the metrics-server sub-chart
+metrics-server:
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/metrics-server
+    tag: "0.8.0-debian-12-r4"
+  apiService:
+    create: true
+
+# Knative operator sub-chart configuration
+# These values are passed directly to the knative-operator sub-chart
+# The operator will be installed and can then deploy Knative Serving/Eventing via CRs
+knative-operator:
+  knative_operator:
+    knative_operator:
+      tag: "v1.19.4"
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+        limits:
+          cpu: 500m
+          memory: 500Mi
