@@ -1,3 +1,17 @@
+---
+title: "Azure AKS Setup"
+description: "Azure configuration with managed PostgreSQL, Key Vault integration, and Workload Identity"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "Azure Kubernetes Service Documentation"
+    url: "https://docs.microsoft.com/en-us/azure/aks/"
+  - name: "Azure CLI Documentation"
+    url: "https://docs.microsoft.com/en-us/cli/azure/"
+  - name: "Azure PostgreSQL Documentation"
+    url: "https://docs.microsoft.com/en-us/azure/postgresql/"
+---
+
 # Microsoft Azure Setup
 
 ## Using Azure Managed PostgreSQL

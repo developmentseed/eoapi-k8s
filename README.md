@@ -28,7 +28,7 @@
 
 ### Get started
 
-* [Quick start guide](./docs/installation/quick-start.md)
+* [Quick start guide](./docs/quick-start.md)
 
 ### `eoAPI-k8s` documentation
 

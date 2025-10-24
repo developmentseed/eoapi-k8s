@@ -7,7 +7,7 @@ TEST_SCRIPT := ./scripts/test.sh
 # Default cluster type (can be overridden)
 CLUSTER_TYPE ?= minikube
 
-.PHONY: help deploy clean tests integration lint validate-schema
+.PHONY: help deploy clean tests integration lint validate-schema docs serve-docs
 .DEFAULT_GOAL := help
 
 help:
@@ -30,6 +30,8 @@ help:
 	@echo "QUALITY:"
 	@echo "  lint            Run linting and code quality checks"
 	@echo "  validate-schema Validate Helm schemas"
+	@echo "  docs            Generate portable documentation package"
+	@echo "  serve-docs      Serve docs with mkdocs at http://localhost:8000"
 	@echo ""
 	@echo "VARIABLES:"
 	@echo "  CLUSTER_TYPE    Local cluster type: minikube or k3s (default: minikube)"
@@ -104,3 +106,13 @@ validate-schema:
 
 ingest:
 	@./scripts/ingest.sh
+
+docs:
+	@command -v mkdocs >/dev/null 2>&1 || { echo "❌ mkdocs required. Run: pip install mkdocs-material"; exit 1; }
+	@echo "📚 Building documentation with mkdocs"
+	@mkdocs build
+
+serve-docs: docs
+	@echo "📚 Serving docs with mkdocs at http://localhost:8000"
+	@echo "Press Ctrl+C to stop"
+	@mkdocs serve --dev-addr localhost:8000

@@ -114,3 +114,47 @@ jobs:
         run: |
           helm uninstall "$RELEASE_NAME" -n eoapi || true
           kubectl delete namespace eoapi || true
+  validate-docs:
+    name: Validate documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check internal links
+        run: |
+          broken=0
+          find docs -name "*.md" | while read -r file; do
+            if grep -q "](\./" "$file" 2>/dev/null; then
+              grep -n "](\./" "$file" | while IFS=: read -r line link; do
+                path=$(echo "$link" | sed -n 's/.*](\.\///; s/).*//p')
+                if [[ "$path" == images/* ]]; then
+                  full="docs/$path"
+                else
+                  full="docs/$path"
+                fi
+                if [[ ! -e "$full" ]]; then
+                  echo "❌ $file:$line -> $path"
+                  broken=1
+                fi
+              done
+            fi
+          done
+          exit $broken
+
+      - name: Check external links
+        run: |
+          npm install -g markdown-link-check@3.11.2
+          echo '{"timeout":"10s","retryCount":2,"aliveStatusCodes":[200,301,302,403,999]}' > .mlc.json
+          find docs -name "*.md" -exec timeout 30 markdown-link-check {} --config .mlc.json \; || true
+
+      - name: Check frontmatter
+        run: |
+          missing=0
+          find docs -name "*.md" -not -path "docs/_includes/*" | while read -r file; do
+            head -1 "$file" | grep -q "^---$" || { echo "❌ Missing frontmatter: $file"; missing=1; }
+          done
+          exit $missing

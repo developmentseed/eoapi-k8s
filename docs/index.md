@@ -1,3 +1,13 @@
+---
+title: "eoAPI Kubernetes Documentation"
+description: "Technical documentation for deploying and operating eoAPI on Kubernetes clusters"
+external_links:
+  - name: "Main eoapi Repository"
+    url: "https://github.com/developmentseed/eoapi"
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+---
+
 # eoAPI Kubernetes Documentation
 
 Technical documentation for deploying and operating eoAPI on Kubernetes clusters.
@@ -5,13 +15,14 @@ Technical documentation for deploying and operating eoAPI on Kubernetes clusters
 ## Architecture
 
 When deployed with default settings, eoAPI provides:
+
 - High-availability PostgreSQL cluster (via PostgreSQL Operator)
 - Load balancer with path-based routing:
-  - `/stac` → STAC API
-  - `/raster` → TiTiler raster API
-  - `/vector` → TiPG vector API
-  - `/browser` → STAC Browser
-  - `/` → Documentation server
+    - `/stac` → STAC API
+    - `/raster` → TiTiler raster API
+    - `/vector` → TiPG vector API
+    - `/browser` → STAC Browser
+    - `/` → Documentation server
 - Horizontal pod autoscaling based on CPU or request rate metrics
 - Persistent storage with dynamic volume provisioning
 - TLS termination and certificate management
@@ -19,41 +30,36 @@ When deployed with default settings, eoAPI provides:
 
 ## Quick Start
 
-Please refer to our [quick start guide](./installation/quick-start.md)
+Please refer to our [quick start guide](./quick-start.md)
 
 ## Installation
 
 1. Set up a Kubernetes cluster using one of the cloud provider guides
 2. Install the PostgreSQL Operator dependency
-3. Configure your deployment using the [Configuration Options](./installation/configuration.md)
-4. Deploy using [Helm Installation](./installation/helm-install.md) instructions
-5. Set up monitoring with [Autoscaling & Monitoring](./operations/autoscaling.md)
+2. Configure your deployment using the [Configuration Options](./configuration.md)
+3. Deploy using [Helm Installation](./helm-install.md) instructions
+4. Set up monitoring with [Autoscaling & Monitoring](./autoscaling.md)
 
-## Detailed documenation
+## Documentation
 
 ### Cloud Provider Guides
-- **[AWS EKS Setup](./installation/providers/aws-eks.md)** - Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and NGINX ingress
-- **[GCP GKE Setup](./installation/providers/gcp-gke.md)** - GKE cluster creation with CSI driver, NGINX ingress, and cert-manager
-- **[Azure AKS Setup](./installation/providers/azure.md)** - Azure configuration with managed PostgreSQL, Key Vault integration, and Workload Identity
+- **[AWS EKS Setup](./aws-eks.md)** - Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and NGINX ingress
+- **[GCP GKE Setup](./gcp-gke.md)** - GKE cluster creation with CSI driver, NGINX ingress, and cert-manager
+- **[Azure AKS Setup](./azure.md)** - Azure configuration with managed PostgreSQL, Key Vault integration, and Workload Identity
 
-## Installation & Configuration
+### Installation & Configuration
+- **[Configuration Options](./configuration.md)** - Complete reference for Helm values, database types, ingress setup, and service configuration
+- **[Manual Helm Installation](./helm-install.md)** - Step-by-step Helm deployment process with custom configurations
+- **[Unified Ingress Configuration](./unified-ingress.md)** - NGINX and Traefik ingress setup with TLS and cert-manager integration
 
-- **[Configuration Options](./installation/configuration.md)** - Complete reference for Helm values, database types, ingress setup, and service configuration
-- **[Manual Helm Installation](./installation/helm-install.md)** - Step-by-step Helm deployment process with custom configurations
-- **[Unified Ingress Configuration](./installation/unified-ingress.md)** - NGINX and Traefik ingress setup with TLS and cert-manager integration
+### Database Management
+- **[Data Management](./manage-data.md)** - Loading STAC collections and items into PostgreSQL using pypgstac
 
-## Database Management
+### Operations & Monitoring
+- **[Autoscaling & Monitoring](./autoscaling.md)** - HPA setup with custom metrics, Grafana dashboards, Prometheus configuration, and load testing
 
-- **[Data Management](./operations/manage-data.md)** - Loading STAC collections and items into PostgreSQL using pypgstac
+### Advanced Features
+- **[STAC Auth Proxy Integration](./stac-auth-proxy.md)** - Service-specific ingress control for authenticated STAC access
 
-## Operations & Monitoring
-
-- **[Autoscaling & Monitoring](./operations/autoscaling.md)** - HPA setup with custom metrics, Grafana dashboards, Prometheus configuration, and load testing
-
-## Advanced Features
-
-- **[STAC Auth Proxy Integration](./advanced/stac-auth-proxy.md)** - Service-specific ingress control for authenticated STAC access
-
-## Development & Release
-
-- **[Release Workflow](./advanced/release.md)** - Chart versioning, GitHub releases, and Helm repository publishing process
+### Development & Release
+- **[Release Workflow](./release.md)** - Chart versioning, GitHub releases, and Helm repository publishing process

@@ -4,5 +4,7 @@
 charts/config.yaml
 charts/eoapi/charts/*.tgz
 config_ingress.yaml
+dist
+site
 __pycache__
 CLAUDE.md
