@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- CI/CD pipeline: improved job waiting, error handling, and Helm unittests,
+- Added resource discovery and error context in test scripts
+
 ## [0.7.12] - 2025-10-17
 
 - Bumped eoapi-notifier dependency version to 0.0.7
