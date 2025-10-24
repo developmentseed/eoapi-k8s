@@ -217,3 +217,122 @@ jobs:
         if: always()
         run: |
           helm uninstall "$RELEASE_NAME" || true
+
+  observability-tests:
+    name: Observability Tests
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    needs: k3s-integration-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Start K3s cluster
+        uses: jupyterhub/action-k3s-helm@v4
+        with:
+          k3s-channel: latest
+          helm-version: ${{ env.HELM_VERSION }}
+          metrics-enabled: false
+          docker-enabled: true
+
+      - name: Set release name
+        run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
+
+      - name: Wait for K3s to be fully ready
+        run: |
+          echo "=== Waiting for K3s to be fully ready ==="
+          kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s
+          kubectl get nodes
+          kubectl get pods --all-namespaces
+          sleep 10
+          echo "✅ K3s is ready"
+
+      - name: Deploy eoAPI with monitoring
+        run: |
+          echo "=== Deploying eoAPI with monitoring stack ==="
+          export RELEASE_NAME="$RELEASE_NAME"
+          export PGO_VERSION="${{ env.PGO_VERSION }}"
+          export GITHUB_SHA="${{ github.sha }}"
+          ./scripts/deploy.sh --ci
+
+          # Enable monitoring components
+          helm upgrade "$RELEASE_NAME" ./charts/eoapi \
+            --set monitoring.prometheus.enabled=true \
+            --set monitoring.prometheusAdapter.enabled=true \
+            --set monitoring.kube-state-metrics.enabled=true \
+            --set monitoring.prometheus-node-exporter.enabled=true \
+            --set observability.grafana.enabled=true \
+            --set stac.autoscaling.enabled=true \
+            --set raster.autoscaling.enabled=true \
+            --set vector.autoscaling.enabled=true \
+            --namespace eoapi \
+            --wait --timeout=10m
+
+      - name: Wait for monitoring stack to be ready
+        run: |
+          echo "=== Waiting for monitoring components ==="
+
+          # Wait for Prometheus
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n eoapi --timeout=300s || echo "Prometheus not ready"
+
+          # Wait for Grafana
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=grafana -n eoapi --timeout=300s || echo "Grafana not ready"
+
+          # Wait for prometheus-adapter
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus-adapter -n eoapi --timeout=300s || echo "prometheus-adapter not ready"
+
+          # Wait for HPA to be created
+          sleep 30
+
+          echo "=== Final monitoring stack status ==="
+          kubectl get pods -n eoapi -l 'app.kubernetes.io/component in (server,grafana,prometheus-adapter)' || true
+          kubectl get hpa -n eoapi || true
+
+      - name: Run observability tests
+        run: |
+          echo "=== Running observability test suite ==="
+          export RELEASE_NAME="$RELEASE_NAME"
+          export NAMESPACE="eoapi"
+
+          # Install python dependencies for testing
+          python -m pip install --upgrade pip
+          pip install pytest requests
+
+          # Run observability tests
+          python -m pytest .github/workflows/tests/test_observability.py -v --tb=short
+
+          # Run autoscaling tests
+          python -m pytest .github/workflows/tests/test_autoscaling.py -v --tb=short -m "not slow"
+
+      - name: Debug observability stack on failure
+        if: failure()
+        run: |
+          echo "=== Observability Debug Information ==="
+
+          echo "=== Monitoring Pods Status ==="
+          kubectl get pods -n eoapi -l 'app.kubernetes.io/name in (prometheus,grafana,prometheus-adapter)' -o wide || true
+
+          echo "=== HPA Status ==="
+          kubectl get hpa -n eoapi -o wide || true
+          kubectl describe hpa -n eoapi || true
+
+          echo "=== Custom Metrics API ==="
+          kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" || true
+
+          echo "=== Pod Metrics ==="
+          kubectl top pods -n eoapi || true
+
+          echo "=== Recent Events ==="
+          kubectl get events -n eoapi --sort-by='.lastTimestamp' | tail -20 || true
+
+          echo "=== Component Logs ==="
+          kubectl logs -l app.kubernetes.io/name=prometheus-adapter -n eoapi --tail=50 || true
+          kubectl logs -l app.kubernetes.io/name=grafana -n eoapi --tail=30 || true
+
+      - name: Cleanup observability test
+        if: always()
+        run: |
+          helm uninstall "$RELEASE_NAME" || true

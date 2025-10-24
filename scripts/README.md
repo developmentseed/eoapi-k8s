@@ -8,8 +8,9 @@ Automation scripts for deploying, testing, and managing eoAPI on Kubernetes.
 |--------|---------|-------|
 | **`deploy.sh`** | Deploy eoAPI to Kubernetes | `./deploy.sh [deploy\|setup\|cleanup] [--ci]` |
 | **`ingest.sh`** | Ingest STAC data into deployed eoAPI | `./ingest.sh [collections.json] [items.json]` |
-| **`test.sh`** | Run Helm and integration tests | `./test.sh [helm\|integration\|all] [--debug]` |
-| **`lib/`** | Shared utility functions | See [lib/README.md](lib/README.md) |
+| **`test.sh`** | Run Helm, integration, and observability tests | `./test.sh [helm\|integration\|observability\|all] [--debug]` |
+| **`lib/common.sh`** | Core utility functions and logging | Shared functions for all scripts |
+| **`lib/observability.sh`** | Monitoring and autoscaling utilities | Functions for testing observability stack |
 
 ## Quick Start
 
@@ -50,6 +51,35 @@ export RASTER_ENDPOINT=http://...   # Override Raster API endpoint
 export VECTOR_ENDPOINT=http://...   # Override Vector API endpoint
 ```
 
+## Observability Testing
+
+The test suite includes comprehensive observability validation:
+
+**Monitoring Stack Tests:**
+- Prometheus server deployment and metrics collection
+- Grafana dashboard accessibility and data source connectivity
+- Custom metrics API availability via prometheus-adapter
+- HPA (Horizontal Pod Autoscaler) functionality with CPU metrics
+- kube-state-metrics and node-exporter deployment
+
+**Autoscaling Tests:**
+- HPA configuration validation for STAC, Raster, and Vector services
+- CPU-based scaling threshold verification
+- Request-rate scaling metrics (when ingress metrics available)
+- Scaling behavior and stabilization window testing
+
+**Run observability tests:**
+```bash
+# Run only observability tests
+./scripts/test.sh observability
+
+# Run with enhanced monitoring output
+./scripts/test.sh observability --debug
+
+# Run all tests including observability
+./scripts/test.sh all
+```
+
 ## Common Examples
 
 **Deploy with custom namespace:**
@@ -65,6 +95,25 @@ NAMESPACE=my-eoapi ./scripts/deploy.sh
 **Run tests with debug output:**
 ```bash
 ./scripts/test.sh all --debug
+```
+
+**Run only observability tests:**
+```bash
+./scripts/test.sh observability --debug
+```
+
+**Test monitoring stack health:**
+```bash
+# Source observability functions
+source ./scripts/lib/observability.sh
+
+# Check individual components
+check_prometheus_health
+check_grafana_health
+check_hpa_status
+
+# Get comprehensive status
+get_monitoring_stack_status
 ```
 
 **Cleanup deployment:**
