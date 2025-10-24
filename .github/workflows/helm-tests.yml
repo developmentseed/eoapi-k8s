@@ -22,11 +22,16 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
-      - name: Run Helm unit tests
-        run: make tests
+      - name: Install helm unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest
 
-  integration:
-    name: Integration Tests (K3s)
+      - run: |
+          cd charts
+          helm unittest eoapi -f 'tests/*.yaml' -v eoapi/test-helm-values.yaml
+          # Run autoscaling-specific unit tests
+          helm unittest eoapi -f 'tests/autoscaling_tests.yaml'
+
+  k3s-integration-tests:
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: 'read'
@@ -47,9 +52,110 @@ jobs:
       - name: Set release name
         run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
 
+      - name: Wait for K3s to be fully ready
+        run: |
+          echo "=== Waiting for K3s to be fully ready ==="
+
+          # Wait for core K3s components to be ready
+          echo "Waiting for kube-system pods to be ready..."
+          kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s
+
+          # Wait for API server to be fully responsive
+          echo "Checking API server responsiveness..."
+          kubectl get nodes
+          kubectl get pods --all-namespaces
+
+          # Give K3s a moment to initialize all CRDs
+          echo "Waiting for K3s initialization to complete..."
+          sleep 10
+
+          echo "✅ K3s is ready"
+
+      - name: Install Knative Serving
+        run: |
+          echo "=== Installing Knative Serving ==="
+          # Install Knative Serving CRDs
+          kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.17.0/serving-crds.yaml
+          # Install Knative Serving core components
+          kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.17.0/serving-core.yaml
+          # Install Kourier networking layer for Knative
+          kubectl apply -f https://github.com/knative/net-kourier/releases/download/knative-v1.17.0/kourier.yaml
+          # Configure Knative to use Kourier
+          kubectl patch configmap/config-network \
+            --namespace knative-serving \
+            --type merge \
+            --patch '{"data":{"ingress-class":"kourier.ingress.networking.knative.dev"}}'
+          # Wait for Knative Serving to be ready
+          echo "Waiting for Knative Serving to be ready..."
+          kubectl wait --for=condition=Ready pod -l app=controller -n knative-serving --timeout=300s
+          kubectl wait --for=condition=Ready pod -l app=webhook -n knative-serving --timeout=300s
+          kubectl wait --for=condition=Ready pod -l app=3scale-kourier-gateway -n kourier-system --timeout=300s
+
+      - name: Install Knative Eventing
+        run: |
+          echo "=== Installing Knative Eventing ==="
+          # Install Knative Eventing CRDs (includes SinkBinding)
+          kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.17.0/eventing-crds.yaml
+          # Install Knative Eventing core components
+          kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.17.0/eventing-core.yaml
+          # Wait for Knative Eventing to be ready
+          echo "Waiting for Knative Eventing to be ready..."
+          kubectl wait --for=condition=Ready pod -l app=eventing-controller -n knative-eventing --timeout=300s
+          kubectl wait --for=condition=Ready pod -l app=eventing-webhook -n knative-eventing --timeout=300s
+
+      - name: Deploy CloudEvents sink for eoapi-notifier
+        run: |
+          echo "=== Deploying CloudEvents sink ==="
+          # Create the namespace first
+          kubectl create namespace eoapi || true
+          # Deploy the CloudEvents sink service
+          kubectl apply -f charts/eoapi/samples/cloudevents-sink.yaml
+          # Wait for the Knative service to be ready
+          echo "Waiting for CloudEvents sink to be ready..."
+          kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n eoapi --timeout=300s
+
+      - name: Wait for Traefik to be ready
+        run: |
+          echo "=== Waiting for Traefik to be ready ==="
+
+          # Wait for Traefik pods to be ready first
+          echo "Waiting for Traefik controller to be ready..."
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s
+
+          # Wait for essential Traefik CRDs to be available
+          echo "Checking for Traefik CRDs..."
+          timeout=300
+          counter=0
+          required_crds=("middlewares.traefik.io" "ingressroutes.traefik.io")
+
+          for crd in "${required_crds[@]}"; do
+            echo "Checking for CRD: $crd"
+            counter=0
+            while [ $counter -lt $timeout ]; do
+              if kubectl get crd "$crd" &>/dev/null; then
+                echo "✅ $crd is available"
+                break
+              fi
+              echo "⏳ Waiting for $crd... ($counter/$timeout)"
+              sleep 3
+              counter=$((counter + 3))
+            done
+
+            if [ $counter -ge $timeout ]; then
+              echo "❌ Timeout waiting for $crd"
+              echo "Available Traefik CRDs:"
+              kubectl get crd | grep traefik || echo "No Traefik CRDs found"
+              echo "All CRDs:"
+              kubectl get crd
+              exit 1
+            fi
+          done
+
+          echo "✅ All required Traefik CRDs are ready"
+
       - name: Deploy eoAPI
         id: deploy
-        continue-on-error: true
         run: |
           echo "=== Starting eoAPI deployment ==="
           export RELEASE_NAME="$RELEASE_NAME"
@@ -57,96 +163,60 @@ jobs:
           export GITHUB_SHA="${{ github.sha }}"
           ./scripts/deploy.sh --ci
 
-      - name: Check deployment status
-        id: check
-        if: steps.deploy.outcome == 'success'
-        run: |
-          echo "=== Checking deployment status ==="
-          export RELEASE_NAME="$RELEASE_NAME"
-          ./scripts/test.sh check-deployment --debug
-
-      - name: Debug pgstac jobs if deployment failed
-        if: steps.deploy.outcome == 'failure'
-        continue-on-error: true
-        run: |
-          echo "=== Debugging pgstac job failures ==="
-
-          # Check pgstac-migrate job
-          echo "===== pgstac-migrate Job Status ====="
-          kubectl get jobs -l app.kubernetes.io/name=pgstac-migrate -o wide || echo "No pgstac-migrate jobs found"
-
-          MIGRATE_PODS=$(kubectl get pods -l app.kubernetes.io/name=pgstac-migrate -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-          if [ -n "$MIGRATE_PODS" ]; then
-            for POD in $MIGRATE_PODS; do
-              echo "--- Logs from migrate pod $POD ---"
-              kubectl logs "$POD" --tail=100 || true
-              echo "--- Description of migrate pod $POD ---"
-              kubectl describe pod "$POD"
-            done
-          fi
-
-          # Check pgstac-load-samples job
-          echo "===== pgstac-load-samples Job Status ====="
-          kubectl get jobs -l app.kubernetes.io/name=pgstac-load-samples -o wide || echo "No pgstac-load-samples jobs found"
-
-          SAMPLES_PODS=$(kubectl get pods -l app.kubernetes.io/name=pgstac-load-samples -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
-          if [ -n "$SAMPLES_PODS" ]; then
-            for POD in $SAMPLES_PODS; do
-              echo "--- Logs from samples pod $POD ---"
-              kubectl logs "$POD" --tail=100 || true
-              echo "--- Description of samples pod $POD ---"
-              kubectl describe pod "$POD"
-            done
-          fi
-
-          # Check database status
-          echo "===== Database Pod Status ====="
-          kubectl get pods -l postgres-operator.crunchydata.com/cluster -o wide
-          kubectl get postgrescluster -o wide
-
-          # Check ConfigMaps
-          echo "===== Relevant ConfigMaps ====="
-          kubectl get configmaps | grep -E "initdb|pgstac" || echo "No relevant configmaps found"
-
-          # Check for any related events
-          echo "===== Related Kubernetes Events ====="
-          kubectl get events | grep -E "pgstac|initdb" || echo "No relevant events found"
-
-          # Check notification system status
-          echo "===== Notification System Status ====="
-          kubectl get deployments -l app.kubernetes.io/name=eoapi-notifier -o wide || echo "No eoapi-notifier deployment found"
-          kubectl get ksvc -l app.kubernetes.io/component=cloudevents-sink -o wide || echo "No Knative CloudEvents sink found"
-
-          exit 1
 
       - name: Run integration tests
-        if: steps.deploy.outcome == 'success'
         run: |
           echo "=== Running integration tests ==="
           export RELEASE_NAME="$RELEASE_NAME"
           ./scripts/test.sh integration --debug
 
-      - name: Debug deployment status
-        if: always()
+      - name: Debug failed deployment
+        if: failure()
         run: |
-          echo "=== Final Deployment Status ==="
+          echo "=== Deployment failed - collecting debug information ==="
           kubectl get pods -o wide
           kubectl get jobs -o wide
           kubectl get services -o wide
-          kubectl get ingress
+          kubectl get events --sort-by='.lastTimestamp' | tail -20 || true
+
+          # Check Knative installation status
+          echo "=== Knative Installation Status ==="
+          kubectl get pods -n knative-serving -o wide || echo "Knative Serving not installed"
+          kubectl get pods -n knative-eventing -o wide || echo "Knative Eventing not installed"
+          kubectl get pods -n kourier-system -o wide || echo "Kourier not installed"
+          # Check Knative CRDs
+          echo "=== Knative CRDs Status ==="
+          kubectl get crd | grep knative || echo "No Knative CRDs found"
+          kubectl get crd sinkbindings.sources.knative.dev || echo "SinkBinding CRD not found"
+
+          # Check Traefik status
+          echo "=== Traefik Status ==="
+          kubectl get pods -n kube-system -l app.kubernetes.io/name=traefik -o wide || echo "No Traefik pods found"
+          kubectl get crd | grep traefik || echo "No Traefik CRDs found"
+          kubectl get crd middlewares.traefik.io || echo "Middleware CRD not found"
+          kubectl get crd ingressroutes.traefik.io || echo "IngressRoute CRD not found"
 
           # Check notification system final status
           echo "=== Notification System Final Status ==="
           kubectl get deployments -l app.kubernetes.io/name=eoapi-notifier -o wide || echo "No eoapi-notifier deployment"
           kubectl get pods -l app.kubernetes.io/name=eoapi-notifier -o wide || echo "No eoapi-notifier pods"
-          kubectl get ksvc -l app.kubernetes.io/component=cloudevents-sink -o wide || echo "No Knative CloudEvents sink"
-          kubectl get pods -l serving.knative.dev/service -o wide || echo "No Knative CloudEvents sink pods"
+          kubectl get ksvc -n eoapi -o wide || echo "No Knative services in eoapi namespace"
+          kubectl get ksvc eoapi-cloudevents-sink -n eoapi -o wide || echo "No eoapi-cloudevents-sink Knative service"
+          kubectl get pods -l serving.knative.dev/service=eoapi-cloudevents-sink -n eoapi -o wide || echo "No CloudEvents sink pods"
+          # Check SinkBinding resources
+          echo "=== SinkBinding Resources ==="
+          kubectl get sinkbindings -A -o wide || echo "No SinkBinding resources found"
 
           # Show notification logs if they exist
           echo "=== eoapi-notifier Logs ==="
           kubectl logs -l app.kubernetes.io/name=eoapi-notifier --tail=20 || echo "No eoapi-notifier logs"
           echo "=== Knative CloudEvents Sink Logs ==="
-          kubectl logs -l serving.knative.dev/service --tail=20 || echo "No Knative CloudEvents sink logs"
+          kubectl logs -l serving.knative.dev/service=eoapi-cloudevents-sink -n eoapi --tail=20 || echo "No CloudEvents sink logs"
+          # Show Knative system logs if there are issues
+          echo "=== Knative Serving Controller Logs ==="
+          kubectl logs -n knative-serving -l app=controller --tail=20 || echo "No Knative Serving controller logs"
+          echo "=== Knative Eventing Controller Logs ==="
+          kubectl logs -n knative-eventing -l app=eventing-controller --tail=20 || echo "No Knative Eventing controller logs"
 
 
       - name: Cleanup
