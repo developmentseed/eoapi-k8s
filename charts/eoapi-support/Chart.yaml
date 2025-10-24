@@ -21,7 +21,7 @@ dependencies:
   #
   - name: prometheus-adapter
     # NOTE: configuration for this dependency is handled in `eoapi-support/values.yaml.prometheus-adapter` values
-    version: 5.1.0
+    version: 5.2.0
     repository: https://prometheus-community.github.io/helm-charts
 
   # Grafana for dashboarding of metrics
