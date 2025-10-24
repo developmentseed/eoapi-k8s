@@ -130,7 +130,8 @@ debug_deployment_state() {
         log_info "Recent events:"
         kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' 2>/dev/null | tail -10 || log_info "No events"
 
-
+        log_info "Knative services:"
+        kubectl get ksvc -n "$NAMESPACE" 2>/dev/null || log_info "No Knative services"
     fi
 }
 

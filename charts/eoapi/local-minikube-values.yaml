@@ -8,3 +8,65 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/use-regex: "true"
+
+# Knative components for CloudEvents
+knative:
+  enabled: true
+  cloudEventsSink:
+    enabled: true
+
+# eoapi-notifier configuration with CloudEvents output
+eoapi-notifier:
+  enabled: true
+  waitForKnativeCRDs: false
+  config:
+    logLevel: DEBUG
+    sources:
+      - type: pgstac
+        config:
+          channel: pgstac_items_change
+          connection:
+            existingSecret:
+              name: ""  # Set dynamically by deploy script
+              keys:
+                username: "user"
+                password: "password"
+                host: "host"
+                port: "port"
+                database: "dbname"
+    outputs:
+      - type: cloudevents
+        config:
+          source: /eoapi/pgstac
+          event_type: org.eoapi.stac.item
+          destination:
+            ref:
+              apiVersion: serving.knative.dev/v1
+              kind: Service
+              name: eoapi-cloudevents-sink
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+# Reduce PostgreSQL resources for local development
+postgrescluster:
+  instances:
+    - name: "postgres"
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "1Gi"
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "512Mi"
+        limits:
+          cpu: "500m"
+          memory: "1Gi"

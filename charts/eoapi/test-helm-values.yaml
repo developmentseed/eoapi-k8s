@@ -1,5 +1,8 @@
 # this file is used with `helm-tests` job in CI
 
+knative:
+  enabled: false
+
 ingress:
   className: "nginx"
   enabled: true
