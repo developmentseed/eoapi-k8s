@@ -1,10 +1,13 @@
-# used in GH Actions `.github/workflows/helm-tests.yml.jobs.integration-tests`
+# Local test configuration for minikube/local development
+# Based on test-k3s-unittest-values.yaml with minimal changes for local environment
+
 testing: true
 ingress:
   enabled: true
-  className: "traefik"
+  className: "nginx"  # Changed from "traefik" for minikube
   pathType: "Prefix"
-  host: "eoapi.local"  # Adding a host value to avoid "No domain found" warnings with Traefik
+  host: "eoapi.local"
+
 pgstacBootstrap:
   enabled: true
   settings:
@@ -15,16 +18,18 @@ pgstacBootstrap:
       limits:
         cpu: "512m"
         memory: "1024Mi"
+
 raster:
   enabled: true
   settings:
     resources:
       limits:
         cpu: "768m"
-        memory: "4096Mi"
+        memory: "2048Mi"  # Reduced from 4096Mi for local
       requests:
         cpu: "256m"
         memory: "1024Mi"
+
 stac:
   enabled: true
   settings:
@@ -35,6 +40,7 @@ stac:
       requests:
         cpu: "512m"
         memory: "1024Mi"
+
 vector:
   enabled: true
   settings:
@@ -46,12 +52,8 @@ vector:
         cpu: "256m"
         memory: "1024Mi"
     envVars:
-      # needs to on so we can call /refresh for integration tests
       TIPG_DEBUG: "True"
 
-######################
-# NOTIFICATIONS
-######################
 eoapi-notifier:
   enabled: true
   config:
@@ -62,7 +64,7 @@ eoapi-notifier:
           channel: pgstac_items_change
           connection:
             existingSecret:
-              name: ""
+              name: ""  # Set dynamically by deploy script
               keys:
                 username: "user"
                 password: "password"
@@ -86,3 +88,22 @@ eoapi-notifier:
     limits:
       cpu: "200m"
       memory: "128Mi"
+
+# Reduce PostgreSQL resources for local development
+postgrescluster:
+  instances:
+    - name: "postgres"
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "1Gi"  # Reduced for local
+      resources:
+        requests:
+          cpu: "100m"     # Reduced for local
+          memory: "512Mi" # Reduced for local
+        limits:
+          cpu: "500m"     # Reduced for local
+          memory: "1Gi"   # Reduced for local

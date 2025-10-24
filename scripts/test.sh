@@ -127,9 +127,9 @@ install_test_deps() {
         python_cmd="python3"
     fi
 
-    if ! $python_cmd -m pip install --quiet pytest httpx >/dev/null 2>&1; then
-        log_error "Failed to install test dependencies (pytest, httpx)"
-        log_error "Please install manually: pip install pytest httpx"
+    if ! $python_cmd -m pip install --quiet pytest httpx psycopg2-binary >/dev/null 2>&1; then
+        log_error "Failed to install test dependencies (pytest, httpx, psycopg2-binary)"
+        log_error "Please install manually: pip install pytest httpx psycopg2-binary"
         exit 1
     fi
 

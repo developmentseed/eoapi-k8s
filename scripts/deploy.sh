@@ -81,6 +81,55 @@ install_pgo() {
     kubectl get pods -l postgres-operator.crunchydata.com/control-plane=postgres-operator
 }
 
+# Setup Knative for local development
+setup_knative() {
+    log_info "Setting up Knative for local development..."
+
+    if kubectl get namespace knative-serving &>/dev/null && kubectl get namespace knative-eventing &>/dev/null; then
+        log_info "Knative already installed, skipping installation"
+        return 0
+    fi
+
+    log_info "Installing Knative Serving..."
+    kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.17.0/serving-crds.yaml
+    kubectl apply -f https://github.com/knative/serving/releases/download/knative-v1.17.0/serving-core.yaml
+    kubectl apply -f https://github.com/knative/net-kourier/releases/download/knative-v1.17.0/kourier.yaml
+    # Configure Knative to use Kourier
+    kubectl patch configmap/config-network \
+        --namespace knative-serving \
+        --type merge \
+        --patch '{"data":{"ingress-class":"kourier.ingress.networking.knative.dev"}}'
+
+    log_info "Installing Knative Eventing..."
+    # Install Knative Eventing CRDs (includes SinkBinding)
+    kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.17.0/eventing-crds.yaml
+    # Install Knative Eventing core components
+    kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.17.0/eventing-core.yaml
+
+    log_info "Waiting for Knative components to be ready..."
+    kubectl wait --for=condition=Ready pod -l app=controller -n knative-serving --timeout=300s
+    kubectl wait --for=condition=Ready pod -l app=webhook -n knative-serving --timeout=300s
+    kubectl wait --for=condition=Ready pod -l app=3scale-kourier-gateway -n kourier-system --timeout=300s
+    kubectl wait --for=condition=Ready pod -l app=eventing-controller -n knative-eventing --timeout=300s
+    kubectl wait --for=condition=Ready pod -l app=eventing-webhook -n knative-eventing --timeout=300s
+
+    log_info "✅ Knative installation complete"
+}
+
+deploy_cloudevents_sink() {
+    log_info "Deploying CloudEvents sink for notifications..."
+
+    kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+    if kubectl apply -f charts/eoapi/samples/cloudevents-sink.yaml; then
+        log_info "Waiting for CloudEvents sink to be ready..."
+        kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n "$NAMESPACE" --timeout=300s
+        log_info "✅ CloudEvents sink deployed successfully"
+    else
+        log_warn "Failed to deploy CloudEvents sink, continuing without it"
+    fi
+}
+
 # Integrated Helm dependency setup
 setup_helm_dependencies() {
     log_info "Setting up Helm dependencies..."
@@ -140,10 +189,17 @@ deploy_eoapi() {
         HELM_CMD="$HELM_CMD -f ./eoapi/values.yaml"
     fi
 
-    # CI-specific configuration
+    # Environment-specific configuration
     if [ "$CI_MODE" = true ] && [ -f "./eoapi/test-k3s-unittest-values.yaml" ]; then
         log_info "Using CI test configuration..."
         HELM_CMD="$HELM_CMD -f ./eoapi/test-k3s-unittest-values.yaml"
+        # Fix eoapi-notifier secret name dynamically
+        HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
+    elif [ -f "./eoapi/test-local-values.yaml" ]; then
+        log_info "Using local test configuration..."
+        HELM_CMD="$HELM_CMD -f ./eoapi/test-local-values.yaml"
+        # Fix eoapi-notifier secret name dynamically for local mode too
+        HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
     fi
 
     # Set git SHA if available
@@ -159,6 +215,31 @@ deploy_eoapi() {
     eval "$HELM_CMD"
 
     cd .. || exit
+
+    # Wait for pgstac jobs to complete first
+    if kubectl get job -n "$NAMESPACE" -l "app=$RELEASE_NAME-pgstac-migrate" >/dev/null 2>&1; then
+        log_info "Waiting for pgstac-migrate job to complete..."
+        if ! kubectl wait --for=condition=complete job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" --timeout=600s; then
+            log_error "pgstac-migrate job failed to complete"
+            kubectl describe job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE"
+            kubectl logs -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" --tail=50 || true
+            exit 1
+        fi
+    fi
+
+    if kubectl get job -n "$NAMESPACE" -l "app=$RELEASE_NAME-pgstac-load-samples" >/dev/null 2>&1; then
+        log_info "Waiting for pgstac-load-samples job to complete..."
+        if ! kubectl wait --for=condition=complete job -l "app=$RELEASE_NAME-pgstac-load-samples" -n "$NAMESPACE" --timeout=600s; then
+            log_error "pgstac-load-samples job failed to complete"
+            kubectl describe job -l "app=$RELEASE_NAME-pgstac-load-samples" -n "$NAMESPACE"
+            kubectl logs -l "app=$RELEASE_NAME-pgstac-load-samples" -n "$NAMESPACE" --tail=50 || true
+            exit 1
+        fi
+    fi
+
+    if [ "$CI_MODE" != true ]; then
+        deploy_cloudevents_sink
+    fi
 
     # Verify deployment
     log_info "Verifying deployment..."
@@ -225,6 +306,10 @@ case $COMMAND in
         ;;
     deploy)
         install_pgo
+
+        if [ "$CI_MODE" != true ]; then
+            setup_knative
+        fi
         setup_helm_dependencies
         deploy_eoapi
         ;;
