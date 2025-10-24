@@ -62,7 +62,7 @@ eoapi-notifier:
           channel: pgstac_items_change
           connection:
             existingSecret:
-              name: "eoapi-test-pguser-eoapi"
+              name: ""
               keys:
                 username: "user"
                 password: "password"
