@@ -19,10 +19,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install markdown-link-check
-        run: npm install -g markdown-link-check
+        run: npm install -g markdown-link-check@3.11.2
 
       - name: Create markdown-link-check config
         run: |
@@ -67,6 +67,10 @@ jobs:
           broken_links_found=0
 
           while IFS= read -r -d '' file; do
+            # Skip files that don't contain any internal links
+            if ! grep -q "](\./" "$file" 2>/dev/null; then
+              continue
+            fi
             echo "Checking internal links in: $file"
 
             # Check for broken relative links
@@ -101,25 +105,36 @@ jobs:
         run: |
           echo "Validating external links..."
           find docs -name "*.md" -type f | while read -r file; do
+            # Skip files that don't contain any links
+            if ! grep -q "](http" "$file" 2>/dev/null; then
+              echo "ℹ️  Skipping $file (no external links found)"
+              continue
+            fi
             echo "Checking external links in: $file"
-            markdown-link-check "$file" --config .markdown-link-check.json || echo "Some external links failed in $file"
+            # Use timeout to avoid hanging and make failures non-blocking
+            timeout 30 markdown-link-check "$file" --config .markdown-link-check.json 2>/dev/null || \
+              echo "⚠️  External link validation failed for $file (non-blocking)"
           done
+          echo "✅ External link validation completed"
 
       - name: Check for consistent link patterns
         run: |
           echo "Checking for inconsistent link patterns..."
           inconsistent_found=false
 
-          # Check for bad patterns
-          if find docs -name "*.md" -exec grep -l "](docs/" {} \;; then
+          # Check for internal docs/ prefix links (exclude external URLs)
+          internal_docs_links=$(find docs -name "*.md" -type f -exec grep -H "](docs/" {} \; 2>/dev/null | grep -v "https\?://[^)]*docs/" || true)
+          if [[ -n "$internal_docs_links" ]]; then
             echo "❌ Found links using 'docs/' prefix - use relative paths instead"
-            find docs -name "*.md" -exec grep -Hn "](docs/" {} \;
+            echo "$internal_docs_links"
             inconsistent_found=true
           fi
 
-          if find docs -name "*.md" -exec grep -l "](\.\./" {} \;; then
+          # Check for ../ patterns
+          dotdot_links=$(find docs -name "*.md" -type f -exec grep -Hn "](\.\./" {} \; 2>/dev/null || true)
+          if [[ -n "$dotdot_links" ]]; then
             echo "❌ Found links using '../' - use relative paths from docs root instead"
-            find docs -name "*.md" -exec grep -Hn "](\.\./" {} \;
+            echo "$dotdot_links"
             inconsistent_found=true
           fi
 
