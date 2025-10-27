@@ -57,3 +57,34 @@ dependencies:
     version: 0.0.7
     repository: "oci://ghcr.io/developmentseed/charts"
     condition: eoapi-notifier.enabled
+
+  # Optional Knative components for CloudEvents and serverless workloads
+  # Required for eoapi-notifier CloudEvents output
+  - name: knative-operator
+    version: 1.19.4
+    repository: https://knative.github.io/operator
+    condition: knative.enabled
+
+  # Optional monitoring components for metrics collection and autoscaling
+  # These are disabled by default to keep deployments lightweight
+  # Enable via: monitoring.prometheus.enabled=true, monitoring.metricsServer.enabled=true
+  - name: metrics-server
+    version: 7.4.12
+    repository: https://charts.bitnami.com/bitnami
+    condition: monitoring.metricsServer.enabled
+
+  - name: prometheus
+    version: 27.42.0
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheus.enabled
+
+  - name: prometheus-adapter
+    version: 5.2.0
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheusAdapter.enabled
+
+  # Observability components - Grafana dashboards and visualization
+  - name: grafana
+    version: 10.1.2
+    repository: https://grafana.github.io/helm-charts
+    condition: observability.grafana.enabled
