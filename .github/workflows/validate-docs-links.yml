@@ -1,0 +1,177 @@
+name: Validate Documentation Links
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: [ 'docs/**/*.md' ]
+  pull_request:
+    branches: [ main, master ]
+    paths: [ 'docs/**/*.md' ]
+
+jobs:
+  validate-links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check@3.11.2
+
+      - name: Create markdown-link-check config
+        run: |
+          cat > .markdown-link-check.json << 'EOF'
+          {
+            "ignorePatterns": [
+              {
+                "pattern": "^https://github.com/developmentseed/eoapi-k8s"
+              },
+              {
+                "pattern": "localhost"
+              },
+              {
+                "pattern": "127.0.0.1"
+              }
+            ],
+            "replacementPatterns": [
+              {
+                "pattern": "^./",
+                "replacement": "{{BASEURL}}/"
+              }
+            ],
+            "httpHeaders": [
+              {
+                "urls": ["https://github.com"],
+                "headers": {
+                  "Accept": "text/html"
+                }
+              }
+            ],
+            "timeout": "20s",
+            "retryOn429": true,
+            "retryCount": 3,
+            "fallbackRetryDelay": "30s",
+            "aliveStatusCodes": [200, 206, 301, 302, 403, 999]
+          }
+          EOF
+
+      - name: Validate internal links
+        run: |
+          echo "Checking internal link patterns..."
+          broken_links_found=0
+
+          while IFS= read -r -d '' file; do
+            # Skip files that don't contain any internal links
+            if ! grep -q "](\./" "$file" 2>/dev/null; then
+              continue
+            fi
+            echo "Checking internal links in: $file"
+
+            # Check for broken relative links
+            while IFS=: read -r line_num link; do
+              # Extract the link path
+              link_path=$(echo "$link" | sed -n 's/.*](\.\///; s/).*//p')
+
+              # Check if it's an image link
+              if [[ "$link_path" == images/* ]]; then
+                full_path="docs/$link_path"
+              else
+                full_path="docs/$link_path"
+              fi
+
+              if [[ ! -e "$full_path" ]]; then
+                echo "❌ Broken internal link in $file:$line_num -> $link_path (resolved to: $full_path)"
+                broken_links_found=1
+              else
+                echo "✅ Valid internal link: $link_path"
+              fi
+            done < <(grep -n "](\./" "$file" || true)
+          done < <(find docs -name "*.md" -type f -print0)
+
+          if [[ $broken_links_found -eq 1 ]]; then
+            echo "❌ Found broken internal links!"
+            exit 1
+          else
+            echo "✅ All internal links are valid!"
+          fi
+
+      - name: Validate external links
+        run: |
+          echo "Validating external links..."
+          find docs -name "*.md" -type f | while read -r file; do
+            # Skip files that don't contain any links
+            if ! grep -q "](http" "$file" 2>/dev/null; then
+              echo "ℹ️  Skipping $file (no external links found)"
+              continue
+            fi
+            echo "Checking external links in: $file"
+            # Use timeout to avoid hanging and make failures non-blocking
+            timeout 30 markdown-link-check "$file" --config .markdown-link-check.json 2>/dev/null || \
+              echo "⚠️  External link validation failed for $file (non-blocking)"
+          done
+          echo "✅ External link validation completed"
+
+      - name: Check for consistent link patterns
+        run: |
+          echo "Checking for inconsistent link patterns..."
+          inconsistent_found=false
+
+          # Check for internal docs/ prefix links (exclude external URLs)
+          internal_docs_links=$(find docs -name "*.md" -type f -exec grep -H "](docs/" {} \; 2>/dev/null | grep -v "https\?://[^)]*docs/" || true)
+          if [[ -n "$internal_docs_links" ]]; then
+            echo "❌ Found links using 'docs/' prefix - use relative paths instead"
+            echo "$internal_docs_links"
+            inconsistent_found=true
+          fi
+
+          # Check for ../ patterns
+          dotdot_links=$(find docs -name "*.md" -type f -exec grep -Hn "](\.\./" {} \; 2>/dev/null || true)
+          if [[ -n "$dotdot_links" ]]; then
+            echo "❌ Found links using '../' - use relative paths from docs root instead"
+            echo "$dotdot_links"
+            inconsistent_found=true
+          fi
+
+          if [[ "$inconsistent_found" == "true" ]]; then
+            echo "❌ Found inconsistent link patterns!"
+            echo "Use these patterns instead:"
+            echo "  - [Installation Guide](./installation.md)"
+            echo "  - [AWS Setup](./aws-eks.md)"
+            echo "  - [Images](./images/diagram.png)"
+            exit 1
+          else
+            echo "✅ All link patterns are consistent!"
+          fi
+
+      - name: Validate frontmatter
+        run: |
+          echo "Checking that all markdown files have frontmatter..."
+          missing_frontmatter_found=0
+
+          while IFS= read -r -d '' file; do
+            if ! head -1 "$file" | grep -q "^---$"; then
+              echo "❌ Missing frontmatter in: $file"
+              missing_frontmatter_found=1
+            fi
+          done < <(find docs -name "*.md" -not -path "docs/_includes/*" -type f -print0)
+
+          if [[ $missing_frontmatter_found -eq 1 ]]; then
+            echo "❌ Some files are missing frontmatter!"
+            echo "Add frontmatter like:"
+            echo "---"
+            echo "title: \"Page Title\""
+            echo "description: \"Page description\""
+            echo "external_links:"
+            echo "  - name: \"Link Name\""
+            echo "    url: \"https://example.com\""
+            echo "---"
+            exit 1
+          else
+            echo "✅ All markdown files have frontmatter!"
+          fi

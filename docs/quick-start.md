@@ -1,3 +1,13 @@
+---
+title: "Quick Start"
+description: "Fast installation guide for eoAPI Kubernetes deployment"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "Helm Documentation"
+    url: "https://helm.sh/docs/"
+---
+
 # Quick Start
 
 ## Prerequisites
