@@ -169,11 +169,11 @@ pgstacBootstrap:
     # Example:
     # queryables:
     #   - file: "initdb-data/queryables/common-queryables.json"
-    #     indexFields: ["id", "datetime", "collection"]
+    #     indexFields: ["platform", "instruments"]
     #     deleteMissing: true
     #   - file: "initdb-data/queryables/collection-specific.json"
     #     collections: ["my-collection-1", "my-collection-2"]
-    #     indexFields: []
+    #     indexFields: ["custom:field1", "custom:field2"]
     #     deleteMissing: true
     queryables: []
 
