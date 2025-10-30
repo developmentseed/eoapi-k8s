@@ -163,6 +163,20 @@ pgstacBootstrap:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
 
+    # Queryables configuration
+    # List of queryables configurations to load using pypgstac load-queryables
+    # Each item specifies a file path and optional parameters
+    # Example:
+    # queryables:
+    #   - file: "initdb-data/queryables/common-queryables.json"
+    #     indexFields: ["id", "datetime", "collection"]
+    #     deleteMissing: true
+    #   - file: "initdb-data/queryables/collection-specific.json"
+    #     collections: ["my-collection-1", "my-collection-2"]
+    #     indexFields: []
+    #     deleteMissing: true
+    queryables: []
+
     # Wait configuration for init containers waiting for pgstac jobs
     # These parameters control how long services wait for pgstac migration jobs to complete
     waitConfig:

@@ -46,6 +46,23 @@ data:
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
   {{- end }}
 {{- end }}
+---
+{{- if .Values.pgstacBootstrap.settings.queryables }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-pgstac-queryables-config
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-7"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+data:
+  {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
+  {{- $filename := splitList "/" $config.file | last }}
+  {{ $filename }}: |
+    {{- $.Files.Get $config.file | nindent 4 }}
+  {{- end }}
+{{- end }}
 {{- end }}
 ---
 {{- if .Values.postgrescluster.enabled }}

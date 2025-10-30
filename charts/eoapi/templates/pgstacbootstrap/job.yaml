@@ -156,3 +156,81 @@ spec:
       {{- end }}
   backoffLimit: 3
 {{- end }}
+
+{{- if and .Values.pgstacBootstrap.enabled .Values.pgstacBootstrap.settings.queryables }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pgstac-load-queryables
+  labels:
+    app: {{ .Release.Name }}-pgstac-load-queryables
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "-3"
+    helm.sh/hook-delete-policy: "before-hook-creation"
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-pgstac-load-queryables
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pgstac-load-queryables
+          image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
+          command:
+            - "/bin/sh"
+            - "-c"
+          args:
+            - |
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+
+              # Database connection configured through standard PG* environment variables
+              # Environment variables are already set by the container
+
+              # Wait for the database to be ready
+              echo "Waiting for database to be ready..."
+              pypgstac pgready
+
+              # Load queryables configurations
+              echo "Loading queryables configurations..."
+              {{- range $idx, $config := .Values.pgstacBootstrap.settings.queryables }}
+              {{- $filename := splitList "/" $config.file | last }}
+              echo "Processing queryables file: {{ $filename }}"
+              pypgstac load-queryables \
+              {{- if $config.deleteMissing }}
+                --delete-missing \
+              {{- end }}
+              {{- if $config.collections }}
+                --collection-ids "[\\\"{{ join "\\\",\\\"" $config.collections }}\\\"]" \
+              {{- end }}
+              {{- if $config.indexFields }}
+                --index-fields {{ join "," $config.indexFields }} \
+              {{- end }}
+                "/opt/queryables/{{ $filename }}"
+              {{- end }}
+
+              echo "Queryables loading complete"
+          resources:
+            {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /opt/queryables
+              name: {{ .Release.Name }}-queryables-volume
+          env:
+            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
+      volumes:
+        - name: {{ .Release.Name }}-queryables-volume
+          configMap:
+            name: {{ .Release.Name }}-pgstac-queryables-config
+      {{- with .Values.pgstacBootstrap.settings.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pgstacBootstrap.settings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  backoffLimit: 3
+{{- end }}
