@@ -1,0 +1,9 @@
+# k3s development and testing values for eoAPI
+# Inherits from local-base-values.yaml, only overrides k3s-specific settings
+# Usage: helm install eoapi ./charts/eoapi -f local-base-values.yaml -f local-k3s-values.yaml
+
+# Ingress configuration for Traefik (k3s built-in)
+ingress:
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web

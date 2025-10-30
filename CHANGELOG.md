@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added local testing with k3s and minikube
+- Base local development values file (`local-base-values.yaml`)
+- Unified local cluster management with `CLUSTER_TYPE` variable
+
 ## [0.7.12] - 2025-10-17
 
 - Bumped eoapi-notifier dependency version to 0.0.7

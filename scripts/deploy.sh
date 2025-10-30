@@ -135,15 +135,55 @@ deploy_eoapi() {
     HELM_CMD="$HELM_CMD --namespace $NAMESPACE --create-namespace"
     HELM_CMD="$HELM_CMD --timeout=$TIMEOUT"
 
-    # Add values files
+    # Add base values file
     if [ -f "./eoapi/values.yaml" ]; then
         HELM_CMD="$HELM_CMD -f ./eoapi/values.yaml"
     fi
 
+    # Add local base configuration for development environments
+    if [ -f "./eoapi/local-base-values.yaml" ]; then
+        case "$(kubectl config current-context 2>/dev/null || echo "unknown")" in
+            *"minikube"*|*"k3d"*|"default")
+                log_info "Using local base configuration..."
+                HELM_CMD="$HELM_CMD -f ./eoapi/local-base-values.yaml"
+                ;;
+        esac
+    fi
+
+    # Local development configuration (detect cluster type)
+    if [ "$CI_MODE" != true ]; then
+        local current_context
+        current_context=$(kubectl config current-context 2>/dev/null || echo "")
+
+        case "$current_context" in
+            *"k3d"*)
+                if [ -f "./eoapi/local-k3s-values.yaml" ]; then
+                    log_info "Adding k3s-specific overrides..."
+                    HELM_CMD="$HELM_CMD -f ./eoapi/local-k3s-values.yaml"
+                fi
+                ;;
+            "minikube")
+                if [ -f "./eoapi/local-minikube-values.yaml" ]; then
+                    log_info "Adding minikube-specific overrides..."
+                    HELM_CMD="$HELM_CMD -f ./eoapi/local-minikube-values.yaml"
+                fi
+                ;;
+        esac
+    fi
+
     # CI-specific configuration
-    if [ "$CI_MODE" = true ] && [ -f "./eoapi/test-k3s-unittest-values.yaml" ]; then
-        log_info "Using CI test configuration..."
-        HELM_CMD="$HELM_CMD -f ./eoapi/test-k3s-unittest-values.yaml"
+    if [ "$CI_MODE" = true ]; then
+        log_info "Applying CI-specific overrides..."
+        # Use base + k3s values, then override for CI
+        if [ -f "./eoapi/local-base-values.yaml" ]; then
+            HELM_CMD="$HELM_CMD -f ./eoapi/local-base-values.yaml"
+        fi
+        if [ -f "./eoapi/local-k3s-values.yaml" ]; then
+            HELM_CMD="$HELM_CMD -f ./eoapi/local-k3s-values.yaml"
+        fi
+        HELM_CMD="$HELM_CMD --set testing=true"
+        HELM_CMD="$HELM_CMD --set ingress.host=eoapi.local"
+        HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=true"
     fi
 
     # Set git SHA if available
