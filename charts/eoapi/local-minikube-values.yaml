@@ -1,0 +1,10 @@
+# Local minikube development values for eoAPI
+# Inherits from local-base-values.yaml, only overrides minikube-specific settings
+# Usage: helm install eoapi ./charts/eoapi -f local-base-values.yaml -f local-minikube-values.yaml
+
+# Ingress configuration for nginx (minikube default)
+ingress:
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
