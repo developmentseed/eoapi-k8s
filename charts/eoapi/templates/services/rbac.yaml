@@ -10,6 +10,60 @@ rules:
   resources: ["jobs"]
   verbs: ["get", "list", "watch"]
 ---
+{{- if .Values.knative.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: eoapi-cluster-role-{{ $.Release.Name }}
+  labels:
+    app: eoapi-{{ $.Release.Name }}
+rules:
+# CRD management for Knative operator installation
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get", "list", "create", "update", "patch", "watch"]
+# Core resources needed by Knative operator
+- apiGroups: [""]
+  resources: ["pods", "namespaces", "services", "configmaps", "secrets", "serviceaccounts"]
+  verbs: ["get", "list", "create", "update", "patch", "watch"]
+# Deployment and app resources
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "create", "update", "patch", "watch"]
+# RBAC resources needed by Knative operator
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+  verbs: ["get", "list", "create", "update", "patch", "watch"]
+# Admission controller resources
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+  verbs: ["get", "list", "create", "update", "patch", "watch"]
+# Knative operator resources
+- apiGroups: ["operator.knative.dev"]
+  resources: ["knativeservings", "knativeeventings"]
+  verbs: ["get", "list", "create", "update", "patch", "watch"]
+# Allow getting cluster info for operator installation
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eoapi-cluster-rolebinding-{{ $.Release.Name }}
+  labels:
+    app: eoapi-{{ $.Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "eoapi.serviceAccountName" . }}
+  namespace: {{ $.Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: eoapi-cluster-role-{{ $.Release.Name }}
+  apiGroup: rbac.authorization.k8s.io
+---
+{{- end }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
