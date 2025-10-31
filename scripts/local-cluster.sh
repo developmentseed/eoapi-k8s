@@ -89,6 +89,77 @@ case "$CLUSTER_TYPE" in
         exit 1 ;;
 esac
 
+# Wait for K3s to be fully ready
+wait_k3s_ready() {
+    log_info "Waiting for K3s to be fully ready..."
+
+    # Wait for core K3s components to be ready
+    log_info "Waiting for kube-system pods to be ready..."
+    if ! kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s; then
+        log_error "DNS pods failed to become ready"
+        return 1
+    fi
+
+    if ! kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s; then
+        log_error "Traefik pods failed to become ready"
+        return 1
+    fi
+
+    # Wait for API server to be fully responsive
+    log_info "Checking API server responsiveness..."
+    kubectl get nodes >/dev/null 2>&1 || return 1
+    kubectl get pods --all-namespaces >/dev/null 2>&1 || return 1
+
+    # Give K3s a moment to initialize all CRDs
+    log_info "Waiting for K3s initialization to complete..."
+    sleep 10
+
+    log_info "✅ K3s is ready"
+}
+
+# Wait for Traefik to be ready
+wait_traefik_ready() {
+    log_info "Waiting for Traefik to be ready..."
+
+    # Wait for Traefik pods to be ready first
+    log_info "Waiting for Traefik controller to be ready..."
+    if ! kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s; then
+        log_error "Traefik controller failed to become ready"
+        return 1
+    fi
+
+    # Wait for essential Traefik CRDs to be available
+    log_info "Checking for Traefik CRDs..."
+    local timeout=300
+    local counter=0
+    local required_crds=("middlewares.traefik.io" "ingressroutes.traefik.io")
+
+    for crd in "${required_crds[@]}"; do
+        log_info "Checking for CRD: $crd"
+        counter=0
+        while [ $counter -lt $timeout ]; do
+            if kubectl get crd "$crd" &>/dev/null; then
+                log_info "✅ $crd is available"
+                break
+            fi
+            log_info "⏳ Waiting for $crd... ($counter/$timeout)"
+            sleep 3
+            counter=$((counter + 3))
+        done
+
+        if [ $counter -ge $timeout ]; then
+            log_error "❌ Timeout waiting for $crd"
+            log_info "Available Traefik CRDs:"
+            kubectl get crd | grep traefik || echo "No Traefik CRDs found"
+            return 1
+        fi
+    done
+
+    log_info "✅ All required Traefik CRDs are ready"
+}
+
+
+
 # Check required tools
 check_requirements() {
     case "$CLUSTER_TYPE" in
@@ -170,6 +241,8 @@ create_cluster() {
                 --port "$HTTPS_PORT:443@loadbalancer" \
                 --wait; then
                 log_info "✅ k3s cluster created successfully"
+                wait_k3s_ready || exit 1
+                wait_traefik_ready || exit 1
             else
                 log_error "Failed to create k3s cluster"
                 exit 1
