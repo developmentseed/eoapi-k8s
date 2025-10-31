@@ -68,7 +68,7 @@ helm upgrade --install \
 
 ### Post-Installation
 
-1. Enable ingress (for Minikube):
+1. Enable ingress (for Minikube only - k3s has Traefik built-in):
 ```bash
 minikube addons enable ingress
 ```

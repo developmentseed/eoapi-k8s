@@ -1,48 +1,77 @@
 # Makefile for eoapi-k8s
 
-# Variables
-HELM_REPO_URL=https://devseed.com/eoapi-k8s/
-HELM_CHART_NAME=eoapi/eoapi
-PGO_CHART_VERSION=5.7.4
+LOCAL_CLUSTER_SCRIPT := ./scripts/local-cluster.sh
+DEPLOY_SCRIPT := ./scripts/deploy.sh
+TEST_SCRIPT := ./scripts/test.sh
 
-.PHONY: all deploy minikube ingest tests integration lint validate-schema help
+# Default cluster type (can be overridden)
+CLUSTER_TYPE ?= minikube
 
-# Default target
-all: deploy
+.PHONY: help deploy clean tests integration lint validate-schema
+.DEFAULT_GOAL := help
+
+help:
+	@echo "eoAPI Kubernetes Makefile"
+	@echo ""
+	@echo "MAIN COMMANDS:"
+	@echo "  deploy          Deploy eoAPI to current kubectl context"
+	@echo "  tests           Run Helm unit tests"
+	@echo "  integration     Run integration tests on current cluster"
+	@echo "  clean           Clean up deployment"
+	@echo ""
+	@echo "LOCAL DEVELOPMENT:"
+	@echo "  local           Create local cluster and deploy (CLUSTER_TYPE=minikube|k3s)"
+	@echo "  local-start     Start existing local cluster"
+	@echo "  local-stop      Stop local cluster"
+	@echo "  local-delete    Delete local cluster"
+	@echo "  local-status    Show local cluster status"
+	@echo "  test-local      Run full integration tests on local cluster"
+	@echo ""
+	@echo "QUALITY:"
+	@echo "  lint            Run linting and code quality checks"
+	@echo "  validate-schema Validate Helm schemas"
+	@echo ""
+	@echo "VARIABLES:"
+	@echo "  CLUSTER_TYPE    Local cluster type: minikube or k3s (default: minikube)"
+	@echo ""
+	@echo "EXAMPLES:"
+	@echo "  make local CLUSTER_TYPE=minikube"
+	@echo "  make test-local CLUSTER_TYPE=k3s"
 
 deploy:
-	@echo "Deploying eoAPI."
-	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
-	@./scripts/deploy.sh
+	@$(DEPLOY_SCRIPT)
 
-minikube:
-	@echo "Starting minikube."
-	@command -v minikube >/dev/null 2>&1 || { echo "minikube is required but not installed"; exit 1; }
-	minikube start
-	# Deploy eoAPI via the regular helm install routine
-	@make deploy
-	minikube addons enable ingress
-	@echo "eoAPI is now available at:"
-	@minikube service ingress-nginx-controller -n ingress-nginx --url | head -n 1
-
-ingest:
-	@echo "Ingesting STAC collections and items into the database."
-	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
-	@./scripts/ingest.sh || { echo "Ingestion failed."; exit 1; }
+clean:
+	@$(DEPLOY_SCRIPT) cleanup
 
 tests:
-	@echo "Running Helm unit tests..."
-	@command -v helm >/dev/null 2>&1 || { echo "helm is required but not installed"; exit 1; }
-	@./scripts/deploy.sh setup
-	@./scripts/test.sh helm
+	@$(DEPLOY_SCRIPT) setup
+	@$(TEST_SCRIPT) helm
 
 integration:
-	@echo "Running integration tests against Kubernetes cluster..."
-	@command -v bash >/dev/null 2>&1 || { echo "bash is required but not installed"; exit 1; }
-	@./scripts/test.sh integration
+	@$(TEST_SCRIPT) integration
+
+local:
+	@$(LOCAL_CLUSTER_SCRIPT) deploy --type $(CLUSTER_TYPE)
+
+local-start:
+	@$(LOCAL_CLUSTER_SCRIPT) start --type $(CLUSTER_TYPE)
+
+local-stop:
+	@$(LOCAL_CLUSTER_SCRIPT) stop --type $(CLUSTER_TYPE)
+
+local-delete:
+	@$(LOCAL_CLUSTER_SCRIPT) delete --type $(CLUSTER_TYPE)
+
+local-status:
+	@$(LOCAL_CLUSTER_SCRIPT) status --type $(CLUSTER_TYPE)
+
+test-local:
+	@$(LOCAL_CLUSTER_SCRIPT) start --type $(CLUSTER_TYPE)
+	@$(LOCAL_CLUSTER_SCRIPT) context --type $(CLUSTER_TYPE)
+	@$(MAKE) integration
 
 lint:
-	@echo "Running linting and code quality checks..."
 	@if [ ! -f .git/hooks/pre-commit ]; then \
 		echo "Installing pre-commit..."; \
 		uv pip install pre-commit yamllint shellcheck-py || pip3 install --user pre-commit yamllint shellcheck-py; \
@@ -51,37 +80,27 @@ lint:
 	@pre-commit run --all-files
 
 validate-schema:
-	@echo "Validating Helm values schemas..."
-	@command -v helm >/dev/null 2>&1 || { echo "❌ helm is required but not installed"; exit 1; }
-	@command -v ajv >/dev/null 2>&1 || { echo "❌ ajv-cli is required but not installed. Run: npm install -g ajv-cli ajv-formats"; exit 1; }
+	@command -v helm >/dev/null 2>&1 || { echo "❌ helm required but not installed"; exit 1; }
+	@command -v ajv >/dev/null 2>&1 || { echo "❌ ajv-cli required. Run: npm install -g ajv-cli ajv-formats"; exit 1; }
 	@for chart_dir in charts/*/; do \
 		chart_name=$$(basename "$$chart_dir"); \
 		if [ -f "$${chart_dir}values.schema.json" ]; then \
-			echo "🔍 Validating schema for $$chart_name..."; \
-			if helm lint "$$chart_dir" --strict && \
-			   helm template test "$$chart_dir" >/dev/null && \
-			   ajv compile -s "$${chart_dir}values.schema.json" --spec=draft7 --strict=false && \
-			   python3 -c "import yaml,json; json.dump(yaml.safe_load(open('$${chart_dir}values.yaml')), open('/tmp/values-$${chart_name}.json','w'))" && \
-			   ajv validate -s "$${chart_dir}values.schema.json" -d "/tmp/values-$${chart_name}.json" --spec=draft7; then \
-				rm -f "/tmp/values-$${chart_name}.json"; \
-				echo "✅ $$chart_name validation passed"; \
-			else \
+			echo "🔍 Validating $$chart_name..."; \
+			helm lint "$$chart_dir" --strict && \
+			helm template test "$$chart_dir" >/dev/null && \
+			ajv compile -s "$${chart_dir}values.schema.json" --spec=draft7 --strict=false && \
+			python3 -c "import yaml,json; json.dump(yaml.safe_load(open('$${chart_dir}values.yaml')), open('/tmp/values-$${chart_name}.json','w'))" && \
+			ajv validate -s "$${chart_dir}values.schema.json" -d "/tmp/values-$${chart_name}.json" --spec=draft7 && \
+			rm -f "/tmp/values-$${chart_name}.json" && \
+			echo "✅ $$chart_name validation passed" || { \
 				rm -f "/tmp/values-$${chart_name}.json"; \
 				echo "❌ $$chart_name validation failed"; \
 				exit 1; \
-			fi; \
+			}; \
 		else \
 			echo "⚠️ $$chart_name: no values.schema.json found, skipping"; \
 		fi; \
 	done
 
-help:
-	@echo "Makefile commands:"
-	@echo "  make deploy         -  Deploy eoAPI to the configured Kubernetes cluster."
-	@echo "  make minikube       -  Install eoAPI on minikube."
-	@echo "  make ingest         -  Ingest STAC collections and items into the database."
-	@echo "  make integration    -  Run integration tests on connected Kubernetes cluster."
-	@echo "  make tests          -  Run unit tests."
-	@echo "  make lint           -  Run linting and code quality checks."
-	@echo "  make validate-schema -  Validate Helm values schemas."
-	@echo "  make help           -  Show this help message."
+ingest:
+	@./scripts/ingest.sh

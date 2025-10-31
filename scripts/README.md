@@ -1,78 +1,44 @@
-# eoAPI Kubernetes Scripts
+# Scripts
 
-Automation scripts for deploying, testing, and managing eoAPI on Kubernetes.
+Automation scripts for eoAPI Kubernetes deployment and testing.
 
-## Scripts Overview
+## Core Scripts
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| **`deploy.sh`** | Deploy eoAPI to Kubernetes | `./deploy.sh [deploy\|setup\|cleanup] [--ci]` |
-| **`ingest.sh`** | Ingest STAC data into deployed eoAPI | `./ingest.sh [collections.json] [items.json]` |
-| **`test.sh`** | Run Helm and integration tests | `./test.sh [helm\|integration\|all] [--debug]` |
-| **`lib/`** | Shared utility functions | See [lib/README.md](lib/README.md) |
+| Script | Purpose |
+|--------|---------|
+| **`deploy.sh`** | Deploy/setup/cleanup eoAPI |
+| **`test.sh`** | Run Helm and integration tests |
+| **`local-cluster.sh`** | Manage local clusters (minikube/k3s) |
+| **`ingest.sh`** | Ingest STAC data |
 
-## Quick Start
+## Quick Usage
 
 ```bash
-# Deploy eoAPI
+# Deploy to current cluster
 ./scripts/deploy.sh
 
-# Ingest sample data
-./scripts/ingest.sh collections.json items.json
+# Local development
+make local                       # uses minikube by default
+make local CLUSTER_TYPE=k3s      # or use k3s
+make test-local                  # uses minikube by default
+make test-local CLUSTER_TYPE=k3s # or use k3s
 
 # Run tests
-./scripts/test.sh
+./scripts/test.sh integration
 ```
 
 ## Prerequisites
 
-- **kubectl** - Kubernetes CLI configured for your cluster
-- **helm** - Helm package manager v3+
-- **python3** - For data ingestion and testing
-- **jq** - JSON processor (for advanced features)
+- `kubectl`, `helm` (v3.15+), `python3`, `jq`
+- **Local testing**: `k3d` or `minikube`
 
-## Environment Variables (Optional)
+## Environment Variables
 
-Most settings are auto-detected. Override only when needed:
+Most settings auto-detected. Override when needed:
 
 ```bash
-# Deployment customization
-export PGO_VERSION=5.7.4           # PostgreSQL operator version
-export TIMEOUT=15m                  # Deployment timeout
-
-# Override auto-detection (usually not needed)
-export NAMESPACE=my-eoapi           # Target namespace
-export RELEASE_NAME=my-release      # Helm release name
-
-# Testing endpoints (auto-detected by test.sh)
-export STAC_ENDPOINT=http://...     # Override STAC API endpoint
-export RASTER_ENDPOINT=http://...   # Override Raster API endpoint
-export VECTOR_ENDPOINT=http://...   # Override Vector API endpoint
+NAMESPACE=custom ./scripts/deploy.sh
+CLUSTER_TYPE=k3s make local      # override to use k3s
 ```
 
-## Common Examples
-
-**Deploy with custom namespace:**
-```bash
-NAMESPACE=my-eoapi ./scripts/deploy.sh
-```
-
-**Setup dependencies only:**
-```bash
-./scripts/deploy.sh setup
-```
-
-**Run tests with debug output:**
-```bash
-./scripts/test.sh all --debug
-```
-
-**Cleanup deployment:**
-```bash
-./scripts/deploy.sh cleanup
-```
-
-**CI mode deployment:**
-```bash
-./scripts/deploy.sh --ci
-```
+See individual script `--help` for details.

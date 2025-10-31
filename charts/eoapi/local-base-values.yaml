@@ -1,0 +1,102 @@
+# Base local development values for eoAPI
+# Common configuration shared between minikube and k3s
+# Platform-specific values should override only what's different
+
+testing: false
+
+# Database configuration optimized for local development
+database:
+  enabled: true
+  connectionPooling:
+    enabled: false  # Simplify for local development
+
+# Enable pgstac bootstrap with sample data
+pgstacBootstrap:
+  enabled: true
+  settings:
+    # Queryables configuration for testing
+    queryables:
+      - file: "initdb-data/queryables/test-queryables.json"
+        indexFields: ["platform", "instruments"]
+        deleteMissing: true
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+
+# STAC API service
+stac:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "1280m"
+        memory: "1536Mi"
+    envVars:
+      # Enable debug mode for development
+      STAC_FASTAPI_DEBUG: "True"
+      # Disable CORS for local development
+      STAC_FASTAPI_CORS_ORIGINS: "*"
+
+# Raster service (TiTiler)
+raster:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+    envVars:
+      # Enable debug logging
+      TITILER_DEBUG: "True"
+
+# Vector service (TiPG)
+vector:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "768m"
+        memory: "1536Mi"
+    envVars:
+      # Enable debug mode for integration tests
+      TIPG_DEBUG: "True"
+
+# STAC Browser
+browser:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "200m"
+        memory: "128Mi"
+
+# Disable resource-intensive features for local development
+monitoring:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+# Simple ingress configuration (platform-specific parts overridden)
+ingress:
+  enabled: true
+  pathType: "Prefix"
+  host: "localhost"
+  tls:
+    enabled: false  # Simplify for local development
