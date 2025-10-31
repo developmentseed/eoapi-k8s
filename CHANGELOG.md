@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Minimal Knative integration for CloudEvents notifications
+- CloudEvents sink deployment for eoapi-notifier integration
+- Knative operator dependency and initialization job
+- RBAC permissions for Knative resources
 - Added local testing with k3s and minikube
 - Base local development values file (`local-base-values.yaml`)
 - Unified local cluster management with `CLUSTER_TYPE` variable

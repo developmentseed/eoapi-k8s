@@ -95,3 +95,38 @@ ingress:
   host: "localhost"
   tls:
     enabled: false  # Simplify for local development
+
+# Enable eoapi-notifier for CloudEvents testing
+eoapi-notifier:
+  enabled: true
+  serviceAccount:
+    create: false
+    name: ""
+  sources:
+    - type: pgstac
+      config:
+        connection:
+          existingSecret:
+            name: "eoapi-db-pguser-pgstac"
+            keys:
+              username: "user"
+              password: "password"
+              host: "host"
+              port: "port"
+              database: "dbname"
+  outputs:
+    - type: cloudevents
+      config:
+        source: "/eoapi/pgstac"
+        event_type: "org.eoapi.stac.item"
+
+# Enable Knative for local CloudEvents testing
+knative:
+  enabled: true
+  version: "1.17"
+  cloudEventsSink:
+    enabled: true
+
+# Knative operator configuration
+knative-operator:
+  tag: "v1.17.8"

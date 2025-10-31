@@ -487,6 +487,9 @@ docServer:
 ######################
 eoapi-notifier:
   enabled: false
+  serviceAccount:
+    name: ""
+    create: false
   sources:
     - type: pgstac
       config:
@@ -522,6 +525,24 @@ eoapi-notifier:
             namespace: serverless
         # For HTTP endpoints, use: endpoint: https://webhook.example.com
 
+######################
+# KNATIVE
+######################
+# Optional Knative components for CloudEvents and serverless workloads
+knative:
+  enabled: false
+  version: "1.17"
+  # CloudEvents sink configuration (deployed when eoapi-notifier uses CloudEvents output)
+  cloudEventsSink:
+    enabled: false
+
+# Knative operator sub-chart configuration
+knative-operator:
+  tag: "v1.17.8"
+
+######################
+# VERSION MANAGEMENT
+######################
 # Version being upgraded from, used for migration purposes
 # Dont set the value in the values.yaml file
 # prefer to set it in the command line

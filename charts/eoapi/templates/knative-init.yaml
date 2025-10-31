@@ -1,0 +1,101 @@
+{{- if .Values.knative.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-knative-init
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: knative-init
+spec:
+  template:
+    metadata:
+      name: {{ .Release.Name }}-knative-init
+      labels:
+        {{- include "eoapi.labels" . | nindent 8 }}
+        app.kubernetes.io/component: knative-init
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
+      containers:
+      - name: knative-init
+        image: bitnami/kubectl:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          echo "=== Knative Initialization ==="
+
+          # Wait for knative-operator deployment
+          echo "Waiting for knative-operator deployment..."
+          max_attempts=20
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            if kubectl get deployment knative-operator --all-namespaces >/dev/null 2>&1; then
+              OPERATOR_NS=$(kubectl get deployment knative-operator --all-namespaces -o jsonpath='{.items[0].metadata.namespace}')
+              echo "Found knative-operator in namespace: $OPERATOR_NS"
+              break
+            fi
+            echo "Attempt $attempt/$max_attempts: knative-operator not found, waiting..."
+            sleep 10
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "Warning: knative-operator not found, continuing without Knative setup"
+            exit 0
+          fi
+
+          # Wait for operator to be ready
+          echo "Waiting for knative-operator to be ready..."
+          kubectl rollout status deployment/knative-operator -n "$OPERATOR_NS" --timeout=300s || {
+            echo "Warning: knative-operator not ready, continuing anyway"
+          }
+
+          # Create namespaces
+          kubectl create namespace knative-serving --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace knative-eventing --dry-run=client -o yaml | kubectl apply -f -
+
+          # Create KnativeServing
+          if ! kubectl get knativeserving knative-serving -n knative-serving >/dev/null 2>&1; then
+            cat <<EOF | kubectl apply -f -
+          apiVersion: operator.knative.dev/v1beta1
+          kind: KnativeServing
+          metadata:
+            name: knative-serving
+            namespace: knative-serving
+          spec:
+            version: {{ .Values.knative.version | quote }}
+            ingress:
+              kourier:
+                enabled: true
+            config:
+              network:
+                ingress-class: "kourier.ingress.networking.knative.dev"
+          EOF
+            echo "KnativeServing created"
+          fi
+
+          # Create KnativeEventing
+          if ! kubectl get knativeeventing knative-eventing -n knative-eventing >/dev/null 2>&1; then
+            cat <<EOF | kubectl apply -f -
+          apiVersion: operator.knative.dev/v1beta1
+          kind: KnativeEventing
+          metadata:
+            name: knative-eventing
+            namespace: knative-eventing
+          spec:
+            version: {{ .Values.knative.version | quote }}
+          EOF
+            echo "KnativeEventing created"
+          fi
+
+          echo "Knative initialization completed"
+
+
+  backoffLimit: 2
+  activeDeadlineSeconds: 900
+{{- end }}
