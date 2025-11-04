@@ -1,0 +1,54 @@
+{
+  "structure": "flat",
+  "assets_dir": "images",
+  "external_repo": "https://github.com/developmentseed/eoapi-k8s",
+  "files": {
+    "index.md": { "title": "Kubernetes Deployment", "slug": "index" },
+    "quick-start.md": { "title": "Quick Start", "slug": "quick-start" },
+    "helm-install.md": { "title": "Helm Installation", "slug": "helm-install" },
+    "configuration.md": { "title": "Configuration Options", "slug": "configuration" },
+    "unified-ingress.md": { "title": "Unified Ingress", "slug": "unified-ingress" },
+    "aws-eks.md": { "title": "AWS EKS Setup", "slug": "aws-eks" },
+    "gcp-gke.md": { "title": "GCP GKE Setup", "slug": "gcp-gke" },
+    "azure.md": { "title": "Azure AKS Setup", "slug": "azure" },
+    "manage-data.md": { "title": "Data Management", "slug": "manage-data" },
+    "autoscaling.md": { "title": "Autoscaling & Monitoring", "slug": "autoscaling" },
+    "stac-auth-proxy.md": { "title": "STAC Auth Proxy", "slug": "stac-auth-proxy" },
+    "release.md": { "title": "Release Workflow", "slug": "release" },
+    "README.md": { "title": "Documentation Guide", "slug": "docs-readme" }
+  },
+  "nav_structure": [
+    { "title": "Overview", "file": "index.md" },
+    { "title": "Quick Start", "file": "quick-start.md" },
+    {
+      "title": "Installation",
+      "children": [
+        { "title": "Helm Installation", "file": "helm-install.md" },
+        { "title": "Configuration Options", "file": "configuration.md" },
+        { "title": "Unified Ingress", "file": "unified-ingress.md" }
+      ]
+    },
+    {
+      "title": "Cloud Providers",
+      "children": [
+        { "title": "AWS EKS", "file": "aws-eks.md" },
+        { "title": "GCP GKE", "file": "gcp-gke.md" },
+        { "title": "Azure AKS", "file": "azure.md" }
+      ]
+    },
+    {
+      "title": "Operations",
+      "children": [
+        { "title": "Data Management", "file": "manage-data.md" },
+        { "title": "Autoscaling & Monitoring", "file": "autoscaling.md" }
+      ]
+    },
+    {
+      "title": "Advanced",
+      "children": [
+        { "title": "STAC Auth Proxy", "file": "stac-auth-proxy.md" },
+        { "title": "Release Workflow", "file": "release.md" }
+      ]
+    }
+  ]
+}

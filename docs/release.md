@@ -1,4 +1,16 @@
-### Release Workflow
+---
+title: "Release Workflow"
+description: "Chart versioning, GitHub releases, and Helm repository publishing process"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "Semantic Versioning"
+    url: "https://semver.org/"
+  - name: "Helm Chart Best Practices"
+    url: "https://helm.sh/docs/chart_best_practices/"
+---
+
+# Release Workflow
 
 1. PRs that include changes in the `charts/<eoapi> || <eoapi-support> || <postgrescluster>` charts are manually required to consider
 whether their changes are major, minor or patch (in terms of semantic versioning) and bump the appropriate

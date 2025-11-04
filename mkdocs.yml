@@ -1,0 +1,58 @@
+site_name: eoAPI Kubernetes
+site_description: Production-ready Kubernetes deployment for eoAPI - Earth Observation data APIs
+site_url: https://developmentseed.github.io/eoapi-k8s
+repo_url: https://github.com/developmentseed/eoapi-k8s
+repo_name: developmentseed/eoapi-k8s
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+docs_dir: docs
+site_dir: site
+
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  - Installation:
+      - Helm Installation: helm-install.md
+      - Configuration Options: configuration.md
+      - Unified Ingress: unified-ingress.md
+  - Cloud Providers:
+      - AWS EKS: aws-eks.md
+      - GCP GKE: gcp-gke.md
+      - Azure AKS: azure.md
+  - Operations:
+      - Data Management: manage-data.md
+      - Autoscaling & Monitoring: autoscaling.md
+  - Authentication:
+      - STAC Auth Proxy: stac-auth-proxy.md
+  - Contributing:
+      - Release Workflow: release.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search

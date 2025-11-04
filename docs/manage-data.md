@@ -1,3 +1,15 @@
+---
+title: "Data Management"
+description: "Loading STAC collections and items into PostgreSQL using pypgstac"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "pypgstac Documentation"
+    url: "https://github.com/stac-utils/pypgstac"
+  - name: "STAC Specification"
+    url: "https://stacspec.org/"
+---
+
 # Data management
 
 eoAPI-k8s provides a basic data ingestion process that consist of manual operations on the components of the stack.

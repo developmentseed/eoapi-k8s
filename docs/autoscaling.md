@@ -1,3 +1,17 @@
+---
+title: "Autoscaling & Monitoring"
+description: "HPA setup with custom metrics, Grafana dashboards, Prometheus configuration, and load testing"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "Kubernetes HPA Documentation"
+    url: "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"
+  - name: "Prometheus Documentation"
+    url: "https://prometheus.io/docs/"
+  - name: "Grafana Documentation"
+    url: "https://grafana.com/docs/"
+---
+
 # Autoscaling / Monitoring / Observability
 
 Autoscaling is both art and science. To test out your application's autoscaling requirements you often need to consider
@@ -5,7 +19,7 @@ your data volume, data usage patterns, bottlenecks (such as the database) among 
 metrics, monitoring and observability will help you explore what those needs are.
 
 
-> &#9432; The `eoapi-support` chart in this repository (see `../charts/eoapi-support`) is required to be installed to
+> &#9432; The `eoapi-support` chart in this repository is required to be installed to
 enable any of the eoAPI service autoscaling. It cannot be listed as a dependecy of `eoapi` chart
 b/c of the limitations in `prometheus-adapter` and `grafana` for constructing the Prometheus internal
 service domains dynamically.
@@ -17,7 +31,7 @@ might want to read through the verbose walkthrough material below to familiarize
 
 ## Helm Install `eoapi-support`
 
-The following instructions assume you've gone through the [AWS](../installation/providers/aws-eks.md) or [GCP](../installation/providers/gcp-gke.md) cluster set up
+The following instructions assume you've gone through the [AWS](./aws-eks.md) or [GCP](./gcp-gke.md) cluster set up
 and installed the `eoapi` chart.
 
 
@@ -99,9 +113,9 @@ manual step that cannot be automated
 
 ---
 
-### Review [Default Configuration and Options](../installation/configuration.md)
+### Review [Default Configuration and Options](./configuration.md)
 
-[This document](../installation/configuration.md) will explain the differences in the `autoscaling` block for each service:
+[This document](./configuration.md) will explain the differences in the `autoscaling` block for each service:
 
    ```yaml
    autoscaling:
@@ -199,15 +213,15 @@ with the `release` name we installed the chart with below `<release-name>-grafan
 
 3. Login and you should be default be able to see the eoapi-k8s grafana dashboard. The Prometheus datasource will already be configured for you:
 
-   ![Grafana Datasource Configuration](../images/datasource.png)
+   ![Grafana Datasource Configuration](./images/datasource.png)
 
    You can then view the main eoAPI dashboard:
 
-   ![](../images/gfdashboard.png)
+   ![](./images/gfdashboard.png)
 
    To add additional custom dashboards, you can use the dashboard import functionality:
 
-   ![Adding Custom Grafana Dashboards](../images/add-grafana-dashboard.png)
+   ![Adding Custom Grafana Dashboards](./images/add-grafana-dashboard.png)
 
 ### Install or Upgrade Autoscaling Changes to `eoapi` Chart
 
@@ -361,7 +375,7 @@ that you're deploying using `ingress.className: "nginx"`.
 
 4. **Monitor autoscaling in Grafana** - Go back to your Grafana dashboard and watch your services autoscale for the endpoints you're hitting:
 
-   ![Grafana Autoscaling Dashboard](../images/grafanaautoscale.png)
+   ![Grafana Autoscaling Dashboard](./images/grafanaautoscale.png)
 
 ### Load Testing Best Practices
 

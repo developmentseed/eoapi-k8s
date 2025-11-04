@@ -28,11 +28,11 @@
 
 ### Get started
 
-* [Quick start guide](./docs/installation/quick-start.md)
+* [Quick start guide](./docs/quick-start.md)
 
 ### `eoAPI-k8s` documentation
 
-* [Overview of docs](./docs/index.md)
+* [Overview of docs](https://eoapi.dev/deployment/kubernetes)
 
 ### General eoAPI documentation
 * [eoapi.dev](https://eoapi.dev) website.

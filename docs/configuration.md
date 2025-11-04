@@ -1,3 +1,13 @@
+---
+title: "Configuration Options"
+description: "Complete reference for Helm values, database types, ingress setup, and service configuration"
+external_links:
+  - name: "eoapi-k8s Repository"
+    url: "https://github.com/developmentseed/eoapi-k8s"
+  - name: "Helm Values Documentation"
+    url: "https://helm.sh/docs/chart_best_practices/values/"
+---
+
 # Configuration Options
 
 ## Required Values
@@ -116,7 +126,7 @@ raster:
 ## Deployment Architecture
 
 When using default settings, the deployment looks like this:
-![](../images/default_architecture.png)
+![](./images/default_architecture.png)
 
 The deployment includes:
 - HA PostgreSQL database (via PostgreSQL Operator)
@@ -138,7 +148,7 @@ All services include health check endpoints with automatic liveness probes:
 | Raster API | `/raster/healthz` | HTTP 200, no auth required |
 | Vector API | `/vector/healthz` | HTTP 200, no auth required |
 
-The Kubernetes deployment templates automatically configure `livenessProbe` settings for regular health checks. See the [deployment template](../../charts/eoapi/templates/services/deployment.yaml) for probe configuration details.
+The Kubernetes deployment templates automatically configure `livenessProbe` settings for regular health checks. See the [deployment template](https://github.com/developmentseed/eoapi-k8s/blob/main/charts/eoapi/templates/services/deployment.yaml) for probe configuration details.
 
 ## Advanced Configuration
 
