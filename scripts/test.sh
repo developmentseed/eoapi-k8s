@@ -175,9 +175,21 @@ run_integration_tests() {
             -v --tb=short || log_warn "Notification tests failed"
     fi
 
-    # Wait for pods to be ready
+    # Wait for pods to be ready - try standard labels first, fallback to legacy
     if kubectl get pods -n "$NAMESPACE" >/dev/null 2>&1; then
-        wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=stac" "300s" || log_warn "STAC pods not ready"
+        if ! wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac" "300s" 2>/dev/null; then
+            wait_for_pods "$NAMESPACE" "app=${RELEASE_NAME}-stac" "300s" || log_warn "STAC pods not ready"
+        fi
+    fi
+
+    # Wait for Knative services to be ready if they exist
+    if kubectl get ksvc -n "$NAMESPACE" >/dev/null 2>&1; then
+        if kubectl get ksvc eoapi-cloudevents-sink -n "$NAMESPACE" >/dev/null 2>&1; then
+            log_info "Waiting for Knative cloudevents sink to be ready..."
+            if ! kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n "$NAMESPACE" --timeout=120s 2>/dev/null; then
+                log_warn "Knative cloudevents sink not ready - this may cause SinkBinding warnings"
+            fi
+        fi
     fi
 
     log_info "✅ Integration tests completed"
