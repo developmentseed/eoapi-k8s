@@ -1,4 +1,4 @@
-name: CI
+name: CI tests
 
 on:
   push:
@@ -11,8 +11,8 @@ env:
   PGO_VERSION: 5.7.4
 
 jobs:
-  validate:
-    name: Lint checks
+  fast-checks:
+    name: Simple tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -20,9 +20,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
-
-      - name: Install ajv-cli
-        run: npm install -g ajv-cli ajv-formats
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -32,8 +29,88 @@ jobs:
       - name: Setup Helm dependencies
         run: ./scripts/deploy.sh setup
 
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli ajv-formats
+
       - name: Run linters
         run: make lint
 
       - name: Validate Helm values schema
         run: make validate-schema
+
+      - name: Run Helm unit tests
+        run: make tests
+
+  integration-tests:
+    name: Integration tests
+    needs: fast-checks
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Start K3s cluster
+        uses: jupyterhub/action-k3s-helm@v4
+        with:
+          k3s-channel: latest
+          helm-version: ${{ env.HELM_VERSION }}
+          metrics-enabled: false
+          docker-enabled: true
+
+      - name: Set release name
+        run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
+
+      - name: Wait for K3s readiness
+        run: |
+          echo "=== Waiting for K3s cluster to be ready ==="
+
+          # The action already sets up kubectl context, just verify it works
+          kubectl cluster-info
+          kubectl get nodes
+
+          # Wait for core components
+          kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s
+
+          # Verify Traefik CRDs
+          timeout=300; counter=0
+          for crd in "middlewares.traefik.io" "ingressroutes.traefik.io"; do
+            while [ $counter -lt $timeout ] && ! kubectl get crd "$crd" &>/dev/null; do
+              sleep 3; counter=$((counter + 3))
+            done
+            [ $counter -ge $timeout ] && { echo "❌ Timeout waiting for $crd"; exit 1; }
+          done
+
+          echo "✅ K3s cluster ready"
+
+      - name: Deploy eoAPI
+        id: deploy
+        run: |
+          echo "=== eoAPI Deployment ==="
+          export RELEASE_NAME="${RELEASE_NAME}"
+          export PGO_VERSION="${{ env.PGO_VERSION }}"
+          export CI_MODE=true
+
+          # Deploy using consolidated script with CI mode
+          ./scripts/deploy.sh --ci
+
+      - name: Validate deployment
+        run: |
+          echo "=== Post-deployment validation ==="
+          ./scripts/test.sh check-deployment
+
+      - name: Run integration tests
+        run: |
+          export RELEASE_NAME="$RELEASE_NAME"
+          ./scripts/test.sh integration --debug
+
+      - name: Debug failed deployment
+        if: failure()
+        run: |
+          ./scripts/debug-deployment.sh
+
+      - name: Cleanup
+        if: always()
+        run: |
+          helm uninstall "$RELEASE_NAME" -n eoapi || true
+          kubectl delete namespace eoapi || true
