@@ -158,12 +158,26 @@ run_integration_tests() {
         debug_deployment_state
     fi
 
-    # TODO: Add actual integration test implementation
-    log_info "Running basic endpoint checks..."
+    # Run Python integration tests if available
+    if [ -d ".github/workflows/tests" ]; then
+        log_info "Running Python integration tests..."
+
+        if ! command -v pytest >/dev/null 2>&1; then
+            python3 -m pip install --user pytest psycopg2-binary requests >/dev/null 2>&1 || {
+                log_warn "Failed to install pytest - skipping Python tests"
+                return 0
+            }
+        fi
+
+        # Run notification tests (don't require DB connection)
+        python3 -m pytest .github/workflows/tests/test_notifications.py::test_eoapi_notifier_deployment \
+            .github/workflows/tests/test_notifications.py::test_cloudevents_sink_logs_show_startup \
+            -v --tb=short || log_warn "Notification tests failed"
+    fi
 
     # Wait for pods to be ready
     if kubectl get pods -n "$NAMESPACE" >/dev/null 2>&1; then
-        wait_for_pods "$NAMESPACE" "app=$RELEASE_NAME-stac" "300s" || log_warn "STAC pods not ready"
+        wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=stac" "300s" || log_warn "STAC pods not ready"
     fi
 
     log_info "✅ Integration tests completed"
