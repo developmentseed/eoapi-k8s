@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://stac-extensions.github.io/item-search/v1.0.0/schema.json",
+  "title": "Test Queryables",
+  "description": "Test queryables for eoapi",
+  "type": "object",
+  "properties": {
+    "eo:cloud_cover": {
+      "description": "Estimate of cloud cover as a percentage (0-100) of the entire scene",
+      "type": "number",
+      "title": "Cloud Cover",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "view:sun_azimuth": {
+      "description": "Sun azimuth angle in degrees",
+      "type": "number",
+      "title": "Sun Azimuth",
+      "minimum": 0,
+      "maximum": 360
+    },
+    "view:sun_elevation": {
+      "description": "Sun elevation angle in degrees",
+      "type": "number",
+      "title": "Sun Elevation",
+      "minimum": -90,
+      "maximum": 90
+    },
+    "platform": {
+      "description": "Platform or satellite name",
+      "type": "string",
+      "title": "Platform"
+    },
+    "instruments": {
+      "description": "Instrument(s) used",
+      "type": "array",
+      "title": "Instruments",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
