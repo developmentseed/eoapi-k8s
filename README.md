@@ -8,7 +8,7 @@
 
 <p>
   <a href="https://github.com/developmentseed/eoapi-k8s/actions?query=workflow%3ACI" target="_blank">
-      <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/helm-tests.yml/badge.svg?branch=main" alt="Test">
+      <img src="https://github.com/developmentseed/eoapi-k8s/actions/workflows/ci.yml/badge.svg?branch=main" alt="Test">
   </a>
   <a href="https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/developmentseed/titiler.svg" alt="License">
@@ -28,14 +28,8 @@
 
 ### Get started
 
-* [Quick start guide](./docs/quick-start.md)
-
-### `eoAPI-k8s` documentation
-
-* [Overview of docs](https://eoapi.dev/deployment/kubernetes)
-
-### General eoAPI documentation
-* [eoapi.dev](https://eoapi.dev) website.
+* [General eoAPI documentation](https://eoapi.dev).
+* [eoAPI-k8s documentation](https://eoapi.dev/deployment/kubernetes)
 
 ## Contributing
 
