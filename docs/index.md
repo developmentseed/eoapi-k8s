@@ -1,65 +1,28 @@
 ---
-title: "eoAPI Kubernetes Documentation"
-description: "Technical documentation for deploying and operating eoAPI on Kubernetes clusters"
+title: "eoAPI Kubernetes"
+description: "Production-ready Kubernetes deployment"
 external_links:
-  - name: "Main eoapi Repository"
-    url: "https://github.com/developmentseed/eoapi"
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
 ---
 
-# eoAPI Kubernetes Documentation
+# eoAPI Kubernetes
 
-Technical documentation for deploying and operating eoAPI on Kubernetes clusters.
+Production-ready Kubernetes deployment for eoAPI.
 
-## Architecture
+The source code is maintained in the [eoapi-k8s repository](https://github.com/developmentseed/eoapi-k8s). Contributions are welcome!
 
-When deployed with default settings, eoAPI provides:
+## Kubernetes Architecture
 
-- High-availability PostgreSQL cluster (via PostgreSQL Operator)
-- Load balancer with path-based routing:
-    - `/stac` → STAC API
-    - `/raster` → TiTiler raster API
-    - `/vector` → TiPG vector API
-    - `/browser` → STAC Browser
-    - `/` → Documentation server
-- Horizontal pod autoscaling based on CPU or request rate metrics
-- Persistent storage with dynamic volume provisioning
+This deployment provides:
+
+- Path-based ingress routing (`/stac`, `/raster`, `/vector`, `/browser`, ..)
+- A PostgreSQL cluster (via PostgreSQL Operator)
 - TLS termination and certificate management
-- Health checks at `/stac/_mgmt/ping`, `/raster/healthz`, `/vector/healthz`
+- Persistent storage with dynamic volume provisioning
+- Horizontal pod autoscaling with custom metrics
+- Built-in health checks and monitoring at `/stac/_mgmt/ping`, `/raster/healthz`, `/vector/healthz`
 
-## Quick Start
+## Getting Started
 
-Please refer to our [quick start guide](./quick-start.md)
-
-## Installation
-
-1. Set up a Kubernetes cluster using one of the cloud provider guides
-2. Install the PostgreSQL Operator dependency
-2. Configure your deployment using the [Configuration Options](./configuration.md)
-3. Deploy using [Helm Installation](./helm-install.md) instructions
-4. Set up monitoring with [Autoscaling & Monitoring](./autoscaling.md)
-
-## Documentation
-
-### Cloud Provider Guides
-- **[AWS EKS Setup](./aws-eks.md)** - Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and NGINX ingress
-- **[GCP GKE Setup](./gcp-gke.md)** - GKE cluster creation with CSI driver, NGINX ingress, and cert-manager
-- **[Azure AKS Setup](./azure.md)** - Azure configuration with managed PostgreSQL, Key Vault integration, and Workload Identity
-
-### Installation & Configuration
-- **[Configuration Options](./configuration.md)** - Complete reference for Helm values, database types, ingress setup, and service configuration
-- **[Manual Helm Installation](./helm-install.md)** - Step-by-step Helm deployment process with custom configurations
-- **[Unified Ingress Configuration](./unified-ingress.md)** - NGINX and Traefik ingress setup with TLS and cert-manager integration
-
-### Database Management
-- **[Data Management](./manage-data.md)** - Loading STAC collections and items into PostgreSQL using pypgstac
-
-### Operations & Monitoring
-- **[Autoscaling & Monitoring](./autoscaling.md)** - HPA setup with custom metrics, Grafana dashboards, Prometheus configuration, and load testing
-
-### Advanced Features
-- **[STAC Auth Proxy Integration](./stac-auth-proxy.md)** - Service-specific ingress control for authenticated STAC access
-
-### Development & Release
-- **[Release Workflow](./release.md)** - Chart versioning, GitHub releases, and Helm repository publishing process
+Ready to deploy? Start with our [Quick Start guide](./quick-start.md) for fast installation, or explore the full documentation below for production deployments.

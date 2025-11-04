@@ -1,5 +1,5 @@
 ---
-title: "STAC Auth Proxy Integration"
+title: "STAC Auth Proxy"
 description: "Service-specific ingress control for authenticated STAC access"
 external_links:
   - name: "eoapi-k8s Repository"
@@ -8,7 +8,7 @@ external_links:
     url: "https://github.com/developmentseed/stac-auth-proxy"
 ---
 
-# STAC Auth Proxy Integration with eoAPI-K8S
+# STAC Auth Proxy
 
 ## Solution Overview
 

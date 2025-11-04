@@ -23,7 +23,7 @@ docs_dir: docs
 site_dir: site
 
 nav:
-  - Overview: index.md
+  - Home: index.md
   - Quick Start: quick-start.md
   - Installation:
       - Helm Installation: helm-install.md
@@ -36,8 +36,9 @@ nav:
   - Operations:
       - Data Management: manage-data.md
       - Autoscaling & Monitoring: autoscaling.md
-  - Advanced:
+  - Authentication:
       - STAC Auth Proxy: stac-auth-proxy.md
+  - Contributing:
       - Release Workflow: release.md
 
 markdown_extensions:
