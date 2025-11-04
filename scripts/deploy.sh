@@ -139,7 +139,10 @@ pre_deployment_debug() {
     kubectl get pods -l postgres-operator.crunchydata.com/control-plane=postgres-operator -o wide 2>/dev/null || log_info "No PGO pods found (expected for fresh install)"
     echo ""
 
-
+    # Check for any existing knative-operator
+    log_info "Looking for knative-operator before deployment:"
+    kubectl get deployment knative-operator --all-namespaces -o wide 2>/dev/null || log_info "knative-operator not found yet (expected)"
+    echo ""
 
     # Check available helm repositories
     log_info "Helm repositories:"
@@ -419,11 +422,14 @@ deploy_eoapi() {
         fi
         HELM_CMD="$HELM_CMD --set testing=true"
         HELM_CMD="$HELM_CMD --set ingress.host=eoapi.local"
-        HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=false"
+        HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=true"
+        # Fix eoapi-notifier secret name dynamically
+        HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
     elif [ -f "./eoapi/test-local-values.yaml" ]; then
         log_info "Using local test configuration..."
         HELM_CMD="$HELM_CMD -f ./eoapi/test-local-values.yaml"
-        HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=false"
+        # Fix eoapi-notifier secret name dynamically for local mode too
+        HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
     else
         # Local development configuration (detect cluster type)
         local current_context
@@ -554,6 +560,11 @@ validate_ci_deployment() {
     find charts/ -name "charts" -type d -exec ls -la {} \; 2>/dev/null || log_info "No chart dependencies found"
     echo ""
 
+    # Check knative-operator specifically
+    log_info "Checking for knative-operator deployment:"
+    kubectl get deployment knative-operator --all-namespaces -o wide 2>/dev/null || log_info "knative-operator deployment not found"
+    echo ""
+
     # Check helm release status
     log_info "Helm release status:"
     helm status "$RELEASE_NAME" -n "$NAMESPACE" 2>/dev/null || log_warn "Release status unavailable"
@@ -567,6 +578,18 @@ validate_ci_deployment() {
     # Check pod status specifically
     log_info "Pod status:"
     kubectl get pods -n "$NAMESPACE" -o wide 2>/dev/null || log_warn "No pods in $NAMESPACE namespace"
+
+    # Knative Integration Debug
+    log_info "=== Knative Integration Debug ==="
+    kubectl get deployments -l app.kubernetes.io/name=knative-operator --all-namespaces 2>/dev/null || log_info "Knative operator not found"
+    kubectl get crd | grep knative 2>/dev/null || log_info "No Knative CRDs found"
+    kubectl get knativeservings --all-namespaces -o wide 2>/dev/null || log_info "No KnativeServing resources"
+    kubectl get knativeeventings --all-namespaces -o wide 2>/dev/null || log_info "No KnativeEventing resources"
+    kubectl get pods -n knative-serving 2>/dev/null || log_info "No knative-serving namespace"
+    kubectl get pods -n knative-eventing 2>/dev/null || log_info "No knative-eventing namespace"
+    kubectl get pods -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE" 2>/dev/null || log_info "No eoapi-notifier pods"
+    kubectl get ksvc -n "$NAMESPACE" 2>/dev/null || log_info "No Knative services in $NAMESPACE namespace"
+    kubectl get sinkbindings -n "$NAMESPACE" 2>/dev/null || log_info "No SinkBindings in $NAMESPACE namespace"
 
     return 0
 }

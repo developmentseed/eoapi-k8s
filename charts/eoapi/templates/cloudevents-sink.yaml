@@ -1,0 +1,53 @@
+{{- $hasCloudEventsOutput := false }}
+{{- range (index .Values "eoapi-notifier").outputs }}
+{{- if eq .type "cloudevents" }}
+{{- $hasCloudEventsOutput = true }}
+{{- end }}
+{{- end }}
+{{- if and (index .Values "eoapi-notifier").enabled .Values.knative.enabled .Values.knative.cloudEventsSink.enabled $hasCloudEventsOutput }}
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: eoapi-cloudevents-sink
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cloudevents-sink
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: "before-hook-creation"
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "1"
+      labels:
+        {{- include "eoapi.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cloudevents-sink
+    spec:
+      containers:
+      - name: cloudevents-sink
+        image: gcr.io/knative-samples/helloworld-go:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: TARGET
+          value: "eoAPI CloudEvents Sink"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          {{- toYaml .Values.knative.cloudEventsSink.resources | nindent 10 }}
+{{- end }}

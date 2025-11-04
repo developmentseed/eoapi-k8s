@@ -501,6 +501,9 @@ docServer:
 ######################
 eoapi-notifier:
   enabled: false
+  serviceAccount:
+    name: ""
+    create: false
   sources:
     - type: pgstac
       config:
@@ -534,8 +537,44 @@ eoapi-notifier:
             kind: Broker
             name: my-channel-1
             namespace: serverless
-        # For HTTP endpoints, use: endpoint: https://webhook.example.com
+            # For HTTP endpoints, use: endpoint: https://webhook.example.com
 
+######################
+# KNATIVE
+######################
+# Optional Knative components for CloudEvents and serverless workloads
+knative:
+  enabled: false
+  version: "1.17"
+  initTimeout: "600s"
+  # CloudEvents sink configuration (deployed when eoapi-notifier uses CloudEvents output)
+  cloudEventsSink:
+    enabled: false
+    image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+# Knative operator sub-chart configuration
+# These values are passed directly to the knative-operator sub-chart
+# The operator will be installed and can then deploy Knative Serving/Eventing via CRs
+knative-operator:
+  tag: "v1.17.8"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+######################
+# VERSION MANAGEMENT
+######################
 # Version being upgraded from, used for migration purposes
 # Dont set the value in the values.yaml file
 # prefer to set it in the command line

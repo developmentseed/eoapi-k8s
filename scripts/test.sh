@@ -130,7 +130,8 @@ debug_deployment_state() {
         log_info "Recent events:"
         kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' 2>/dev/null | tail -10 || log_info "No events"
 
-
+        log_info "Knative services:"
+        kubectl get ksvc -n "$NAMESPACE" 2>/dev/null || log_info "No Knative services"
     fi
 }
 
@@ -157,12 +158,38 @@ run_integration_tests() {
         debug_deployment_state
     fi
 
-    # TODO: Add actual integration test implementation
-    log_info "Running basic endpoint checks..."
+    # Run Python integration tests if available
+    if [ -d ".github/workflows/tests" ]; then
+        log_info "Running Python integration tests..."
 
-    # Wait for pods to be ready
+        if ! command -v pytest >/dev/null 2>&1; then
+            python3 -m pip install --user pytest psycopg2-binary requests >/dev/null 2>&1 || {
+                log_warn "Failed to install pytest - skipping Python tests"
+                return 0
+            }
+        fi
+
+        # Run notification tests (don't require DB connection)
+        python3 -m pytest .github/workflows/tests/test_notifications.py::test_eoapi_notifier_deployment \
+            .github/workflows/tests/test_notifications.py::test_cloudevents_sink_logs_show_startup \
+            -v --tb=short || log_warn "Notification tests failed"
+    fi
+
+    # Wait for pods to be ready - try standard labels first, fallback to legacy
     if kubectl get pods -n "$NAMESPACE" >/dev/null 2>&1; then
-        wait_for_pods "$NAMESPACE" "app=$RELEASE_NAME-stac" "300s" || log_warn "STAC pods not ready"
+        if ! wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac" "300s" 2>/dev/null; then
+            wait_for_pods "$NAMESPACE" "app=${RELEASE_NAME}-stac" "300s" || log_warn "STAC pods not ready"
+        fi
+    fi
+
+    # Wait for Knative services to be ready if they exist
+    if kubectl get ksvc -n "$NAMESPACE" >/dev/null 2>&1; then
+        if kubectl get ksvc eoapi-cloudevents-sink -n "$NAMESPACE" >/dev/null 2>&1; then
+            log_info "Waiting for Knative cloudevents sink to be ready..."
+            if ! kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n "$NAMESPACE" --timeout=120s 2>/dev/null; then
+                log_warn "Knative cloudevents sink not ready - this may cause SinkBinding warnings"
+            fi
+        fi
     fi
 
     log_info "✅ Integration tests completed"

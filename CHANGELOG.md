@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Base local development values file (`local-base-values.yaml`)
 - Unified local cluster management with `CLUSTER_TYPE` variable
 - Improved CI and local debugging; added debug-deployment.sh script
+- Added knative in CI to test eoapi-notifier.
 
 ## [0.7.12] - 2025-10-17
 

@@ -1,0 +1,34 @@
+{{- $hasCloudEventsOutput := false }}
+{{- range (index .Values "eoapi-notifier").outputs }}
+{{- if eq .type "cloudevents" }}
+{{- $hasCloudEventsOutput = true }}
+{{- end }}
+{{- end }}
+{{- if and (index .Values "eoapi-notifier").enabled .Values.knative.enabled .Values.knative.cloudEventsSink.enabled $hasCloudEventsOutput }}
+---
+apiVersion: sources.knative.dev/v1
+kind: SinkBinding
+metadata:
+  name: eoapi-notifier-sink-binding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sink-binding
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-weight: "30"
+    helm.sh/hook-delete-policy: "before-hook-creation"
+spec:
+  subject:
+    apiVersion: apps/v1
+    kind: Deployment
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: eoapi-notifier
+  sink:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: eoapi-cloudevents-sink
+      namespace: {{ .Release.Namespace }}
+{{- end }}

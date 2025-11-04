@@ -41,6 +41,16 @@ echo ""
 
 # Post-install hooks debugging
 echo "--- Post-Install Hooks Status ---"
+echo "knative-init job:"
+kubectl get job "$RELEASE_NAME-knative-init" -n "$NAMESPACE" -o wide 2>/dev/null || echo "knative-init job not found"
+if kubectl get job "$RELEASE_NAME-knative-init" -n "$NAMESPACE" >/dev/null 2>&1; then
+  echo "knative-init job logs:"
+  kubectl logs -l app.kubernetes.io/component=knative-init -n "$NAMESPACE" --tail=50 2>/dev/null || echo "No logs available for knative-init job"
+  echo ""
+  echo "knative-init job description:"
+  kubectl describe job "$RELEASE_NAME-knative-init" -n "$NAMESPACE" 2>/dev/null
+fi
+echo ""
 echo "pgstac-migrate job:"
 kubectl get job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" -o wide 2>/dev/null || echo "pgstac-migrate job not found"
 if kubectl get job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" >/dev/null 2>&1; then
@@ -77,6 +87,27 @@ echo ""
 echo "PostgreSQL pods:"
 kubectl get pods -l postgres-operator.crunchydata.com/cluster -n "$NAMESPACE" -o wide 2>/dev/null || echo "No PostgreSQL pods found in namespace $NAMESPACE"
 echo ""
+# Knative status
+echo "--- Knative Status ---"
+echo "knative-operator deployment status:"
+kubectl get deployment knative-operator --all-namespaces -o wide 2>/dev/null || echo "knative-operator deployment not found"
+if kubectl get deployment knative-operator --all-namespaces >/dev/null 2>&1; then
+  OPERATOR_NS=$(kubectl get deployment knative-operator --all-namespaces -o jsonpath='{.items[0].metadata.namespace}')
+  echo "knative-operator logs:"
+  kubectl logs -l app.kubernetes.io/name=knative-operator -n "$OPERATOR_NS" --tail=30 2>/dev/null || echo "No logs available for knative-operator"
+fi
+echo ""
+echo "Knative CRDs:"
+kubectl get crd | grep knative || echo "No Knative CRDs found"
+echo ""
+echo "KnativeServing resources:"
+kubectl get knativeservings --all-namespaces -o wide 2>/dev/null || echo "No KnativeServing resources found"
+echo ""
+echo "KnativeEventing resources:"
+kubectl get knativeeventings --all-namespaces -o wide 2>/dev/null || echo "No KnativeEventing resources found"
+echo ""
+kubectl get pods -n knative-serving -o wide || echo "Knative Serving not installed"
+kubectl get pods -n knative-eventing -o wide || echo "Knative Eventing not installed"
 
 # Traefik status
 echo "--- Traefik Status ---"
@@ -105,6 +136,16 @@ kubectl logs -l app.kubernetes.io/name=tipg -n "$NAMESPACE" --tail=20 2>/dev/nul
 echo ""
 echo "eoapi-notifier logs:"
 kubectl logs -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No eoapi-notifier logs in namespace $NAMESPACE"
+# eoAPI notification system
+echo "--- Notification System ---"
+kubectl get deployments -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE" -o wide || echo "No eoapi-notifier deployment in namespace $NAMESPACE"
+kubectl get ksvc -n "$NAMESPACE" -o wide 2>/dev/null || echo "No Knative services in namespace $NAMESPACE"
+kubectl get sinkbindings -n "$NAMESPACE" -o wide 2>/dev/null || echo "No SinkBinding resources in namespace $NAMESPACE"
+
+# Logs from key components
+echo "--- Key Component Logs ---"
+kubectl logs -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No eoapi-notifier logs in namespace $NAMESPACE"
+kubectl logs -l serving.knative.dev/service=eoapi-cloudevents-sink -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No CloudEvents sink logs in namespace $NAMESPACE"
 
 # Recent events in eoAPI namespace
 echo "--- Recent Events in eoAPI Namespace ---"
@@ -117,3 +158,9 @@ kubectl top nodes 2>/dev/null || echo "Metrics not available"
 echo ""
 echo "Pod resource usage in $NAMESPACE:"
 kubectl top pods -n "$NAMESPACE" 2>/dev/null || echo "Pod metrics not available"
+# System controller logs if issues detected
+if ! kubectl get pods -n knative-serving &>/dev/null; then
+    echo "--- Knative Controller Logs ---"
+    kubectl logs -n knative-serving -l app=controller --tail=20 || echo "No Knative Serving controller logs"
+    kubectl logs -n knative-eventing -l app=eventing-controller --tail=20 || echo "No Knative Eventing controller logs"
+fi

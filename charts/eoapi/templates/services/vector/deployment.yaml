@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vector
     app: {{ .Release.Name }}-vector
     gitsha: {{ .Values.gitSha }}
   name: {{ .Release.Name }}-vector
@@ -22,10 +24,14 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
+      {{- include "eoapi.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: vector
       app: {{ .Release.Name }}-vector
   template:
     metadata:
       labels:
+        {{- include "eoapi.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: vector
         app: {{ .Release.Name }}-vector
         {{- with .Values.vector.settings.labels }}
         {{- toYaml . | nindent 8 }}
