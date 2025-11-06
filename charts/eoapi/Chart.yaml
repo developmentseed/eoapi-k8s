@@ -58,6 +58,6 @@ dependencies:
     repository: "oci://ghcr.io/developmentseed/charts"
     condition: eoapi-notifier.enabled
   - name: knative-operator
-    version: 1.17.8
+    version: v1.19.5
     repository: https://knative.github.io/operator
     condition: knative.enabled
