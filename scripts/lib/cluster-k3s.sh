@@ -51,7 +51,7 @@ k3s_create() {
         --agents 1
         --port "$http_port:80@loadbalancer"
         --port "$https_port:443@loadbalancer"
-        --k3s-arg "--disable=servicelb@server:*"
+        # --k3s-arg "--disable=servicelb@server:*"
         --registry-create "$cluster_name-registry:0.0.0.0:$K3S_REGISTRY_PORT"
         --wait
     )

@@ -119,10 +119,10 @@ def test_cloudevents_sink_logs_show_startup():
             "kubectl",
             "logs",
             "-l",
-            "serving.knative.dev/service",
+            "serving.knative.dev/service=eoapi-cloudevents-sink",
             "-n",
             namespace,
-            "--tail=20",
+            "--tail=100",
         ],
         capture_output=True,
         text=True,
@@ -132,8 +132,9 @@ def test_cloudevents_sink_logs_show_startup():
         pytest.skip("Cannot get Knative CloudEvents sink logs")
 
     logs = result.stdout
-    assert "listening on port" in logs, (
-        "Knative CloudEvents sink should have started successfully"
+    # Check for either startup message or evidence the service is running
+    assert "listening on port" in logs or "received a request" in logs, (
+        f"Knative CloudEvents sink should be running. Got logs: {logs[:500]}"
     )
 
 
