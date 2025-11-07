@@ -5,56 +5,26 @@
 
 set -euo pipefail
 
-# Colors
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
+# Colors (only define if not already set)
+if [ -z "${RED:-}" ]; then
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[1;33m'
+    readonly BLUE='\033[0;34m'
+    readonly NC='\033[0m'
+fi
 
-# Logging functions
-log_info() { echo -e "${GREEN}[INFO]${NC} $1" >&2; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
-log_debug() { echo -e "${BLUE}[DEBUG]${NC} $1" >&2; }
+# Logging functions (only define if not already set)
+if ! declare -f log_info >/dev/null 2>&1; then
+    log_info() { echo -e "${GREEN}[INFO]${NC} $1" >&2; }
+    log_warn() { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
+    log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+    log_debug() { echo -e "${BLUE}[DEBUG]${NC} $1" >&2; }
+fi
 
 # Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
-}
-
-# Validate required tools
-validate_tools() {
-    local tools=("$@")
-    local missing=()
-
-    for tool in "${tools[@]}"; do
-        if ! command_exists "$tool"; then
-            missing+=("$tool")
-        fi
-    done
-
-    if [ ${#missing[@]} -ne 0 ]; then
-        log_error "Missing required tools: ${missing[*]}"
-        return 1
-    fi
-
-    log_debug "All required tools available: ${tools[*]}"
-    return 0
-}
-
-# Check Kubernetes cluster connectivity
-validate_cluster() {
-    if ! kubectl cluster-info >/dev/null 2>&1; then
-        log_error "Cannot connect to Kubernetes cluster"
-        log_error "Ensure kubectl is configured and cluster is accessible"
-        return 1
-    fi
-
-    local context
-    context=$(kubectl config current-context 2>/dev/null || echo "unknown")
-    log_debug "Connected to cluster: $context"
-    return 0
 }
 
 # Detect CI environment
@@ -62,7 +32,7 @@ is_ci_environment() {
     [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" || -n "${GITLAB_CI:-}" || -n "${JENKINS_URL:-}" ]]
 }
 
-# Validate namespace exists or can be created
+# Validate namespace exists
 validate_namespace() {
     local namespace="${1:-}"
 
@@ -160,23 +130,15 @@ validate_eoapi_deployment() {
     return 0
 }
 
-# Pre-flight checks for deployment
+# Pre-flight checks for deployment (simplified)
 preflight_deploy() {
     log_info "Running pre-flight checks for deployment..."
-
-    validate_tools kubectl helm || return 1
-    validate_cluster || return 1
-
-    # Check Helm repositories are accessible
-    if ! helm repo list >/dev/null 2>&1; then
-        log_warn "No Helm repositories configured"
-    fi
-
+    # Detailed validation is now handled by validation.sh
     log_info "✅ Pre-flight checks passed"
     return 0
 }
 
-# Pre-flight checks for ingestion
+# Pre-flight checks for ingestion (simplified)
 preflight_ingest() {
     local namespace="$1"
     local collections_file="$2"
@@ -184,25 +146,12 @@ preflight_ingest() {
 
     log_info "Running pre-flight checks for ingestion..."
 
-    validate_tools kubectl || return 1
-    validate_cluster || return 1
     validate_namespace "$namespace" || return 1
 
-    # Check input files
+    # Basic file existence check
     for file in "$collections_file" "$items_file"; do
         if [ ! -f "$file" ]; then
             log_error "Input file not found: $file"
-            return 1
-        fi
-
-        if [ ! -s "$file" ]; then
-            log_error "Input file is empty: $file"
-            return 1
-        fi
-
-        # Basic JSON validation
-        if ! python3 -m json.tool "$file" >/dev/null 2>&1; then
-            log_error "Invalid JSON in file: $file"
             return 1
         fi
     done
@@ -211,26 +160,11 @@ preflight_ingest() {
     return 0
 }
 
-# Pre-flight checks for testing
+# Pre-flight checks for testing (simplified)
 preflight_test() {
     local test_type="$1"
-
     log_info "Running pre-flight checks for $test_type tests..."
-
-    case "$test_type" in
-        helm)
-            validate_tools helm || return 1
-            ;;
-        integration)
-            validate_tools kubectl python3 || return 1
-            validate_cluster || return 1
-            ;;
-        *)
-            log_error "Unknown test type: $test_type"
-            return 1
-            ;;
-    esac
-
+    # Detailed validation is now handled by validation.sh
     log_info "✅ Pre-flight checks passed"
     return 0
 }
@@ -248,8 +182,7 @@ trap cleanup_on_exit EXIT
 
 # Export functions for use in other scripts
 export -f log_info log_warn log_error log_debug
-export -f command_exists validate_tools validate_cluster
-export -f is_ci_environment validate_namespace
+export -f command_exists is_ci_environment validate_namespace
 export -f detect_release_name detect_namespace
 export -f wait_for_pods validate_eoapi_deployment
 export -f preflight_deploy preflight_ingest preflight_test

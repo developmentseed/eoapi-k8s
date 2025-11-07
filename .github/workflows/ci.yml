@@ -5,6 +5,13 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run with upterm debugging enabled (requires SSH key in secrets)'
+        required: false
+        default: false
 
 env:
   HELM_VERSION: v3.15.2
@@ -27,7 +34,7 @@ jobs:
           version: ${{ env.HELM_VERSION }}
 
       - name: Setup Helm dependencies
-        run: ./scripts/deploy.sh setup
+        run: ./scripts/deploy.sh setup --deps-only
 
       - name: Install ajv-cli
         run: npm install -g ajv-cli ajv-formats
@@ -39,7 +46,7 @@ jobs:
         run: make validate-schema
 
       - name: Run Helm unit tests
-        run: make tests
+        run: make test-helm
 
   integration-tests:
     name: Integration tests
@@ -48,6 +55,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx psycopg2-binary pytest
 
       - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
@@ -86,23 +103,133 @@ jobs:
       - name: Deploy eoAPI
         id: deploy
         run: |
+          set -e  # Exit on any error
+
           echo "=== eoAPI Deployment ==="
+          echo "RELEASE_NAME: ${RELEASE_NAME}"
+          echo "PGO_VERSION: ${{ env.PGO_VERSION }}"
+
           export RELEASE_NAME="${RELEASE_NAME}"
           export PGO_VERSION="${{ env.PGO_VERSION }}"
-          export CI_MODE=true
 
-          # Deploy using consolidated script with CI mode
-          ./scripts/deploy.sh --ci
+          # Deploy using consolidated script with k3s values for testing
+          echo "Running deploy script..."
+          if ! ./scripts/deploy.sh deploy --namespace "${RELEASE_NAME}" --release "${RELEASE_NAME}" \
+            -f charts/eoapi/local-base-values.yaml \
+            -f charts/eoapi/local-k3s-values.yaml \
+            --set ingress.host=eoapi.local \
+            --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name="${RELEASE_NAME}-pguser-eoapi" \
+            --debug; then
+
+            echo "❌ Deploy script failed"
+            kubectl get namespaces
+            kubectl get pods -A
+            exit 1
+          fi
+
+          # Verify namespace was created
+          echo "=== Verifying namespace creation ==="
+          if ! kubectl get namespace "${RELEASE_NAME}" >/dev/null 2>&1; then
+            echo "❌ Namespace ${RELEASE_NAME} was not created"
+            kubectl get namespaces
+            exit 1
+          fi
+          echo "✅ Namespace ${RELEASE_NAME} exists"
+
+          # List resources in namespace
+          echo "=== Resources in namespace ${RELEASE_NAME} ==="
+          kubectl get all -n "${RELEASE_NAME}"
+
+      - name: Debug session after deployment
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: lhotari/action-upterm@v1
+        with:
+          limit-access-to-keys: ${{ secrets.UPTERM_SSH_KEY }}
+          wait-timeout-minutes: 30
 
       - name: Validate deployment
         run: |
           echo "=== Post-deployment validation ==="
+          export NAMESPACE="${RELEASE_NAME}"
           ./scripts/test.sh check-deployment
+
+      - name: Wait for services to be ready
+        run: |
+          set -e  # Exit on any error
+
+          echo "=== Waiting for Services to be Ready ==="
+          echo "RELEASE_NAME: ${RELEASE_NAME}"
+
+          # Verify namespace exists first
+          if ! kubectl get namespace "${RELEASE_NAME}" >/dev/null 2>&1; then
+            echo "❌ Namespace ${RELEASE_NAME} does not exist!"
+            kubectl get namespaces
+            exit 1
+          fi
+
+          echo "Waiting for deployments in namespace ${RELEASE_NAME}..."
+          kubectl wait --for=condition=available deployment/"${RELEASE_NAME}"-stac -n "${RELEASE_NAME}" --timeout=300s
+          kubectl wait --for=condition=available deployment/"${RELEASE_NAME}"-raster -n "${RELEASE_NAME}" --timeout=300s
+          kubectl wait --for=condition=available deployment/"${RELEASE_NAME}"-vector -n "${RELEASE_NAME}" --timeout=300s
+
+          # Get the K3s node IP and set up host entry
+          NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+          echo "Node IP: $NODE_IP"
+
+          # Add eoapi.local to /etc/hosts for ingress access
+          echo "$NODE_IP eoapi.local" | sudo tee -a /etc/hosts
+
+          # Wait for ingress to be ready
+          echo "=== Waiting for Ingress to be Ready ==="
+          kubectl get ingress -n "${RELEASE_NAME}"
+
+          # Wait for Traefik to pick up the ingress rules
+          sleep 10
+
+          # Test connectivity through ingress using eoapi.local
+          echo "=== Testing API connectivity through ingress ==="
+          for i in {1..30}; do
+            if curl -s "http://eoapi.local/stac/_mgmt/ping" 2>/dev/null; then
+              echo "✅ STAC API accessible through ingress"
+              break
+            fi
+            echo "Waiting for STAC API... (attempt $i/30)"
+            sleep 3
+          done
+
+          for i in {1..30}; do
+            if curl -s "http://eoapi.local/raster/healthz" 2>/dev/null; then
+              echo "✅ Raster API accessible through ingress"
+              break
+            fi
+            echo "Waiting for Raster API... (attempt $i/30)"
+            sleep 3
+          done
+
+          for i in {1..30}; do
+            if curl -s "http://eoapi.local/vector/healthz" 2>/dev/null; then
+              echo "✅ Vector API accessible through ingress"
+              break
+            fi
+            echo "Waiting for Vector API... (attempt $i/30)"
+            sleep 3
+          done
 
       - name: Run integration tests
         run: |
           export RELEASE_NAME="$RELEASE_NAME"
+          export NAMESPACE="$RELEASE_NAME"
+          export STAC_ENDPOINT="http://eoapi.local/stac"
+          export RASTER_ENDPOINT="http://eoapi.local/raster"
+          export VECTOR_ENDPOINT="http://eoapi.local/vector"
           ./scripts/test.sh integration --debug
+
+      - name: Debug session on test failure
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
+        uses: lhotari/action-upterm@v1
+        with:
+          limit-access-to-keys: ${{ secrets.UPTERM_SSH_KEY }}
+          wait-timeout-minutes: 30
 
       - name: Debug failed deployment
         if: failure()
@@ -112,8 +239,8 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          helm uninstall "$RELEASE_NAME" -n eoapi || true
-          kubectl delete namespace eoapi || true
+          helm uninstall "$RELEASE_NAME" -n "$RELEASE_NAME" || true
+          kubectl delete namespace "$RELEASE_NAME" || true
   validate-docs:
     name: Validate documentation
     runs-on: ubuntu-latest

@@ -1,23 +1,23 @@
 #!/bin/bash
 
-# Local Cluster Management Script
-# Unified management for both minikube and k3s local development clusters
+# eoAPI local cluster management script
+# management for minikube and k3s local development clusters
 
-# Source shared utilities
+set -euo pipefail
+
+# Source required libraries
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source "$SCRIPT_DIR/lib/common.sh"
-
-# Default values
-CLUSTER_TYPE="${CLUSTER_TYPE:-minikube}"
-CLUSTER_NAME="${CLUSTER_NAME:-eoapi-local}"
-HTTP_PORT="${HTTP_PORT:-8080}"
-HTTPS_PORT="${HTTPS_PORT:-8443}"
-COMMAND=""
+source "$SCRIPT_DIR/lib/validation.sh"
+source "$SCRIPT_DIR/lib/args.sh"
+source "$SCRIPT_DIR/lib/cluster-minikube.sh"
+source "$SCRIPT_DIR/lib/cluster-k3s.sh"
 
 # Show help message
 show_help() {
     cat << EOF
-Local Cluster Management Script - Unified minikube and k3s support
+eoAPI local cluster management script
+minikube and k3s support for local development
 
 USAGE:
     $(basename "$0") [COMMAND] [OPTIONS]
@@ -29,508 +29,335 @@ COMMANDS:
     delete              Delete cluster
     status              Show cluster status
     context             Set kubectl context to cluster
-    url                 Show cluster access URLs
+    urls                Show cluster access URLs
     deploy              Create cluster and deploy eoAPI
+    cleanup             Stop and delete cluster
 
-OPTIONS:
-    --type TYPE         Cluster type: minikube or k3s (default: minikube)
-    --name NAME         Cluster name (default: eoapi-local)
-    --http-port PORT    HTTP port for k3s (default: 8080)
-    --https-port PORT   HTTPS port for k3s (default: 8443)
-    --help, -h          Show this help message
+$(show_cluster_options)
+$(show_common_options)
+
+MINIKUBE SPECIFIC OPTIONS:
+    --driver DRIVER     Minikube driver (docker, virtualbox, etc.)
+    --memory SIZE       Memory allocation (default: 4g)
+    --cpus COUNT        CPU allocation (default: 2)
+    --disk-size SIZE    Disk size (default: 20g)
 
 ENVIRONMENT VARIABLES:
-    CLUSTER_TYPE        Cluster type (minikube or k3s)
-    CLUSTER_NAME        Cluster name
-    HTTP_PORT           HTTP port for k3s ingress
-    HTTPS_PORT          HTTPS port for k3s ingress
+    MINIKUBE_DRIVER     Minikube driver (default: docker)
+    MINIKUBE_MEMORY     Memory for minikube (default: 4g)
+    MINIKUBE_CPUS       CPUs for minikube (default: 2)
+    MINIKUBE_DISK       Disk size for minikube (default: 20g)
+    K3S_REGISTRY_PORT   Registry port for k3s (default: 5001)
 
 EXAMPLES:
     $(basename "$0") create --type minikube
     $(basename "$0") start --type k3s --name my-cluster
-    $(basename "$0") deploy --type k3s
-    CLUSTER_TYPE=minikube $(basename "$0") create
+    $(basename "$0") deploy --type minikube --debug
+    $(basename "$0") urls --type k3s
 
+For more information, see: https://github.com/developmentseed/eoapi-k8s
 EOF
 }
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        create|start|stop|delete|status|context|url|deploy)
-            COMMAND="$1"; shift ;;
-        --type)
-            CLUSTER_TYPE="$2"; shift 2 ;;
-        --name)
-            CLUSTER_NAME="$2"; shift 2 ;;
-        --http-port)
-            HTTP_PORT="$2"; shift 2 ;;
-        --https-port)
-            HTTPS_PORT="$2"; shift 2 ;;
-        --help|-h)
-            show_help; exit 0 ;;
-        *)
-            log_error "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1 ;;
-    esac
-done
+# Main function
+main() {
+    local command="${1:-create}"
+    shift || true
 
-# Default to status if no command specified
-if [ -z "$COMMAND" ]; then
-    COMMAND="status"
-fi
-
-# Validate cluster type
-case "$CLUSTER_TYPE" in
-    minikube|k3s) ;;
-    *)
-        log_error "Invalid cluster type: $CLUSTER_TYPE. Must be 'minikube' or 'k3s'"
-        exit 1 ;;
-esac
-
-# Wait for K3s to be fully ready
-wait_k3s_ready() {
-    log_info "Waiting for K3s to be fully ready..."
-
-    # Wait for core K3s components to be ready
-    log_info "Waiting for kube-system pods to be ready..."
-    if ! kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s; then
-        log_error "DNS pods failed to become ready"
-        return 1
-    fi
-
-    if ! kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s; then
-        log_error "Traefik pods failed to become ready"
-        return 1
-    fi
-
-    # Wait for API server to be fully responsive
-    log_info "Checking API server responsiveness..."
-    kubectl get nodes >/dev/null 2>&1 || return 1
-    kubectl get pods --all-namespaces >/dev/null 2>&1 || return 1
-
-    # Give K3s a moment to initialize all CRDs
-    log_info "Waiting for K3s initialization to complete..."
-    sleep 10
-
-    log_info "✅ K3s is ready"
-}
-
-# Wait for Traefik to be ready
-wait_traefik_ready() {
-    log_info "Waiting for Traefik to be ready..."
-
-    # Wait for Traefik pods to be ready first
-    log_info "Waiting for Traefik controller to be ready..."
-    if ! kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s; then
-        log_error "Traefik controller failed to become ready"
-        return 1
-    fi
-
-    # Wait for essential Traefik CRDs to be available
-    log_info "Checking for Traefik CRDs..."
-    local timeout=300
-    local counter=0
-    local required_crds=("middlewares.traefik.io" "ingressroutes.traefik.io")
-
-    for crd in "${required_crds[@]}"; do
-        log_info "Checking for CRD: $crd"
-        counter=0
-        while [ $counter -lt $timeout ]; do
-            if kubectl get crd "$crd" &>/dev/null; then
-                log_info "✅ $crd is available"
-                break
-            fi
-            log_info "⏳ Waiting for $crd... ($counter/$timeout)"
-            sleep 3
-            counter=$((counter + 3))
-        done
-
-        if [ $counter -ge $timeout ]; then
-            log_error "❌ Timeout waiting for $crd"
-            log_info "Available Traefik CRDs:"
-            kubectl get crd | grep traefik || echo "No Traefik CRDs found"
-            return 1
+    # Parse arguments
+    if ! parse_cluster_args "$@"; then
+        local result=$?
+        if [ $result -eq 2 ]; then
+            show_help
+            exit 0
         fi
-    done
+        exit $result
+    fi
 
-    log_info "✅ All required Traefik CRDs are ready"
-}
+    # Validate parsed arguments
+    if ! validate_parsed_args cluster; then
+        exit 1
+    fi
 
+    # Enable debug logging if requested
+    if [ "$DEBUG_MODE" = true ]; then
+        log_info "=== Local cluster management debug info ==="
+        log_debug "Command: $command"
+        log_debug "Cluster type: $CLUSTER_TYPE"
+        log_debug "Cluster name: $CLUSTER_NAME"
+        log_debug "Script directory: $SCRIPT_DIR"
+        log_debug "Working directory: $(pwd)"
+    fi
 
+    # Validate tools for the selected cluster type
+    if ! validate_local_cluster_tools "$CLUSTER_TYPE"; then
+        exit 1
+    fi
 
-# Check required tools
-check_requirements() {
-    case "$CLUSTER_TYPE" in
-        minikube)
-            if ! command_exists minikube; then
-                log_error "minikube is required but not installed"
-                log_info "Install minikube: https://minikube.sigs.k8s.io/docs/start/"
-                exit 1
-            fi
+    # Execute command
+    case "$command" in
+        create)
+            cmd_create
             ;;
-        k3s)
-            if ! command_exists k3d; then
-                log_error "k3d is required but not installed"
-                log_info "Install k3d: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash"
-                exit 1
-            fi
+        start)
+            cmd_start
+            ;;
+        stop)
+            cmd_stop
+            ;;
+        delete)
+            cmd_delete
+            ;;
+        status)
+            cmd_status
+            ;;
+        context)
+            cmd_context
+            ;;
+        urls)
+            cmd_urls
+            ;;
+        deploy)
+            cmd_deploy
+            ;;
+        cleanup)
+            cmd_cleanup
+            ;;
+        --help|-h|help)
+            show_help
+            exit 0
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            log_info "Use '$(basename "$0") --help' for usage information"
+            exit 1
             ;;
     esac
 }
 
-# Get cluster context name
-get_context_name() {
-    case "$CLUSTER_TYPE" in
-        minikube) echo "minikube" ;;
-        k3s) echo "k3d-$CLUSTER_NAME" ;;
-    esac
-}
-
-# Check if cluster exists
-cluster_exists() {
-    case "$CLUSTER_TYPE" in
-        minikube)
-            minikube profile list -o json 2>/dev/null | grep -q "\"Name\":\"minikube\"" || return 1
-            ;;
-        k3s)
-            k3d cluster list | grep -q "^$CLUSTER_NAME" || return 1
-            ;;
-    esac
-}
-
-# Check if cluster is running
-cluster_running() {
-    case "$CLUSTER_TYPE" in
-        minikube)
-            minikube status >/dev/null 2>&1 || return 1
-            ;;
-        k3s)
-            k3d cluster list | grep "^$CLUSTER_NAME" | grep -qE "[0-9]+/[0-9]+" || return 1
-            ;;
-    esac
-}
-
-# Create cluster
-create_cluster() {
+# Command implementations
+cmd_create() {
     log_info "Creating $CLUSTER_TYPE cluster: $CLUSTER_NAME"
 
-    if cluster_exists && cluster_running; then
-        log_info "Cluster '$CLUSTER_NAME' already exists and is running"
-        set_context
-        show_cluster_info
-        return 0
-    fi
-
     case "$CLUSTER_TYPE" in
         minikube)
-            if minikube start --profile minikube; then
-                log_info "✅ Minikube cluster created successfully"
-                # Enable ingress addon
-                minikube addons enable ingress
-                log_info "✅ Ingress addon enabled"
+            local driver="${MINIKUBE_DRIVER:-docker}"
+            local memory="${MINIKUBE_MEMORY:-4g}"
+            local cpus="${MINIKUBE_CPUS:-2}"
+            local disk="${MINIKUBE_DISK:-20g}"
+
+            if minikube_create "$CLUSTER_NAME" "$driver" "$memory" "$cpus" "$disk"; then
+                log_info "✅ minikube cluster created successfully"
+                minikube_context "$CLUSTER_NAME"
             else
-                log_error "Failed to create minikube cluster"
+                log_error "❌ Failed to create minikube cluster"
                 exit 1
             fi
             ;;
         k3s)
-            if k3d cluster create "$CLUSTER_NAME" \
-                --port "$HTTP_PORT:80@loadbalancer" \
-                --port "$HTTPS_PORT:443@loadbalancer" \
-                --wait; then
+            if k3s_create "$CLUSTER_NAME" "$HTTP_PORT" "$HTTPS_PORT"; then
                 log_info "✅ k3s cluster created successfully"
-                wait_k3s_ready || exit 1
-                wait_traefik_ready || exit 1
+                k3s_context "$CLUSTER_NAME"
             else
-                log_error "Failed to create k3s cluster"
+                log_error "❌ Failed to create k3s cluster"
                 exit 1
             fi
             ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
+            ;;
     esac
-
-    set_context
-    show_cluster_info
 }
 
-# Start existing cluster
-start_cluster() {
+cmd_start() {
     log_info "Starting $CLUSTER_TYPE cluster: $CLUSTER_NAME"
 
-    if ! cluster_exists; then
-        log_error "Cluster '$CLUSTER_NAME' does not exist"
-        log_info "Create it first with: $0 create --type $CLUSTER_TYPE"
-        exit 1
-    fi
-
-    if cluster_running; then
-        log_info "Cluster '$CLUSTER_NAME' is already running"
-        set_context
-        return 0
-    fi
-
     case "$CLUSTER_TYPE" in
         minikube)
-            if minikube start; then
-                log_info "✅ Minikube cluster started successfully"
+            if minikube_start "$CLUSTER_NAME"; then
+                log_info "✅ minikube cluster started successfully"
+                minikube_context "$CLUSTER_NAME"
             else
-                log_error "Failed to start minikube cluster"
+                log_error "❌ Failed to start minikube cluster"
                 exit 1
             fi
             ;;
         k3s)
-            if k3d cluster start "$CLUSTER_NAME"; then
+            if k3s_start "$CLUSTER_NAME"; then
                 log_info "✅ k3s cluster started successfully"
+                k3s_context "$CLUSTER_NAME"
             else
-                log_error "Failed to start k3s cluster"
+                log_error "❌ Failed to start k3s cluster"
                 exit 1
             fi
             ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
+            ;;
     esac
-
-    set_context
-    show_cluster_info
 }
 
-# Stop cluster
-stop_cluster() {
+cmd_stop() {
     log_info "Stopping $CLUSTER_TYPE cluster: $CLUSTER_NAME"
 
-    if ! cluster_exists; then
-        log_warn "Cluster '$CLUSTER_NAME' does not exist"
-        return 0
-    fi
-
-    if ! cluster_running; then
-        log_info "Cluster '$CLUSTER_NAME' is already stopped"
-        return 0
-    fi
-
     case "$CLUSTER_TYPE" in
         minikube)
-            if minikube stop; then
-                log_info "✅ Minikube cluster stopped successfully"
+            if minikube_stop "$CLUSTER_NAME"; then
+                log_info "✅ minikube cluster stopped successfully"
             else
-                log_error "Failed to stop minikube cluster"
+                log_error "❌ Failed to stop minikube cluster"
                 exit 1
             fi
             ;;
         k3s)
-            if k3d cluster stop "$CLUSTER_NAME"; then
+            if k3s_stop "$CLUSTER_NAME"; then
                 log_info "✅ k3s cluster stopped successfully"
             else
-                log_error "Failed to stop k3s cluster"
+                log_error "❌ Failed to stop k3s cluster"
                 exit 1
             fi
+            ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
             ;;
     esac
 }
 
-# Delete cluster
-delete_cluster() {
+cmd_delete() {
     log_info "Deleting $CLUSTER_TYPE cluster: $CLUSTER_NAME"
 
-    if ! cluster_exists; then
-        log_warn "Cluster '$CLUSTER_NAME' does not exist"
-        return 0
-    fi
-
     case "$CLUSTER_TYPE" in
         minikube)
-            if minikube delete; then
-                log_info "✅ Minikube cluster deleted successfully"
+            if minikube_delete "$CLUSTER_NAME"; then
+                log_info "✅ minikube cluster deleted successfully"
             else
-                log_error "Failed to delete minikube cluster"
+                log_error "❌ Failed to delete minikube cluster"
                 exit 1
             fi
             ;;
         k3s)
-            if k3d cluster delete "$CLUSTER_NAME"; then
+            if k3s_delete "$CLUSTER_NAME"; then
                 log_info "✅ k3s cluster deleted successfully"
             else
-                log_error "Failed to delete k3s cluster"
+                log_error "❌ Failed to delete k3s cluster"
                 exit 1
             fi
             ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
+            ;;
     esac
 }
 
-# Show cluster status
-show_status() {
-    log_info "$CLUSTER_TYPE cluster status:"
-    echo ""
+cmd_status() {
+    case "$CLUSTER_TYPE" in
+        minikube)
+            minikube_status "$CLUSTER_NAME"
+            ;;
+        k3s)
+            k3s_status "$CLUSTER_NAME"
+            ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_context() {
+    log_info "Setting kubectl context for $CLUSTER_TYPE cluster: $CLUSTER_NAME"
 
     case "$CLUSTER_TYPE" in
         minikube)
-            if command_exists minikube; then
-                minikube status 2>/dev/null || log_warn "Minikube cluster not found or not running"
-                echo ""
-                if cluster_exists && cluster_running; then
-                    log_info "Cluster 'minikube' is running"
-                    show_cluster_info
-                else
-                    log_warn "Cluster 'minikube' does not exist or is not running"
-                fi
+            if minikube_context "$CLUSTER_NAME"; then
+                log_info "✅ kubectl context set successfully"
             else
-                log_error "minikube is not installed"
+                log_error "❌ Failed to set kubectl context"
+                exit 1
             fi
             ;;
         k3s)
-            if command_exists k3d; then
-                k3d cluster list
-                echo ""
-                if cluster_exists; then
-                    if cluster_running; then
-                        log_info "Cluster '$CLUSTER_NAME' is running"
-                        show_cluster_info
-                    else
-                        log_warn "Cluster '$CLUSTER_NAME' exists but is not running"
-                    fi
-                else
-                    log_warn "Cluster '$CLUSTER_NAME' does not exist"
-                fi
+            if k3s_context "$CLUSTER_NAME"; then
+                log_info "✅ kubectl context set successfully"
             else
-                log_error "k3d is not installed"
+                log_error "❌ Failed to set kubectl context"
+                exit 1
             fi
+            ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
             ;;
     esac
 }
 
-# Set kubectl context
-set_context() {
-    local context
-    context=$(get_context_name)
-
-    if ! cluster_running; then
-        log_error "Cluster '$CLUSTER_NAME' is not running"
-        return 1
-    fi
-
-    if kubectl config use-context "$context" >/dev/null 2>&1; then
-        log_info "✅ kubectl context set to: $context"
-    else
-        log_error "Failed to set kubectl context to: $context"
-        return 1
-    fi
-}
-
-# Get cluster access URLs
-get_cluster_urls() {
-    if ! cluster_running; then
-        log_error "Cluster is not running"
-        return 1
-    fi
-
+cmd_urls() {
     case "$CLUSTER_TYPE" in
         minikube)
-            # Get minikube service URL for ingress
-            local ingress_url
-            ingress_url=$(minikube service ingress-nginx-controller -n ingress-nginx --url 2>/dev/null | head -n 1)
-            if [ -n "$ingress_url" ]; then
-                echo "$ingress_url"
-            else
-                echo "http://$(minikube ip)"
-            fi
+            minikube_urls "$CLUSTER_NAME"
             ;;
         k3s)
-            echo "http://localhost:$HTTP_PORT"
-            echo "https://localhost:$HTTPS_PORT"
+            k3s_urls "$CLUSTER_NAME"
+            ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
             ;;
     esac
 }
 
-# Show cluster information
-show_cluster_info() {
-    if cluster_running; then
-        echo ""
-        log_info "Cluster endpoints:"
-        get_cluster_urls | while read -r url; do
-            echo "  $url"
-        done
-        echo ""
-        log_info "kubectl context: $(get_context_name)"
+cmd_deploy() {
+    log_info "Creating $CLUSTER_TYPE cluster and deploying eoAPI..."
 
-        case "$CLUSTER_TYPE" in
-            minikube)
-                echo ""
-                log_info "Ingress controller: nginx-ingress"
-                log_info "Dashboard: minikube dashboard"
-                ;;
-            k3s)
-                echo ""
-                log_info "Ingress controller: Traefik (built-in)"
-                log_info "Note: Add entries to /etc/hosts for custom hostnames"
-                ;;
-        esac
-
-        echo ""
-        log_info "To deploy eoAPI: make deploy"
-        log_info "To run tests: make integration"
-    fi
-}
-
-# Deploy eoAPI to cluster
-deploy_eoapi() {
-    log_info "Creating cluster and deploying eoAPI..."
-
-    # Create cluster if it doesn't exist or start if stopped
-    if ! cluster_running; then
-        if cluster_exists; then
-            start_cluster
-        else
-            create_cluster
-        fi
-    else
-        set_context
-    fi
-
-    # Deploy eoAPI using the main deploy script
-    log_info "Deploying eoAPI to $CLUSTER_TYPE cluster..."
-    if command -v make >/dev/null 2>&1; then
-        make deploy
-    else
-        "$SCRIPT_DIR/deploy.sh"
-    fi
-}
-
-# Main execution
-log_info "Local Cluster Management ($CLUSTER_TYPE)"
-log_info "Cluster: $CLUSTER_NAME | Type: $CLUSTER_TYPE"
-if [ "$CLUSTER_TYPE" = "k3s" ]; then
-    log_info "Ports: HTTP=$HTTP_PORT, HTTPS=$HTTPS_PORT"
-fi
-
-check_requirements
-
-case $COMMAND in
-    create)
-        create_cluster
-        ;;
-    start)
-        start_cluster
-        ;;
-    stop)
-        stop_cluster
-        ;;
-    delete)
-        delete_cluster
-        ;;
-    status)
-        show_status
-        ;;
-    context)
-        set_context
-        ;;
-    url)
-        get_cluster_urls
-        ;;
-    deploy)
-        deploy_eoapi
-        ;;
-    *)
-        log_error "Unknown command: $COMMAND"
-        show_help
+    # Create cluster if needed
+    if ! cmd_create; then
         exit 1
-        ;;
-esac
+    fi
+
+    # Deploy eoAPI
+    log_info "Deploying eoAPI to local cluster..."
+    if "$SCRIPT_DIR/deploy.sh" deploy --namespace "$NAMESPACE" --release "$RELEASE_NAME"; then
+        log_info "🎉 Local cluster created and eoAPI deployed successfully!"
+
+        # Show access information
+        cmd_urls
+        log_info ""
+        log_info "eoAPI should be accessible at the above URLs under these paths:"
+        log_info "  /stac    - STAC API"
+        log_info "  /raster  - TiTiler"
+        log_info "  /vector  - TiPG"
+        log_info "  /browser - STAC Browser"
+    else
+        log_error "❌ Failed to deploy eoAPI"
+        exit 1
+    fi
+}
+
+cmd_cleanup() {
+    log_info "Cleaning up $CLUSTER_TYPE cluster: $CLUSTER_NAME"
+
+    case "$CLUSTER_TYPE" in
+        minikube)
+            minikube_cleanup "$CLUSTER_NAME"
+            ;;
+        k3s)
+            k3s_cleanup "$CLUSTER_NAME"
+            ;;
+        *)
+            log_error "Unsupported cluster type: $CLUSTER_TYPE"
+            exit 1
+            ;;
+    esac
+
+    log_info "✅ Cluster cleanup completed"
+}
+
+# Error handling
+trap 'log_error "Script failed at line $LINENO"' ERR
+
+# Run main function
+main "$@"

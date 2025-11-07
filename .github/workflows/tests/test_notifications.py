@@ -1,6 +1,7 @@
 """Test notification system deployment and functionality."""
 
 import json
+import os
 import subprocess
 import time
 
@@ -9,6 +10,9 @@ import pytest
 
 def test_eoapi_notifier_deployment():
     """Test that eoapi-notifier deployment is running."""
+    # Get namespace from environment variable
+    namespace = os.environ.get("NAMESPACE", "eoapi")
+
     # Check if eoapi-notifier deployment exists and is ready
     result = subprocess.run(
         [
@@ -18,7 +22,7 @@ def test_eoapi_notifier_deployment():
             "-l",
             "app.kubernetes.io/name=eoapi-notifier",
             "-n",
-            "eoapi",
+            namespace,
             "--no-headers",
             "-o",
             "custom-columns=READY:.status.readyReplicas",
@@ -40,6 +44,9 @@ def test_eoapi_notifier_deployment():
 
 def test_cloudevents_sink_exists():
     """Test that Knative CloudEvents sink service exists and is accessible."""
+    # Get namespace from environment variable
+    namespace = os.environ.get("NAMESPACE", "eoapi")
+
     # Check if Knative service exists
     result = subprocess.run(
         [
@@ -48,6 +55,8 @@ def test_cloudevents_sink_exists():
             "ksvc",
             "-l",
             "app.kubernetes.io/component=cloudevents-sink",
+            "-n",
+            namespace,
             "--no-headers",
         ],
         capture_output=True,
@@ -66,6 +75,9 @@ def test_cloudevents_sink_exists():
 
 def test_notification_configuration():
     """Test that eoapi-notifier is configured correctly."""
+    # Get namespace from environment variable
+    namespace = os.environ.get("NAMESPACE", "eoapi")
+
     # Get the configmap for eoapi-notifier
     result = subprocess.run(
         [
@@ -74,6 +86,8 @@ def test_notification_configuration():
             "configmap",
             "-l",
             "app.kubernetes.io/name=eoapi-notifier",
+            "-n",
+            namespace,
             "-o",
             r"jsonpath={.items[0].data.config\.yaml}",
         ],
@@ -96,6 +110,9 @@ def test_notification_configuration():
 
 def test_cloudevents_sink_logs_show_startup():
     """Test that Knative CloudEvents sink started successfully."""
+    # Get namespace from environment variable
+    namespace = os.environ.get("NAMESPACE", "eoapi")
+
     # Get Knative CloudEvents sink pod logs
     result = subprocess.run(
         [
@@ -104,7 +121,7 @@ def test_cloudevents_sink_logs_show_startup():
             "-l",
             "serving.knative.dev/service",
             "-n",
-            "eoapi",
+            namespace,
             "--tail=20",
         ],
         capture_output=True,
@@ -115,7 +132,9 @@ def test_cloudevents_sink_logs_show_startup():
         pytest.skip("Cannot get Knative CloudEvents sink logs")
 
     logs = result.stdout
-    assert "listening on port" in logs, "Knative CloudEvents sink should have started successfully"
+    assert "listening on port" in logs, (
+        "Knative CloudEvents sink should have started successfully"
+    )
 
 
 def test_eoapi_notifier_logs_show_connection():
