@@ -24,6 +24,7 @@ help: ## Show this help message
 	@echo "  cleanup         Clean up eoAPI deployment"
 	@echo "  status          Show deployment status"
 	@echo "  info            Show deployment info and URLs"
+	@echo "  validate        Validate deployment health and API connectivity"
 	@echo ""
 	@echo "TESTING:"
 	@echo "  test            Run all tests (lint + helm + integration)"
@@ -72,6 +73,9 @@ status: ## Show deployment status
 
 info: ## Show deployment information and URLs
 	@$(DEPLOY_SCRIPT) info --namespace $(NAMESPACE) --release $(RELEASE_NAME)
+
+validate: ## Validate deployment health and API connectivity
+	@$(DEPLOY_SCRIPT) validate --namespace $(NAMESPACE) --release $(RELEASE_NAME) --verbose
 
 # Testing commands
 test: lint test-helm test-integration ## Run all tests

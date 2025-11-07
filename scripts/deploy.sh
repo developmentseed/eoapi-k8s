@@ -25,6 +25,7 @@ COMMANDS:
     cleanup             Clean up eoAPI deployment
     status              Show deployment status
     info                Show deployment information and URLs
+    validate            Validate deployment health and connectivity
 
 $(show_common_options)
 
@@ -103,6 +104,9 @@ main() {
         info)
             cmd_info
             ;;
+        validate)
+            cmd_validate
+            ;;
         --help|-h|help)
             show_help
             exit 0
@@ -128,6 +132,26 @@ cmd_deploy() {
     if deploy_eoapi; then
         log_info "🎉 eoAPI deployment completed successfully!"
         get_deployment_info
+
+        # Run validation if requested
+        if [ "${VALIDATE:-false}" = "true" ]; then
+            log_info ""
+            log_info "Running deployment validation..."
+
+            # Set verbosity
+            local verbose="false"
+            if [ "${DEBUG_MODE:-false}" = "true" ] || [ "${VERBOSE:-false}" = "true" ]; then
+                verbose="true"
+            fi
+
+            # Run comprehensive validation
+            if validate_eoapi_deployment "$NAMESPACE" "$RELEASE_NAME" "${INGRESS_HOST:-eoapi.local}" "$verbose"; then
+                log_success "✅ Deployment validation passed!"
+            else
+                log_warn "⚠️  Deployment validation failed - check logs above"
+                exit 1
+            fi
+        fi
     else
         log_error "❌ eoAPI deployment failed"
         exit 1
@@ -256,6 +280,40 @@ cmd_info() {
     fi
 
     get_deployment_info
+}
+
+cmd_validate() {
+    log_info "Running eoAPI deployment validation..."
+
+    if ! validate_kubectl; then
+        exit 1
+    fi
+
+    if ! validate_cluster_connection; then
+        exit 1
+    fi
+
+    # Auto-detect namespace and release if not specified
+    if [ "$NAMESPACE" = "eoapi" ]; then
+        NAMESPACE=$(detect_namespace)
+    fi
+
+    if [ "$RELEASE_NAME" = "eoapi" ]; then
+        RELEASE_NAME=$(detect_release_name "$NAMESPACE")
+    fi
+
+    # Set verbosity based on debug/verbose flags
+    local verbose="false"
+    if [ "${DEBUG_MODE:-false}" = "true" ] || [ "${VERBOSE:-false}" = "true" ]; then
+        verbose="true"
+    fi
+
+    # Run comprehensive validation
+    if validate_eoapi_deployment "$NAMESPACE" "$RELEASE_NAME" "${INGRESS_HOST:-eoapi.local}" "$verbose"; then
+        exit 0
+    else
+        exit 1
+    fi
 }
 
 # Error handling

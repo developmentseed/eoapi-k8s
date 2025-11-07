@@ -13,11 +13,24 @@ echo "Using NAMESPACE: $NAMESPACE"
 echo ""
 
 # eoAPI specific debugging
-echo "--- eoAPI Namespace Status ---"
-echo "Namespace info:"
-kubectl get namespace "$NAMESPACE" -o wide 2>/dev/null || echo "Namespace $NAMESPACE not found"
+echo "=== Verifying namespace creation ==="
+if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+    echo "❌ Namespace $NAMESPACE was not created"
+    echo "Available namespaces:"
+    kubectl get namespaces
+else
+    echo "✅ Namespace $NAMESPACE exists"
+    echo ""
+    echo "--- eoAPI Namespace Status ---"
+    echo "Namespace info:"
+    kubectl get namespace "$NAMESPACE" -o wide
+fi
 echo ""
-echo "All resources in eoAPI namespace:"
+
+echo "=== Resources in namespace $NAMESPACE ==="
+kubectl get all -n "$NAMESPACE" 2>/dev/null || echo "No resources found in namespace $NAMESPACE"
+echo ""
+echo "Detailed resource list:"
 kubectl get all -n "$NAMESPACE" -o wide 2>/dev/null || echo "No resources found in namespace $NAMESPACE"
 echo ""
 echo "Jobs in eoAPI namespace:"
@@ -74,10 +87,17 @@ echo ""
 
 # Basic cluster status
 echo "--- Cluster Status ---"
-kubectl get pods -o wide
-kubectl get jobs -o wide
-kubectl get services -o wide
-kubectl get events --sort-by='.lastTimestamp' | tail -20 || true
+echo "Pods across all namespaces:"
+kubectl get pods --all-namespaces -o wide
+echo ""
+echo "Jobs across all namespaces:"
+kubectl get jobs --all-namespaces -o wide
+echo ""
+echo "Services across all namespaces:"
+kubectl get services --all-namespaces -o wide
+echo ""
+echo "Recent cluster events:"
+kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -20 || true
 
 # PostgreSQL status
 echo "--- PostgreSQL Status ---"
@@ -149,15 +169,23 @@ kubectl logs -l serving.knative.dev/service=eoapi-cloudevents-sink -n "$NAMESPAC
 
 # Recent events in eoAPI namespace
 echo "--- Recent Events in eoAPI Namespace ---"
-kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -20 2>/dev/null || echo "No events found in namespace $NAMESPACE"
+if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -20 2>/dev/null || echo "No events found in namespace $NAMESPACE"
+else
+    echo "Namespace $NAMESPACE does not exist - skipping namespace-specific events"
+fi
 
 # Resource usage
 echo "--- Resource Usage ---"
 echo "Node status:"
 kubectl top nodes 2>/dev/null || echo "Metrics not available"
 echo ""
-echo "Pod resource usage in $NAMESPACE:"
-kubectl top pods -n "$NAMESPACE" 2>/dev/null || echo "Pod metrics not available"
+if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+    echo "Pod resource usage in $NAMESPACE:"
+    kubectl top pods -n "$NAMESPACE" 2>/dev/null || echo "Pod metrics not available"
+else
+    echo "Namespace $NAMESPACE does not exist - skipping pod metrics"
+fi
 # System controller logs if issues detected
 if ! kubectl get pods -n knative-serving &>/dev/null; then
     echo "--- Knative Controller Logs ---"

@@ -24,6 +24,7 @@ CLUSTER_TYPE="${CLUSTER_TYPE:-minikube}"
 CLUSTER_NAME="${CLUSTER_NAME:-eoapi-local}"
 HTTP_PORT="${HTTP_PORT:-8080}"
 HTTPS_PORT="${HTTPS_PORT:-8443}"
+VALIDATE="${VALIDATE:-false}"
 
 # Parse common arguments used across multiple scripts
 parse_common_args() {
@@ -59,6 +60,10 @@ parse_common_args() {
                 ;;
             --deps-only)
                 DEPS_ONLY=true
+                shift
+                ;;
+            --validate)
+                VALIDATE=true
                 shift
                 ;;
             --set)
@@ -107,6 +112,7 @@ parse_common_args() {
         log_debug "  RELEASE_NAME: $RELEASE_NAME"
         log_debug "  TIMEOUT: $TIMEOUT"
         log_debug "  DEPS_ONLY: $DEPS_ONLY"
+        log_debug "  VALIDATE: $VALIDATE"
         if [ "${#HELM_VALUES_FILES[@]}" -gt 0 ]; then
             log_debug "  HELM_VALUES_FILES: ${HELM_VALUES_FILES[*]}"
         fi
@@ -319,6 +325,7 @@ COMMON OPTIONS:
     --set KEY=VALUE         Set Helm chart values (can be used multiple times)
     --debug, -d             Enable debug mode
     --deps-only             Setup Helm dependencies only (no cluster required)
+    --validate              Run deployment validation after successful deployment
     --verbose, -v           Enable verbose output with command tracing
     --help, -h              Show this help message
 

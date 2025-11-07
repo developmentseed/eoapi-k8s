@@ -79,26 +79,10 @@ jobs:
 
       - name: Wait for K3s readiness
         run: |
-          echo "=== Waiting for K3s cluster to be ready ==="
-
-          # The action already sets up kubectl context, just verify it works
-          kubectl cluster-info
-          kubectl get nodes
-
-          # Wait for core components
-          kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s
-
-          # Verify Traefik CRDs
-          timeout=300; counter=0
-          for crd in "middlewares.traefik.io" "ingressroutes.traefik.io"; do
-            while [ $counter -lt $timeout ] && ! kubectl get crd "$crd" &>/dev/null; do
-              sleep 3; counter=$((counter + 3))
-            done
-            [ $counter -ge $timeout ] && { echo "❌ Timeout waiting for $crd"; exit 1; }
-          done
-
-          echo "✅ K3s cluster ready"
+          # Source validation library and use K3s readiness check
+          source ./scripts/lib/common.sh
+          source ./scripts/lib/validation.sh
+          validate_k3s_readiness
 
       - name: Deploy eoAPI
         id: deploy
@@ -127,18 +111,12 @@ jobs:
             exit 1
           fi
 
-          # Verify namespace was created
-          echo "=== Verifying namespace creation ==="
-          if ! kubectl get namespace "${RELEASE_NAME}" >/dev/null 2>&1; then
-            echo "❌ Namespace ${RELEASE_NAME} was not created"
-            kubectl get namespaces
-            exit 1
-          fi
-          echo "✅ Namespace ${RELEASE_NAME} exists"
-
-          # List resources in namespace
-          echo "=== Resources in namespace ${RELEASE_NAME} ==="
-          kubectl get all -n "${RELEASE_NAME}"
+          # Run post-deployment validation
+          echo "=== Running post-deployment validation ==="
+          ./scripts/deploy.sh validate \
+            --namespace "${RELEASE_NAME}" \
+            --release "${RELEASE_NAME}" \
+            --verbose
 
       - name: Debug session after deployment
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
@@ -147,73 +125,20 @@ jobs:
           limit-access-to-keys: ${{ secrets.UPTERM_SSH_KEY }}
           wait-timeout-minutes: 30
 
-      - name: Validate deployment
+      - name: Run deployment tests
         run: |
-          echo "=== Post-deployment validation ==="
+          echo "=== Running deployment tests ==="
           export NAMESPACE="${RELEASE_NAME}"
           ./scripts/test.sh check-deployment
 
       - name: Wait for services to be ready
         run: |
-          set -e  # Exit on any error
-
-          echo "=== Waiting for Services to be Ready ==="
-          echo "RELEASE_NAME: ${RELEASE_NAME}"
-
-          # Verify namespace exists first
-          if ! kubectl get namespace "${RELEASE_NAME}" >/dev/null 2>&1; then
-            echo "❌ Namespace ${RELEASE_NAME} does not exist!"
-            kubectl get namespaces
-            exit 1
-          fi
-
-          echo "Waiting for deployments in namespace ${RELEASE_NAME}..."
-          kubectl wait --for=condition=available deployment/"${RELEASE_NAME}"-stac -n "${RELEASE_NAME}" --timeout=300s
-          kubectl wait --for=condition=available deployment/"${RELEASE_NAME}"-raster -n "${RELEASE_NAME}" --timeout=300s
-          kubectl wait --for=condition=available deployment/"${RELEASE_NAME}"-vector -n "${RELEASE_NAME}" --timeout=300s
-
-          # Get the K3s node IP and set up host entry
-          NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-          echo "Node IP: $NODE_IP"
-
-          # Add eoapi.local to /etc/hosts for ingress access
-          echo "$NODE_IP eoapi.local" | sudo tee -a /etc/hosts
-
-          # Wait for ingress to be ready
-          echo "=== Waiting for Ingress to be Ready ==="
-          kubectl get ingress -n "${RELEASE_NAME}"
-
-          # Wait for Traefik to pick up the ingress rules
-          sleep 10
-
-          # Test connectivity through ingress using eoapi.local
-          echo "=== Testing API connectivity through ingress ==="
-          for i in {1..30}; do
-            if curl -s "http://eoapi.local/stac/_mgmt/ping" 2>/dev/null; then
-              echo "✅ STAC API accessible through ingress"
-              break
-            fi
-            echo "Waiting for STAC API... (attempt $i/30)"
-            sleep 3
-          done
-
-          for i in {1..30}; do
-            if curl -s "http://eoapi.local/raster/healthz" 2>/dev/null; then
-              echo "✅ Raster API accessible through ingress"
-              break
-            fi
-            echo "Waiting for Raster API... (attempt $i/30)"
-            sleep 3
-          done
-
-          for i in {1..30}; do
-            if curl -s "http://eoapi.local/vector/healthz" 2>/dev/null; then
-              echo "✅ Vector API accessible through ingress"
-              break
-            fi
-            echo "Waiting for Vector API... (attempt $i/30)"
-            sleep 3
-          done
+          # Use deploy.sh validate command to check service readiness and API connectivity
+          export INGRESS_HOST="eoapi.local"
+          ./scripts/deploy.sh validate \
+            --namespace "${RELEASE_NAME}" \
+            --release "${RELEASE_NAME}" \
+            --debug
 
       - name: Run integration tests
         run: |

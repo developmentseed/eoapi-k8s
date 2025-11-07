@@ -20,6 +20,7 @@ if ! declare -f log_info >/dev/null 2>&1; then
     log_warn() { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
     log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
     log_debug() { echo -e "${BLUE}[DEBUG]${NC} $1" >&2; }
+    log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1" >&2; }
 fi
 
 # Check if command exists
@@ -93,11 +94,11 @@ wait_for_pods() {
 }
 
 # Check if eoAPI is deployed
-validate_eoapi_deployment() {
+check_eoapi_services() {
     local namespace="$1"
     local release_name="$2"
 
-    log_info "Validating eoAPI deployment in namespace: $namespace"
+    log_info "Checking eoAPI services in namespace: $namespace"
 
     local services=("stac" "raster" "vector")
     local missing_services=()
@@ -126,7 +127,7 @@ validate_eoapi_deployment() {
         return 1
     fi
 
-    log_info "eoAPI deployment validated successfully"
+    log_info "eoAPI services check passed"
     return 0
 }
 
@@ -181,8 +182,8 @@ cleanup_on_exit() {
 trap cleanup_on_exit EXIT
 
 # Export functions for use in other scripts
-export -f log_info log_warn log_error log_debug
+export -f log_info log_warn log_error log_debug log_success
 export -f command_exists is_ci_environment validate_namespace
 export -f detect_release_name detect_namespace
-export -f wait_for_pods validate_eoapi_deployment
+export -f wait_for_pods check_eoapi_services
 export -f preflight_deploy preflight_ingest preflight_test

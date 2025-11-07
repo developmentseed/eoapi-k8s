@@ -5,6 +5,7 @@
 # Source shared utilities
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source "$SCRIPT_DIR/lib/common.sh"
+source "$SCRIPT_DIR/lib/validation.sh"
 
 # Global variables
 DEBUG_MODE=false
@@ -69,8 +70,8 @@ log_info "eoAPI Test Suite - Command: $COMMAND | Debug: $DEBUG_MODE | Release: $
 # Check dependencies
 check_dependencies() {
     log_info "Checking dependencies..."
-    command -v helm >/dev/null 2>&1 || { log_error "helm required"; exit 1; }
-    command -v kubectl >/dev/null 2>&1 || { log_error "kubectl required"; exit 1; }
+    validate_kubectl || exit 1
+    validate_helm || exit 1
     log_info "✅ Dependencies OK"
 }
 
@@ -195,14 +196,10 @@ run_integration_tests() {
         fi
     fi
 
-    # Wait for pods to be ready - try standard labels first, fallback to legacy
-    if kubectl get pods -n "$NAMESPACE" >/dev/null 2>&1; then
-        if ! wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac" "300s" 2>/dev/null; then
-            if ! wait_for_pods "$NAMESPACE" "app=${RELEASE_NAME}-stac" "300s"; then
-                log_error "STAC pods not ready"
-                exit 1
-            fi
-        fi
+    # Wait for deployments to be ready using validation function
+    if ! validate_deployments_ready "$NAMESPACE" "$RELEASE_NAME" "300s"; then
+        log_error "Deployments not ready"
+        exit 1
     fi
 
     # Wait for Knative services to be ready if they exist
