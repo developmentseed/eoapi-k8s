@@ -2,10 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Fixed
+- Fixed integration tests failing with pagination URLs by:
+  - Using Traefik ingress in CI instead of port-forwarding to properly test ingress configuration
+  - Adding `ROOT_PATH` environment variable to services (stac, raster, vector, multidim) when ingress is enabled
+  - This ensures services generate correct URLs with path prefixes (e.g., `/raster/searches/list`) in pagination links
+- Added test script `scripts/tests/test-ingress-paths.sh` to validate ROOT_PATH behavior with ingress
+
+### Changed
+- CI workflow now deploys with Traefik ingress enabled (`--set ingress.className=traefik`) for more realistic testing
+- Services now automatically receive their path prefix via `ROOT_PATH` environment variable when behind an ingress
+- Refactored test and deployment scripts
 
 ## [0.7.13] - 2025-11-04
 

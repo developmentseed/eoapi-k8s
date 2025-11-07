@@ -8,7 +8,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 # Global variables
 DEBUG_MODE=false
-NAMESPACE="eoapi"
+NAMESPACE="${NAMESPACE:-eoapi}"
 COMMAND=""
 RELEASE_NAME=""
 
@@ -169,16 +169,39 @@ run_integration_tests() {
             }
         fi
 
-        # Run notification tests (don't require DB connection)
-        python3 -m pytest .github/workflows/tests/test_notifications.py::test_eoapi_notifier_deployment \
+        # Set up environment variables for API endpoint tests
+        # Use individual endpoint variables if already set (from CI), otherwise use API_HOST
+        API_HOST="${API_HOST:-http://localhost}"
+        export STAC_ENDPOINT="${STAC_ENDPOINT:-${API_HOST}/stac}"
+        export RASTER_ENDPOINT="${RASTER_ENDPOINT:-${API_HOST}/raster}"
+        export VECTOR_ENDPOINT="${VECTOR_ENDPOINT:-${API_HOST}/vector}"
+
+        # Run API integration tests (don't require DB connection)
+        if ! python3 -m pytest .github/workflows/tests/test_stac.py \
+            .github/workflows/tests/test_raster.py \
+            .github/workflows/tests/test_vector.py \
+            -v --tb=short; then
+            log_error "API integration tests failed"
+            exit 1
+        fi
+
+        # Run notification tests that don't require DB connection
+        if ! python3 -m pytest .github/workflows/tests/test_notifications.py::test_eoapi_notifier_deployment \
             .github/workflows/tests/test_notifications.py::test_cloudevents_sink_logs_show_startup \
-            -v --tb=short || log_warn "Notification tests failed"
+            .github/workflows/tests/test_notifications.py::test_k_sink_injection \
+            -v --tb=short; then
+            log_error "Notification tests failed"
+            exit 1
+        fi
     fi
 
     # Wait for pods to be ready - try standard labels first, fallback to legacy
     if kubectl get pods -n "$NAMESPACE" >/dev/null 2>&1; then
         if ! wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac" "300s" 2>/dev/null; then
-            wait_for_pods "$NAMESPACE" "app=${RELEASE_NAME}-stac" "300s" || log_warn "STAC pods not ready"
+            if ! wait_for_pods "$NAMESPACE" "app=${RELEASE_NAME}-stac" "300s"; then
+                log_error "STAC pods not ready"
+                exit 1
+            fi
         fi
     fi
 
@@ -187,7 +210,8 @@ run_integration_tests() {
         if kubectl get ksvc eoapi-cloudevents-sink -n "$NAMESPACE" >/dev/null 2>&1; then
             log_info "Waiting for Knative cloudevents sink to be ready..."
             if ! kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n "$NAMESPACE" --timeout=120s 2>/dev/null; then
-                log_warn "Knative cloudevents sink not ready - this may cause SinkBinding warnings"
+                log_error "Knative cloudevents sink not ready"
+                exit 1
             fi
         fi
     fi

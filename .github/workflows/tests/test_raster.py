@@ -1,6 +1,8 @@
 """test EOapi."""
-import httpx
+
 import os
+
+import httpx
 
 # better timeouts
 timeout = httpx.Timeout(15.0, connect=60.0)
@@ -21,7 +23,10 @@ def test_raster_api(raster_endpoint):
 
 def test_mosaic_api(raster_endpoint):
     """test mosaic."""
-    query = {"collections": ["noaa-emergency-response"], "filter-lang": "cql-json"}
+    query = {
+        "collections": ["noaa-emergency-response"],
+        "filter-lang": "cql-json",
+    }
     resp = client.post(f"{raster_endpoint}/searches/register", json=query)
     assert resp.headers["content-type"] == "application/json"
     assert resp.status_code == 200
@@ -30,7 +35,9 @@ def test_mosaic_api(raster_endpoint):
 
     searchid = resp.json()["id"]
 
-    resp = client.get(f"{raster_endpoint}/searches/{searchid}/point/-85.6358,36.1624/assets")
+    resp = client.get(
+        f"{raster_endpoint}/searches/{searchid}/point/-85.6358,36.1624/assets"
+    )
     assert resp.status_code == 200
     assert len(resp.json()) == 1
     assert list(resp.json()[0]) == ["id", "bbox", "assets", "collection"]
@@ -91,51 +98,87 @@ def test_mosaic_search(raster_endpoint):
     # register some fake mosaic
     searches = [
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection1"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection1"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection2"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection2"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection3"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection3"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection4"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection4"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection5"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection5"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection6"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection6"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection7"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection7"],
+            },
             "metadata": {"owner": "vincent"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection8"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection8"],
+            },
             "metadata": {"owner": "sean"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection9"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection9"],
+            },
             "metadata": {"owner": "sean"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection10"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection10"],
+            },
             "metadata": {"owner": "drew"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection11"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection11"],
+            },
             "metadata": {"owner": "drew"},
         },
         {
-            "filter": {"op": "=", "args": [{"property": "collection"}, "collection12"]},
+            "filter": {
+                "op": "=",
+                "args": [{"property": "collection"}, "collection12"],
+            },
             "metadata": {"owner": "drew"},
         },
     ]
@@ -158,9 +201,16 @@ def test_mosaic_search(raster_endpoint):
 
     links = resp.json()["links"]
     assert len(links) == 2
-    assert links[0]["rel"] == "self"
-    assert links[1]["rel"] == "next"
-    assert links[1]["href"] == f"{raster_endpoint}/searches/list?limit=10&offset=10"
+    # Find links by rel type
+    link_rels = {link["rel"]: link["href"] for link in links}
+    assert "self" in link_rels
+    assert "next" in link_rels
+    # Check if href contains the expected path (works with or without ROOT_PATH)
+    next_href = link_rels["next"]
+    assert (
+        next_href.endswith("/searches/list?limit=10&offset=10")
+        or next_href == f"{raster_endpoint}/searches/list?limit=10&offset=10"
+    )
 
     resp = client.get(
         f"{raster_endpoint}/searches/list", params={"limit": 1, "offset": 1}
@@ -172,34 +222,59 @@ def test_mosaic_search(raster_endpoint):
 
     links = resp.json()["links"]
     assert len(links) == 3
-    assert links[0]["rel"] == "self"
-    assert links[0]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=1"
-    assert links[1]["rel"] == "next"
-    assert links[1]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=2"
-    assert links[2]["rel"] == "prev"
-    assert links[2]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=0"
+    # Find links by rel type
+    link_rels = {link["rel"]: link["href"] for link in links}
+    assert "self" in link_rels
+    assert "next" in link_rels
+    assert "prev" in link_rels
+    # Check if hrefs contain the expected paths (works with or without ROOT_PATH)
+    assert (
+        link_rels["prev"].endswith("/searches/list?limit=1&offset=0")
+        or link_rels["prev"]
+        == f"{raster_endpoint}/searches/list?limit=1&offset=0"
+    )
+    assert (
+        link_rels["self"].endswith("/searches/list?limit=1&offset=1")
+        or link_rels["self"]
+        == f"{raster_endpoint}/searches/list?limit=1&offset=1"
+    )
+    assert (
+        link_rels["next"].endswith("/searches/list?limit=1&offset=2")
+        or link_rels["next"]
+        == f"{raster_endpoint}/searches/list?limit=1&offset=2"
+    )
 
     # Filter on mosaic metadata
-    resp = client.get(f"{raster_endpoint}/searches/list", params={"owner": "vincent"})
+    resp = client.get(
+        f"{raster_endpoint}/searches/list", params={"owner": "vincent"}
+    )
     assert resp.status_code == 200
     assert resp.json()["context"]["matched"] == 7
     assert resp.json()["context"]["limit"] == 10
     assert resp.json()["context"]["returned"] == 7
 
     # sortBy
-    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "lastused"})
+    resp = client.get(
+        f"{raster_endpoint}/searches/list", params={"sortby": "lastused"}
+    )
     assert resp.status_code == 200
 
-    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "usecount"})
+    resp = client.get(
+        f"{raster_endpoint}/searches/list", params={"sortby": "usecount"}
+    )
     assert resp.status_code == 200
 
-    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "-owner"})
+    resp = client.get(
+        f"{raster_endpoint}/searches/list", params={"sortby": "-owner"}
+    )
     assert resp.status_code == 200
     assert (
         "owner" not in resp.json()["searches"][0]["search"]["metadata"]
     )  # some mosaic don't have owners
 
-    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "owner"})
+    resp = client.get(
+        f"{raster_endpoint}/searches/list", params={"sortby": "owner"}
+    )
     assert resp.status_code == 200
     assert "owner" in resp.json()["searches"][0]["search"]["metadata"]
 

@@ -115,7 +115,9 @@ def test_cloudevents_sink_logs_show_startup():
         pytest.skip("Cannot get Knative CloudEvents sink logs")
 
     logs = result.stdout
-    assert "listening on port" in logs, "Knative CloudEvents sink should have started successfully"
+    assert "listening on port" in logs, (
+        "Knative CloudEvents sink should have started successfully"
+    )
 
 
 def test_eoapi_notifier_logs_show_connection():
