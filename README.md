@@ -29,7 +29,7 @@
 ### Get started
 
 * [General eoAPI documentation](https://eoapi.dev).
-* [eoAPI-k8s documentation](https://eoapi.dev/deployment/kubernetes)
+* [eoAPI-k8s documentation](https://eoapi.dev/deployment/#via-eoapi-k8s)
 
 ## Contributing
 
