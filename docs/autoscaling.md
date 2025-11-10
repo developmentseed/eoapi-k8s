@@ -1,39 +1,50 @@
 ---
-title: "Autoscaling & Monitoring"
-description: "HPA setup with custom metrics, Grafana dashboards, Prometheus configuration, and load testing"
+title: "Autoscaling"
+description: "Horizontal Pod Autoscaler (HPA) configuration for eoAPI services."
 external_links:
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
   - name: "Kubernetes HPA Documentation"
     url: "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"
-  - name: "Prometheus Documentation"
-    url: "https://prometheus.io/docs/"
-  - name: "Grafana Documentation"
-    url: "https://grafana.com/docs/"
 ---
 
-# Autoscaling / Monitoring / Observability
+# Autoscaling
 
-Autoscaling is both art and science. To test out your application's autoscaling requirements you often need to consider
-your data volume, data usage patterns, bottlenecks (such as the database) among many, many other things. Load testing,
-metrics, monitoring and observability will help you explore what those needs are.
+Horizontal Pod Autoscaler (HPA) configuration for eoAPI services. Autoscaling requires monitoring components to be enabled in the main chart.
 
+## Prerequisites
 
-> &#9432; The `eoapi-support` chart in this repository is required to be installed to
-enable any of the eoAPI service autoscaling. It cannot be listed as a dependecy of `eoapi` chart
-b/c of the limitations in `prometheus-adapter` and `grafana` for constructing the Prometheus internal
-service domains dynamically.
+Enable monitoring in your main eoapi installation:
 
-If you are comfortable with k8s you probably only need to `helm install` the support chart and be on your way. Other folks
-might want to read through the verbose walkthrough material below to familiarize yourself with how things work.
+```yaml
+monitoring:
+  prometheus:
+    enabled: true
+  prometheusAdapter:
+    enabled: true  # Required for request-rate scaling
+  metricsServer:
+    enabled: true   # Required for CPU scaling
+```
 
----
+## Configuration
 
-## Helm Install `eoapi-support`
+### Basic Autoscaling
 
 The following instructions assume you've gone through the [AWS](./aws-eks.md) or [GCP](./gcp-gke.md) cluster set up
 and installed the `eoapi` chart.
 
+```yaml
+stac:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    type: "requestRate"  # Options: "cpu", "requestRate", "both"
+    targets:
+      requestRate: 50000m  # 50 requests/second
+```
+
+### Scaling Policies
 
 1. Go to the [releases section](https://github.com/developmentseed/eoapi-k8s/releases) of this repository and find the latest
 `eoapi-support-<version>` version to install, or use the following command to get the latest version:
@@ -43,361 +54,395 @@ and installed the `eoapi` chart.
    export SUPPORT_VERSION=$(helm search repo eoapi/eoapi-support --versions | head -2 | tail -1 | awk '{print $2}')
    ```
 
+```yaml
+stac:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    type: "both"
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 300  # 5min cooldown
+        policies:
+        - type: Percent
+          value: 50      # Max 50% pods removed per period
+          periodSeconds: 300
+      scaleUp:
+        stabilizationWindowSeconds: 60   # 1min cooldown
+        policies:
+        - type: Percent
+          value: 100     # Max 100% pods added per period
+          periodSeconds: 60
+    targets:
+      cpu: 70
+      requestRate: 50000m
+```
 
-2. Decide on a release name and `namespace` for your support chart. The next steps assume we've
-chosen a release name of `eoapi-support` and a similar namespace of `eoapi-support`
+## Metrics Types
+
+### CPU-based Scaling
+```yaml
+type: "cpu"
+targets:
+  cpu: 70
+```
+
+### Request Rate Scaling
+```yaml
+type: "requestRate"
+targets:
+  requestRate: 50000m  # 50 requests/second
+```
 
 
-3. Then do a normal `helm install` but you'll want to parameterize and pass overrides for the prometheus URL to include
-the release name and namespace chosen above. This allows other third-party dependencies used in the chart
-(`prometheus-adpater` and `grafana`) know where to find the prometheus service internally. This is unfortunately a
-manual step that cannot be automated
+### Combined Scaling
+```yaml
+type: "both"
+targets:
+  cpu: 70
+  requestRate: 100000m  # 100 requests/second
+```
 
+## Custom Metrics Configuration
+
+When using request rate scaling, the prometheus-adapter needs to be configured to expose custom metrics. This is handled automatically when you enable monitoring in the main chart:
+
+```yaml
+# In your main eoapi values file
+ingress:
+  host: your-domain.com
+
+monitoring:
+  prometheusAdapter:
+    enabled: true
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+```
+
+## Service-Specific Examples
+
+### STAC (High throughput)
+```yaml
+stac:
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    type: "requestRate"
+    targets:
+      requestRate: 40000m
+```
+
+### Raster (Resource intensive)
+```yaml
+raster:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    type: "cpu"
+    behaviour:
+      scaleDown:
+        stabilizationWindowSeconds: 300
+    targets:
+      cpu: 75
+```
+
+### Vector (Balanced)
+```yaml
+vector:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 12
+    type: "both"
+    targets:
+      cpu: 70
+      requestRate: 75000m
+```
+
+## Resource Requirements
+
+### Autoscaling Components
+- **metrics-server**: ~100m CPU, ~300Mi memory per node
+- **prometheus-adapter**: ~250m CPU, ~256Mi memory
+- **prometheus-server**: ~500m CPU, ~512Mi memory (varies with retention)
+
+## Verification
+
+### Check HPA Status
+
+```bash
+# Check HPA status for all services
+kubectl get hpa -n eoapi
+
+# Get detailed HPA information
+kubectl describe hpa eoapi-stac -n eoapi
+```
+
+### Verify Custom Metrics API
+
+```bash
+# Check if custom metrics API is available
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq .
+
+# Check specific request rate metrics
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/eoapi/ingresses/*/requests_per_second" | jq .
+```
+
+### Check Prometheus Adapter
+
+```bash
+# Check prometheus-adapter logs
+kubectl logs -l app.kubernetes.io/name=prometheus-adapter -n eoapi
+```
+
+## Load Testing
+
+For load testing your autoscaling setup:
+
+```yaml
+ingress:
+  host: your-test-domain.com
+```
+
+3. Check ingress configuration:
    ```bash
-   helm upgrade --install -n eoapi-support \
-     --create-namespace eoapi-support eoapi/eoapi-support --version $SUPPORT_VERSION \
-     --set prometheus-adapter.prometheus.url='http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local' \
-     --set grafana.datasources.datasources\\.yaml.datasources[0].url='http://eoapi-support-prometheus-server.eoapi-support.svc.cluster.local'
+   kubectl get ingress -n eoapi
    ```
 
+## Troubleshooting
 
-4. verify that everything is set up correctly and no deployments are not failing:
+### HPA Shows "Unknown" Metrics
 
-   ```sh
-   watch -n 1 "kubectl -n eoapi-support get deploy,pod,svc"
-   NAME                                                    READY   STATUS    RESTARTS   AGE
-   pod/eoapi-support-grafana-7fdc9688dd-wkw7p              1/1     Running   0          79s
-   pod/eoapi-support-kube-state-metrics-54d75784db-ghgbd   1/1     Running   0          79s
-   pod/eoapi-support-prometheus-adapter-668b6bd89c-kb25q   1/1     Running   0          79s
-   pod/eoapi-support-prometheus-node-exporter-6f96z        1/1     Running   0          79s
-   pod/eoapi-support-prometheus-node-exporter-fr96x        1/1     Running   0          79s
-   pod/eoapi-support-prometheus-node-exporter-pdvvp        1/1     Running   0          79s
-   pod/eoapi-support-prometheus-server-76dcfc684b-wmk5c    2/2     Running   0          79s
+If HPA shows "unknown" for custom metrics:
 
-   NAME                                             TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)        AGE
-   service/eoapi-support-grafana                    LoadBalancer   10.123.248.75    104.154.59.180   80:30821/TCP   79s
-   service/eoapi-support-kube-state-metrics         ClusterIP      10.123.241.247   <none>           8080/TCP       79s
-   service/eoapi-support-prometheus-adapter         ClusterIP      10.123.249.21    <none>           443/TCP        79s
-   service/eoapi-support-prometheus-node-exporter   ClusterIP      10.123.249.90    <none>           9100/TCP       79s
-   service/eoapi-support-prometheus-server          ClusterIP      10.123.247.255   <none>           80/TCP         79s
+1. Verify prometheus-adapter is running:
+   ```bash
+   kubectl get pods -l app.kubernetes.io/name=prometheus-adapter -n eoapi
    ```
 
-
-5. If anything in steps 1 through 3 seems confusing then here is a quick bash script to clear it up:
-
-   ```shell
-   export RELEASE_NAME=eoapi
-   export RELEASE_NS=eoapi
-   export SUPPORT_RELEASE_NAME=eoapi-support
-   export SUPPORT_RELEASE_NS=eoapi-support
-
-   # Get latest chart versions
-   export SUPPORT_VERSION=$(helm search repo eoapi/eoapi-support --versions | head -2 | tail -1 | awk '{print $2}')
-   export EOAPI_VERSION=$(helm search repo eoapi/eoapi --versions | head -2 | tail -1 | awk '{print $2}')
-
-   PROMETHEUS_URL="http://${SUPPORT_RELEASE_NAME}-prometheus-server.${SUPPORT_RELEASE_NS}.svc.cluster.local"
-
-   helm upgrade --install \
-     -n $SUPPORT_RELEASE_NS --create-namespace $SUPPORT_RELEASE_NAME \
-     eoapi/eoapi-support --version $SUPPORT_VERSION \
-     --set prometheus-adapter.prometheus.url=$PROMETHEUS_URL \
-     --set grafana.datasources.datasources\\.yaml.datasources[0].url=$PROMETHEUS_URL \
-     -f /tmp/values-overrides.yaml
-
-   helm upgrade --install \
-     -n $RELEASE_NS --create-namespace $RELEASE_NAME \
-     eoapi/eoapi --version $EOAPI_VERSION \
-     -f /tmp/support-values-overrides.yaml
+2. Check prometheus-adapter logs:
+   ```bash
+   kubectl logs -l app.kubernetes.io/name=prometheus-adapter -n eoapi
    ```
 
-
----
-
-### Review [Default Configuration and Options](./configuration.md)
-
-[This document](./configuration.md) will explain the differences in the `autoscaling` block for each service:
-
-   ```yaml
-   autoscaling:
-       enabled: false
-       minReplicas: 1
-       maxReplicas: 10
-       # `type`: "cpu" || "requestRate" || "both"
-       type: "requestRate"
-       behaviour: {}
-         scaleDown:
-           stabilizationWindowSeconds: 60
-         scaleUp:
-           stabilizationWindowSeconds: 0
-       targets:
-         # matches `type` value above unless `type: "both"` is selected
-         cpu: 85
-         requestRate: 15000
+3. Verify metrics are available in Prometheus:
+   ```bash
+   # Port forward to access Prometheus
+   kubectl port-forward service/eoapi-prometheus-server 9090:80 -n eoapi
+   # Then check metrics at http://localhost:9090
    ```
 
----
+### Default Configuration
 
-### How Autoscaling Works
+Default autoscaling configuration:
 
-If you grok the default `eoapi-support` values in `values.yaml` you'll see we use custom metrics and prometheus queries
-based on the nginx ingress controller's request rate under the `prometheus-adpater.prometheus:` key:
+```yaml
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  # Type can be "cpu", "requestRate", or "both"
+  type: "cpu"
+  # Custom scaling behavior (optional)
+  behaviour: {}
+  # Scaling targets
+  targets:
+    # CPU target percentage (when type is "cpu" or "both")
+    cpu: 80
+    # Request rate target in millirequests per second (when type is "requestRate" or "both")
+    requestRate: 30000m
+```
 
-   ```yaml
-   prometheus-adapter:
-     prometheus:
-       # NOTE: the `url` below make some assumptions about the namespace where you released eoapi and prometheus
-       # 1) that you didn't change the default name of the `prometheus-server` or the port and installed in eoapi namespace
-       # 2) namely that you ran `helm install eoapi --create-namespace=eoapi`  with the `eoapi` namespace
-       url: http://eoapi-support-prometheus-server.eoapi.svc.cluster.local
-       port: 80
-       path: ""
-     rules:
-       default: false
-       # NOTE: the `name.as` values below make some assumptions about your release name
-       # namely that you have run `helm install eoapi eoapi/eoapi --create-namespace=eoapi`
-       custom:
-       - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
-         seriesFilters: []
-         resources:
-           template: <<.Resource>>
-         name:
-           matches: ""
-           as: "nginx_ingress_controller_requests_rate_vector_eoapi"
-         metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
-       - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
-         seriesFilters: []
-         resources:
-           template: <<.Resource>>
-         name:
-           matches: ""
-           as: "nginx_ingress_controller_requests_rate_raster_eoapi"
-         metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
-       - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
-         seriesFilters: []
-         resources:
-           template: <<.Resource>>
-         name:
-           matches: ""
-           as: "nginx_ingress_controller_requests_rate_stac_eoapi"
-         metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+### No Scaling Activity
+
+If pods aren't scaling:
+
+1. Check HPA events:
+   ```bash
+   kubectl describe hpa eoapi-stac -n eoapi
    ```
 
-Prometheus adapter is a bridge for metrics between Prometheus (which scrapes nginx) and the k8s metrics server so it can autoscale deployments using these custom metrics.
-If you've chosen `both` or `requestRate` as a autoscaling `type:` for those values then these custom metrics are used to template an `hpa.yaml` for each service
-
-### Log into Grafana
-
-When you `helm install` the support chart you by default get a Grafana dashboard set up with different default metrics charts
-to help you load test and explore your service autoscaling. Grafana creates a new username `admin` and password for you
-that you'll have to retrieve to login.
-
-> &#9432; Note that the `service/eoapi-support-grafana` has an EXTERNAL-IP that we can use to view it.
-This is just a quick way to work with it. You'll want to set it up with an ingress in the future
-
-
-1. To log into Grafana you'll need to export the default username/password it came installed with. Note that secret names are prefixed
-with the `release` name we installed the chart with below `<release-name>-grafana`:
-
-   ```sh
-   kubectl get secret eoapi-support-grafana --template='{{index .data "admin-user"}}' -n eoapi | base64 -d
-     # <not-showing-output>
-   kubectl get secret eoapi-support-grafana --template='{{index .data "admin-password"}}' -n eoapi | base64 -d
-     # <not-showing-output>
+2. Verify metrics are being collected:
+   ```bash
+   kubectl top pods -n eoapi
    ```
 
-2. To find the URL for the load balancer for where to log in with Grafana you can query the services:
-
-   ```sh
-   kubectl get svc -n eoapi-support
+3. Check resource requests are set:
+   ```bash
+   kubectl describe pod eoapi-stac-xxx -n eoapi | grep -A 10 "Requests"
    ```
 
-3. Login and you should be default be able to see the eoapi-k8s grafana dashboard. The Prometheus datasource will already be configured for you:
-
-   ![Grafana Datasource Configuration](./images/datasource.png)
-
-   You can then view the main eoAPI dashboard:
-
-   ![](./images/gfdashboard.png)
-
-   To add additional custom dashboards, you can use the dashboard import functionality:
-
-   ![Adding Custom Grafana Dashboards](./images/add-grafana-dashboard.png)
 
 ### Install or Upgrade Autoscaling Changes to `eoapi` Chart
 
-1. If you haven't already decide which services (`vector` || `raster` || `stac`) you want to enable `autoscaling` on change your values yaml for these and redeploy
+When enabling autoscaling, ensure monitoring is also enabled:
 
-   ```yaml
-   stac:
-     enabled: true
-     autoscaling:
-       enabled: true
-       type: "requestRate"
-       targets:
-         requestRate: 50000m
-     settings:
-       resources:
-         limits:
-           cpu: "1280m"
-           memory: "1536Mi"
-         requests:
-           cpu: "512m"
-           memory: "1024Mi"
-   vector:
-     enabled: true
-     autoscaling:
-       enabled: true
-       type: "requestRate"
-       targets:
-         requestRate: 50000m
-     settings:
-       resources:
-         limits:
-           cpu: "768m"
-           memory: "1536Mi"
-         requests:
-           cpu: "256m"
-           memory: "1024Mi"
-   ```
+```yaml
+# Enable monitoring first
+monitoring:
+  prometheus:
+    enabled: true
+  prometheusAdapter:
+    enabled: true
 
-2. Review what the heck the unit `m` means for your [autoscaling values in the k8s docs](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#quantities)
+# Then enable autoscaling
+stac:
+  autoscaling:
+    enabled: true
+    type: "requestRate"
+    targets:
+      requestRate: 50000m
 
+# Configure resources for proper scaling metrics
+stac:
+  settings:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+```
 
-3. Then `helm install` the eoapi chart with these changes
+### Custom Metrics Not Working
 
-   ```sh
-   helm upgrade --install -n eoapi...
-   ```
+If request rate metrics aren't working:
 
----
+1. Verify nginx ingress controller has metrics enabled
+2. Check prometheus is scraping ingress metrics
+3. Confirm prometheus-adapter configuration
+4. Validate ingress annotations for metrics
 
-### Add Load Balancer Host as a Host to Your Ingress
+### Scaling Too Aggressive/Slow
 
-Unfortunately, nginx will not expose metrics for ingresses without hosts or hosts with wildcards. You'll either need to deploy
-`eoapi-k8s` chart again with `ingress.tls.enabled` or need to find the `EXTERNAL-IP` for your `ingress-nginx-controller` and use that
-to set up a simple host
+Adjust scaling behavior:
 
-1. Find the IP that your `ingress-nginx-controller` service load balancer:
+```yaml
+autoscaling:
+  behaviour:
+    scaleUp:
+      stabilizationWindowSeconds: 60    # Faster scaling up
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300   # Slower scaling down
+      policies:
+      - type: Percent
+        value: 25                       # More conservative scale down
+        periodSeconds: 300
+```
 
-   ```sh
-   kubectl -n ingress-nginx  get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-     http://abc5929f88f8c45c38f6cbab2faad43c-776419634.us-west-2.elb.amazonaws.com/
-   ```
+## Best Practices
 
-2. Then live edit your shared ingress for eoapi services to add the host:
+1. **Set appropriate resource requests**: HPA needs resource requests to calculate CPU utilization
+2. **Use stabilization windows**: Prevent thrashing with appropriate cooldown periods
+3. **Monitor costs**: Autoscaling can increase costs rapidly
+4. **Test thoroughly**: Validate scaling behavior under realistic load
+5. **Set reasonable limits**: Use `maxReplicas` to prevent runaway scaling
+6. **Use multiple metrics**: Combine CPU and request rate for better scaling decisions
 
-   ```sh
-   kubectl edit ingress nginx-service-ingress-shared-eoapi -n eoapi
-   ```
+Example ingress configuration for load testing:
 
-   ```yaml
-   # BEFORE
-   spec:
-   ingressClassName: nginx
-   rules:
-   - http:
-       paths:
-       ...
-   ```
+```yaml
+# For AWS ALB
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eoapi-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: your-domain.com
+    http:
+      paths: [...]
 
-   ```yaml
-   # AFTER
-   spec:
-   ingressClassName: nginx
-   rules:
-   - host: abc5929f88f8c45c38f6cbab2faad43c-776419634.us-west-2.elb.amazonaws.com
-     http:
-       paths:
-       ...
-   ```
-
-And then finally roll out the deployment.
-
-   ```sh
-   kubectl rollout restart deploy/ingress-nginx-controller -n ingress-nginx
-
-   ```
-
----
+# For nginx ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eoapi-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: abc5929f88f8c45c38f6cbab2faad43c-776419634.us-west-2.elb.amazonaws.com
+    http:
+      paths: [...]
+```
 
 ## Load Testing
 
 #### Load Testing with `hey`
 
-Everything mentioned below assumes you've already gone through the autoscaling setup above and
-that you're deploying using `ingress.className: "nginx"`.
+The `hey` tool is a simple HTTP load testing tool.
 
 ### Install and Run Load Tests
 
-1. Install `hey` utility locally:
-
+1. Install hey:
    ```bash
    # macOS
    brew install hey
 
    # Linux
-   wget https://github.com/rakyll/hey/releases/latest/download/hey_linux_amd64
-   chmod +x hey_linux_amd64 && sudo mv hey_linux_amd64 /usr/local/bin/hey
+   go install github.com/rakyll/hey@latest
 
-   # Or use Docker
-   alias hey='docker run --rm rcmorano/hey'
+   # Or download from releases
+   wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64
+   chmod +x hey_linux_amd64
+   sudo mv hey_linux_amd64 /usr/local/bin/hey
    ```
 
-2. Find the external IP of your shared nginx ingress:
-
+2. Run basic load test:
    ```bash
-   # For GKE clusters
-   export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx get ingress/nginx-service-ingress-shared-eoapi -o=jsonpath='{.spec.rules[0].host}')
-   # Example output: eoapi-35.234.254.12.nip.io
+   # Test STAC endpoint
+   hey -z 5m -c 10 https://your-domain.com/stac/collections
 
-   # For EKS clusters
-   export INGRESS_ENDPOINT=$(kubectl -n ingress-nginx get svc/ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-   # Example output: k8s-eoapi-ingressn-404721dbb4-e6dec70321c3eddd.elb.us-west-2.amazonaws.com
+   # Test with higher concurrency
+   hey -z 10m -c 50 https://your-domain.com/stac/search
    ```
 
-3. Run load tests against different endpoints in separate terminals:
-
+3. Monitor during load test:
    ```bash
-   # Test Vector API
-   hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/vector/collections/public.my_data/items?f=geojson"
+   # Watch HPA scaling
+   watch kubectl get hpa -n eoapi
 
-   # Test STAC API
-   hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/stac/"
-
-   # Test Raster API
-   hey -n 2000000 -q 150 -c 20 "http://${INGRESS_ENDPOINT}/raster/collections"
+   # Monitor pods
+   watch kubectl get pods -n eoapi
    ```
 
-   **Load testing parameters:**
-   - `-n`: Total number of requests (2M for sustained testing)
-   - `-q`: Rate limit (150 requests/second per worker)
-   - `-c`: Number of concurrent workers (20)
-
-4. **Monitor autoscaling in Grafana** - Go back to your Grafana dashboard and watch your services autoscale for the endpoints you're hitting:
-
-   ![Grafana Autoscaling Dashboard](./images/grafanaautoscale.png)
 
 ### Load Testing Best Practices
 
-- **Start small**: Begin with lower request rates and gradually increase
-- **Monitor resources**: Watch CPU, memory, and request rate metrics
-- **Test realistic scenarios**: Use actual data access patterns when possible
-- **Verify autoscaling**: Ensure HPA triggers and pods scale up/down appropriately
-- **Database bottlenecks**: Monitor PostgreSQL performance under load
-- **Clean up**: Stop load tests gracefully to avoid overwhelming services
+1. **Start small**: Begin with low concurrency and short duration
+2. **Monitor resources**: Watch CPU, memory, and network usage
+3. **Test realistic scenarios**: Use actual API endpoints and payloads
+4. **Gradual increase**: Slowly increase load to find breaking points
+5. **Test different endpoints**: Each service may have different characteristics
 
 ### Troubleshooting Load Tests
 
-If autoscaling isn't triggering:
-- Verify HPA is configured: `kubectl get hpa -n eoapi`
-- Check custom metrics: `kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq .`
-- Ensure prometheus-adapter is running: `kubectl get pods -n eoapi-support`
-- Validate ingress metrics: Check Grafana for nginx request rates
+- **High response times**: May indicate need for more replicas or resources
+- **Error rates**: Could suggest database bottlenecks or resource limits
+- **No scaling**: Check HPA metrics and thresholds
 
 ### Advanced Load Testing
 
-For more sophisticated testing consider:
-- **[k6](https://k6.io/)** - JavaScript-based load testing with scenarios
-- **[Artillery](https://artillery.io/)** - Node.js load testing toolkit
-- **[JMeter](https://jmeter.apache.org/)** - GUI-based load testing with complex scenarios
+For more comprehensive testing, consider:
+- **[Artillery](https://artillery.io/)** - Feature-rich load testing toolkit
+- **[k6](https://k6.io/)** - Developer-centric performance testing
 - **[Locust](https://locust.io/)** - Python-based distributed load testing
+
+For monitoring and observability setup, see [observability.md](observability.md).

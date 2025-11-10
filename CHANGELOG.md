@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic queue processor CronJob created when `use_queue` is "true" (configurable schedule via `queueProcessor.schedule`)
   - Automatic extent updater CronJob created when `update_collection_extent` is "false" (configurable schedule via `extentUpdater.schedule`)
 
+### Changed
+
+- Refactors eoapi-support into core eoapi chart [#262](https://github.com/developmentseed/eoapi-k8s/pull/262)
+
 ## [0.7.13] - 2025-11-04
 
 ### Added
@@ -51,10 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added values.schema.json validation [#296](https://github.com/developmentseed/eoapi-k8s/pull/296)
 - Adjusted Renovate Configuration to fit conventional commits [#295](https://github.com/developmentseed/eoapi-k8s/pull/295)
 - Notification triggers in database [#289](https://github.com/developmentseed/eoapi-k8s/pull/289)
-
-### Changed
-
-- Excluded renovate.json from CHANGELOG.md edits [#301](https://github.com/developmentseed/eoapi-k8s/pull/301)
 
 ## [0.7.8] - 2025-09-10
 
