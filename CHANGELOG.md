@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Expose PgSTAC configuration options in Helm chart values (`pgstacBootstrap.settings.pgstacSettings`). These are being dynamically applied via templated SQL during bootstrap.
-  - Added `queue_timeout`, `use_queue`, and `update_collection_extent` settings for performance tuning
-  - Added context settings (`context`, `context_estimated_count`, `context_estimated_cost`, `context_stats_ttl`) for search result optimization
+  - Added `queue_timeout`, `use_queue`, and `update_collection_extent` settings for database performance tuning
+  - Made existing context settings configurable (`context`, `context_estimated_count`, `context_estimated_cost`, `context_stats_ttl`)
+  - Automatic queue processor CronJob created when `use_queue` is "true" (configurable schedule via `queueProcessor.schedule`)
 
 ## [0.7.13] - 2025-11-04
 

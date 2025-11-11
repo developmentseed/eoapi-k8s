@@ -102,6 +102,17 @@ Control search result count calculations:
 | `context_estimated_cost` | Cost threshold for estimates | "100000" | integer string |
 | `context_stats_ttl` | Stats cache duration | "1 day" | PostgreSQL interval |
 
+### Queue Processing
+
+When `use_queue` is set to "true", a CronJob is automatically created to process queued queries:
+
+| **Values Key** | **Description** | **Default** | **Format** |
+|:--------------|:----------------|:------------|:-----------|
+| `queueProcessor.schedule` | Cron schedule for processing | "0 * * * *" | Cron format |
+| `queueProcessor.command` | SQL command to run | "SELECT run_queued_queries();" | SQL |
+
+The queue processor runs hourly by default but can be customized for your workload.
+
 Example configuration:
 
 ```yaml

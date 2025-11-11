@@ -193,6 +193,11 @@ pgstacBootstrap:
       context_estimated_cost: "100000"   # Query cost threshold for using estimates
       context_stats_ttl: "1 day"         # Cache duration for context statistics
 
+    # Queue processing configuration (only used when use_queue is "true")
+    queueProcessor:
+      schedule: "0 * * * *"               # Run every hour (cron format)
+      command: "SELECT run_queued_queries();"
+
     # Wait configuration for init containers waiting for pgstac jobs
     # These parameters control how long services wait for pgstac migration jobs to complete
     waitConfig:

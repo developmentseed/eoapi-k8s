@@ -1,0 +1,46 @@
+{{- if .Values.pgstacBootstrap.enabled }}
+{{- if .Values.pgstacBootstrap.settings.pgstacSettings }}
+{{- if ne (default "true" .Values.pgstacBootstrap.settings.pgstacSettings.use_queue | toString) "false" }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-pgstac-queue-processor
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pgstac-queue
+spec:
+  schedule: {{ .Values.pgstacBootstrap.settings.queueProcessor.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "eoapi.labels" . | nindent 12 }}
+            app.kubernetes.io/component: pgstac-queue
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: queue-processor
+            image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
+            imagePullPolicy: IfNotPresent
+            command:
+              - "/bin/sh"
+              - "-c"
+              - |
+                psql -c "{{ .Values.pgstacBootstrap.settings.queueProcessor.command }}"
+            env:
+              {{- include "eoapi.postgresqlEnv" . | nindent 14 }}
+            resources:
+              limits:
+                cpu: "256m"
+                memory: "512Mi"
+              requests:
+                cpu: "128m"
+                memory: "256Mi"
+{{- end }}
+{{- end }}
+{{- end }}
