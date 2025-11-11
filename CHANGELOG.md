@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Expose PgSTAC configuration options in Helm chart values (`pgstacBootstrap.settings.pgstacSettings`). These are being dynamically applied via templated SQL during bootstrap.
+  - Added `queue_timeout`, `use_queue`, and `update_collection_extent` settings for performance tuning
+  - Added context settings (`context`, `context_estimated_count`, `context_estimated_cost`, `context_stats_ttl`) for search result optimization
+
 ## [0.7.13] - 2025-11-04
 
 ### Added
