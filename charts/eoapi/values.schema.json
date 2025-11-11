@@ -272,6 +272,82 @@
             "resources": {
               "type": "object",
               "description": "Resource requirements"
+            },
+            "pgstacSettings": {
+              "type": "object",
+              "description": "PgSTAC database configuration settings",
+              "properties": {
+                "queue_timeout": {
+                  "type": "string",
+                  "default": "10 minutes",
+                  "description": "Timeout for queued queries (PostgreSQL interval format)"
+                },
+                "use_queue": {
+                  "type": "string",
+                  "enum": ["true", "false"],
+                  "default": "true",
+                  "description": "Enable/disable query queue mechanism"
+                },
+                "update_collection_extent": {
+                  "type": "string",
+                  "enum": ["true", "false"],
+                  "default": "false",
+                  "description": "Auto-update collection extents when items are added/modified"
+                },
+                "context": {
+                  "type": "string",
+                  "enum": ["on", "off", "auto"],
+                  "default": "auto",
+                  "description": "Context mode for search results"
+                },
+                "context_estimated_count": {
+                  "type": "string",
+                  "default": "100000",
+                  "description": "Row threshold for using estimates instead of exact counts"
+                },
+                "context_estimated_cost": {
+                  "type": "string",
+                  "default": "100000",
+                  "description": "Query cost threshold for using estimates"
+                },
+                "context_stats_ttl": {
+                  "type": "string",
+                  "default": "1 day",
+                  "description": "Cache duration for context statistics (PostgreSQL interval)"
+                }
+              }
+            },
+            "queueProcessor": {
+              "type": "object",
+              "description": "Queue processor CronJob configuration (active when use_queue is true)",
+              "properties": {
+                "schedule": {
+                  "type": "string",
+                  "default": "0 * * * *",
+                  "description": "Cron schedule for processing queued queries"
+                },
+                "command": {
+                  "type": "string",
+                  "default": "RUN run_queued_queries();",
+                  "description": "SQL command to process queue"
+                }
+              }
+            },
+            "extentUpdater": {
+              "type": "object",
+              "description": "Extent updater CronJob configuration (active when update_collection_extent is false)",
+              "properties": {
+                "schedule": {
+                  "type": "string",
+                  "default": "0 2 * * *",
+                  "description": "Cron schedule for updating collection extents"
+                },
+                "command": {
+                  "type": "string",
+                  "default": "SELECT update_collection_extents();",
+                  "description": "SQL command to update extents"
+                }
+              }
             }
           }
         }

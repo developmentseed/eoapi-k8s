@@ -196,7 +196,7 @@ pgstacBootstrap:
     # Queue processing configuration (only used when use_queue is "true")
     queueProcessor:
       schedule: "0 * * * *"               # Run every hour
-      command: "SELECT run_queued_queries();"
+      command: "RUN run_queued_queries();"
 
     # Extent updater configuration (only used when update_collection_extent is "false")
     extentUpdater:

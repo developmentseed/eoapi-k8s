@@ -108,7 +108,7 @@ Two CronJobs are conditionally created based on PgSTAC settings:
 
 **Queue Processor** (when `use_queue: "true"`):
 - `queueProcessor.schedule`: "0 * * * *" (hourly)
-- `queueProcessor.command`: "SELECT run_queued_queries();"
+- `queueProcessor.command`: "RUN run_queued_queries();"
 
 **Extent Updater** (when `update_collection_extent: "false"`):
 - `extentUpdater.schedule`: "0 2 * * *" (daily at 2 AM)
