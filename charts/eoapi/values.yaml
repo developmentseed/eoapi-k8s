@@ -182,10 +182,10 @@ pgstacBootstrap:
     pgstacSettings:
       # Queue configuration for handling complex queries
       queue_timeout: "10 minutes"        # Timeout for queued queries (PostgreSQL interval format)
-      use_queue: "true"                  # Enable/disable query queue mechanism
+      use_queue: "false"                 # Enable/disable query queue mechanism; if enabled a 'queueProcessor' cronjob is being set
 
       # Collection extent management
-      update_collection_extent: "false"  # Auto-update collection extents when items are added/modified
+      update_collection_extent: "true"   # Auto-update collection extents when items are added/modified; if disabled a 'extentUpdater' cronjob is being set
 
       # Context configuration for search results
       context: "auto"                    # Context mode: "on", "off", or "auto"
@@ -195,12 +195,12 @@ pgstacBootstrap:
 
     # Queue processing configuration (only used when use_queue is "true")
     queueProcessor:
-      schedule: "0 * * * *"               # Run every hour (cron format)
+      schedule: "0 * * * *"               # Run every hour
       command: "SELECT run_queued_queries();"
 
     # Extent updater configuration (only used when update_collection_extent is "false")
     extentUpdater:
-      schedule: "0 2 * * *"               # Run daily at 2 AM (cron format)
+      schedule: "0 2 * * *"               # Run daily at 2 AM
       command: "SELECT update_collection_extents();"
 
     # Wait configuration for init containers waiting for pgstac jobs
