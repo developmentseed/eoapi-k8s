@@ -44,10 +44,10 @@ tests:
           pattern: "VALUES \\('queue_timeout', '10 minutes'\\)"
       - matchRegex:
           path: data["pgstac-settings.sql"]
-          pattern: "VALUES \\('use_queue', 'true'\\)"
+          pattern: "VALUES \\('use_queue', 'false'\\)"
       - matchRegex:
           path: data["pgstac-settings.sql"]
-          pattern: "VALUES \\('update_collection_extent', 'false'\\)"
+          pattern: "VALUES \\('update_collection_extent', 'true'\\)"
 
   # Queue Processor Tests
   - it: should create queue processor when use_queue is true
@@ -91,7 +91,6 @@ tests:
             use_queue: "true"
           queueProcessor:
             schedule: "*/15 * * * *"
-            command: "SELECT custom_queue_function();"
     template: templates/pgstacbootstrap/queue-processor.yaml
     asserts:
       - equal:
@@ -99,7 +98,7 @@ tests:
           value: "*/15 * * * *"
       - matchRegex:
           path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
-          pattern: "SELECT custom_queue_function\\(\\);"
+          pattern: "RUN run_queued_queries\\(\\);"
 
   # Extent Updater Tests
   - it: should create extent updater when update_collection_extent is false
@@ -143,7 +142,6 @@ tests:
             update_collection_extent: "false"
           extentUpdater:
             schedule: "0 */6 * * *"
-            command: "SELECT custom_extent_function();"
     template: templates/pgstacbootstrap/extent-updater.yaml
     asserts:
       - equal:
@@ -151,7 +149,7 @@ tests:
           value: "0 */6 * * *"
       - matchRegex:
           path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
-          pattern: "SELECT custom_extent_function\\(\\);"
+          pattern: "SELECT update_collection_extents\\(\\);"
 
   # Combined scenario tests
   - it: should create both cronjobs with proper settings

@@ -31,7 +31,7 @@ spec:
               - "/bin/sh"
               - "-c"
               - |
-                psql -c "{{ .Values.pgstacBootstrap.settings.extentUpdater.command }}"
+                psql -c "SELECT update_collection_extents();"
             env:
               {{- include "eoapi.postgresqlEnv" . | nindent 14 }}
             resources:

@@ -285,13 +285,13 @@
                 "use_queue": {
                   "type": "string",
                   "enum": ["true", "false"],
-                  "default": "true",
+                  "default": "false",
                   "description": "Enable/disable query queue mechanism"
                 },
                 "update_collection_extent": {
                   "type": "string",
                   "enum": ["true", "false"],
-                  "default": "false",
+                  "default": "true",
                   "description": "Auto-update collection extents when items are added/modified"
                 },
                 "context": {
@@ -325,11 +325,6 @@
                   "type": "string",
                   "default": "0 * * * *",
                   "description": "Cron schedule for processing queued queries"
-                },
-                "command": {
-                  "type": "string",
-                  "default": "RUN run_queued_queries();",
-                  "description": "SQL command to process queue"
                 }
               }
             },
@@ -341,11 +336,6 @@
                   "type": "string",
                   "default": "0 2 * * *",
                   "description": "Cron schedule for updating collection extents"
-                },
-                "command": {
-                  "type": "string",
-                  "default": "SELECT update_collection_extents();",
-                  "description": "SQL command to update extents"
                 }
               }
             }

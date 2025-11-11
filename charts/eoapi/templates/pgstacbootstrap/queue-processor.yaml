@@ -31,7 +31,7 @@ spec:
               - "/bin/sh"
               - "-c"
               - |
-                psql -c "{{ .Values.pgstacBootstrap.settings.queueProcessor.command }}"
+                psql -c "RUN run_queued_queries();"
             env:
               {{- include "eoapi.postgresqlEnv" . | nindent 14 }}
             resources:

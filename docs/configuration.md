@@ -88,8 +88,8 @@ Configure via `pgstacBootstrap.settings.pgstacSettings`:
 | **Values Key** | **Description** | **Default** | **Format** |
 |:--------------|:----------------|:------------|:-----------|
 | `queue_timeout` | Timeout for queued queries | "10 minutes" | PostgreSQL interval |
-| `use_queue` | Enable query queue mechanism | "true" | boolean string |
-| `update_collection_extent` | Auto-update collection extents | "false" | boolean string |
+| `use_queue` | Enable query queue mechanism | "false" | boolean string |
+| `update_collection_extent` | Auto-update collection extents | "true" | boolean string |
 
 ### Context Settings
 
@@ -104,15 +104,17 @@ Control search result count calculations:
 
 ### Automatic Maintenance Jobs
 
-Two CronJobs are conditionally created based on PgSTAC settings:
+CronJobs are conditionally created based on PgSTAC settings:
 
-**Queue Processor** (when `use_queue: "true"`):
+**Queue Processor** (created when `use_queue: "true"`):
 - `queueProcessor.schedule`: "0 * * * *" (hourly)
-- `queueProcessor.command`: "RUN run_queued_queries();"
+- Processes queries that exceeded timeout
 
-**Extent Updater** (when `update_collection_extent: "false"`):
+**Extent Updater** (created when `update_collection_extent: "false"`):
 - `extentUpdater.schedule`: "0 2 * * *" (daily at 2 AM)
-- `extentUpdater.command`: "SELECT update_collection_extents();"
+- Updates collection spatial/temporal boundaries
+
+By default, no CronJobs are created (use_queue=false, update_collection_extent=true).
 
 Both schedules are customizable using standard cron format.
 
