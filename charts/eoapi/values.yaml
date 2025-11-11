@@ -198,6 +198,11 @@ pgstacBootstrap:
       schedule: "0 * * * *"               # Run every hour (cron format)
       command: "SELECT run_queued_queries();"
 
+    # Extent updater configuration (only used when update_collection_extent is "false")
+    extentUpdater:
+      schedule: "0 2 * * *"               # Run daily at 2 AM (cron format)
+      command: "SELECT update_collection_extents();"
+
     # Wait configuration for init containers waiting for pgstac jobs
     # These parameters control how long services wait for pgstac migration jobs to complete
     waitConfig:

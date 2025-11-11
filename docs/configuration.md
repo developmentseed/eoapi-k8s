@@ -102,16 +102,19 @@ Control search result count calculations:
 | `context_estimated_cost` | Cost threshold for estimates | "100000" | integer string |
 | `context_stats_ttl` | Stats cache duration | "1 day" | PostgreSQL interval |
 
-### Queue Processing
+### Automatic Maintenance Jobs
 
-When `use_queue` is set to "true", a CronJob is automatically created to process queued queries:
+Two CronJobs are conditionally created based on PgSTAC settings:
 
-| **Values Key** | **Description** | **Default** | **Format** |
-|:--------------|:----------------|:------------|:-----------|
-| `queueProcessor.schedule` | Cron schedule for processing | "0 * * * *" | Cron format |
-| `queueProcessor.command` | SQL command to run | "SELECT run_queued_queries();" | SQL |
+**Queue Processor** (when `use_queue: "true"`):
+- `queueProcessor.schedule`: "0 * * * *" (hourly)
+- `queueProcessor.command`: "SELECT run_queued_queries();"
 
-The queue processor runs hourly by default but can be customized for your workload.
+**Extent Updater** (when `update_collection_extent: "false"`):
+- `extentUpdater.schedule`: "0 2 * * *" (daily at 2 AM)
+- `extentUpdater.command`: "SELECT update_collection_extents();"
+
+Both schedules are customizable using standard cron format.
 
 Example configuration:
 
