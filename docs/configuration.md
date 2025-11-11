@@ -48,6 +48,7 @@ Using Crunchydata's PostgreSQL Operator (`postgresql.type: "postgrescluster"`):
 
 For external databases, set `postgresql.type` to either:
 
+
 1. Using plaintext credentials (`external-plaintext`):
 ```yaml
 postgresql:
@@ -74,6 +75,65 @@ postgresql:
     host: "your-host"  # can also be in secret
     port: "5432"       # can also be in secret
     database: "eoapi"  # can also be in secret
+```
+
+## PgSTAC Configuration
+
+Control PgSTAC database behavior and performance tuning:
+
+### Core Settings
+
+Configure via `pgstacBootstrap.settings.pgstacSettings`:
+
+| **Values Key** | **Description** | **Default** | **Format** |
+|:--------------|:----------------|:------------|:-----------|
+| `queue_timeout` | Timeout for queued queries | "10 minutes" | PostgreSQL interval |
+| `use_queue` | Enable query queue mechanism | "false" | boolean string |
+| `update_collection_extent` | Auto-update collection extents | "true" | boolean string |
+
+### Context Settings
+
+Control search result count calculations:
+
+| **Values Key** | **Description** | **Default** | **Format** |
+|:--------------|:----------------|:------------|:-----------|
+| `context` | Context mode | "auto" | "on", "off", "auto" |
+| `context_estimated_count` | Row threshold for estimates | "100000" | integer string |
+| `context_estimated_cost` | Cost threshold for estimates | "100000" | integer string |
+| `context_stats_ttl` | Stats cache duration | "1 day" | PostgreSQL interval |
+
+### Automatic Maintenance Jobs
+
+CronJobs are conditionally created based on PgSTAC settings:
+
+**Queue Processor** (created when `use_queue: "true"`):
+- `queueProcessor.schedule`: "0 * * * *" (hourly)
+- Processes queries that exceeded timeout
+
+**Extent Updater** (created when `update_collection_extent: "false"`):
+- `extentUpdater.schedule`: "0 2 * * *" (daily at 2 AM)
+- Updates collection spatial/temporal boundaries
+
+By default, no CronJobs are created (use_queue=false, update_collection_extent=true).
+
+Both schedules are customizable using standard cron format.
+
+Example configuration:
+
+```yaml
+pgstacBootstrap:
+  settings:
+    pgstacSettings:
+      # Performance tuning for large datasets
+      queue_timeout: "20 minutes"
+      use_queue: "true"
+      update_collection_extent: "false"
+
+      # Optimize context for performance
+      context: "auto"
+      context_estimated_count: "50000"
+      context_estimated_cost: "75000"
+      context_stats_ttl: "12 hours"
 ```
 
 ## Ingress Configuration

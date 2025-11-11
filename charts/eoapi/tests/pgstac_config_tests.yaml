@@ -1,0 +1,214 @@
+suite: pgstac configuration tests
+templates:
+  - templates/pgstacbootstrap/configmap.yaml
+  - templates/pgstacbootstrap/queue-processor.yaml
+  - templates/pgstacbootstrap/extent-updater.yaml
+tests:
+  # PgSTAC Settings Tests
+  - it: should apply custom pgstac settings
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            queue_timeout: "30 minutes"
+            use_queue: "false"
+            update_collection_extent: "true"
+            context: "on"
+            context_estimated_count: "50000"
+    template: templates/pgstacbootstrap/configmap.yaml
+    documentIndex: 0
+    asserts:
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('queue_timeout', '30 minutes'\\)"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('use_queue', 'false'\\)"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('update_collection_extent', 'true'\\)"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('context_estimated_count', '50000'\\)"
+
+  - it: should use default pgstac settings
+    set:
+      pgstacBootstrap:
+        enabled: true
+    template: templates/pgstacbootstrap/configmap.yaml
+    documentIndex: 0
+    asserts:
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('queue_timeout', '10 minutes'\\)"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('use_queue', 'false'\\)"
+      - matchRegex:
+          path: data["pgstac-settings.sql"]
+          pattern: "VALUES \\('update_collection_extent', 'true'\\)"
+
+  # Queue Processor Tests
+  - it: should create queue processor when use_queue is true
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            use_queue: "true"
+    template: templates/pgstacbootstrap/queue-processor.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: CronJob
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-queue-processor
+      - equal:
+          path: spec.schedule
+          value: "0 * * * *"
+
+  - it: should NOT create queue processor when use_queue is false
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            use_queue: "false"
+    template: templates/pgstacbootstrap/queue-processor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should use custom queue processor schedule
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            use_queue: "true"
+          queueProcessor:
+            schedule: "*/15 * * * *"
+    template: templates/pgstacbootstrap/queue-processor.yaml
+    asserts:
+      - equal:
+          path: spec.schedule
+          value: "*/15 * * * *"
+      - matchRegex:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
+          pattern: "RUN run_queued_queries\\(\\);"
+
+  # Extent Updater Tests
+  - it: should create extent updater when update_collection_extent is false
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            update_collection_extent: "false"
+    template: templates/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: CronJob
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-extent-updater
+      - equal:
+          path: spec.schedule
+          value: "0 2 * * *"
+
+  - it: should NOT create extent updater when update_collection_extent is true
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            update_collection_extent: "true"
+    template: templates/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should use custom extent updater schedule
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            update_collection_extent: "false"
+          extentUpdater:
+            schedule: "0 */6 * * *"
+    template: templates/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - equal:
+          path: spec.schedule
+          value: "0 */6 * * *"
+      - matchRegex:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
+          pattern: "SELECT update_collection_extents\\(\\);"
+
+  # Combined scenario tests
+  - it: should create both cronjobs with proper settings
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            use_queue: "true"
+            update_collection_extent: "false"
+    templates:
+      - templates/pgstacbootstrap/queue-processor.yaml
+      - templates/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: CronJob
+
+  - it: should not create any cronjobs when disabled
+    set:
+      pgstacBootstrap:
+        enabled: false
+    templates:
+      - templates/pgstacbootstrap/queue-processor.yaml
+      - templates/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Resource limits tests
+  - it: should set correct resource limits for queue processor
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            use_queue: "true"
+    template: templates/pgstacbootstrap/queue-processor.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.cpu
+          value: "256m"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.memory
+          value: "512Mi"
+
+  - it: should set correct resource limits for extent updater
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          pgstacSettings:
+            update_collection_extent: "false"
+    template: templates/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.cpu
+          value: "512m"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.memory
+          value: "1024Mi"

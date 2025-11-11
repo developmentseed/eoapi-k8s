@@ -177,6 +177,30 @@ pgstacBootstrap:
     #     deleteMissing: true
     queryables: []
 
+    # PgSTAC settings configuration
+    # These settings control key PgSTAC behaviors and performance characteristics
+    pgstacSettings:
+      # Queue configuration for handling complex queries
+      queue_timeout: "10 minutes"        # Timeout for queued queries (PostgreSQL interval format)
+      use_queue: "false"                 # Enable/disable query queue mechanism
+
+      # Collection extent management
+      update_collection_extent: "true"   # Auto-update collection extents when items are added/modified
+
+      # Context configuration for search results
+      context: "auto"                    # Context mode: "on", "off", or "auto"
+      context_estimated_count: "100000"  # Row threshold for using estimates instead of exact counts
+      context_estimated_cost: "100000"   # Query cost threshold for using estimates
+      context_stats_ttl: "1 day"         # Cache duration for context statistics
+
+    # Queue processing configuration (only used when use_queue is "true")
+    queueProcessor:
+      schedule: "0 * * * *"               # Run every hour
+
+    # Extent updater configuration (only used when update_collection_extent is "false")
+    extentUpdater:
+      schedule: "0 2 * * *"               # Run daily at 2 AM
+
     # Wait configuration for init containers waiting for pgstac jobs
     # These parameters control how long services wait for pgstac migration jobs to complete
     waitConfig:
