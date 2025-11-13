@@ -1,0 +1,40 @@
+{{/*
+Common monitoring configurations to avoid duplication across values files
+*/}}
+
+{{/*
+Standard monitoring configuration with environment-specific settings
+Usage: {{ include "eoapi.monitoring.config" (dict "context" . "environment" "production" "persistence" true) }}
+Environments: basic, production, testing
+*/}}
+{{- define "eoapi.monitoring.config" -}}
+{{- $ctx := .context -}}
+{{- $env := .environment | default "basic" -}}
+{{- $persistence := .persistence | default false -}}
+metricsServer:
+  enabled: true
+  apiService:
+    create: true
+prometheus:
+  enabled: true
+  alertmanager:
+    enabled: {{ if eq $env "production" }}true{{ else }}false{{ end }}
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+    resources: {{- include "eoapi.resources.small" $ctx | nindent 6 }}
+  server:
+    service:
+      type: ClusterIP
+    {{- if $persistence }}
+    persistentVolume:
+      enabled: true
+      size: 10Gi
+    {{- else }}
+    persistentVolume:
+      enabled: false
+    {{- end }}
+{{- end -}}
