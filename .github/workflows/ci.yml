@@ -114,6 +114,16 @@ jobs:
           echo "=== Post-deployment validation ==="
           ./scripts/test.sh check-deployment
 
+      - name: Wait for monitoring stack
+        run: |
+          echo "=== Waiting for monitoring components (required for autoscaling) ==="
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/component=server,app.kubernetes.io/name=prometheus -n eoapi --timeout=120s &
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=grafana -n eoapi --timeout=120s &
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus-adapter -n eoapi --timeout=120s &
+          wait # Wait for all background jobs
+          echo "✅ Monitoring stack ready"
+          kubectl get hpa -n eoapi
+
       - name: Run integration tests
         run: |
           export RELEASE_NAME="$RELEASE_NAME"

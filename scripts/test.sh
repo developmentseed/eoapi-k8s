@@ -45,33 +45,115 @@ ENVIRONMENT VARIABLES:
 EOF
 }
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        helm|integration|all|check-deps|check-deployment)
-            COMMAND="$1"; shift ;;
-        --debug)
-            DEBUG_MODE=true; shift ;;
-        --help|-h)
-            show_help; exit 0 ;;
-        *)
-            log_error "Unknown option: $1"; exit 1 ;;
-    esac
-done
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            helm|integration|all|check-deps|check-deployment)
+                COMMAND="$1"; shift ;;
+            --debug)
+                DEBUG_MODE=true; shift ;;
+            --help|-h)
+                show_help; exit 0 ;;
+            *)
+                log_error "Unknown option: $1"
+                show_help; exit 1 ;;
+        esac
+    done
+}
 
-# Default command
-if [ -z "$COMMAND" ]; then
-    COMMAND="all"
-fi
+check_helm_dependencies() {
+    preflight_test "helm" || exit 1
 
-log_info "eoAPI Test Suite - Command: $COMMAND | Debug: $DEBUG_MODE | Release: $RELEASE_NAME"
+    if ! helm plugin list | grep -q unittest; then
+        log_info "Installing helm unittest plugin..."
+        helm plugin install https://github.com/helm-unittest/helm-unittest
+    fi
+}
 
-# Check dependencies
-check_dependencies() {
-    log_info "Checking dependencies..."
-    command -v helm >/dev/null 2>&1 || { log_error "helm required"; exit 1; }
-    command -v kubectl >/dev/null 2>&1 || { log_error "kubectl required"; exit 1; }
-    log_info "✅ Dependencies OK"
+check_integration_dependencies() {
+    preflight_test "integration" || exit 1
+}
+
+install_test_deps() {
+    log_info "Installing Python test dependencies..."
+
+    local python_cmd="python"
+    if command_exists python3; then
+        python_cmd="python3"
+    fi
+
+    if ! $python_cmd -m pip install --quiet pytest httpx >/dev/null 2>&1; then
+        log_error "Failed to install test dependencies (pytest, httpx)"
+        log_error "Please install manually: pip install pytest httpx"
+        exit 1
+    fi
+
+    log_info "Test dependencies installed."
+}
+
+detect_deployment() {
+    if [ -z "${NAMESPACE:-}" ]; then
+        NAMESPACE=$(detect_namespace)
+    fi
+
+    if [ -z "${RELEASE_NAME:-}" ]; then
+        RELEASE_NAME=$(detect_release_name "$NAMESPACE")
+    fi
+
+    log_info "Using namespace: $NAMESPACE, release: $RELEASE_NAME"
+}
+
+check_eoapi_deployment() {
+    validate_eoapi_deployment "$NAMESPACE" "$RELEASE_NAME" || {
+        log_error "eoAPI deployment validation failed"
+        debug_deployment_state
+        exit 1
+    }
+}
+
+wait_for_services() {
+    log_info "Waiting for eoAPI services to be ready..."
+
+    local services=("stac" "raster" "vector")
+    for service in "${services[@]}"; do
+        if kubectl get pods -n "$NAMESPACE" -l "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=$service" >/dev/null 2>&1; then
+            wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=$service" || return 1
+        else
+            log_warning "Service $service not found, skipping wait"
+        fi
+    done
+
+    log_info "✅ All eoAPI services are ready"
+}
+
+setup_test_environment() {
+    local ingress_host
+    ingress_host=$(kubectl get ingress -n "$NAMESPACE" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "localhost")
+
+    export STAC_ENDPOINT="${STAC_ENDPOINT:-http://$ingress_host/stac}"
+    export RASTER_ENDPOINT="${RASTER_ENDPOINT:-http://$ingress_host/raster}"
+    export VECTOR_ENDPOINT="${VECTOR_ENDPOINT:-http://$ingress_host/vector}"
+
+    log_info "Test endpoints configured:"
+    log_info "  STAC: $STAC_ENDPOINT"
+    log_info "  Raster: $RASTER_ENDPOINT"
+    log_info "  Vector: $VECTOR_ENDPOINT"
+}
+
+show_debug_info() {
+    log_info "=== Debug Information ==="
+
+    log_info "=== Pods ==="
+    kubectl get pods -n "$NAMESPACE" -o wide 2>/dev/null || true
+
+    log_info "=== Services ==="
+    kubectl get svc -n "$NAMESPACE" 2>/dev/null || true
+
+    log_info "=== Ingress ==="
+    kubectl get ingress -n "$NAMESPACE" 2>/dev/null || true
+
+    log_info "=== Recent Events ==="
+    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' 2>/dev/null | tail -10 || true
 }
 
 # Run Helm tests
@@ -185,6 +267,18 @@ run_integration_tests() {
         fi
     fi
 
+    # Run observability tests as part of integration
+    log_info "Running observability and monitoring tests..."
+    if [ -f ".github/workflows/tests/test_observability.py" ]; then
+        python3 -m pytest .github/workflows/tests/test_observability.py -v --tb=short || {
+            log_error "Observability tests failed - autoscaling won't work properly"
+            exit 1
+        }
+    else
+        log_error "Observability tests not found - required for autoscaling validation"
+        exit 1
+    fi
+
     # Wait for Knative services to be ready if they exist
     if kubectl get ksvc -n "$NAMESPACE" >/dev/null 2>&1; then
         if kubectl get ksvc eoapi-cloudevents-sink -n "$NAMESPACE" >/dev/null 2>&1; then
@@ -199,32 +293,87 @@ run_integration_tests() {
     log_info "✅ Integration tests completed"
 }
 
-# Main execution
-case "$COMMAND" in
-    helm)
-        check_dependencies
-        run_helm_tests
-        ;;
-    integration)
-        check_dependencies
-        run_integration_tests
-        ;;
-    all)
-        check_dependencies
-        run_helm_tests
-        run_integration_tests
-        ;;
-    check-deps)
-        check_dependencies
-        ;;
-    check-deployment)
-        debug_deployment_state
-        ;;
-    *)
-        log_error "Unknown command: $COMMAND"
-        show_help
-        exit 1
-        ;;
-esac
+main() {
+    parse_args "$@"
 
-log_info "✅ Test suite completed successfully"
+    if [ -z "$COMMAND" ]; then
+        COMMAND="all"
+    fi
+
+    if [ "$DEBUG_MODE" = true ]; then
+        log_info "eoAPI Test Suite (DEBUG) - Command: $COMMAND | Release: $RELEASE_NAME"
+    else
+        log_info "eoAPI Test Suite - Command: $COMMAND | Release: $RELEASE_NAME"
+    fi
+
+    case $COMMAND in
+        helm)
+            check_helm_dependencies
+            run_helm_tests
+            ;;
+        check-deps)
+            log_info "Checking all dependencies..."
+            check_helm_dependencies
+            check_integration_dependencies
+            validate_cluster
+            install_test_deps
+            log_info "✅ All dependencies checked and ready"
+            ;;
+        check-deployment)
+            log_info "Checking deployment status..."
+            check_integration_dependencies
+            validate_cluster
+            detect_deployment
+            check_eoapi_deployment
+            log_info "✅ Deployment check complete"
+            ;;
+        integration)
+            check_integration_dependencies
+            validate_cluster
+            install_test_deps
+            detect_deployment
+
+            if [ "$DEBUG_MODE" = true ]; then
+                show_debug_info
+            fi
+
+            check_eoapi_deployment
+            wait_for_services
+            setup_test_environment
+            run_integration_tests
+            ;;
+        all)
+            log_info "Running comprehensive test suite (Helm + Integration tests)"
+
+            log_info "=== Phase 1: Helm Tests ==="
+            check_helm_dependencies
+            run_helm_tests
+
+            log_info "=== Phase 2: Integration Tests ==="
+            check_integration_dependencies
+            validate_cluster
+            install_test_deps
+            detect_deployment
+
+            if [ "$DEBUG_MODE" = true ]; then
+                show_debug_info
+            fi
+
+            check_eoapi_deployment
+
+            wait_for_services
+            setup_test_environment
+
+            run_integration_tests
+            ;;
+        *)
+            log_error "Unknown command: $COMMAND"
+            show_help
+            exit 1
+            ;;
+    esac
+
+    log_info "✅ Test suite complete"
+}
+
+main "$@"

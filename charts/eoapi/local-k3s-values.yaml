@@ -69,3 +69,8 @@ postgrescluster:
         limits:
           cpu: "500m"
           memory: "1Gi"
+
+# Disable metrics-server as k3s provides it built-in
+monitoring:
+  metricsServer:
+    enabled: false

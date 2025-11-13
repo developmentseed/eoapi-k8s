@@ -47,6 +47,8 @@ For production deployments, use configuration files instead of command-line flag
 helm install eoapi eoapi/eoapi -f values-full-observability.yaml
 ```
 
+**For a complete example**: See [examples/values-full-observability.yaml](../examples/values-full-observability.yaml)
+
 ## Architecture & Components
 
 **Component Responsibilities:**
