@@ -38,6 +38,20 @@ tests:
           path: metadata.labels.gitsha
           value: "ABC123"
 
+  - it: "stac deployment includes configmap checksum annotation"
+    set:
+      stac.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - exists:
+          path: spec.template.metadata.annotations["checksum/config"]
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/config"]
+          pattern: ^[a-f0-9]{64}$
+
   - it: "stac configmap defaults"
     set:
       raster.enabled: false

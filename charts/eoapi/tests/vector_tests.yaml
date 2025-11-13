@@ -39,6 +39,20 @@ tests:
           path: metadata.labels.gitsha
           value: "ABC123"
 
+  - it: "vector deployment includes configmap checksum annotation"
+    set:
+      vector.enabled: true
+      stac.enabled: false
+      raster.enabled: false
+      multidim.enabled: false
+    template: templates/services/vector/deployment.yaml
+    asserts:
+      - exists:
+          path: spec.template.metadata.annotations["checksum/config"]
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/config"]
+          pattern: ^[a-f0-9]{64}$
+
   - it: "vector configmap defaults"
     set:
       raster.enabled: false

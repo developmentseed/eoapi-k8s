@@ -29,6 +29,8 @@ spec:
       app: {{ .Release.Name }}-stac
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/services/stac/configmap.yaml") . | sha256sum }}
       labels:
         {{- include "eoapi.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: stac

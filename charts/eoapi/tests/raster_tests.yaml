@@ -34,6 +34,21 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
           value: "3072Mi"
+
+  - it: "raster deployment includes configmap checksum annotation"
+    set:
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      gitSha: "ABC123"
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - exists:
+          path: spec.template.metadata.annotations["checksum/config"]
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/config"]
+          pattern: ^[a-f0-9]{64}$
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"

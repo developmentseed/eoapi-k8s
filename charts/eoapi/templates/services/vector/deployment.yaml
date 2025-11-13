@@ -29,6 +29,8 @@ spec:
       app: {{ .Release.Name }}-vector
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/services/vector/configmap.yaml") . | sha256sum }}
       labels:
         {{- include "eoapi.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: vector
