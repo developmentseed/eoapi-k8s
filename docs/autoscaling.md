@@ -167,6 +167,10 @@ vector:
       requestRate: 75000m
 ```
 
+## Configuration Examples
+
+For complete configuration examples, see the [examples directory](../examples/).
+
 ## Resource Requirements
 
 ### Autoscaling Components

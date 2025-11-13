@@ -528,7 +528,7 @@
               "enum": ["cpu", "requestRate", "both"],
               "description": "Autoscaling metric type"
             },
-            "behaviour": {
+            "behavior": {
               "type": "object",
               "description": "Autoscaling behavior configuration"
             },
