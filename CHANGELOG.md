@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactors eoapi-support into core eoapi chart [#262](https://github.com/developmentseed/eoapi-k8s/pull/262)
 - Make integration tests fail properly
 - Temporarily skip VRT driver in GDALg to avoid https://github.com/OSGeo/gdal/issues/12645
+- Consistent naming of behavior field
 
 ## [0.7.13] - 2025-11-04
 

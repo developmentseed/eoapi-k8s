@@ -61,7 +61,7 @@ stac:
     minReplicas: 2
     maxReplicas: 20
     type: "both"
-    behaviour:
+    behavior:
       scaleDown:
         stabilizationWindowSeconds: 300  # 5min cooldown
         policies:
@@ -147,7 +147,7 @@ raster:
     minReplicas: 2
     maxReplicas: 8
     type: "cpu"
-    behaviour:
+    behavior:
       scaleDown:
         stabilizationWindowSeconds: 300
     targets:
@@ -252,7 +252,7 @@ autoscaling:
   # Type can be "cpu", "requestRate", or "both"
   type: "cpu"
   # Custom scaling behavior (optional)
-  behaviour: {}
+  behavior: {}
   # Scaling targets
   targets:
     # CPU target percentage (when type is "cpu" or "both")
@@ -328,7 +328,7 @@ Adjust scaling behavior:
 
 ```yaml
 autoscaling:
-  behaviour:
+  behavior:
     scaleUp:
       stabilizationWindowSeconds: 60    # Faster scaling up
       policies:

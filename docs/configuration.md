@@ -218,7 +218,7 @@ Fine-tune scaling behavior:
 
 ```yaml
 autoscaling:
-  behaviour:
+  behavior:
     scaleDown:
       stabilizationWindowSeconds: 60
     scaleUp:
