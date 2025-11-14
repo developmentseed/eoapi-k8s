@@ -74,6 +74,7 @@ pgstacBootstrap:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `postgresql.type` | Database deployment type | `postgrescluster` |
+| `postgrescluster.enabled` | Enable PostgreSQL cluster. Must be set to `false` when using external databases | `true` |
 | `ingress.enabled` | Enable ingress | `true` |
 | `ingress.className` | Ingress controller class | `nginx` |
 | `browser.enabled` | Enable STAC Browser interface | `true` |

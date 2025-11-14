@@ -315,6 +315,9 @@ Validate PostgreSQL configuration
   {{- end }}
   {{- include "eoapi.validatePostgresCluster" . }}
 {{- else if eq .Values.postgresql.type "external-plaintext" }}
+  {{- if .Values.postgrescluster.enabled }}
+    {{- fail "When postgresql.type is 'external-plaintext', postgrescluster.enabled must be set to false" }}
+  {{- end }}
   {{- if not .Values.postgresql.external.host }}
     {{- fail "When postgresql.type is 'external-plaintext', postgresql.external.host must be set" }}
   {{- end }}
@@ -325,6 +328,9 @@ Validate PostgreSQL configuration
     {{- fail "When postgresql.type is 'external-plaintext', postgresql.external.credentials.password must be set" }}
   {{- end }}
 {{- else if eq .Values.postgresql.type "external-secret" }}
+  {{- if .Values.postgrescluster.enabled }}
+    {{- fail "When postgresql.type is 'external-secret', postgrescluster.enabled must be set to false" }}
+  {{- end }}
   {{- if not .Values.postgresql.external.existingSecret.name }}
     {{- fail "When postgresql.type is 'external-secret', postgresql.external.existingSecret.name must be set" }}
   {{- end }}

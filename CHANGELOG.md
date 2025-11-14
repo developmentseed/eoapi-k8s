@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic extent updater CronJob created when `update_collection_extent` is "false" (configurable schedule via `extentUpdater.schedule`)
 - Added ConfigMap checksum annotations to automatically restart pods when configuration changes [#344](https://github.com/developmentseed/eoapi-k8s/pull/344)
 - Tests for autoscaling
+- Added validation to require `postgrescluster.enabled: false` when using external databases [#346](https://github.com/developmentseed/eoapi-k8s/pull/346)
 
 ### Changed
 
