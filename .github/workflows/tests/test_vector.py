@@ -1,6 +1,7 @@
-import httpx
 import os
 import time
+
+import httpx
 
 timeout = httpx.Timeout(15.0, connect=60.0)
 if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
@@ -9,7 +10,7 @@ else:
     client = httpx.Client(timeout=timeout)
 
 
-def test_vector_api(vector_endpoint):
+def test_vector_api(vector_endpoint: str) -> None:
     """test vector."""
     # landing
     resp = client.get(f"{vector_endpoint}/")
@@ -51,11 +52,18 @@ def test_vector_api(vector_endpoint):
 
         elapsed_time = time.time() - start_time
         if elapsed_time > total_timeout:
-            print(f"Timeout exceeded after {elapsed_time:.1f}s. Expected 7 collections, got {current_count}")
+            print(
+                f"Timeout exceeded after {elapsed_time:.1f}s. Expected 7 collections, got {current_count}"
+            )
             if "collections" in collections_data:
-                available_collections = [c.get("id", "unknown") for c in collections_data["collections"]]
+                available_collections = [
+                    c.get("id", "unknown")
+                    for c in collections_data["collections"]
+                ]
                 print(f"Available collections: {available_collections}")
-            assert False, f"Expected 7 collections but found {current_count} after {elapsed_time:.1f}s timeout"
+            assert False, (
+                f"Expected 7 collections but found {current_count} after {elapsed_time:.1f}s timeout"
+            )
 
         time.sleep(10)
         resp = client.get(f"{vector_endpoint}/collections")
@@ -64,8 +72,13 @@ def test_vector_api(vector_endpoint):
     matched_count = collections_data.get("numberMatched", 0)
     returned_count = collections_data.get("numberReturned", 0)
 
-    assert matched_count == 7, f"Expected 7 matched collections, got {matched_count}. Available: {[c.get('id', 'unknown') for c in collections_data.get('collections', [])]}"
-    assert returned_count == 7, f"Expected 7 returned collections, got {returned_count}"
+    assert matched_count == 7, (
+        f"Expected 7 matched collections, got {matched_count}. "
+        f"Available: {[c.get('id', 'unknown') for c in collections_data.get('collections', [])]}"
+    )
+    assert returned_count == 7, (
+        f"Expected 7 returned collections, got {returned_count}"
+    )
 
     collections = resp.json()["collections"]
     ids = [c["id"] for c in collections]
@@ -84,9 +97,7 @@ def test_vector_api(vector_endpoint):
     assert resp.json()["itemType"] == "feature"
 
     # items
-    resp = client.get(
-        f"{vector_endpoint}/collections/public.my_data/items"
-    )
+    resp = client.get(f"{vector_endpoint}/collections/public.my_data/items")
     assert resp.status_code == 200
     assert resp.headers["content-type"] == "application/geo+json"
     items = resp.json()["features"]
@@ -111,15 +122,15 @@ def test_vector_api(vector_endpoint):
     assert len(items) == 6
 
     # item
-    resp = client.get(
-        f"{vector_endpoint}/collections/public.my_data/items/1"
-    )
+    resp = client.get(f"{vector_endpoint}/collections/public.my_data/items/1")
     assert resp.status_code == 200
     item = resp.json()
     assert item["id"] == 1
 
     # OGC Tiles
-    resp = client.get(f"{vector_endpoint}/collections/public.my_data/tiles/WebMercatorQuad/0/0/0")
+    resp = client.get(
+        f"{vector_endpoint}/collections/public.my_data/tiles/WebMercatorQuad/0/0/0"
+    )
     assert resp.status_code == 200
 
     resp = client.get(
