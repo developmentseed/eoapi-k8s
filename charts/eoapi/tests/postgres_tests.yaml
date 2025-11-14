@@ -68,3 +68,41 @@ tests:
               secretKeyRef:
                 name: test-release-pguser-my-user
                 key: user
+
+  - it: should fail when external-plaintext is used with postgrescluster enabled
+    set:
+      stac:
+        enabled: true
+      postgresql:
+        type: external-plaintext
+        external:
+          host: test-db
+          credentials:
+            username: test
+            password: test
+      postgrescluster:
+        enabled: true
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-plaintext', postgrescluster.enabled must be set to false
+
+  - it: should fail when external-secret is used with postgrescluster enabled
+    set:
+      stac:
+        enabled: true
+      postgresql:
+        type: external-secret
+        external:
+          host: test-db
+          existingSecret:
+            name: my-secret
+            keys:
+              username: user
+              password: pass
+      postgrescluster:
+        enabled: true
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-secret', postgrescluster.enabled must be set to false

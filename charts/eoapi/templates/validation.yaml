@@ -1,0 +1,5 @@
+{{/*
+This template validates the PostgreSQL configuration.
+It doesn't create any resources but ensures configuration consistency.
+*/}}
+{{- include "eoapi.validatePostgresql" . }}

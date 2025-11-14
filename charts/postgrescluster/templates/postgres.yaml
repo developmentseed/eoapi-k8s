@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 apiVersion: postgres-operator.crunchydata.com/v1beta1
 kind: PostgresCluster
 metadata:
@@ -227,3 +228,4 @@ spec:
   customReplicationTLSSecret:
 {{ toYaml .Values.customReplicationTLSSecret | indent 4 }}
   {{- end }}
+{{- end }}

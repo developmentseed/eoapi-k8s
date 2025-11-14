@@ -39,18 +39,20 @@ Using Crunchydata's PostgreSQL Operator (`postgresql.type: "postgrescluster"`):
 
 | **Values Key** | **Description** | **Default** | **Choices** |
 |:--------------|:----------------|:------------|:------------|
-| `postgrescluster.enabled` | Enable PostgreSQL cluster | true | true/false |
+| `postgrescluster.enabled` | Enable PostgreSQL cluster. Must be set to `false` when using external databases | true | true/false |
 | `postgrescluster.name` | Cluster name | Release name | any valid k8s name |
 | `postgrescluster.postgresVersion` | PostgreSQL version | 16 | supported versions |
 | `postgrescluster.postGISVersion` | PostGIS version | "3.4" | supported versions |
 
 ### External Database
 
-For external databases, set `postgresql.type` to either:
+For external databases, set `postgresql.type` to either `external-plaintext` or `external-secret` and set `postgrescluster.enabled: false`.
 
 
 1. Using plaintext credentials (`external-plaintext`):
 ```yaml
+postgrescluster:
+  enabled: false
 postgresql:
   type: "external-plaintext"
   external:
