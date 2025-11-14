@@ -247,7 +247,7 @@ raster:
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
     type: "requestRate"
-    behaviour:
+    behavior:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
@@ -320,7 +320,7 @@ multidim:
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
     type: "requestRate"
-    behaviour:
+    behavior:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
@@ -392,7 +392,7 @@ stac:
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
     type: "requestRate"
-    behaviour:
+    behavior:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
@@ -452,7 +452,7 @@ vector:
     maxReplicas: 10
     # `type`: "cpu" || "requestRate" || "both"
     type: "requestRate"
-    behaviour:
+    behavior:
       scaleDown:
         stabilizationWindowSeconds: 60
       scaleUp:
