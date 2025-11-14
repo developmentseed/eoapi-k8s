@@ -1,6 +1,8 @@
 """test EOapi."""
-import httpx
+
 import os
+
+import httpx
 
 timeout = httpx.Timeout(15.0, connect=60.0)
 if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
@@ -9,7 +11,7 @@ else:
     client = httpx.Client(timeout=timeout)
 
 
-def test_stac_api(stac_endpoint):
+def test_stac_api(stac_endpoint: str) -> None:
     """test stac."""
     # Ping
     assert client.get(f"{stac_endpoint}/_mgmt/ping").status_code == 200
@@ -24,7 +26,7 @@ def test_stac_api(stac_endpoint):
             assert link["href"].startswith(stac_endpoint.split("://")[1])
 
     # viewer
-    #assert client.get(f"{stac_endpoint}/index.html").status_code == 200
+    # assert client.get(f"{stac_endpoint}/index.html").status_code == 200
     assert client.get(f"{stac_endpoint}/index.html").status_code == 404
 
     # Collections
@@ -42,7 +44,9 @@ def test_stac_api(stac_endpoint):
                 assert link["href"].startswith(stac_endpoint.split("://")[1])
 
     # items
-    resp = client.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
+    resp = client.get(
+        f"{stac_endpoint}/collections/noaa-emergency-response/items"
+    )
     assert resp.status_code == 200
     items = resp.json()
     # Verify item links have correct base path
@@ -60,17 +64,18 @@ def test_stac_api(stac_endpoint):
     assert item["id"] == "20200307aC0853300w361200"
 
 
-def test_stac_to_raster(stac_endpoint):
+def test_stac_to_raster(stac_endpoint: str) -> None:
     """test link to raster api."""
     # tilejson
     resp = client.get(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/tilejson.json",
         params={"assets": "cog"},
     )
-    #assert resp.status_code == 307
+    # assert resp.status_code == 307
     assert resp.status_code == 404
 
-def test_stac_custom_path(stac_endpoint):
+
+def test_stac_custom_path(stac_endpoint: str) -> None:
     """test stac with custom ingress path."""
     # If we're using a custom path (e.g., /api instead of /stac)
     base_path = stac_endpoint.split("://")[1]
@@ -83,8 +88,9 @@ def test_stac_custom_path(stac_endpoint):
     # All links should use the custom path
     for link in landing["links"]:
         if link["href"].startswith("/"):
-            assert link["href"].startswith(base_path), \
+            assert link["href"].startswith(base_path), (
                 f"Link {link['href']} doesn't start with {base_path}"
+            )
 
     # Collections should also use the custom path
     resp = client.get(f"{stac_endpoint}/collections")
@@ -94,11 +100,14 @@ def test_stac_custom_path(stac_endpoint):
     for collection in collections:
         for link in collection["links"]:
             if link["href"].startswith("/"):
-                assert link["href"].startswith(base_path), \
+                assert link["href"].startswith(base_path), (
                     f"Collection link {link['href']} doesn't start with {base_path}"
+                )
 
     # Test a specific item
-    resp = client.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
+    resp = client.get(
+        f"{stac_endpoint}/collections/noaa-emergency-response/items"
+    )
     assert resp.status_code == 200
     items = resp.json()
 
@@ -106,13 +115,14 @@ def test_stac_custom_path(stac_endpoint):
     for feature in items["features"]:
         for link in feature["links"]:
             if link["href"].startswith("/"):
-                assert link["href"].startswith(base_path), \
+                assert link["href"].startswith(base_path), (
                     f"Item link {link['href']} doesn't start with {base_path}"
+                )
 
     # viewer
     resp = client.get(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/20200307aC0853300w361200/viewer",
         params={"assets": "cog"},
     )
-    #assert resp.status_code == 307
+    # assert resp.status_code == 307
     assert resp.status_code == 404

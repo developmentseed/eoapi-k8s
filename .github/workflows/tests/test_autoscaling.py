@@ -140,7 +140,7 @@ def make_request(url: str, timeout: int = 10) -> bool:
     """Make a single HTTP request and return success status."""
     try:
         response = requests.get(url, timeout=timeout)
-        return response.status_code == 200
+        return bool(response.status_code == 200)
     except requests.RequestException:
         return False
 

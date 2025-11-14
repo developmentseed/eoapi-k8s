@@ -3,11 +3,12 @@
 import json
 import subprocess
 import time
+from typing import Any
 
 import pytest
 
 
-def test_eoapi_notifier_deployment():
+def test_eoapi_notifier_deployment() -> None:
     """Test that eoapi-notifier deployment is running."""
     # Check if eoapi-notifier deployment exists and is ready
     result = subprocess.run(
@@ -38,7 +39,7 @@ def test_eoapi_notifier_deployment():
     )
 
 
-def test_cloudevents_sink_exists():
+def test_cloudevents_sink_exists() -> None:
     """Test that Knative CloudEvents sink service exists and is accessible."""
     # Check if Knative service exists
     result = subprocess.run(
@@ -64,7 +65,7 @@ def test_cloudevents_sink_exists():
     )
 
 
-def test_notification_configuration():
+def test_notification_configuration() -> None:
     """Test that eoapi-notifier is configured correctly."""
     # Get the configmap for eoapi-notifier
     result = subprocess.run(
@@ -94,7 +95,7 @@ def test_notification_configuration():
     )
 
 
-def test_cloudevents_sink_logs_show_startup():
+def test_cloudevents_sink_logs_show_startup() -> None:
     """Test that Knative CloudEvents sink started successfully."""
     # Get Knative CloudEvents sink pod logs
     result = subprocess.run(
@@ -123,7 +124,7 @@ def test_cloudevents_sink_logs_show_startup():
     )
 
 
-def test_eoapi_notifier_logs_show_connection():
+def test_eoapi_notifier_logs_show_connection() -> None:
     """Test that eoapi-notifier connects to database successfully."""
     # Give some time for the notifier to start
     time.sleep(5)
@@ -150,7 +151,7 @@ def test_eoapi_notifier_logs_show_connection():
     assert "Authentication failed" not in logs, "Should not have auth errors"
 
 
-def test_database_notification_triggers_exist(db_connection):
+def test_database_notification_triggers_exist(db_connection: Any) -> None:
     """Test that pgstac notification triggers are installed."""
     with db_connection.cursor() as cur:
         # Check if the notification function exists
@@ -180,7 +181,7 @@ def test_database_notification_triggers_exist(db_connection):
         )
 
 
-def test_end_to_end_notification_flow(db_connection):
+def test_end_to_end_notification_flow(db_connection: Any) -> None:
     """Test complete flow: database → eoapi-notifier → Knative CloudEvents sink."""
 
     # Skip if notifications not enabled
@@ -269,7 +270,7 @@ def test_end_to_end_notification_flow(db_connection):
             cursor.execute("SELECT pgstac.delete_item(%s);", (test_item_id,))
 
 
-def test_k_sink_injection():
+def test_k_sink_injection() -> None:
     """Test that SinkBinding injects K_SINK into eoapi-notifier deployment."""
     # Check if eoapi-notifier deployment exists
     result = subprocess.run(

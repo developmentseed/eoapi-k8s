@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make integration tests fail properly
 - Temporarily skip VRT driver in GDALg to avoid https://github.com/OSGeo/gdal/issues/12645
 - Consistent naming of behavior field
+- Made all python tests comply with mypy strict validation
 
 ## [0.7.13] - 2025-11-04
 

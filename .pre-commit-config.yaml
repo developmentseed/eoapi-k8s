@@ -34,6 +34,16 @@ repos:
     hooks:
       - id: actionlint
 
+  # Python type checking for test files
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        name: mypy strict mode for tests
+        args: ['--strict', '--ignore-missing-imports']
+        files: ^\.github/workflows/tests/.*\.py$
+        additional_dependencies: ['types-psycopg2', 'httpx', 'pytest', 'types-requests']
+
   # Fast Helm syntax check only
   - repo: local
     hooks:
