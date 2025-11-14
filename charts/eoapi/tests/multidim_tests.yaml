@@ -38,6 +38,20 @@ tests:
           path: metadata.labels.gitsha
           value: "ABC123"
 
+  - it: "multidim deployment includes configmap checksum annotation"
+    set:
+      multidim.enabled: true
+      stac.enabled: false
+      raster.enabled: false
+      vector.enabled: false
+    template: templates/services/multidim/deployment.yaml
+    asserts:
+      - exists:
+          path: spec.template.metadata.annotations["checksum/config"]
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/config"]
+          pattern: ^[a-f0-9]{64}$
+
   - it: "multidim configmap defaults"
     set:
       raster.enabled: false
