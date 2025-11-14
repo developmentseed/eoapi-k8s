@@ -34,9 +34,8 @@ helm install eoapi eoapi/eoapi \
   --set monitoring.prometheus.enabled=true \
   --set observability.grafana.enabled=true
 
-# Access Grafana (get password)
-kubectl get secret eoapi-grafana -n eoapi \
-  -o jsonpath="{.data.admin-password}" | base64 -d
+# Access Grafana (see "Accessing Grafana" section below for credentials)
+kubectl port-forward -n eoapi svc/eoapi-obs-grafana 3000:80
 ```
 
 ### Using Configuration Files
@@ -212,6 +211,22 @@ Minimum resource requirements (actual usage varies by cluster size and metrics v
 | grafana | 100m | 200Mi | Visualization |
 
 ## Operations
+
+### Accessing Grafana
+
+```bash
+# Get Grafana admin username (usually 'admin')
+kubectl get secret -n eoapi -l app.kubernetes.io/name=grafana \
+  -o jsonpath="{.items[0].data.admin-user}" | base64 --decode
+
+# Get Grafana admin password
+kubectl get secret -n eoapi -l app.kubernetes.io/name=grafana \
+  -o jsonpath="{.items[0].data.admin-password}" | base64 --decode
+
+# Port-forward to access Grafana UI
+kubectl port-forward -n eoapi svc/eoapi-obs-grafana 3000:80
+# Access at http://localhost:3000
+```
 
 ### Verification Commands
 
