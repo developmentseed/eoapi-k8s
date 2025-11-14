@@ -5,8 +5,8 @@ set -e
 echo "=== Deployment Debug Information ==="
 
 # Get release name from environment or detect it
-RELEASE_NAME=${RELEASE_NAME:-$(kubectl get pods --all-namespaces -l app.kubernetes.io/name=stac -o jsonpath='{.items[0].metadata.labels.app\.kubernetes\.io/instance}' 2>/dev/null || echo "eoapi")}
-NAMESPACE=${NAMESPACE:-$(kubectl get pods --all-namespaces -l app.kubernetes.io/name=stac -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || echo "eoapi")}
+RELEASE_NAME=${RELEASE_NAME:-$(kubectl get pods --all-namespaces -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac -o jsonpath='{.items[0].metadata.labels.app\.kubernetes\.io/instance}' 2>/dev/null || echo "eoapi")}
+NAMESPACE=${NAMESPACE:-$(kubectl get pods --all-namespaces -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || echo "eoapi")}
 
 echo "Using RELEASE_NAME: $RELEASE_NAME"
 echo "Using NAMESPACE: $NAMESPACE"
@@ -126,13 +126,13 @@ kubectl get deployments -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE"
 # Logs from key components
 echo "--- Key Component Logs ---"
 echo "STAC API logs:"
-kubectl logs -l app.kubernetes.io/name=stac -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No STAC API logs in namespace $NAMESPACE"
+kubectl logs -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No STAC API logs in namespace $NAMESPACE"
 echo ""
 echo "TiTiler logs:"
-kubectl logs -l app.kubernetes.io/name=titiler -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No TiTiler logs in namespace $NAMESPACE"
+kubectl logs -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=raster -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No TiTiler logs in namespace $NAMESPACE"
 echo ""
 echo "TiPG logs:"
-kubectl logs -l app.kubernetes.io/name=tipg -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No TiPG logs in namespace $NAMESPACE"
+kubectl logs -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=vector -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No TiPG logs in namespace $NAMESPACE"
 echo ""
 echo "eoapi-notifier logs:"
 kubectl logs -l app.kubernetes.io/name=eoapi-notifier -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No eoapi-notifier logs in namespace $NAMESPACE"
@@ -158,6 +158,28 @@ kubectl top nodes 2>/dev/null || echo "Metrics not available"
 echo ""
 echo "Pod resource usage in $NAMESPACE:"
 kubectl top pods -n "$NAMESPACE" 2>/dev/null || echo "Pod metrics not available"
+
+# Observability stack debugging
+echo "--- Observability Stack ---"
+echo "HPA status:"
+kubectl get hpa -n "$NAMESPACE" -o wide 2>/dev/null || echo "No HPA resources found in namespace $NAMESPACE"
+kubectl describe hpa -n "$NAMESPACE" 2>/dev/null || echo "No HPA resources to describe"
+echo ""
+echo "Custom Metrics API:"
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" 2>/dev/null || echo "Custom metrics API not available"
+echo ""
+echo "Monitoring components:"
+kubectl get pods -n "$NAMESPACE" | grep -E "(prometheus|grafana|metrics-server|adapter)" 2>/dev/null || echo "No monitoring components found in namespace $NAMESPACE"
+echo ""
+echo "Prometheus adapter logs:"
+kubectl logs -l app.kubernetes.io/name=prometheus-adapter -n "$NAMESPACE" --tail=30 2>/dev/null || echo "No prometheus-adapter logs in namespace $NAMESPACE"
+echo ""
+echo "Grafana logs:"
+kubectl logs -l app.kubernetes.io/name=grafana -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No grafana logs in namespace $NAMESPACE"
+echo ""
+echo "Metrics server logs:"
+kubectl logs -l app.kubernetes.io/name=metrics-server -n "$NAMESPACE" --tail=20 2>/dev/null || echo "No metrics-server logs in namespace $NAMESPACE"
+
 # System controller logs if issues detected
 if ! kubectl get pods -n knative-serving &>/dev/null; then
     echo "--- Knative Controller Logs ---"

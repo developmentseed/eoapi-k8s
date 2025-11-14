@@ -422,6 +422,22 @@ deploy_eoapi() {
         fi
         HELM_CMD="$HELM_CMD --set testing=true"
         HELM_CMD="$HELM_CMD --set ingress.host=eoapi.local"
+        HELM_CMD="$HELM_CMD --set ingress.className=traefik"
+
+        HELM_CMD="$HELM_CMD --set monitoring.prometheus.enabled=true"
+        HELM_CMD="$HELM_CMD --set monitoring.prometheusAdapter.enabled=true"
+        HELM_CMD="$HELM_CMD --set observability.grafana.enabled=true"
+        HELM_CMD="$HELM_CMD --set monitoring.prometheusAdapter.prometheus.url=http://$RELEASE_NAME-prometheus-server.eoapi.svc.cluster.local"
+
+        # Enable autoscaling with CPU metrics
+        HELM_CMD="$HELM_CMD --set stac.autoscaling.enabled=true"
+        HELM_CMD="$HELM_CMD --set stac.autoscaling.type=cpu"
+        HELM_CMD="$HELM_CMD --set raster.autoscaling.enabled=true"
+        HELM_CMD="$HELM_CMD --set raster.autoscaling.type=cpu"
+        HELM_CMD="$HELM_CMD --set vector.autoscaling.enabled=true"
+        HELM_CMD="$HELM_CMD --set vector.autoscaling.type=cpu"
+
+        # Enable notifier
         HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=true"
         # Fix eoapi-notifier secret name dynamically
         HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"

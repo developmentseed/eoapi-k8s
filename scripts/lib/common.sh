@@ -92,7 +92,7 @@ detect_release_name() {
     # Fallback to pod labels
     if [ -z "$release_name" ]; then
         release_name=$(kubectl get pods ${namespace:+-n "$namespace"} \
-                      -l app.kubernetes.io/name=stac -o jsonpath='{.items[0].metadata.labels.app\.kubernetes\.io/instance}' \
+                      -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac -o jsonpath='{.items[0].metadata.labels.app\.kubernetes\.io/instance}' \
                       2>/dev/null || echo "eoapi")
     fi
 
@@ -101,7 +101,7 @@ detect_release_name() {
 
 # Auto-detect namespace from deployed eoAPI resources
 detect_namespace() {
-    kubectl get pods --all-namespaces -l app.kubernetes.io/name=stac \
+    kubectl get pods --all-namespaces -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac \
         -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || echo "eoapi"
 }
 
@@ -225,6 +225,7 @@ preflight_test() {
             validate_tools kubectl python3 || return 1
             validate_cluster || return 1
             ;;
+
         *)
             log_error "Unknown test type: $test_type"
             return 1

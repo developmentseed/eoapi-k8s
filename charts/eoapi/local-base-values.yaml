@@ -86,9 +86,9 @@ browser:
         cpu: "200m"
         memory: "128Mi"
 
-# Disable resource-intensive features for local development
 monitoring:
-  enabled: false
+  metricsServer:
+    enabled: true
 
 autoscaling:
   enabled: false

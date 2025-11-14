@@ -1,148 +1,22 @@
 """Test autoscaling behavior and HPA functionality."""
 
 import json
-import os
 import subprocess
 import threading
 import time
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List
 
 import pytest
 import requests
-
-
-def get_namespace() -> str:
-    return os.environ.get("NAMESPACE", "eoapi")
-
-
-def get_release_name() -> str:
-    return os.environ.get("RELEASE_NAME", "eoapi")
-
-
-def get_base_url() -> str:
-    namespace = get_namespace()
-
-    # Check if we have an ingress
-    result = subprocess.run(
-        ["kubectl", "get", "ingress", "-n", namespace, "-o", "json"],
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode == 0:
-        ingress_data = json.loads(result.stdout)
-        if ingress_data["items"]:
-            ingress = ingress_data["items"][0]
-            rules = ingress.get("spec", {}).get("rules", [])
-            if rules:
-                host = rules[0].get("host", "localhost")
-                # Check if host is accessible
-                try:
-                    response = requests.get(
-                        f"http://{host}/stac/collections", timeout=5
-                    )
-                    if response.status_code == 200:
-                        return f"http://{host}"
-                except requests.RequestException:
-                    pass
-
-    return "http://localhost:8080"
-
-
-def kubectl_get(
-    resource: str,
-    namespace: Optional[str] = None,
-    label_selector: Optional[str] = None,
-    output: str = "json",
-) -> subprocess.CompletedProcess[str]:
-    cmd = ["kubectl", "get", resource]
-
-    if namespace:
-        cmd.extend(["-n", namespace])
-
-    if label_selector:
-        cmd.extend(["-l", label_selector])
-
-    if output:
-        cmd.extend(["-o", output])
-
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    return result
-
-
-def get_pod_metrics(namespace: str, service_name: str) -> List[Dict[str, str]]:
-    release_name = get_release_name()
-    result = subprocess.run(
-        [
-            "kubectl",
-            "top",
-            "pods",
-            "-n",
-            namespace,
-            "-l",
-            f"app={release_name}-{service_name}",
-            "--no-headers",
-        ],
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode != 0:
-        return []
-
-    metrics: List[Dict[str, str]] = []
-    for line in result.stdout.strip().split("\n"):
-        if line.strip():
-            parts = line.split()
-            if len(parts) >= 3:
-                pod_name = parts[0]
-                cpu = parts[1]  # e.g., "25m"
-                memory = parts[2]  # e.g., "128Mi"
-                metrics.append({"pod": pod_name, "cpu": cpu, "memory": memory})
-
-    return metrics
-
-
-def get_hpa_status(namespace: str, hpa_name: str) -> Optional[Dict[str, Any]]:
-    """Get HPA status for a specific HPA."""
-    result = kubectl_get("hpa", namespace=namespace, output="json")
-    if result.returncode != 0:
-        return None
-
-    hpas = json.loads(result.stdout)
-    for hpa in hpas["items"]:
-        if hpa["metadata"]["name"] == hpa_name:
-            return cast(Dict[str, Any], hpa)
-
-    return None
-
-
-def get_pod_count(namespace: str, service_name: str) -> int:
-    release_name = get_release_name()
-    result = kubectl_get(
-        "pods",
-        namespace=namespace,
-        label_selector=f"app={release_name}-{service_name}",
-    )
-
-    if result.returncode != 0:
-        return 0
-
-    pods = json.loads(result.stdout)
-    running_pods = [
-        pod for pod in pods["items"] if pod["status"]["phase"] == "Running"
-    ]
-
-    return len(running_pods)
-
-
-def make_request(url: str, timeout: int = 10) -> bool:
-    """Make a single HTTP request and return success status."""
-    try:
-        response = requests.get(url, timeout=timeout)
-        return bool(response.status_code == 200)
-    except requests.RequestException:
-        return False
+from conftest import (
+    get_base_url,
+    get_namespace,
+    get_pod_count,
+    get_pod_metrics,
+    get_release_name,
+    kubectl_get,
+    make_request,
+)
 
 
 def generate_load(
