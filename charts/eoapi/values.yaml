@@ -305,7 +305,9 @@ raster:
       HOST: "0.0.0.0"
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "5"
+      WEB_CONCURRENCY: "4" # CPU-intensive; reduce to 2-3 with autoscaling
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "3" # Less intensive: Metadata queries only
 
 multidim:
   enabled: false # disabled by default
@@ -377,7 +379,9 @@ multidim:
       HOST: "0.0.0.0"
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "5"
+      WEB_CONCURRENCY: "4" # CPU-intensive; reduce to 2-3 with autoscaling
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "3" # Less intensive: Metadata queries only
 
 stac:
   enabled: true
@@ -437,7 +441,9 @@ stac:
       HOST: "0.0.0.0"
       PORT: "8080"
       # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "5"
+      WEB_CONCURRENCY: "10" # Handles many concurrent requests; reduce to 4-6 with autoscaling
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "5" # Quite intensive (queries, transactions, searches)
 
 vector:
   enabled: true
@@ -501,8 +507,9 @@ vector:
       ##############
       HOST: "0.0.0.0"
       PORT: "8080"
-      # https://www.uvicorn.org/settings/#production
-      WEB_CONCURRENCY: "5"
+      WEB_CONCURRENCY: "8" # Moderate concurrency for complex spatial queries; reduce to 4-5 with autoscaling
+      DB_MIN_CONN_SIZE: "2"
+      DB_MAX_CONN_SIZE: "5" # Vector queries can be complex and long-running
 
 ######################
 # STAC Browser

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added tests for observability stack [#342](https://github.com/developmentseed/eoapi-k8s/pull/342)
 - Added validation to require `postgrescluster.enabled: false` when using external databases [#346](https://github.com/developmentseed/eoapi-k8s/pull/346)
 - Added a production.yaml profile [#354](https://github.com/developmentseed/eoapi-k8s/pull/354)
+- Added clarification about concurrency and db connection configuration. [#356](https://github.com/developmentseed/eoapi-k8s/pull/356)
 
 ### Changed
 
