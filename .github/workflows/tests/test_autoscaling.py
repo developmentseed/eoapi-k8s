@@ -5,20 +5,21 @@ import os
 import subprocess
 import threading
 import time
+from typing import Any, Dict, List, Optional, cast
 
 import pytest
 import requests
 
 
-def get_namespace():
+def get_namespace() -> str:
     return os.environ.get("NAMESPACE", "eoapi")
 
 
-def get_release_name():
+def get_release_name() -> str:
     return os.environ.get("RELEASE_NAME", "eoapi")
 
 
-def get_base_url():
+def get_base_url() -> str:
     namespace = get_namespace()
 
     # Check if we have an ingress
@@ -48,7 +49,12 @@ def get_base_url():
     return "http://localhost:8080"
 
 
-def kubectl_get(resource, namespace=None, label_selector=None, output="json"):
+def kubectl_get(
+    resource: str,
+    namespace: Optional[str] = None,
+    label_selector: Optional[str] = None,
+    output: str = "json",
+) -> subprocess.CompletedProcess[str]:
     cmd = ["kubectl", "get", resource]
 
     if namespace:
@@ -64,7 +70,7 @@ def kubectl_get(resource, namespace=None, label_selector=None, output="json"):
     return result
 
 
-def get_pod_metrics(namespace, service_name):
+def get_pod_metrics(namespace: str, service_name: str) -> List[Dict[str, str]]:
     release_name = get_release_name()
     result = subprocess.run(
         [
@@ -84,7 +90,7 @@ def get_pod_metrics(namespace, service_name):
     if result.returncode != 0:
         return []
 
-    metrics = []
+    metrics: List[Dict[str, str]] = []
     for line in result.stdout.strip().split("\n"):
         if line.strip():
             parts = line.split()
@@ -97,7 +103,8 @@ def get_pod_metrics(namespace, service_name):
     return metrics
 
 
-def get_hpa_status(namespace, hpa_name):
+def get_hpa_status(namespace: str, hpa_name: str) -> Optional[Dict[str, Any]]:
+    """Get HPA status for a specific HPA."""
     result = kubectl_get("hpa", namespace=namespace, output="json")
     if result.returncode != 0:
         return None
@@ -105,12 +112,12 @@ def get_hpa_status(namespace, hpa_name):
     hpas = json.loads(result.stdout)
     for hpa in hpas["items"]:
         if hpa["metadata"]["name"] == hpa_name:
-            return hpa
+            return cast(Dict[str, Any], hpa)
 
     return None
 
 
-def get_pod_count(namespace, service_name):
+def get_pod_count(namespace: str, service_name: str) -> int:
     release_name = get_release_name()
     result = kubectl_get(
         "pods",
@@ -129,7 +136,7 @@ def get_pod_count(namespace, service_name):
     return len(running_pods)
 
 
-def make_request(url, timeout=10):
+def make_request(url: str, timeout: int = 10) -> bool:
     """Make a single HTTP request and return success status."""
     try:
         response = requests.get(url, timeout=timeout)
@@ -139,14 +146,18 @@ def make_request(url, timeout=10):
 
 
 def generate_load(
-    base_url, endpoints, duration=60, concurrent_requests=5, delay=0.1
-):
+    base_url: str,
+    endpoints: List[str],
+    duration: int = 60,
+    concurrent_requests: int = 5,
+    delay: float = 0.1,
+) -> Dict[str, Any]:
     """Generate HTTP load against specified endpoints."""
     end_time = time.time() + duration
     success_count = 0
     error_count = 0
 
-    def worker():
+    def worker() -> None:
         nonlocal success_count, error_count
         while time.time() < end_time:
             for endpoint in endpoints:
@@ -179,10 +190,7 @@ def generate_load(
 
 
 class TestHPAConfiguration:
-    """Test HPA resource configuration and basic functionality."""
-
-    def test_hpa_resources_properly_configured(self):
-        """Verify HPA resources have correct configuration."""
+    def test_hpa_resources_properly_configured(self) -> None:
         namespace = get_namespace()
         result = kubectl_get("hpa", namespace=namespace)
 
@@ -196,7 +204,6 @@ class TestHPAConfiguration:
             spec = hpa["spec"]
             hpa_name = hpa["metadata"]["name"]
 
-            # Check required fields
             assert "scaleTargetRef" in spec, (
                 f"HPA {hpa_name} missing scaleTargetRef"
             )
@@ -206,7 +213,6 @@ class TestHPAConfiguration:
                 f"HPA {hpa_name} missing metrics configuration"
             )
 
-            # Validate replica bounds
             min_replicas = spec["minReplicas"]
             max_replicas = spec["maxReplicas"]
             assert min_replicas > 0, f"HPA {hpa_name} minReplicas must be > 0"
@@ -214,11 +220,9 @@ class TestHPAConfiguration:
                 f"HPA {hpa_name} maxReplicas must be > minReplicas"
             )
 
-            # Check metrics configuration
             metrics = spec["metrics"]
             assert len(metrics) > 0, f"HPA {hpa_name} has no metrics configured"
 
-            # Verify at least one metric is CPU
             cpu_metrics = [
                 m
                 for m in metrics
@@ -233,8 +237,7 @@ class TestHPAConfiguration:
                 f"✅ HPA {hpa_name}: {min_replicas}-{max_replicas} replicas, {len(metrics)} metrics"
             )
 
-    def test_target_deployments_exist(self):
-        """Verify HPA target deployments exist and are ready."""
+    def test_target_deployments_exist(self) -> None:
         namespace = get_namespace()
         result = kubectl_get("hpa", namespace=namespace)
 
@@ -281,9 +284,7 @@ class TestHPAConfiguration:
 
 
 class TestCPUScaling:
-    """Test CPU-based autoscaling functionality."""
-
-    def test_cpu_metrics_collection(self):
+    def test_cpu_metrics_collection(self) -> None:
         """Verify CPU metrics are being collected for HPA targets."""
         namespace = get_namespace()
         services = ["stac", "raster", "vector"]
@@ -306,7 +307,7 @@ class TestCPUScaling:
             "No CPU metrics available for any service"
         )
 
-    def test_hpa_cpu_utilization_calculation(self):
+    def test_hpa_cpu_utilization_calculation(self) -> None:
         """Verify HPA calculates CPU utilization correctly."""
         namespace = get_namespace()
         result = kubectl_get("hpa", namespace=namespace)
@@ -359,7 +360,7 @@ class TestCPUScaling:
                 else:
                     print(f"⚠️  HPA {hpa_name} no CPU metrics available yet")
 
-    def test_cpu_resource_requests_alignment(self):
+    def test_cpu_resource_requests_alignment(self) -> None:
         """Verify CPU resource requests are properly set for percentage calculations."""
         namespace = get_namespace()
         services = ["stac", "raster", "vector"]
@@ -419,7 +420,7 @@ class TestScalingBehavior:
     """Test actual scaling behavior under load."""
 
     @pytest.mark.slow
-    def test_load_response_scaling(self):
+    def test_load_response_scaling(self) -> None:
         """Generate load and verify scaling response (when possible)."""
         namespace = get_namespace()
         base_url = get_base_url()
@@ -433,7 +434,7 @@ class TestScalingBehavior:
         ]
 
         # Check initial state
-        initial_pod_counts = {}
+        initial_pod_counts: Dict[str, int] = {}
         services = ["stac", "raster", "vector"]
 
         for service in services:
@@ -473,7 +474,7 @@ class TestScalingBehavior:
         time.sleep(30)
 
         # Check final state
-        final_pod_counts = {}
+        final_pod_counts: Dict[str, int] = {}
         for service in services:
             final_pod_counts[service] = get_pod_count(namespace, service)
 
@@ -501,7 +502,6 @@ class TestScalingBehavior:
                     )
                     print(f"Post-load HPA {hpa_name} CPU: {cpu_utilization}%")
 
-        # Verify load test was successful
         assert load_stats["success_rate"] > 0.8, (
             f"Load test had low success rate: {load_stats['success_rate']:.2%}"
         )
@@ -524,7 +524,7 @@ class TestScalingBehavior:
                 "⚠️  No scaling occurred - may be due to CI resource constraints or low load thresholds"
             )
 
-    def test_scaling_stabilization_windows(self):
+    def test_scaling_stabilization_windows(self) -> None:
         """Verify HPA respects stabilization windows in configuration."""
         namespace = get_namespace()
         result = kubectl_get("hpa", namespace=namespace)
@@ -538,7 +538,6 @@ class TestScalingBehavior:
             hpa_name = hpa["metadata"]["name"]
             spec = hpa["spec"]
 
-            # Check if behavior is configured
             behavior = spec.get("behavior", {})
             if not behavior:
                 print(f"⚠️  HPA {hpa_name} has no scaling behavior configured")
@@ -566,7 +565,7 @@ class TestScalingBehavior:
 class TestRequestRateScaling:
     """Test request rate-based autoscaling (when available)."""
 
-    def test_custom_metrics_for_request_rate(self):
+    def test_custom_metrics_for_request_rate(self) -> None:
         """Check if custom metrics for request rate scaling are available."""
         namespace = get_namespace()
 
@@ -600,7 +599,7 @@ class TestRequestRateScaling:
                 "⚠️  No request rate metrics available - may require ingress controller metrics configuration"
             )
 
-    def test_hpa_request_rate_metrics(self):
+    def test_hpa_request_rate_metrics(self) -> None:
         """Verify HPA can access request rate metrics (when configured)."""
         namespace = get_namespace()
         result = kubectl_get("hpa", namespace=namespace)

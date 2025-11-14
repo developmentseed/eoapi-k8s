@@ -55,7 +55,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install pytest pytest-timeout requests psycopg2-binary
+          pip install pytest pytest-timeout requests types-requests psycopg2-binary
 
       - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
