@@ -1,0 +1,208 @@
+# Example values for eoAPI with core monitoring and autoscaling enabled
+#
+# To use this configuration:
+#
+# 1. Update the ingress.host to your actual domain
+# 2. Adjust scaling targets based on your load testing results
+# 3. Monitor resource usage and adjust requests/limits accordingly
+# 4. Consider enabling TLS for production deployments
+#
+# IMPORTANT: This configuration enables monitoring components that are
+# disabled by default. This is required for autoscaling to work.
+#
+# For observability and dashboards, install the separate eoapi-observability chart:
+# helm install eoapi-obs eoapi/eoapi-observability --namespace eoapi
+#
+# Load testing recommendations:
+# - Test each service endpoint individually
+# - Monitor HPA metrics: kubectl get hpa -n eoapi -w
+# - Check custom metrics: kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1"
+# - Review Prometheus targets to ensure metrics collection is working
+
+gitSha: "latest"
+
+######################
+# INGRESS
+######################
+ingress:
+  enabled: true
+  className: "nginx"
+  # IMPORTANT: Set a proper hostname for metrics collection
+  # nginx ingress controller requires a specific host (not wildcard) to expose metrics
+  host: "your-eoapi.example.com"  # Replace with your domain
+  tls:
+    enabled: true
+    secretName: eoapi-tls
+
+######################
+# DATABASE
+######################
+# Using default PostgreSQL cluster configuration
+postgrescluster:
+  enabled: true
+  instances:
+  - name: eoapi
+    replicas: 1
+    dataVolumeClaimSpec:
+      accessModes:
+      - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "50Gi"  # Increased for production workloads
+          cpu: "2048m"     # More CPU for database under load
+          memory: "4096Mi" # More memory for database performance
+
+######################
+# MONITORING & AUTOSCALING
+######################
+# Essential monitoring components for autoscaling
+monitoring:
+  metricsServer:
+    enabled: true
+    apiService:
+      create: true
+  prometheus:
+    enabled: true
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kube-state-metrics:
+      enabled: true
+    prometheus-node-exporter:
+      enabled: true
+      resources:
+        limits:
+          cpu: 10m
+          memory: 30Mi
+        requests:
+          cpu: 10m
+          memory: 30Mi
+    server:
+      service:
+        type: ClusterIP
+
+# Custom metrics for request-rate based autoscaling
+prometheusAdapter:
+  enabled: true
+
+######################
+# SERVICE CONFIGURATION WITH AUTOSCALING
+######################
+
+# STAC API Service
+stac:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2      # Start with 2 replicas for availability
+    maxReplicas: 20     # Scale up to handle high loads
+    type: "requestRate" # Scale based on request rate
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      scaleUp:
+        stabilizationWindowSeconds: 30   # Scale up quickly (30 seconds)
+    targets:
+      requestRate: 50000m  # Scale when average > 50 requests/second
+  settings:
+    resources:
+      limits:
+        cpu: "1000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "500m"      # Higher baseline for autoscaling
+        memory: "1024Mi"
+
+# Raster Service (TiTiler)
+raster:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 15
+    type: "requestRate"
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 180  # Scale down slower for raster (3 min)
+      scaleUp:
+        stabilizationWindowSeconds: 60   # Scale up moderately fast
+    targets:
+      requestRate: 30000m  # Scale when average > 30 requests/second (raster is more resource intensive)
+  settings:
+    resources:
+      limits:
+        cpu: "1536m"     # Raster processing needs more CPU
+        memory: "6144Mi" # Raster processing needs more memory
+      requests:
+        cpu: "768m"
+        memory: "3072Mi"
+    envVars:
+      # Optimized GDAL settings for autoscaling
+      GDAL_CACHEMAX: "512"  # Increased cache for better performance
+      WEB_CONCURRENCY: "8"  # More workers for higher throughput
+
+# Vector Service (TIPG)
+vector:
+  enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    type: "requestRate"
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 240
+      scaleUp:
+        stabilizationWindowSeconds: 45
+    targets:
+      requestRate: 75000m  # Vector is typically lighter, can handle more requests
+  settings:
+    resources:
+      limits:
+        cpu: "1000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+
+# Multidimensional Service (optional)
+multidim:
+  enabled: false  # Disabled by default
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 8
+    type: "requestRate"
+    targets:
+      requestRate: 25000m  # Conservative scaling for multidim
+  settings:
+    resources:
+      limits:
+        cpu: "2048m"     # Multidim can be very CPU intensive
+        memory: "8192Mi" # Large memory requirements for multidim data
+      requests:
+        cpu: "1024m"
+        memory: "4096Mi"
+
+######################
+# STAC BROWSER
+######################
+browser:
+  enabled: true
+  replicaCount: 2  # Static replicas (browser is just static files)
+
+######################
+# PGSTAC BOOTSTRAP
+######################
+pgstacBootstrap:
+  enabled: true
+  settings:
+    loadSamples: false  # Disable sample data for production
+    resources:
+      requests:
+        cpu: "1024m"
+        memory: "2048Mi"
+      limits:
+        cpu: "1024m"
+        memory: "2048Mi"

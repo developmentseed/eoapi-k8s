@@ -49,12 +49,20 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install pytest pytest-timeout requests types-requests psycopg2-binary
+
       - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
         with:
           k3s-channel: latest
           helm-version: ${{ env.HELM_VERSION }}
-          metrics-enabled: false
+          metrics-enabled: true
           docker-enabled: true
 
       - name: Set release name
@@ -81,6 +89,13 @@ jobs:
             [ $counter -ge $timeout ] && { echo "❌ Timeout waiting for $crd"; exit 1; }
           done
 
+          # Wait for metrics-server to be ready (required for HPA)
+          echo "Waiting for metrics-server..."
+          kubectl wait --for=condition=Ready pod -l k8s-app=metrics-server -n kube-system --timeout=300s || {
+            echo "⚠️ Metrics-server not ready, checking status..."
+            kubectl get pods -n kube-system -l k8s-app=metrics-server
+          }
+
           echo "✅ K3s cluster ready"
 
       - name: Deploy eoAPI
@@ -103,6 +118,11 @@ jobs:
         run: |
           export RELEASE_NAME="$RELEASE_NAME"
           ./scripts/test.sh integration --debug
+
+      - name: Run autoscaling tests
+        run: |
+          export RELEASE_NAME="$RELEASE_NAME"
+          python -m pytest .github/workflows/tests/test_autoscaling.py -v --tb=short -m "not slow"
 
       - name: Debug failed deployment
         if: failure()
