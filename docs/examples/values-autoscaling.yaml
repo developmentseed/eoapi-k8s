@@ -1,4 +1,23 @@
 # Example values for eoAPI with core monitoring and autoscaling enabled
+#
+# To use this configuration:
+#
+# 1. Update the ingress.host to your actual domain
+# 2. Adjust scaling targets based on your load testing results
+# 3. Monitor resource usage and adjust requests/limits accordingly
+# 4. Consider enabling TLS for production deployments
+#
+# IMPORTANT: This configuration enables monitoring components that are
+# disabled by default. This is required for autoscaling to work.
+#
+# For observability and dashboards, install the separate eoapi-observability chart:
+# helm install eoapi-obs eoapi/eoapi-observability --namespace eoapi
+#
+# Load testing recommendations:
+# - Test each service endpoint individually
+# - Monitor HPA metrics: kubectl get hpa -n eoapi -w
+# - Check custom metrics: kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1"
+# - Review Prometheus targets to ensure metrics collection is working
 
 gitSha: "latest"
 
@@ -187,26 +206,3 @@ pgstacBootstrap:
       limits:
         cpu: "1024m"
         memory: "2048Mi"
-
-######################
-# ADDITIONAL NOTES
-######################
-#
-# To use this configuration:
-#
-# 1. Update the ingress.host to your actual domain
-# 2. Adjust scaling targets based on your load testing results
-# 3. Monitor resource usage and adjust requests/limits accordingly
-# 4. Consider enabling TLS for production deployments
-#
-# IMPORTANT: This configuration enables monitoring components that are
-# disabled by default. This is required for autoscaling to work.
-#
-# For observability and dashboards, install the separate eoapi-observability chart:
-# helm install eoapi-obs eoapi/eoapi-observability --namespace eoapi
-#
-# Load testing recommendations:
-# - Test each service endpoint individually
-# - Monitor HPA metrics: kubectl get hpa -n eoapi -w
-# - Check custom metrics: kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1"
-# - Review Prometheus targets to ensure metrics collection is working

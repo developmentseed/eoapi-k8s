@@ -11,18 +11,14 @@ import requests
 
 
 def get_namespace():
-    """Get the target namespace from environment or default."""
     return os.environ.get("NAMESPACE", "eoapi")
 
 
 def get_release_name():
-    """Get the release name from environment or default."""
     return os.environ.get("RELEASE_NAME", "eoapi")
 
 
 def get_base_url():
-    """Get the base URL for API endpoints."""
-    # Try to detect ingress or use port-forward
     namespace = get_namespace()
 
     # Check if we have an ingress
@@ -49,12 +45,10 @@ def get_base_url():
                 except requests.RequestException:
                     pass
 
-    # Fallback to localhost (assuming port-forward)
     return "http://localhost:8080"
 
 
 def kubectl_get(resource, namespace=None, label_selector=None, output="json"):
-    """Execute kubectl get command with optional parameters."""
     cmd = ["kubectl", "get", resource]
 
     if namespace:
@@ -71,7 +65,6 @@ def kubectl_get(resource, namespace=None, label_selector=None, output="json"):
 
 
 def get_pod_metrics(namespace, service_name):
-    """Get current CPU and memory metrics for service pods."""
     release_name = get_release_name()
     result = subprocess.run(
         [
@@ -105,7 +98,6 @@ def get_pod_metrics(namespace, service_name):
 
 
 def get_hpa_status(namespace, hpa_name):
-    """Get current HPA status and metrics."""
     result = kubectl_get("hpa", namespace=namespace, output="json")
     if result.returncode != 0:
         return None
@@ -119,7 +111,6 @@ def get_hpa_status(namespace, hpa_name):
 
 
 def get_pod_count(namespace, service_name):
-    """Get current number of running pods for a service."""
     release_name = get_release_name()
     result = kubectl_get(
         "pods",

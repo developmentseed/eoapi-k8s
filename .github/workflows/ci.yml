@@ -55,7 +55,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install pytest pytest-timeout requests
+          pip install pytest pytest-timeout requests psycopg2-binary
 
       - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
@@ -113,11 +113,6 @@ jobs:
         run: |
           echo "=== Post-deployment validation ==="
           ./scripts/test.sh check-deployment
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest requests psycopg2-binary
 
       - name: Run integration tests
         run: |
