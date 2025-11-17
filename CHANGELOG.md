@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+## [0.8.0] - 2025-11-20
+
 ### Breaking changes
 
-- Removed all default resource specifications from values.yaml and profile files. Users must now explicitly set resource limits/requests based on their infrastructure needs. This simplifies the chart and acknowledges that resource requirements vary greatly based on workload and infrastructure. If you were relying on the default resource specifications, add them to your values override file:
+#### Refactored `eoapi-support` chart
+
+This release refactored `eoapi-support` into the main `eoapi` chart. This includes all monitoring, observability and a lot of the metrics functionality. If you use any of this, please check on the new configuration structre and options as described in `docs/observability.md` and `docs/autoscaling.md`.
+
+### Cleaned up to rely on default resource specification
+
+Removed all default resource specifications from values.yaml and profile files. Users must now explicitly set resource limits/requests based on their infrastructure needs. This simplifies the chart and acknowledges that resource requirements vary greatly based on workload and infrastructure. If you were relying on the default resource specifications, add them to your values override file:
 
 ```yaml
 stac:
@@ -55,6 +65,7 @@ stac:
 - Updated actions/setup-python action to v6 [#350](https://github.com/developmentseed/eoapi-k8s/pull/350)
 - Updated Helm release prometheus to 27.45.0 [#339](https://github.com/developmentseed/eoapi-k8s/pull/339)
 - Updated Helm release knative-operator to v1.20.0 [#337](https://github.com/developmentseed/eoapi-k8s/pull/337)
+- Updated helm release grafana to 10.1.5 [#361](https://github.com/developmentseed/eoapi-k8s/pull/361)
 - Updated registry.k8s.io/ingress-nginx/kube-webhook-certgen Docker tag to v1.6.4 [#332](https://github.com/developmentseed/eoapi-k8s/pull/332)
 - Updated actions/checkout action to v5 [#333](https://github.com/developmentseed/eoapi-k8s/pull/333)
 - Updated actions/setup-node action to v6 [#334](https://github.com/developmentseed/eoapi-k8s/pull/334)
