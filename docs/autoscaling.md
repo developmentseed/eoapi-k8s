@@ -169,7 +169,7 @@ vector:
 
 ## Configuration Examples
 
-For complete configuration examples, see the [examples directory](../examples/).
+For complete configuration examples, see the [production profile](../charts/eoapi/profiles/production.yaml).
 
 ## Resource Requirements
 

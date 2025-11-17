@@ -9,7 +9,7 @@ Profiles are pre-configured values files that override the default `values.yaml`
 ## Available Profiles
 
 ### Core Profile (`core.yaml`)
-**Use Case:** Production deployments with stable, well-tested services only.
+**Use Case:** Minimal production deployment with stable services only.
 
 **Includes:**
 - PostgreSQL with PgSTAC
@@ -23,8 +23,29 @@ Profiles are pre-configured values files that override the default `values.yaml`
 - Development tools
 - Monitoring stack
 - STAC Browser UI
+- Autoscaling
 
 **Resources:** Production-optimized with higher resource allocations.
+
+### Production Profile (`production.yaml`)
+**Use Case:** Full production deployment with autoscaling and observability.
+
+**Includes:**
+- All core services
+- High availability PostgreSQL (2 replicas)
+- Autoscaling for all API services
+- Complete monitoring stack (Prometheus)
+- Grafana dashboards for observability
+- STAC Browser UI
+- Custom metrics for request-rate scaling
+
+**Configuration:**
+- Autoscaling enabled (CPU and request-rate based)
+- Persistent storage for metrics (30 days retention)
+- Production-optimized resource allocations
+- TLS enabled by default
+
+**Resources:** High resource allocations optimized for production workloads.
 
 ### Experimental Profile (`experimental.yaml`)
 **Use Case:** Development, testing, and evaluation of all eoAPI features.
@@ -69,10 +90,13 @@ Profiles are pre-configured values files that override the default `values.yaml`
 
 Deploy with a single profile:
 ```bash
-# Production deployment with core services only
+# Minimal production deployment
 helm install eoapi ./charts/eoapi -f profiles/core.yaml
 
-# Development deployment with all features
+# Full production with autoscaling and observability
+helm install eoapi ./charts/eoapi -f profiles/production.yaml
+
+# Development deployment with all experimental features
 helm install eoapi ./charts/eoapi -f profiles/experimental.yaml
 ```
 
