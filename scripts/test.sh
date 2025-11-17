@@ -170,10 +170,10 @@ run_helm_tests() {
                 exit 1
             fi
 
-            # Use test values for eoapi chart if available
-            if [ "$chart_name" = "eoapi" ] && [ -f "$chart_dir/test-helm-values.yaml" ]; then
-                if ! helm template test "$chart_dir" -f "$chart_dir/test-helm-values.yaml" >/dev/null; then
-                    log_error "Helm template failed for $chart_name with test values"
+            # Use experimental profile for comprehensive eoapi chart testing
+            if [ "$chart_name" = "eoapi" ] && [ -f "$chart_dir/profiles/experimental.yaml" ]; then
+                if ! helm template test "$chart_dir" -f "$chart_dir/profiles/experimental.yaml" >/dev/null; then
+                    log_error "Helm template failed for $chart_name with experimental profile"
                     exit 1
                 fi
             elif ! helm template test "$chart_dir" >/dev/null; then

@@ -1,0 +1,49 @@
+# eoAPI Minikube Local Profile
+# Minikube-specific overrides for local development
+# Must be used together with experimental.yaml profile
+#
+# Usage:
+#   helm install eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/minikube.yaml
+#   helm upgrade eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/minikube.yaml
+#
+# Note: This profile inherits all settings from experimental.yaml and only overrides minikube-specific values
+
+######################
+# MINIKUBE SPECIFIC INGRESS
+######################
+# Minikube uses nginx as the default ingress controller
+ingress:
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+
+######################
+# POSTGRESQL RESOURCES
+######################
+# Reduce PostgreSQL resources for local minikube development
+postgrescluster:
+  instances:
+    - name: "postgres"
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "1Gi"
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "512Mi"
+        limits:
+          cpu: "500m"
+          memory: "1Gi"
+
+######################
+# MONITORING
+######################
+# Keep metrics-server enabled as minikube may not provide it by default
+monitoring:
+  metricsServer:
+    enabled: true
