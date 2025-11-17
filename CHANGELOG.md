@@ -49,6 +49,18 @@ stac:
 - Reorganized the helm chart templates files [#352](https://github.com/developmentseed/eoapi-k8s/pull/352)
 - Removed all default resource specifications from values.yaml [#357](https://github.com/developmentseed/eoapi-k8s/pull/357)
 
+### Dependencies
+
+- Updated Python to 3.14.0 [#349](https://github.com/developmentseed/eoapi-k8s/pull/349)
+- Updated actions/setup-python action to v6 [#350](https://github.com/developmentseed/eoapi-k8s/pull/350)
+- Updated Helm release prometheus to 27.45.0 [#339](https://github.com/developmentseed/eoapi-k8s/pull/339)
+- Updated Helm release knative-operator to v1.20.0 [#337](https://github.com/developmentseed/eoapi-k8s/pull/337)
+- Updated registry.k8s.io/ingress-nginx/kube-webhook-certgen Docker tag to v1.6.4 [#332](https://github.com/developmentseed/eoapi-k8s/pull/332)
+- Updated actions/checkout action to v5 [#333](https://github.com/developmentseed/eoapi-k8s/pull/333)
+- Updated actions/setup-node action to v6 [#334](https://github.com/developmentseed/eoapi-k8s/pull/334)
+- Updated Node.js to 24.11.0 [#335](https://github.com/developmentseed/eoapi-k8s/pull/335)
+- Updated tipg to v1.3.0 [#355](https://github.com/developmentseed/eoapi-k8s/pull/355)
+
 ## [0.7.13] - 2025-11-04
 
 ### Added
