@@ -159,6 +159,27 @@ For detailed configuration and usage:
 - [Data Management](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/manage-data.md)
 - [Autoscaling Guide](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/autoscaling.md)
 
+## Template Structure
+
+The Helm templates are organized into logical modules:
+
+```
+templates/
+├── core/           # ServiceAccount, RBAC, Knative resources
+├── database/       # PostgreSQL and pgstac bootstrap
+├── networking/     # Ingress and middleware
+├── monitoring/     # Prometheus and Grafana
+├── services/       # API deployments (stac, raster, vector, multidim)
+└── _helpers/       # Reusable template functions
+```
+
+Helper functions are organized by domain in `_helpers/`:
+- `core.tpl` - Naming, labels, service account
+- `database.tpl` - PostgreSQL configuration
+- `services.tpl` - Service helpers and init containers
+- `validation.tpl` - Chart validation
+- `_resources.tpl` - Resource presets
+
 ## License
 
 [MIT License](https://github.com/developmentseed/eoapi-k8s/blob/main/LICENSE)
