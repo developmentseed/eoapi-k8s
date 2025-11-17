@@ -28,8 +28,11 @@ helm install --set disable_check_for_upgrades=true pgo \
   oci://registry.developers.crunchydata.com/crunchydata/pgo \
   --version 5.7.4
 
-# Install eoAPI
-helm install eoapi eoapi/eoapi
+# Install eoAPI with core profile (stable services only)
+helm install eoapi eoapi/eoapi -f profiles/core.yaml
+
+# Or install with all features for development
+helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
 ```
 
 ## Prerequisites
@@ -39,7 +42,33 @@ helm install eoapi eoapi/eoapi
 - PV provisioner support
 - PostgreSQL operator
 
-## Quick Start Configuration
+## Quick Start with Profiles
+
+Use pre-configured profiles for common deployment scenarios:
+
+```bash
+# Production deployment with stable services only
+helm install eoapi eoapi/eoapi -f profiles/core.yaml
+
+# Development with all features enabled
+helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
+
+# Local k3s development
+helm install eoapi eoapi/eoapi \
+  -f profiles/experimental.yaml \
+  -f profiles/local/k3s.yaml
+
+# Local minikube development
+helm install eoapi eoapi/eoapi \
+  -f profiles/experimental.yaml \
+  -f profiles/local/minikube.yaml
+```
+
+See [profiles/README.md](./profiles/README.md) for detailed profile documentation.
+
+## Manual Configuration
+
+For custom deployments, configure values directly:
 
 ```yaml
 # Enable desired services
@@ -68,6 +97,15 @@ pgstacBootstrap:
 ```
 
 ## Configuration Options
+
+### Service Profile Presets
+
+| Profile | Use Case | Services | Features |
+|---------|----------|----------|----------|
+| `profiles/core.yaml` | Production | STAC, Raster, Vector | Stable, optimized resources |
+| `profiles/experimental.yaml` | Development/Testing | All services | Includes experimental features, monitoring |
+| `profiles/local/k3s.yaml` | Local k3s | Inherits from experimental | k3s-specific settings |
+| `profiles/local/minikube.yaml` | Local minikube | Inherits from experimental | Minikube-specific settings |
 
 ### Key Parameters
 

@@ -1,0 +1,217 @@
+# eoAPI Core Profile
+# Stable, production-ready services only
+# Includes: PostgreSQL, PgSTAC, STAC API, Raster (TiTiler), Vector (TiPG)
+#
+# Usage:
+#   helm install eoapi ./charts/eoapi -f profiles/core.yaml
+#   helm upgrade eoapi ./charts/eoapi -f profiles/core.yaml
+
+# Core services only
+testing: false
+
+######################
+# DATABASE
+######################
+# PostgreSQL cluster configuration for production
+postgresql:
+  type: "postgrescluster"
+
+postgrescluster:
+  enabled: true
+  postgresVersion: 16
+  postGISVersion: "3.4"
+  pgBouncerReplicas: 1
+  monitoring: false
+  instances:
+    - name: eoapi
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "10Gi"
+      resources:
+        requests:
+          cpu: "1024m"
+          memory: "3048Mi"
+        limits:
+          cpu: "2048m"
+          memory: "4096Mi"
+  users:
+    - name: postgres
+      databases:
+        - eoapi
+        - postgres
+      options: "SUPERUSER"
+    - name: eoapi
+      databases:
+        - eoapi
+        - postgres
+      options: "CREATEDB CREATEROLE"
+      password:
+        type: AlphaNumeric
+
+######################
+# PGSTAC BOOTSTRAP
+######################
+pgstacBootstrap:
+  enabled: true
+  settings:
+    # Disable sample data for production
+    loadSamples: false
+
+    # Production-optimized PgSTAC settings
+    pgstacSettings:
+      queue_timeout: "10 minutes"
+      use_queue: "false"
+      update_collection_extent: "true"
+      context: "auto"
+      context_estimated_count: "100000"
+      context_estimated_cost: "100000"
+      context_stats_ttl: "1 day"
+
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "1024m"
+        memory: "2048Mi"
+
+######################
+# CORE API SERVICES
+######################
+# Only stable, production-ready services
+stac:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/stac"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "1024m"
+        memory: "2048Mi"
+    envVars:
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "4"
+      # Production settings
+      STAC_FASTAPI_DEBUG: "False"
+      STAC_FASTAPI_CORS_ORIGINS: '["*"]'
+
+raster:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/raster"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "2048Mi"
+      limits:
+        cpu: "1024m"
+        memory: "4096Mi"
+    envVars:
+      # GDAL performance settings
+      GDAL_CACHEMAX: "200"
+      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      GDAL_SKIP: "VRT"
+      PYTHONWARNINGS: "ignore"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "5000000"
+      # Uvicorn settings
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "4"
+      # Production settings
+      TITILER_DEBUG: "False"
+
+vector:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/vector"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "512Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+    envVars:
+      TIPG_CATALOG_TTL: "300"
+      TIPG_DEBUG: "False"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "4"
+
+######################
+# DISABLED SERVICES
+######################
+# Experimental and optional services disabled
+multidim:
+  enabled: false
+
+browser:
+  enabled: false
+
+docServer:
+  enabled: true
+
+eoapi-notifier:
+  enabled: false
+
+knative:
+  enabled: false
+
+monitoring:
+  metricsServer:
+    enabled: false
+  prometheus:
+    enabled: false
+  prometheusAdapter:
+    enabled: false
+
+observability:
+  grafana:
+    enabled: false
+
+######################
+# INGRESS
+######################
+ingress:
+  enabled: true
+  className: "nginx"
+  pathType: "Prefix"
+  host: ""
+  tls:
+    enabled: false
+    secretName: eoapi-tls
+
+######################
+# SERVICE
+######################
+service:
+  port: 8080
+
+serviceAccount:
+  create: true
+  name: ""
+  automount: true

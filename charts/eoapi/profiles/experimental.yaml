@@ -1,0 +1,425 @@
+# eoAPI Experimental Profile
+# All services and experimental features enabled
+# Includes: All core services + Multidim, STAC Browser, Notifications, Knative, Monitoring
+# WARNING: This profile is for development/testing. Not recommended for production.
+#
+# Usage:
+#   helm install eoapi ./charts/eoapi -f profiles/experimental.yaml
+#   helm upgrade eoapi ./charts/eoapi -f profiles/experimental.yaml
+
+# Enable testing mode for experimental features
+testing: false
+
+######################
+# DATABASE
+######################
+# Database configuration optimized for development
+postgresql:
+  type: "postgrescluster"
+
+postgrescluster:
+  enabled: true
+  postgresVersion: 16
+  postGISVersion: "3.4"
+  pgBouncerReplicas: 1
+  monitoring: false
+  patroni:
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - "host all all 0.0.0.0/0 md5"
+        parameters:
+          shared_preload_libraries: pg_stat_statements, auto_explain
+  databaseInitSQL:
+    key: initdb.sql
+    name: initdb
+  instances:
+    - name: eoapi
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "5Gi"
+      resources:
+        requests:
+          cpu: "512m"
+          memory: "1024Mi"
+        limits:
+          cpu: "1024m"
+          memory: "2048Mi"
+  users:
+    - name: postgres
+      databases:
+        - eoapi
+        - postgres
+      options: "SUPERUSER"
+    - name: eoapi
+      databases:
+        - eoapi
+        - postgres
+      options: "CREATEDB CREATEROLE"
+      password:
+        type: AlphaNumeric
+
+######################
+# PGSTAC BOOTSTRAP
+######################
+pgstacBootstrap:
+  enabled: true
+  settings:
+    # Enable sample data loading for testing
+    loadSamples: true
+
+    # Queryables configuration for testing
+    queryables:
+      - file: "initdb-data/queryables/test-queryables.json"
+        indexFields: ["platform", "instruments"]
+        deleteMissing: true
+
+    # PgSTAC settings optimized for development
+    pgstacSettings:
+      queue_timeout: "10 minutes"
+      use_queue: "false"
+      update_collection_extent: "true"
+      context: "auto"
+      context_estimated_count: "100000"
+      context_estimated_cost: "100000"
+      context_stats_ttl: "1 day"
+
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "512m"
+        memory: "1024Mi"
+
+    envVars:
+      LOAD_FIXTURES: "true"
+
+######################
+# ALL API SERVICES
+######################
+# Enable all available services
+stac:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/stac"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "1280m"
+        memory: "1536Mi"
+    envVars:
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "5"
+      # Debug mode for development
+      STAC_FASTAPI_DEBUG: "True"
+      STAC_FASTAPI_CORS_ORIGINS: "*"
+
+raster:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/raster"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+    envVars:
+      # GDAL performance settings
+      GDAL_CACHEMAX: "200"
+      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      GDAL_SKIP: "VRT"
+      PYTHONWARNINGS: "ignore"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "5000000"
+      # Uvicorn settings
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "5"
+      # Debug mode for development
+      TITILER_DEBUG: "True"
+
+vector:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/vector"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "768m"
+        memory: "1536Mi"
+    envVars:
+      TIPG_CATALOG_TTL: "300"
+      TIPG_DEBUG: "True"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "5"
+
+# Experimental: Multidimensional service
+multidim:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/multidim"
+  autoscaling:
+    enabled: false
+  settings:
+    resources:
+      requests:
+        cpu: "256m"
+        memory: "1024Mi"
+      limits:
+        cpu: "768m"
+        memory: "4096Mi"
+    envVars:
+      GDAL_CACHEMAX: "200"
+      GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+      GDAL_INGESTED_BYTES_AT_OPEN: "32768"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      PYTHONWARNINGS: "ignore"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "5000000"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      WEB_CONCURRENCY: "5"
+
+######################
+# UI COMPONENTS
+######################
+browser:
+  enabled: true
+  settings:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "200m"
+        memory: "128Mi"
+
+docServer:
+  enabled: true
+
+######################
+# NOTIFICATIONS
+######################
+eoapi-notifier:
+  enabled: true
+  waitForKnativeCRDs: false
+  config:
+    logLevel: DEBUG
+    sources:
+      - type: pgstac
+        config:
+          channel: pgstac_items_change
+          connection:
+            existingSecret:
+              name: ""  # Set dynamically by deploy script
+              keys:
+                username: "user"
+                password: "password"
+                host: "host"
+                port: "port"
+                database: "dbname"
+    outputs:
+      - type: cloudevents
+        config:
+          source: /eoapi/pgstac
+          event_type: org.eoapi.stac.item
+          destination:
+            ref:
+              apiVersion: serving.knative.dev/v1
+              kind: Service
+              name: eoapi-cloudevents-sink
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+######################
+# KNATIVE
+######################
+knative:
+  enabled: true
+  version: "1.17"
+  initTimeout: "600s"
+  cloudEventsSink:
+    enabled: true
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "100m"
+        memory: "128Mi"
+
+knative-operator:
+  tag: "v1.17.8"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+######################
+# MONITORING
+######################
+monitoring:
+  metricsServer:
+    enabled: true
+    apiService:
+      create: true
+
+  prometheus:
+    enabled: true
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kube-state-metrics:
+      enabled: true
+    prometheus-node-exporter:
+      enabled: true
+      resources:
+        limits:
+          cpu: "10m"
+          memory: "30Mi"
+        requests:
+          cpu: "10m"
+          memory: "30Mi"
+    server:
+      service:
+        type: ClusterIP
+
+  prometheusAdapter:
+    enabled: true
+    prometheus:
+      url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
+      port: 80
+      path: ""
+    rules:
+      default: false
+      custom:
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_vector_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_raster_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_stac_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+######################
+# OBSERVABILITY
+######################
+observability:
+  grafana:
+    enabled: true
+    persistence:
+      enabled: false
+    service:
+      type: ClusterIP
+    resources:
+      limits:
+        cpu: "100m"
+        memory: "200Mi"
+      requests:
+        cpu: "50m"
+        memory: "100Mi"
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Prometheus
+            type: prometheus
+            url: "http://{{ .Release.Name }}-prometheus-server"
+            access: proxy
+            isDefault: true
+    dashboardsConfigMaps:
+      default: "{{ .Release.Name }}-dashboards"
+
+######################
+# AUTOSCALING
+######################
+autoscaling:
+  enabled: true
+
+######################
+# INGRESS
+######################
+ingress:
+  enabled: true
+  className: "nginx"
+  pathType: "Prefix"
+  host: "localhost"
+  tls:
+    enabled: false
+
+######################
+# SERVICE
+######################
+service:
+  port: 8080
+
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+
+# Enable connection pooling for development
+database:
+  enabled: true
+  connectionPooling:
+    enabled: false  # Simplify for local development

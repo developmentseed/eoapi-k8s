@@ -400,12 +400,12 @@ deploy_eoapi() {
         HELM_CMD="$HELM_CMD -f ./eoapi/values.yaml"
     fi
 
-    # Add local base configuration for development environments
-    if [ -f "./eoapi/local-base-values.yaml" ]; then
+    # Add experimental profile for development environments
+    if [ -f "./eoapi/profiles/experimental.yaml" ]; then
         case "$(kubectl config current-context 2>/dev/null || echo "unknown")" in
             *"minikube"*|*"k3d"*|"default")
-                log_info "Using local base configuration..."
-                HELM_CMD="$HELM_CMD -f ./eoapi/local-base-values.yaml"
+                log_info "Using experimental profile configuration..."
+                HELM_CMD="$HELM_CMD -f ./eoapi/profiles/experimental.yaml"
                 ;;
         esac
     fi
@@ -413,12 +413,12 @@ deploy_eoapi() {
     # Environment-specific configuration
     if [ "$CI_MODE" = true ]; then
         log_info "Applying CI-specific overrides..."
-        # Use base + k3s values, then override for CI
-        if [ -f "./eoapi/local-base-values.yaml" ]; then
-            HELM_CMD="$HELM_CMD -f ./eoapi/local-base-values.yaml"
+        # Use experimental + k3s profiles, then override for CI
+        if [ -f "./eoapi/profiles/experimental.yaml" ]; then
+            HELM_CMD="$HELM_CMD -f ./eoapi/profiles/experimental.yaml"
         fi
-        if [ -f "./eoapi/local-k3s-values.yaml" ]; then
-            HELM_CMD="$HELM_CMD -f ./eoapi/local-k3s-values.yaml"
+        if [ -f "./eoapi/profiles/local/k3s.yaml" ]; then
+            HELM_CMD="$HELM_CMD -f ./eoapi/profiles/local/k3s.yaml"
         fi
         HELM_CMD="$HELM_CMD --set testing=true"
         HELM_CMD="$HELM_CMD --set ingress.host=eoapi.local"
@@ -469,15 +469,15 @@ deploy_eoapi() {
 
         case "$current_context" in
             *"k3d"*)
-                if [ -f "./eoapi/local-k3s-values.yaml" ]; then
+                if [ -f "./eoapi/profiles/local/k3s.yaml" ]; then
                     log_info "Adding k3s-specific overrides..."
-                    HELM_CMD="$HELM_CMD -f ./eoapi/local-k3s-values.yaml"
+                    HELM_CMD="$HELM_CMD -f ./eoapi/profiles/local/k3s.yaml"
                 fi
                 ;;
             "minikube")
-                if [ -f "./eoapi/local-minikube-values.yaml" ]; then
+                if [ -f "./eoapi/profiles/local/minikube.yaml" ]; then
                     log_info "Adding minikube-specific overrides..."
-                    HELM_CMD="$HELM_CMD -f ./eoapi/local-minikube-values.yaml"
+                    HELM_CMD="$HELM_CMD -f ./eoapi/profiles/local/minikube.yaml"
                 fi
                 ;;
         esac

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Reorganized local development values files into structured profiles directory:
 - Refactors eoapi-support into core eoapi chart [#262](https://github.com/developmentseed/eoapi-k8s/pull/262)
 - Make integration tests fail properly
 - Temporarily skip VRT driver in GDALg to avoid https://github.com/OSGeo/gdal/issues/12645
@@ -34,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add queryables configuration support using pypgstac load-queryables [#323](https://github.com/developmentseed/eoapi-k8s/pull/323)
 - Added local testing with k3s and minikube
-- Base local development values file (`local-base-values.yaml`)
 - Unified local cluster management with `CLUSTER_TYPE` variable
 - Improved CI and local debugging; added debug-deployment.sh script
 - Added knative in CI to test eoapi-notifier.

@@ -1,0 +1,48 @@
+# eoAPI k3s Local Profile
+# k3s-specific overrides for local development
+# Must be used together with experimental.yaml profile
+#
+# Usage:
+#   helm install eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/k3s.yaml
+#   helm upgrade eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/k3s.yaml
+#
+# Note: This profile inherits all settings from experimental.yaml and only overrides k3s-specific values
+
+######################
+# K3S SPECIFIC INGRESS
+######################
+# k3s uses Traefik as the default ingress controller
+ingress:
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+######################
+# POSTGRESQL RESOURCES
+######################
+# Reduce PostgreSQL resources for local k3s development
+postgrescluster:
+  instances:
+    - name: "postgres"
+      replicas: 1
+      dataVolumeClaimSpec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "1Gi"
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "512Mi"
+        limits:
+          cpu: "500m"
+          memory: "1Gi"
+
+######################
+# MONITORING
+######################
+# Disable metrics-server as k3s provides it built-in
+monitoring:
+  metricsServer:
+    enabled: false
