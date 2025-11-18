@@ -7,6 +7,7 @@ A Helm chart for deploying Earth Observation APIs with integrated STAC, raster, 
 ## Features
 
 - STAC API for metadata discovery and search
+- STAC Auth Proxy for authentication/authorization (optional)
 - Raster tile services (TiTiler)
 - Vector tile services (TIPG)
 - Multidimensional data support
@@ -41,6 +42,21 @@ helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
 - Helm 3.0+
 - PV provisioner support
 - PostgreSQL operator
+
+## STAC Auth Proxy (Optional)
+
+The chart includes support for [stac-auth-proxy](https://github.com/developmentseed/stac-auth-proxy) to add authentication and authorization to your STAC API. This feature is disabled by default and can be enabled, and will need a valid OIDC discovery URL.
+
+### Configuration
+
+```yaml
+stac-auth-proxy:
+  enabled: true
+  env:
+    OIDC_DISCOVERY_URL: "https://your-auth-server/.well-known/openid-configuration"
+```
+
+When enabled, the ingress will automatically route STAC API requests through the auth proxy instead of directly to the STAC service.
 
 ## Quick Start with Profiles
 

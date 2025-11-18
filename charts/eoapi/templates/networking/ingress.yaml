@@ -49,7 +49,11 @@ spec:
             path: {{ $.Values.stac.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
+                {{- if index $.Values "stac-auth-proxy" "enabled" }}
+                name: {{ $.Release.Name }}-stac-auth-proxy
+                {{- else }}
                 name: {{ $.Release.Name }}-stac
+                {{- end }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
@@ -105,7 +109,11 @@ spec:
             path: {{ .Values.stac.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
+                {{- if index .Values "stac-auth-proxy" "enabled" }}
+                name: {{ .Release.Name }}-stac-auth-proxy
+                {{- else }}
                 name: {{ .Release.Name }}-stac
+                {{- end }}
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}

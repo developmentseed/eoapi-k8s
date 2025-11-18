@@ -1,0 +1,79 @@
+suite: test stac-auth-proxy ingress routing
+templates:
+  - networking/ingress.yaml
+
+tests:
+  - it: should route ingress to stac-auth-proxy when enabled
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/stac"
+      stac-auth-proxy.enabled: true
+      service.port: 8080
+    asserts:
+      - contains:
+          path: spec.rules[0].http.paths
+          content:
+            pathType: ImplementationSpecific
+            path: /stac(/|$)(.*)
+            backend:
+              service:
+                name: RELEASE-NAME-stac-auth-proxy
+                port:
+                  number: 8080
+        template: networking/ingress.yaml
+
+  - it: should route ingress directly to stac when auth-proxy is disabled
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/stac"
+      stac-auth-proxy.enabled: false
+      service.port: 8080
+    asserts:
+      - contains:
+          path: spec.rules[0].http.paths
+          content:
+            pathType: ImplementationSpecific
+            path: /stac(/|$)(.*)
+            backend:
+              service:
+                name: RELEASE-NAME-stac
+                port:
+                  number: 8080
+        template: networking/ingress.yaml
+
+  - it: should not create stac routes when stac is disabled
+    set:
+      ingress.enabled: true
+      stac.enabled: false
+      stac-auth-proxy.enabled: true
+    asserts:
+      - notContains:
+          path: spec.rules[0].http.paths
+          any: true
+          content:
+            path: /stac(/|$)(.*)
+        template: networking/ingress.yaml
+
+  - it: should route correctly with experimental profile
+    values:
+      - ../profiles/experimental.yaml
+    set:
+      ingress.enabled: true
+    asserts:
+      - contains:
+          path: spec.rules[0].http.paths
+          content:
+            pathType: ImplementationSpecific
+            path: /stac(/|$)(.*)
+            backend:
+              service:
+                name: RELEASE-NAME-stac-auth-proxy
+                port:
+                  number: 8080
+        template: networking/ingress.yaml
