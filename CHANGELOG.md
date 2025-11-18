@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consistent naming of behavior field
 - Made all python tests comply with mypy strict validation
 - Improved documentation about access to grafana
+- Reorganized the helm chart templates files [#352](https://github.com/developmentseed/eoapi-k8s/pull/352)
 
 ## [0.7.13] - 2025-11-04
 
