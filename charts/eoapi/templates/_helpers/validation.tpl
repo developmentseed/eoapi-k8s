@@ -26,3 +26,15 @@ so we use this helper function to check autoscaling rules
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{/*
+Validate stac-auth-proxy configuration
+Ensures OIDC_DISCOVERY_URL is set when stac-auth-proxy is enabled
+*/}}
+{{- define "eoapi.validateStacAuthProxy" -}}
+{{- if index .Values "stac-auth-proxy" "enabled" }}
+{{- if not (index .Values "stac-auth-proxy" "env" "OIDC_DISCOVERY_URL") }}
+{{- fail "stac-auth-proxy.env.OIDC_DISCOVERY_URL is required when stac-auth-proxy is enabled. Set it to your OpenID Connect discovery URL (e.g., https://your-auth-server/.well-known/openid-configuration)" }}
+{{- end }}
+{{- end }}
+{{- end -}}

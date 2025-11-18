@@ -410,6 +410,17 @@ stac:
       DB_MIN_CONN_SIZE: "1"
       DB_MAX_CONN_SIZE: "5" # Quite intensive (queries, transactions, searches)
 
+# STAC Auth Proxy - authentication layer for STAC API
+stac-auth-proxy:
+  enabled: false
+  env:
+    DEFAULT_PUBLIC: "true"
+    # UPSTREAM_URL will be set dynamically in template to point to stac service
+    # OIDC_DISCOVERY_URL must be configured when enabling auth
+  ingress:
+    enabled: false  # Handled by main eoapi ingress
+  resources: {}
+
 vector:
   enabled: true
   ingress:

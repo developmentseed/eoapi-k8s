@@ -364,6 +364,15 @@ ingress:
   tls:
     enabled: false
 
+stac-auth-proxy:
+  enabled: false
+  env:
+    UPSTREAM_URL: "http://eoapi-stac:8080/stac"
+    # For testing one could deploy a mock OIDC server (https://github.com/alukach/mock-oidc-server)
+    OIDC_DISCOVERY_URL: "http://mock-oidc-server.default.svc.cluster.local/.well-known/openid-configuration"
+    # For production, point to your actual OpenID Connect provider
+    # OIDC_DISCOVERY_URL: "https://your-auth-provider.com/.well-known/openid-configuration"
+
 ######################
 # SERVICE
 ######################

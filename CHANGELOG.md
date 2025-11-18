@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Changed
 
 - Unified scripts and removed Makefile, combined all into one CLI command `eoapi-cli` [#359](https://github.com/developmentseed/eoapi-k8s/pull/359)
+- Added stac-auth-proxy for authentication and authorization on the STAC API [#358](https://github.com/developmentseed/eoapi-k8s/pull/358)
 
 ## [0.8.0] - 2025-11-20
 

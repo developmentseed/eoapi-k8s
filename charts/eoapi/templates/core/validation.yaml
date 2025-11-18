@@ -1,5 +1,6 @@
 {{/*
-This template validates the PostgreSQL configuration.
+This template validates various configurations.
 It doesn't create any resources but ensures configuration consistency.
 */}}
 {{- include "eoapi.validatePostgresql" . }}
+{{- include "eoapi.validateStacAuthProxy" . }}
