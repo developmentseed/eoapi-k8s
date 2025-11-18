@@ -467,7 +467,7 @@ vector:
       requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/tipg
-    tag: 1.2.1
+    tag: 1.3.0
   command:
     - "uvicorn"
     - "tipg.main:app"
