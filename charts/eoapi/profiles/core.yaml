@@ -31,13 +31,7 @@ postgrescluster:
         resources:
           requests:
             storage: "10Gi"
-      resources:
-        requests:
-          cpu: "1024m"
-          memory: "3048Mi"
-        limits:
-          cpu: "2048m"
-          memory: "4096Mi"
+      resources: {}
   users:
     - name: postgres
       databases:
@@ -71,13 +65,7 @@ pgstacBootstrap:
       context_estimated_cost: "100000"
       context_stats_ttl: "1 day"
 
-    resources:
-      requests:
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "1024m"
-        memory: "2048Mi"
+    resources: {}
 
 ######################
 # CORE API SERVICES
@@ -91,13 +79,7 @@ stac:
   autoscaling:
     enabled: false
   settings:
-    resources:
-      requests:
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "1024m"
-        memory: "2048Mi"
+    resources: {}
     envVars:
       HOST: "0.0.0.0"
       PORT: "8080"
@@ -114,13 +96,7 @@ raster:
   autoscaling:
     enabled: false
   settings:
-    resources:
-      requests:
-        cpu: "512m"
-        memory: "2048Mi"
-      limits:
-        cpu: "1024m"
-        memory: "4096Mi"
+    resources: {}
     envVars:
       # GDAL performance settings
       GDAL_CACHEMAX: "200"
@@ -148,13 +124,7 @@ vector:
   autoscaling:
     enabled: false
   settings:
-    resources:
-      requests:
-        cpu: "256m"
-        memory: "512Mi"
-      limits:
-        cpu: "512m"
-        memory: "1024Mi"
+    resources: {}
     envVars:
       TIPG_CATALOG_TTL: "300"
       TIPG_DEBUG: "False"

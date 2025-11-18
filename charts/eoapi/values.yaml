@@ -213,13 +213,7 @@ pgstacBootstrap:
     ### FOR CONFIGURING THE DB CONNECTION
     user: eoapi
     database: eoapi
-    resources:
-      requests:
-        cpu: "512m"
-        memory: "1024Mi"
-      limits:
-        cpu: "512m"
-        memory: "1024Mi"
+    resources: {}
     # DEPRECATED: Use pgstacBootstrap.settings.loadSamples instead
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
@@ -269,21 +263,10 @@ raster:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    # Additional labels to add to the pod
     labels: {}
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-    resources:
-      limits:
-        cpu: "768m"
-        memory: "4096Mi"
-      requests:
-        cpu: "256m"
-        memory: "3072Mi"
-    # Additional environment variables from references like ConfigMap or Secret
+    resources: {}
     extraEnvFrom: []
-    # Additional volume mounts
     extraVolumeMounts: []
-    # Additional volumes
     extraVolumes: []
     envVars:
       ##############
@@ -342,21 +325,10 @@ multidim:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    # Additional labels to add to the pod
     labels: {}
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-    resources:
-      limits:
-        cpu: "768m"
-        memory: "4096Mi"
-      requests:
-        cpu: "256m"
-        memory: "3072Mi"
-    # Additional environment variables from references like ConfigMap or Secret
+    resources: {}
     extraEnvFrom: []
-    # Additional volume mounts
     extraVolumeMounts: []
-    # Additional volumes
     extraVolumes: []
     envVars:
       ##############
@@ -414,21 +386,10 @@ stac:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    # Additional labels to add to the pod
     labels: {}
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-    resources:
-      limits:
-        cpu: "768m"
-        memory: "1024Mi"
-      requests:
-        cpu: "256m"
-        memory: "1024Mi"
-    # Additional environment variables from references like ConfigMap or Secret
+    resources: {}
     extraEnvFrom: []
-    # Additional volume mounts
     extraVolumeMounts: []
-    # Additional volumes
     extraVolumes: []
     envVars:
       ##############
@@ -474,21 +435,10 @@ vector:
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
-    # Additional labels to add to the pod
     labels: {}
-    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-    resources:
-      limits:
-        cpu: "768m"
-        memory: "1024Mi"
-      requests:
-        cpu: "256m"
-        memory: "256Mi"
-    # Additional environment variables from references like ConfigMap or Secret
+    resources: {}
     extraEnvFrom: []
-    # Additional volume mounts
     extraVolumeMounts: []
-    # Additional volumes
     extraVolumes: []
     envVars:
       ##############
@@ -510,7 +460,6 @@ vector:
 # It is a good idea to deploy stac-browser outside of k8s, since it's SPA with static files.
 browser:
   enabled: true
-  replicaCount: 1
   image:
     # we use a custom image with pathPrefix built into it
     name: ghcr.io/developmentseed/eoapi-k8s-stac-browser
@@ -576,24 +525,12 @@ knative:
   cloudEventsSink:
     enabled: false
     image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.4
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    resources: {}
 
 # Knative operator sub-chart configuration
 knative-operator:
   tag: "v1.17.8"
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
+  resources: {}
 
 ######################
 # MONITORING
@@ -617,13 +554,7 @@ monitoring:
       enabled: true
     prometheus-node-exporter:
       enabled: true
-      resources:
-        limits:
-          cpu: 10m
-          memory: 30Mi
-        requests:
-          cpu: 10m
-          memory: 30Mi
+      resources: {}
     server:
       service:
         type: ClusterIP  # Internal service, no external exposure by default
@@ -687,14 +618,7 @@ observability:
       annotations:
         service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
         service.beta.kubernetes.io/aws-load-balancer-internal: "false"
-    # Resources consistent with eoapi.resources.grafana template in _resources.yaml
-    resources:
-      limits:
-        cpu: 100m
-        memory: 200Mi
-      requests:
-        cpu: 50m
-        memory: 100Mi
+    resources: {}
     datasources:
       datasources.yaml:
         apiVersion: 1
@@ -716,10 +640,3 @@ metrics-server:
     tag: "0.8.0-debian-12-r4"
   apiService:
     create: true
-
-# Version being upgraded from, used for migration purposes
-# Dont set the value in the values.yaml file
-# prefer to set it in the command line
-# helm upgrade --set previousVersion=$PREVIOUS_VERSION
-# or in the CI/CD pipeline
-previousVersion: ""

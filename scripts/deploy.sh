@@ -429,34 +429,12 @@ deploy_eoapi() {
         HELM_CMD="$HELM_CMD --set observability.grafana.enabled=true"
         HELM_CMD="$HELM_CMD --set monitoring.prometheusAdapter.prometheus.url=http://$RELEASE_NAME-prometheus-server.eoapi.svc.cluster.local"
 
-        # Enable autoscaling with CPU metrics
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.enabled=true"
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.type=cpu"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.enabled=true"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.type=cpu"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.enabled=true"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.type=cpu"
+
 
         # Enable notifier
         HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=true"
         # Fix eoapi-notifier secret name dynamically
         HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
-        # Enable autoscaling for CI tests
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.enabled=true"
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.type=cpu"
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.targets.cpu=75"
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.minReplicas=1"
-        HELM_CMD="$HELM_CMD --set stac.autoscaling.maxReplicas=3"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.enabled=true"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.type=cpu"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.targets.cpu=75"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.minReplicas=1"
-        HELM_CMD="$HELM_CMD --set raster.autoscaling.maxReplicas=3"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.enabled=true"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.type=cpu"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.targets.cpu=75"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.minReplicas=1"
-        HELM_CMD="$HELM_CMD --set vector.autoscaling.maxReplicas=3"
     elif [ -f "./eoapi/test-local-values.yaml" ]; then
         log_info "Using local test configuration..."
         HELM_CMD="$HELM_CMD -f ./eoapi/test-local-values.yaml"

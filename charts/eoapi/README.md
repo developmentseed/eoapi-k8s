@@ -119,7 +119,32 @@ pgstacBootstrap:
 | `pgstacBootstrap.enabled` | Enable database initialization | `true` |
 | `notifications.sources.pgstac` | Enable PostgreSQL notification triggers for STAC item changes | `false` |
 
-Refer to the [values.schema.json](./values.schema.json) for the complete list of configurable parameters.
+### Resource Configuration
+
+This chart does not specify default resource limits/requests. Set resources based on your infrastructure and workload:
+
+```yaml
+# Example resource configuration in your values override
+stac:
+  settings:
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+raster:
+  settings:
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+```
 
 ### Database Options
 
