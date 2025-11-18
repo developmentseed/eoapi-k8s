@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -26,20 +25,14 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
-      - name: Setup Helm dependencies
-        run: ./scripts/deploy.sh setup
-
-      - name: Install ajv-cli
-        run: npm install -g ajv-cli ajv-formats
-
       - name: Run linters
-        run: make lint
+        run: ./eoapi-cli test lint
 
       - name: Validate Helm values schema
-        run: make validate-schema
+        run: ./eoapi-cli test schema
 
       - name: Run Helm unit tests
-        run: make tests
+        run: ./eoapi-cli test unit
 
   integration-tests:
     name: Integration tests
@@ -48,14 +41,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.14'
+          python-version: '3.12'
 
-      - name: Install Python dependencies
-        run: |
-          pip install pytest pytest-timeout requests types-requests psycopg2-binary
+      - name: Set release name
+        run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
 
       - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
@@ -65,126 +56,42 @@ jobs:
           metrics-enabled: true
           docker-enabled: true
 
-      - name: Set release name
-        run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
-
-      - name: Wait for K3s readiness
-        run: |
-          echo "=== Waiting for K3s cluster to be ready ==="
-
-          # The action already sets up kubectl context, just verify it works
-          kubectl cluster-info
-          kubectl get nodes
-
-          # Wait for core components
-          kubectl wait --for=condition=Ready pod -l k8s-app=kube-dns -n kube-system --timeout=300s
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=traefik -n kube-system --timeout=300s
-
-          # Verify Traefik CRDs
-          timeout=300; counter=0
-          for crd in "middlewares.traefik.io" "ingressroutes.traefik.io"; do
-            while [ $counter -lt $timeout ] && ! kubectl get crd "$crd" &>/dev/null; do
-              sleep 3; counter=$((counter + 3))
-            done
-            [ $counter -ge $timeout ] && { echo "❌ Timeout waiting for $crd"; exit 1; }
-          done
-
-          # Wait for metrics-server to be ready (required for HPA)
-          echo "Waiting for metrics-server..."
-          kubectl wait --for=condition=Ready pod -l k8s-app=metrics-server -n kube-system --timeout=300s || {
-            echo "⚠️ Metrics-server not ready, checking status..."
-            kubectl get pods -n kube-system -l k8s-app=metrics-server
-          }
-
-          echo "✅ K3s cluster ready"
+      - name: Wait until cluster is ready
+        run: ./eoapi-cli cluster wait-ready
 
       - name: Deploy eoAPI
-        id: deploy
-        run: |
-          echo "=== eoAPI Deployment ==="
-          export RELEASE_NAME="${RELEASE_NAME}"
-          export PGO_VERSION="${{ env.PGO_VERSION }}"
-          export CI_MODE=true
-
-          # Deploy using consolidated script with CI mode
-          ./scripts/deploy.sh --ci
-
-      - name: Validate deployment
-        run: |
-          echo "=== Post-deployment validation ==="
-          ./scripts/test.sh check-deployment
-
-      - name: Wait for monitoring stack
-        run: |
-          echo "=== Waiting for monitoring components (required for autoscaling) ==="
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/component=server,app.kubernetes.io/name=prometheus -n eoapi --timeout=120s &
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=grafana -n eoapi --timeout=120s &
-          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus-adapter -n eoapi --timeout=120s &
-          wait # Wait for all background jobs
-          echo "✅ Monitoring stack ready"
-          kubectl get hpa -n eoapi
+        run: ./eoapi-cli deployment run
 
       - name: Run integration tests
-        run: |
-          export RELEASE_NAME="$RELEASE_NAME"
-          ./scripts/test.sh integration --debug
+        run: ./eoapi-cli test integration
+
+      - name: Run notification tests
+        run: ./eoapi-cli test notification
 
       - name: Run autoscaling tests
-        run: |
-          export RELEASE_NAME="$RELEASE_NAME"
-          python -m pytest .github/workflows/tests/test_autoscaling.py -v --tb=short -m "not slow"
+        run: ./eoapi-cli test autoscaling
 
       - name: Debug failed deployment
         if: failure()
-        run: |
-          ./scripts/debug-deployment.sh
+        run: ./eoapi-cli deployment debug
 
       - name: Cleanup
         if: always()
         run: |
           helm uninstall "$RELEASE_NAME" -n eoapi || true
           kubectl delete namespace eoapi || true
+
   validate-docs:
     name: Validate documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
 
-      - name: Check internal links
-        run: |
-          broken=0
-          find docs -name "*.md" | while read -r file; do
-            if grep -q "](\./" "$file" 2>/dev/null; then
-              grep -n "](\./" "$file" | while IFS=: read -r line link; do
-                path=$(echo "$link" | sed -n 's/.*](\.\///; s/).*//p')
-                if [[ "$path" == images/* ]]; then
-                  full="docs/$path"
-                else
-                  full="docs/$path"
-                fi
-                if [[ ! -e "$full" ]]; then
-                  echo "❌ $file:$line -> $path"
-                  broken=1
-                fi
-              done
-            fi
-          done
-          exit $broken
-
-      - name: Check external links
-        run: |
-          npm install -g markdown-link-check@3.11.2
-          echo '{"timeout":"10s","retryCount":2,"aliveStatusCodes":[200,301,302,403,999]}' > .mlc.json
-          find docs -name "*.md" -exec timeout 30 markdown-link-check {} --config .mlc.json \; || true
-
-      - name: Check frontmatter
-        run: |
-          missing=0
-          find docs -name "*.md" -not -path "docs/_includes/*" | while read -r file; do
-            head -1 "$file" | grep -q "^---$" || { echo "❌ Missing frontmatter: $file"; missing=1; }
-          done
-          exit $missing
+      - name: Check documentation
+        run: ./eoapi-cli docs check

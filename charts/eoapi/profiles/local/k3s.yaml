@@ -23,7 +23,7 @@ ingress:
 # Reduce PostgreSQL resources for local k3s development
 postgrescluster:
   instances:
-    - name: "postgres"
+    - name: "eoapi"
       replicas: 1
       dataVolumeClaimSpec:
         accessModes:

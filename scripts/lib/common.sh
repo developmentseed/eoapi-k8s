@@ -3,6 +3,10 @@
 # eoAPI Scripts - Shared Utilities Library
 # Source this file in other scripts: source "$(dirname "$0")/lib/common.sh"
 
+# Include guard to prevent multiple sourcing
+[[ -n "${_EOAPI_COMMON_SH_LOADED:-}" ]] && return
+readonly _EOAPI_COMMON_SH_LOADED=1
+
 set -euo pipefail
 
 # Colors
@@ -12,18 +16,49 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
+is_ci() {
+    [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" || -n "${GITLAB_CI:-}" || -n "${JENKINS_URL:-}" ]]
+}
+
+if is_ci; then
+    export DEBUG_MODE=true
+fi
+
 # Logging functions
-log_info() { echo -e "${GREEN}[INFO]${NC} $1" >&2; }
+log_info() { echo -e "${BLUE}[INFO]${NC} $1" >&2; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1" >&2; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
-log_debug() { echo -e "${BLUE}[DEBUG]${NC} $1" >&2; }
+log_debug() { [ "${DEBUG_MODE:-false}" = "true" ] && echo -e "${BLUE}[DEBUG]${NC} $1" >&2 || true; }
 
-# Check if command exists
+DEBUG_MODE="${DEBUG_MODE:-false}"
+NAMESPACE=""
+REMAINING_ARGS=()
+
+parse_standard_options() {
+    REMAINING_ARGS=()  # Reset
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help) return 0 ;;  # Return early to show help
+            -d|--debug) export DEBUG_MODE=true; shift ;;
+            -n|--namespace) export NAMESPACE="$2"; shift 2 ;;
+            --) shift; REMAINING_ARGS+=("$@"); break ;;
+            *) REMAINING_ARGS+=("$1"); shift ;;
+        esac
+    done
+}
+
+show_standard_options() {
+    echo "  -h, --help              Show help"
+    echo "  -d, --debug             Enable debug mode"
+    echo "  -n, --namespace NAME    Set Kubernetes namespace"
+}
+
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Validate required tools
 validate_tools() {
     local tools=("$@")
     local missing=()
@@ -43,7 +78,10 @@ validate_tools() {
     return 0
 }
 
-# Check Kubernetes cluster connectivity
+check_requirements() {
+    validate_tools "$@"
+}
+
 validate_cluster() {
     if ! kubectl cluster-info >/dev/null 2>&1; then
         log_error "Cannot connect to Kubernetes cluster"
@@ -57,12 +95,6 @@ validate_cluster() {
     return 0
 }
 
-# Detect CI environment
-is_ci_environment() {
-    [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" || -n "${GITLAB_CI:-}" || -n "${JENKINS_URL:-}" ]]
-}
-
-# Validate namespace exists or can be created
 validate_namespace() {
     local namespace="${1:-}"
 
@@ -80,7 +112,6 @@ validate_namespace() {
     return 1
 }
 
-# Auto-detect release name from deployed resources
 detect_release_name() {
     local namespace="${1:-}"
 
@@ -99,13 +130,11 @@ detect_release_name() {
     echo "${release_name:-eoapi}"
 }
 
-# Auto-detect namespace from deployed eoAPI resources
 detect_namespace() {
     kubectl get pods --all-namespaces -l app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac \
         -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || echo "eoapi"
 }
 
-# Wait for pods with label selector
 wait_for_pods() {
     local namespace="$1"
     local selector="$2"
@@ -122,7 +151,6 @@ wait_for_pods() {
     return 0
 }
 
-# Check if eoAPI is deployed
 validate_eoapi_deployment() {
     local namespace="$1"
     local release_name="$2"
@@ -160,7 +188,6 @@ validate_eoapi_deployment() {
     return 0
 }
 
-# Pre-flight checks for deployment
 preflight_deploy() {
     log_info "Running pre-flight checks for deployment..."
 
@@ -176,7 +203,6 @@ preflight_deploy() {
     return 0
 }
 
-# Pre-flight checks for ingestion
 preflight_ingest() {
     local namespace="$1"
     local collections_file="$2"
@@ -211,7 +237,6 @@ preflight_ingest() {
     return 0
 }
 
-# Pre-flight checks for testing
 preflight_test() {
     local test_type="$1"
 
@@ -236,7 +261,6 @@ preflight_test() {
     return 0
 }
 
-# Cleanup function for trapped errors
 cleanup_on_exit() {
     local exit_code=$?
     if [ $exit_code -ne 0 ]; then
@@ -244,13 +268,13 @@ cleanup_on_exit() {
     fi
 }
 
-# Set up error handling
 trap cleanup_on_exit EXIT
 
-# Export functions for use in other scripts
-export -f log_info log_warn log_error log_debug
-export -f command_exists validate_tools validate_cluster
-export -f is_ci_environment validate_namespace
+# Export functions
+export -f log_info log_success log_warn log_error log_debug
+export -f command_exists validate_tools check_requirements validate_cluster
+export -f is_ci validate_namespace
 export -f detect_release_name detect_namespace
 export -f wait_for_pods validate_eoapi_deployment
 export -f preflight_deploy preflight_ingest preflight_test
+export -f show_standard_options

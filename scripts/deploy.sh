@@ -14,10 +14,8 @@ TIMEOUT="${TIMEOUT:-10m}"
 CI_MODE=false
 COMMAND=""
 
-# Auto-detect CI environment
 CI_MODE=$(is_ci_environment && echo true || echo false)
 
-# Initial environment debugging
 log_info "=== eoAPI Deployment Script Starting ==="
 log_debug "Script location: $0"
 log_debug "Script directory: $SCRIPT_DIR"
@@ -29,7 +27,6 @@ log_debug "  NAMESPACE: $NAMESPACE"
 log_debug "  TIMEOUT: $TIMEOUT"
 log_debug "  CI_MODE: $CI_MODE"
 
-# Validate basic tools and environment
 log_debug "=== Environment Validation ==="
 log_debug "Bash version: $BASH_VERSION"
 log_debug "Available tools check:"
@@ -47,10 +44,8 @@ else
     exit 1
 fi
 
-# Kubernetes connectivity will be checked later for commands that need it
 log_debug "Kubernetes connectivity check deferred until needed"
 
-# Check project structure
 log_debug "Project structure validation:"
 if [ -d "charts" ]; then
     log_debug "  ✅ charts/ directory found"
@@ -71,7 +66,6 @@ fi
 
 log_debug "=== Environment validation complete ==="
 
-# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         deploy|setup|cleanup)
@@ -100,7 +94,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Default to deploy if no command specified
 if [ -z "$COMMAND" ]; then
     COMMAND="deploy"
 fi
@@ -120,11 +113,9 @@ if [ "$COMMAND" != "setup" ]; then
     fi
 fi
 
-# Pre-deployment debugging for CI
 pre_deployment_debug() {
     log_info "=== Pre-deployment State Check ==="
 
-    # Check basic cluster state
     log_info "Cluster nodes:"
     kubectl get nodes -o wide || log_error "Cannot get cluster nodes"
     echo ""
@@ -133,28 +124,23 @@ pre_deployment_debug() {
     kubectl get namespaces || log_error "Cannot get namespaces"
     echo ""
 
-    # Check PGO status
     log_info "PostgreSQL Operator status:"
     kubectl get deployment pgo -o wide 2>/dev/null || log_info "PGO not found (expected for fresh install)"
     kubectl get pods -l postgres-operator.crunchydata.com/control-plane=postgres-operator -o wide 2>/dev/null || log_info "No PGO pods found (expected for fresh install)"
     echo ""
 
-    # Check for any existing knative-operator
     log_info "Looking for knative-operator before deployment:"
     kubectl get deployment knative-operator --all-namespaces -o wide 2>/dev/null || log_info "knative-operator not found yet (expected)"
     echo ""
 
-    # Check available helm repositories
     log_info "Helm repositories:"
     helm repo list 2>/dev/null || log_info "No helm repositories configured yet"
     echo ""
 
-    # Check if target namespace exists
     log_info "$NAMESPACE namespace check:"
     kubectl get namespace "$NAMESPACE" 2>/dev/null || log_info "$NAMESPACE namespace doesn't exist yet (expected)"
     echo ""
 
-    # Script validation in CI
     log_info "Script validation complete"
     log_debug "Working directory: $(pwd)"
     log_debug "Environment: RELEASE_NAME=$RELEASE_NAME, PGO_VERSION=$PGO_VERSION"
@@ -162,25 +148,20 @@ pre_deployment_debug() {
     return 0
 }
 
-# Run pre-flight checks (skip for setup-only mode)
 if [ "$COMMAND" != "setup" ]; then
     preflight_deploy || exit 1
 
-    # Run extended debugging in CI mode
     if [ "$CI_MODE" = true ]; then
         pre_deployment_debug || exit 1
     fi
 fi
 
-# Install PostgreSQL operator
 install_pgo() {
     log_info "Installing PostgreSQL Operator..."
 
-    # Debug: Show current state before installation
     log_debug "Current working directory: $(pwd)"
     log_debug "Checking for existing PGO installation..."
 
-    # Check if PGO is already installed
     existing_pgo=$(helm list -A -q 2>/dev/null | grep "^pgo$" || echo "")
 
     if [ -n "$existing_pgo" ]; then
@@ -215,11 +196,9 @@ install_pgo() {
         log_info "✅ PGO installation completed"
     fi
 
-    # Wait for PostgreSQL operator with enhanced debugging
     log_info "Waiting for PostgreSQL Operator to be ready..."
     log_debug "Checking for PGO deployment..."
 
-    # First check if deployment exists
     if ! kubectl get deployment pgo >/dev/null 2>&1; then
         log_warn "PGO deployment not found, waiting for it to be created..."
         sleep 10
@@ -257,11 +236,9 @@ install_pgo() {
     kubectl get pods -l postgres-operator.crunchydata.com/control-plane=postgres-operator -o wide
 }
 
-# Integrated Helm dependency setup
 setup_helm_dependencies() {
     log_info "Setting up Helm dependencies..."
 
-    # Ensure we're in the k8s project root directory
     SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
     PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -273,7 +250,6 @@ setup_helm_dependencies() {
         exit 1
     }
 
-    # Validate charts directory exists
     if [ ! -d "charts" ]; then
         log_error "charts/ directory not found in $(pwd)"
         log_error "Directory contents:"
@@ -281,16 +257,13 @@ setup_helm_dependencies() {
         exit 1
     fi
 
-    # Debug: Show current working directory and chart structure
     log_debug "Current working directory: $(pwd)"
     log_debug "Available charts directories:"
     ls -la charts/ || log_error "Failed to list charts/ directory"
 
-    # Debug: Show initial helm repo state
     log_debug "Initial helm repositories:"
     helm repo list 2>/dev/null || log_debug "No repositories configured yet"
 
-    # Add repositories from Chart.yaml files
     for chart in charts/*/; do
         if [ -f "$chart/Chart.yaml" ]; then
             log_info "Processing $chart..."
@@ -326,11 +299,9 @@ setup_helm_dependencies() {
         fi
     done
 
-    # Debug: Show repositories after adding
     log_debug "Repositories after adding:"
     helm repo list || log_debug "Still no repositories configured"
 
-    # Update repositories
     log_info "Updating helm repositories..."
     if helm repo update 2>&1; then
         log_info "✅ Repository update successful"
@@ -339,7 +310,6 @@ setup_helm_dependencies() {
         helm repo list || log_debug "No repositories to update"
     fi
 
-    # Build dependencies
     for chart in charts/*/; do
         if [ -f "$chart/Chart.yaml" ]; then
             log_info "Building dependencies for $chart..."
@@ -360,7 +330,6 @@ setup_helm_dependencies() {
         fi
     done
 
-    # Final debug: Show final state
     log_debug "Final helm repository state:"
     helm repo list || log_debug "No repositories configured"
     log_debug "Final Chart.lock files:"
@@ -369,11 +338,9 @@ setup_helm_dependencies() {
     log_info "✅ Helm dependency setup complete"
 }
 
-# Deploy eoAPI function
 deploy_eoapi() {
     log_info "Deploying eoAPI..."
 
-    # Ensure we're in the k8s project root directory
     SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
     PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -382,7 +349,6 @@ deploy_eoapi() {
         exit 1
     }
 
-    # Validate charts directory exists
     if [ ! -d "charts" ]; then
         log_error "charts/ directory not found in $(pwd)"
         exit 1
@@ -390,17 +356,14 @@ deploy_eoapi() {
 
     cd charts || exit
 
-    # Build Helm command
     HELM_CMD="helm upgrade --install $RELEASE_NAME ./eoapi"
     HELM_CMD="$HELM_CMD --namespace $NAMESPACE --create-namespace"
     HELM_CMD="$HELM_CMD --timeout=$TIMEOUT"
 
-    # Add base values file
     if [ -f "./eoapi/values.yaml" ]; then
         HELM_CMD="$HELM_CMD -f ./eoapi/values.yaml"
     fi
 
-    # Add experimental profile for development environments
     if [ -f "./eoapi/profiles/experimental.yaml" ]; then
         case "$(kubectl config current-context 2>/dev/null || echo "unknown")" in
             *"minikube"*|*"k3d"*|"default")
@@ -410,7 +373,6 @@ deploy_eoapi() {
         esac
     fi
 
-    # Environment-specific configuration
     if [ "$CI_MODE" = true ]; then
         log_info "Applying CI-specific overrides..."
         # Use experimental + k3s profiles, then override for CI
@@ -431,17 +393,15 @@ deploy_eoapi() {
 
 
 
-        # Enable notifier
         HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=true"
-        # Fix eoapi-notifier secret name dynamically
         HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
+
     elif [ -f "./eoapi/test-local-values.yaml" ]; then
         log_info "Using local test configuration..."
         HELM_CMD="$HELM_CMD -f ./eoapi/test-local-values.yaml"
-        # Fix eoapi-notifier secret name dynamically for local mode too
         HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
+
     else
-        # Local development configuration (detect cluster type)
         local current_context
         current_context=$(kubectl config current-context 2>/dev/null || echo "")
 
@@ -461,7 +421,6 @@ deploy_eoapi() {
         esac
     fi
 
-    # Set git SHA if available
     GITHUB_SHA=${GITHUB_SHA:-}
     if [ -n "$GITHUB_SHA" ]; then
         HELM_CMD="$HELM_CMD --set gitSha=$GITHUB_SHA"
@@ -469,13 +428,11 @@ deploy_eoapi() {
         HELM_CMD="$HELM_CMD --set gitSha=$(git rev-parse HEAD | cut -c1-10)"
     fi
 
-    # Execute deployment
     log_info "Running: $HELM_CMD"
     eval "$HELM_CMD"
 
     cd "$PROJECT_ROOT" || exit
 
-    # Wait for pgstac jobs to complete first
     if kubectl get job -n "$NAMESPACE" -l "app=$RELEASE_NAME-pgstac-migrate" >/dev/null 2>&1; then
         log_info "Waiting for pgstac-migrate job to complete..."
         if ! kubectl wait --for=condition=complete job -l "app=$RELEASE_NAME-pgstac-migrate" -n "$NAMESPACE" --timeout=600s; then
@@ -496,7 +453,6 @@ deploy_eoapi() {
         fi
     fi
 
-    # Verify deployment
     log_info "eoAPI deployment completed successfully!"
     log_info "Services available in namespace: $NAMESPACE"
 
@@ -506,17 +462,14 @@ deploy_eoapi() {
     fi
 }
 
-# Cleanup function
 cleanup_deployment() {
     log_info "Cleaning up resources for release: $RELEASE_NAME"
 
-    # Validate namespace exists
     if ! validate_namespace "$NAMESPACE"; then
         log_warn "Namespace '$NAMESPACE' not found, skipping cleanup"
         return 0
     fi
 
-    # Function to safely delete resources
     cleanup_resource() {
         local resource_type="$1"
         local resources
@@ -532,7 +485,6 @@ cleanup_deployment() {
         fi
     }
 
-    # Clean up resources in order (dependencies first)
     cleanup_resource "ingress"
     cleanup_resource "service"
     cleanup_resource "deployment"
@@ -541,55 +493,42 @@ cleanup_deployment() {
     cleanup_resource "secret"
     cleanup_resource "pvc"
 
-    # Try helm uninstall as well (if it's a helm release)
     log_info "Attempting helm uninstall..."
     helm uninstall "$RELEASE_NAME" -n "$NAMESPACE" 2>/dev/null || log_warn "No helm release found for $RELEASE_NAME"
 
     log_info "✅ Cleanup complete for release: $RELEASE_NAME"
 }
 
-# CI-specific post-deployment validation
 validate_ci_deployment() {
     log_info "=== CI Post-Deployment Validation ==="
-
-    # Validate Helm dependencies
     log_info "Validating Helm Dependencies Post-Deployment..."
-
-    # Check helm repositories
     log_info "Configured helm repositories:"
     helm repo list 2>/dev/null || log_warn "No repositories configured"
     echo ""
 
-    # Check if Chart.lock files exist
     log_info "Chart.lock files:"
     find charts/ -name "Chart.lock" -exec ls -la {} \; 2>/dev/null || log_info "No Chart.lock files found"
     echo ""
 
-    # Check if dependencies were downloaded
     log_info "Downloaded chart dependencies:"
     find charts/ -name "charts" -type d -exec ls -la {} \; 2>/dev/null || log_info "No chart dependencies found"
     echo ""
 
-    # Check knative-operator specifically
     log_info "Checking for knative-operator deployment:"
     kubectl get deployment knative-operator --all-namespaces -o wide 2>/dev/null || log_info "knative-operator deployment not found"
     echo ""
 
-    # Check helm release status
     log_info "Helm release status:"
     helm status "$RELEASE_NAME" -n "$NAMESPACE" 2>/dev/null || log_warn "Release status unavailable"
     echo ""
 
-    # Check target namespace resources
     log_info "Resources in $NAMESPACE namespace:"
     kubectl get all -n "$NAMESPACE" -o wide 2>/dev/null || log_warn "No resources in $NAMESPACE namespace"
     echo ""
 
-    # Check pod status specifically
     log_info "Pod status:"
     kubectl get pods -n "$NAMESPACE" -o wide 2>/dev/null || log_warn "No pods in $NAMESPACE namespace"
 
-    # Knative Integration Debug
     log_info "=== Knative Integration Debug ==="
     kubectl get deployments -l app.kubernetes.io/name=knative-operator --all-namespaces 2>/dev/null || log_info "Knative operator not found"
     kubectl get crd | grep knative 2>/dev/null || log_info "No Knative CRDs found"
@@ -604,7 +543,6 @@ validate_ci_deployment() {
     return 0
 }
 
-# Execute based on command
 case $COMMAND in
     setup)
         setup_helm_dependencies
@@ -617,7 +555,6 @@ case $COMMAND in
         setup_helm_dependencies
         deploy_eoapi
 
-        # Post-deployment validation in CI mode
         if [ "$CI_MODE" = true ]; then
             validate_ci_deployment || exit 1
         fi

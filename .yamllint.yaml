@@ -53,4 +53,4 @@ ignore: |
   charts/*/charts/
   charts/*/tmpcharts/
   charts/*/templates/
-  .github/workflows/tests/
+  tests/integration/

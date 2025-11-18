@@ -1,379 +1,240 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# eoAPI Test Suite - Combined Helm and Integration Testing
+# eoAPI Scripts - Test Management
+# Run various test suites for eoAPI
 
-# Source shared utilities
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-source "$SCRIPT_DIR/lib/common.sh"
+set -euo pipefail
 
-# Global variables
-DEBUG_MODE=false
-NAMESPACE="eoapi"
-COMMAND=""
-RELEASE_NAME=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Auto-detect CI environment
-if is_ci_environment; then
-    DEBUG_MODE=true
-    RELEASE_NAME="${RELEASE_NAME:-eoapi-$(echo "${GITHUB_SHA:-local}" | cut -c1-8)}"
-else
-    RELEASE_NAME="${RELEASE_NAME:-eoapi}"
-fi
+source "${SCRIPT_DIR}/lib/common.sh"
 
-# Show help message
+readonly CHART_PATH="${PROJECT_ROOT}/charts/eoapi"
+NAMESPACE="${NAMESPACE:-eoapi}"
+RELEASE_NAME="${RELEASE_NAME:-eoapi}"
+
 show_help() {
-    cat << EOF
-eoAPI Test Suite - Combined Helm and Integration Testing
+    cat <<EOF
+Test Management for eoAPI
 
-USAGE: $(basename "$0") [COMMAND] [OPTIONS]
+USAGE:
+    $(basename "$0") [OPTIONS] <COMMAND> [ARGS]
 
 COMMANDS:
-    helm              Run Helm tests (lint, template validation)
-    integration       Run integration tests (requires deployed eoAPI)
-    all               Run both Helm and integration tests [default]
-    check-deps        Check dependencies only
-    check-deployment  Debug deployment state
+    schema          Validate Helm chart schema
+    lint            Run Helm lint on chart
+    unit            Run Helm unit tests
+    integration     Run integration tests with pytest
+    notification    Run notification tests with database access
+    autoscaling     Run autoscaling tests with pytest
+    all             Run all tests
 
 OPTIONS:
-    --debug           Enable debug mode
-    --help, -h        Show this help
+    -h, --help      Show this help message
+    -d, --debug     Enable debug mode
+    -n, --namespace Set Kubernetes namespace
+    --release NAME  Helm release name (default: ${RELEASE_NAME})
+    --pytest-args   Additional pytest arguments
 
-ENVIRONMENT VARIABLES:
-    RELEASE_NAME      Helm release name (auto-generated in CI)
-    NAMESPACE         Target namespace (default: eoapi)
+EXAMPLES:
+    # Run schema validation
+    $(basename "$0") schema
 
+    # Run linting
+    $(basename "$0") lint
+
+    # Run unit tests
+    $(basename "$0") unit
+
+    # Run integration tests with debug
+    $(basename "$0") integration --debug
+
+    # Run autoscaling tests with debug
+    $(basename "$0") autoscaling --debug
+
+    # Run all tests
+    $(basename "$0") all
 EOF
 }
 
-parse_args() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            helm|integration|all|check-deps|check-deployment)
-                COMMAND="$1"; shift ;;
-            --debug)
-                DEBUG_MODE=true; shift ;;
-            --help|-h)
-                show_help; exit 0 ;;
-            *)
-                log_error "Unknown option: $1"
-                show_help; exit 1 ;;
-        esac
-    done
+test_schema() {
+    log_info "Running schema validation..."
+
+    if ! command_exists ajv; then
+        log_info "Installing ajv-cli and ajv-formats..."
+        npm install -g ajv-cli ajv-formats >/dev/null 2>&1 || {
+            log_error "Failed to install ajv-cli. Install manually: npm install -g ajv-cli ajv-formats"
+            return 1
+        }
+    fi
+
+    cd "$PROJECT_ROOT"
+
+    if [[ ! -f "charts/eoapi/values.schema.json" ]]; then
+        log_error "Schema file not found: charts/eoapi/values.schema.json"
+        return 1
+    fi
+
+    if ajv compile -s charts/eoapi/values.schema.json --spec=draft2020 --allow-union-types -c ajv-formats; then
+        log_success "Schema validation passed"
+    else
+        log_error "Schema validation failed"
+        return 1
+    fi
 }
 
-check_helm_dependencies() {
-    preflight_test "helm" || exit 1
+test_lint() {
+    log_info "Running Helm lint..."
+
+    check_requirements helm || return 1
+
+    if helm lint "$CHART_PATH"; then
+        log_success "Helm lint passed"
+    else
+        log_error "Helm lint failed"
+        return 1
+    fi
+}
+
+test_unit() {
+    log_info "Running Helm unit tests..."
+
+    check_requirements helm || return 1
 
     if ! helm plugin list | grep -q unittest; then
-        log_info "Installing helm unittest plugin..."
-        helm plugin install https://github.com/helm-unittest/helm-unittest
-    fi
-}
-
-check_integration_dependencies() {
-    preflight_test "integration" || exit 1
-}
-
-install_test_deps() {
-    log_info "Installing Python test dependencies..."
-
-    local python_cmd="python"
-    if command_exists python3; then
-        python_cmd="python3"
+        log_info "Installing Helm unittest plugin..."
+        helm plugin install https://github.com/helm-unittest/helm-unittest.git
     fi
 
-    if ! $python_cmd -m pip install --quiet pytest httpx >/dev/null 2>&1; then
-        log_error "Failed to install test dependencies (pytest, httpx)"
-        log_error "Please install manually: pip install pytest httpx"
-        exit 1
-    fi
-
-    log_info "Test dependencies installed."
-}
-
-detect_deployment() {
-    if [ -z "${NAMESPACE:-}" ]; then
-        NAMESPACE=$(detect_namespace)
-    fi
-
-    if [ -z "${RELEASE_NAME:-}" ]; then
-        RELEASE_NAME=$(detect_release_name "$NAMESPACE")
-    fi
-
-    log_info "Using namespace: $NAMESPACE, release: $RELEASE_NAME"
-}
-
-check_eoapi_deployment() {
-    validate_eoapi_deployment "$NAMESPACE" "$RELEASE_NAME" || {
-        log_error "eoAPI deployment validation failed"
-        debug_deployment_state
-        exit 1
-    }
-}
-
-wait_for_services() {
-    log_info "Waiting for eoAPI services to be ready..."
-
-    local services=("stac" "raster" "vector")
-    for service in "${services[@]}"; do
-        if kubectl get pods -n "$NAMESPACE" -l "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=$service" >/dev/null 2>&1; then
-            wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=$service" || return 1
-        else
-            log_warning "Service $service not found, skipping wait"
-        fi
-    done
-
-    log_info "✅ All eoAPI services are ready"
-}
-
-setup_test_environment() {
-    local ingress_host
-    ingress_host=$(kubectl get ingress -n "$NAMESPACE" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "localhost")
-
-    export STAC_ENDPOINT="${STAC_ENDPOINT:-http://$ingress_host/stac}"
-    export RASTER_ENDPOINT="${RASTER_ENDPOINT:-http://$ingress_host/raster}"
-    export VECTOR_ENDPOINT="${VECTOR_ENDPOINT:-http://$ingress_host/vector}"
-
-    log_info "Test endpoints configured:"
-    log_info "  STAC: $STAC_ENDPOINT"
-    log_info "  Raster: $RASTER_ENDPOINT"
-    log_info "  Vector: $VECTOR_ENDPOINT"
-}
-
-show_debug_info() {
-    log_info "=== Debug Information ==="
-
-    log_info "=== Pods ==="
-    kubectl get pods -n "$NAMESPACE" -o wide 2>/dev/null || true
-
-    log_info "=== Services ==="
-    kubectl get svc -n "$NAMESPACE" 2>/dev/null || true
-
-    log_info "=== Ingress ==="
-    kubectl get ingress -n "$NAMESPACE" 2>/dev/null || true
-
-    log_info "=== Recent Events ==="
-    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' 2>/dev/null | tail -10 || true
-}
-
-# Run Helm tests
-run_helm_tests() {
-    log_info "=== Helm Tests ==="
-
-    for chart_dir in charts/*/; do
-        if [ -d "$chart_dir" ]; then
-            chart_name=$(basename "$chart_dir")
-            log_info "Testing chart: $chart_name"
-
-            if ! helm lint "$chart_dir" --strict; then
-                log_error "Helm lint failed for $chart_name"
-                exit 1
-            fi
-
-            # Use experimental profile for comprehensive eoapi chart testing
-            if [ "$chart_name" = "eoapi" ] && [ -f "$chart_dir/profiles/experimental.yaml" ]; then
-                if ! helm template test "$chart_dir" -f "$chart_dir/profiles/experimental.yaml" >/dev/null; then
-                    log_error "Helm template failed for $chart_name with experimental profile"
-                    exit 1
-                fi
-            elif ! helm template test "$chart_dir" >/dev/null; then
-                log_error "Helm template failed for $chart_name"
-                exit 1
-            fi
-
-            log_info "✅ $chart_name OK"
-        fi
-    done
-}
-
-# Debug deployment state
-debug_deployment_state() {
-    log_info "=== Deployment Debug ==="
-
-    kubectl get namespace "$NAMESPACE" 2>/dev/null || log_warn "Namespace '$NAMESPACE' not found"
-
-    if helm list -n "$NAMESPACE" | grep -q "$RELEASE_NAME"; then
-        log_info "Helm release status:"
-        helm status "$RELEASE_NAME" -n "$NAMESPACE"
+    if helm unittest "$CHART_PATH"; then
+        log_success "Unit tests passed"
     else
-        log_warn "Release '$RELEASE_NAME' not found in namespace '$NAMESPACE'"
-    fi
-
-    log_info "Pods:"
-    kubectl get pods -n "$NAMESPACE" -o wide 2>/dev/null || log_info "No pods in $NAMESPACE"
-
-    log_info "Services:"
-    kubectl get svc -n "$NAMESPACE" 2>/dev/null || log_info "No services in $NAMESPACE"
-
-    if [ "$DEBUG_MODE" = true ]; then
-        log_info "Jobs:"
-        kubectl get jobs -n "$NAMESPACE" 2>/dev/null || log_info "No jobs"
-
-        log_info "Recent events:"
-        kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' 2>/dev/null | tail -10 || log_info "No events"
-
-        log_info "Knative services:"
-        kubectl get ksvc -n "$NAMESPACE" 2>/dev/null || log_info "No Knative services"
+        log_error "Unit tests failed"
+        return 1
     fi
 }
 
-# Run integration tests
-run_integration_tests() {
-    log_info "=== Integration Tests ==="
-
-    export RELEASE_NAME="$RELEASE_NAME"
+test_integration() {
+    local pytest_args="${1:-}"
     export NAMESPACE="$NAMESPACE"
+    export RELEASE_NAME="$RELEASE_NAME"
+    export DEBUG_MODE="$DEBUG_MODE"
+    "${SCRIPT_DIR}/test/integration.sh" "$pytest_args"
+}
 
-    # Validate deployment exists
-    if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
-        log_error "Namespace '$NAMESPACE' not found. Deploy eoAPI first."
-        exit 1
-    fi
+test_autoscaling() {
+    local pytest_args="${1:-}"
+    export NAMESPACE="$NAMESPACE"
+    export RELEASE_NAME="$RELEASE_NAME"
+    export DEBUG_MODE="$DEBUG_MODE"
+    "${SCRIPT_DIR}/test/autoscaling.sh" "$pytest_args"
+}
 
-    if ! helm list -n "$NAMESPACE" | grep -q "$RELEASE_NAME"; then
-        log_error "Release '$RELEASE_NAME' not found in namespace '$NAMESPACE'"
-        exit 1
-    fi
+test_notification() {
+    local pytest_args="${1:-}"
+    export NAMESPACE="$NAMESPACE"
+    export RELEASE_NAME="$RELEASE_NAME"
+    export DEBUG_MODE="$DEBUG_MODE"
+    "${SCRIPT_DIR}/test/notification.sh" "$pytest_args"
+}
 
-    # Enhanced debugging in CI/debug mode
-    if [ "$DEBUG_MODE" = true ]; then
-        debug_deployment_state
-    fi
+test_all() {
+    local failed=0
 
-    # Run Python integration tests if available
-    if [ -d ".github/workflows/tests" ]; then
-        log_info "Running Python integration tests..."
+    log_info "Running all tests..."
 
-        if ! command -v pytest >/dev/null 2>&1; then
-            python3 -m pip install --user pytest psycopg2-binary requests >/dev/null 2>&1 || {
-                log_error "Failed to install pytest - cannot run integration tests"
-                exit 1
-            }
-        fi
+    test_schema || ((failed++))
+    test_lint || ((failed++))
+    test_unit || ((failed++))
 
-        # Run notification tests (don't require DB connection)
-        python3 -m pytest .github/workflows/tests/test_notifications.py::test_eoapi_notifier_deployment \
-            .github/workflows/tests/test_notifications.py::test_cloudevents_sink_logs_show_startup \
-            -v --tb=short
-    fi
-
-    # Wait for pods to be ready - try standard labels first, fallback to legacy
-    if kubectl get pods -n "$NAMESPACE" >/dev/null 2>&1; then
-        if ! wait_for_pods "$NAMESPACE" "app.kubernetes.io/name=eoapi,app.kubernetes.io/component=stac" "300s" 2>/dev/null; then
-            wait_for_pods "$NAMESPACE" "app=${RELEASE_NAME}-stac" "300s" || {
-                log_error "STAC pods not ready after timeout"
-                exit 1
-            }
-        fi
-    fi
-
-    # Run observability tests as part of integration
-    log_info "Running observability and monitoring tests..."
-    if [ -f ".github/workflows/tests/test_observability.py" ]; then
-        python3 -m pytest .github/workflows/tests/test_observability.py -v --tb=short || {
-            log_error "Observability tests failed - autoscaling won't work properly"
-            exit 1
-        }
+    if validate_cluster 2>/dev/null; then
+        test_integration || ((failed++))
+        test_autoscaling || ((failed++))
     else
-        log_error "Observability tests not found - required for autoscaling validation"
-        exit 1
+        log_warn "Skipping integration and autoscaling tests - no cluster connection"
     fi
 
-    # Wait for Knative services to be ready if they exist
-    if kubectl get ksvc -n "$NAMESPACE" >/dev/null 2>&1; then
-        if kubectl get ksvc eoapi-cloudevents-sink -n "$NAMESPACE" >/dev/null 2>&1; then
-            log_info "Waiting for Knative cloudevents sink to be ready..."
-            if ! kubectl wait --for=condition=Ready ksvc/eoapi-cloudevents-sink -n "$NAMESPACE" --timeout=120s 2>/dev/null; then
-                log_error "Knative cloudevents sink not ready after timeout"
-                exit 1
-            fi
-        fi
+    if [[ $failed -eq 0 ]]; then
+        log_success "All tests passed"
+        return 0
+    else
+        log_error "$failed test suites failed"
+        return 1
     fi
-
-    log_info "✅ Integration tests completed"
 }
 
 main() {
-    parse_args "$@"
+    local command=""
+    local pytest_args=""
 
-    if [ -z "$COMMAND" ]; then
-        COMMAND="all"
-    fi
+    # Parse options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -d|--debug)
+                DEBUG_MODE=true
+                shift
+                ;;
+            -n|--namespace)
+                NAMESPACE="$2"
+                shift 2
+                ;;
+            --release)
+                RELEASE_NAME="$2"
+                shift 2
+                ;;
+            --pytest-args)
+                pytest_args="$2"
+                shift 2
+                ;;
+            schema|lint|unit|notification|integration|autoscaling|all)
+                command="$1"
+                shift
+                break
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
 
-    if [ "$DEBUG_MODE" = true ]; then
-        log_info "eoAPI Test Suite (DEBUG) - Command: $COMMAND | Release: $RELEASE_NAME"
-    else
-        log_info "eoAPI Test Suite - Command: $COMMAND | Release: $RELEASE_NAME"
-    fi
+    [[ -z "$command" ]] && command="all"
 
-    case $COMMAND in
-        helm)
-            check_helm_dependencies
-            run_helm_tests
+    case "$command" in
+        schema)
+            test_schema
             ;;
-        check-deps)
-            log_info "Checking all dependencies..."
-            check_helm_dependencies
-            check_integration_dependencies
-            validate_cluster
-            install_test_deps
-            log_info "✅ All dependencies checked and ready"
+        lint)
+            test_lint
             ;;
-        check-deployment)
-            log_info "Checking deployment status..."
-            check_integration_dependencies
-            validate_cluster
-            detect_deployment
-            check_eoapi_deployment
-            log_info "✅ Deployment check complete"
+        unit)
+            test_unit
             ;;
         integration)
-            check_integration_dependencies
-            validate_cluster
-            install_test_deps
-            detect_deployment
-
-            if [ "$DEBUG_MODE" = true ]; then
-                show_debug_info
-            fi
-
-            check_eoapi_deployment
-            wait_for_services
-            setup_test_environment
-            run_integration_tests
+            test_integration "$pytest_args"
+            ;;
+        notification)
+            test_notification "$pytest_args"
+            ;;
+        autoscaling)
+            test_autoscaling "$pytest_args"
             ;;
         all)
-            log_info "Running comprehensive test suite (Helm + Integration tests)"
-
-            log_info "=== Phase 1: Helm Tests ==="
-            check_helm_dependencies
-            run_helm_tests
-
-            log_info "=== Phase 2: Integration Tests ==="
-            check_integration_dependencies
-            validate_cluster
-            install_test_deps
-            detect_deployment
-
-            if [ "$DEBUG_MODE" = true ]; then
-                show_debug_info
-            fi
-
-            check_eoapi_deployment
-
-            wait_for_services
-            setup_test_environment
-
-            run_integration_tests
+            test_all
             ;;
         *)
-            log_error "Unknown command: $COMMAND"
-            show_help
+            log_error "Unknown command: $command"
             exit 1
             ;;
     esac
-
-    log_info "✅ Test suite complete"
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

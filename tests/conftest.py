@@ -31,7 +31,7 @@ def db_connection() -> Generator[psycopg2.extensions.connection, None, None]:
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
         pytest.fail(
-            f"Required environment variables not set: {', '.join(missing_vars)}"
+            f"Database tests skipped - required environment variables not set: {', '.join(missing_vars)}"
         )
 
     connection_params = {
@@ -42,20 +42,35 @@ def db_connection() -> Generator[psycopg2.extensions.connection, None, None]:
         "password": os.getenv("PGPASSWORD"),
     }
 
-    # All required vars are guaranteed to exist due to check above
-    try:
-        conn = psycopg2.connect(
-            host=os.environ["PGHOST"],
-            port=int(os.environ["PGPORT"]),
-            database=os.environ["PGDATABASE"],
-            user=os.environ["PGUSER"],
-            password=os.environ["PGPASSWORD"],
+    conn = None
+    last_error = None
+
+    for sslmode in ["prefer", "require", "disable"]:
+        try:
+            conn = psycopg2.connect(
+                host=os.environ["PGHOST"],
+                port=int(os.environ["PGPORT"]),
+                database=os.environ["PGDATABASE"],
+                user=os.environ["PGUSER"],
+                password=os.environ["PGPASSWORD"],
+                sslmode=sslmode,
+                connect_timeout=5,
+            )
+            conn.set_isolation_level(
+                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT
+            )
+            break  # Connection successful
+        except psycopg2.Error as e:
+            last_error = e
+            continue
+
+    if conn is None:
+        pytest.fail(
+            f"Cannot connect to database with any SSL mode: {last_error}"
         )
-        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-        yield conn
-        conn.close()
-    except psycopg2.Error as e:
-        pytest.fail(f"Cannot connect to database: {e}")
+
+    yield conn
+    conn.close()
 
 
 def get_namespace() -> str:
@@ -109,6 +124,21 @@ def kubectl_port_forward(
     return process
 
 
+def kubectl_proxy(
+    port: int = 8001, namespace: str = None
+) -> subprocess.Popen[str]:
+    """Start kubectl proxy for accessing services via Kubernetes API."""
+    cmd = ["kubectl", "proxy", f"--port={port}"]
+
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+
+    # Wait a bit less than port-forward since proxy is usually faster
+    time.sleep(2)
+    return process
+
+
 def wait_for_url(url: str, timeout: int = 30, interval: int = 2) -> bool:
     start_time = time.time()
     while time.time() - start_time < timeout:
@@ -131,7 +161,6 @@ def make_request(url: str, timeout: int = 10) -> bool:
 
 
 def get_base_url() -> str:
-    """Get the base URL for API access."""
     namespace = get_namespace()
 
     # Check if we have an ingress
@@ -162,7 +191,6 @@ def get_base_url() -> str:
 
 
 def get_pod_metrics(namespace: str, service_name: str) -> List[Dict[str, str]]:
-    """Get CPU and memory metrics for pods of a specific service."""
     release_name_val = get_release_name()
     result = subprocess.run(
         [
@@ -196,7 +224,6 @@ def get_pod_metrics(namespace: str, service_name: str) -> List[Dict[str, str]]:
 
 
 def get_hpa_status(namespace: str, hpa_name: str) -> Optional[Dict[str, Any]]:
-    """Get HPA status for a specific HPA."""
     result = kubectl_get("hpa", namespace=namespace, output="json")
     if result.returncode != 0:
         return None
@@ -210,7 +237,6 @@ def get_hpa_status(namespace: str, hpa_name: str) -> Optional[Dict[str, Any]]:
 
 
 def get_pod_count(namespace: str, service_name: str) -> int:
-    """Get the count of running pods for a specific service."""
     release_name_val = get_release_name()
     result = kubectl_get(
         "pods",

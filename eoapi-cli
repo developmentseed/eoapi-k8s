@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+
+# eoAPI CLI - Main Entry Point
+# This script provides a unified interface to all eoAPI management commands
+
+set -euo pipefail
+
+# Script directory detection
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPTS_DIR="${SCRIPT_DIR}/scripts"
+
+# Source common utilities
+source "${SCRIPTS_DIR}/lib/common.sh"
+
+# Version
+readonly VERSION="0.1.0"
+
+# Available commands
+readonly COMMANDS=(
+    "cluster"
+    "deployment"
+    "test"
+    "ingest"
+    "docs"
+)
+
+# Show main help
+show_help() {
+    cat <<EOF
+eoAPI CLI v${VERSION}
+
+Unified command-line interface for managing eoAPI deployments on Kubernetes
+
+USAGE:
+    eoapi-cli [OPTIONS] <COMMAND> [ARGS]
+
+OPTIONS:
+    -h, --help      Show this help message
+    -v, --version   Show version information
+    --debug         Enable debug output
+
+COMMANDS:
+    cluster         Manage local Kubernetes clusters for development
+    deployment      Deploy and manage eoAPI instances
+    test            Run tests (helm, integration, autoscaling)
+    ingest          Load sample data into eoAPI services
+    docs            Generate and serve documentation
+
+Use 'eoapi-cli <COMMAND> --help' for more information about a specific command.
+
+EXAMPLES:
+    # Set up a local development cluster
+    eoapi-cli cluster start
+
+    # Deploy eoAPI to the cluster
+    eoapi-cli deployment install
+
+    # Run all tests
+    eoapi-cli test all
+
+    # Run integration tests only
+    eoapi-cli test integration
+
+    # Run autoscaling tests only
+    eoapi-cli test autoscaling
+
+    # Ingest sample data
+    eoapi-cli ingest sample-data
+
+    # Serve documentation locally
+    eoapi-cli docs serve
+
+For more information, visit: https://github.com/developmentseed/eoapi-k8s
+EOF
+}
+
+# Show version
+show_version() {
+    echo "eoAPI CLI v${VERSION}"
+    echo "Copyright (c) Development Seed"
+}
+
+# Validate command exists
+validate_command() {
+    local cmd="$1"
+
+    for valid_cmd in "${COMMANDS[@]}"; do
+        if [[ "$cmd" == "$valid_cmd" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# Get script path for command
+get_command_script() {
+    local cmd="$1"
+
+    case "$cmd" in
+        cluster)
+            echo "${SCRIPTS_DIR}/cluster.sh"
+            ;;
+        deployment)
+            echo "${SCRIPTS_DIR}/deployment.sh"
+            ;;
+        test)
+            echo "${SCRIPTS_DIR}/test.sh"
+            ;;
+        ingest)
+            echo "${SCRIPTS_DIR}/ingest.sh"
+            ;;
+        docs)
+            echo "${SCRIPTS_DIR}/docs.sh"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# Execute command
+execute_command() {
+    local cmd="$1"
+    shift
+
+    local script_path
+    script_path=$(get_command_script "$cmd")
+
+    if [[ ! -f "$script_path" ]]; then
+        log_error "Command script not found: $script_path"
+        log_info "The '$cmd' command may not be implemented yet."
+        exit 1
+    fi
+
+    if [[ ! -x "$script_path" ]]; then
+        log_warn "Making script executable: $script_path"
+        chmod +x "$script_path"
+    fi
+
+    # Execute the command script with remaining arguments
+    exec "$script_path" "$@"
+}
+
+# Main entry point
+main() {
+    # Handle no arguments
+    if [[ $# -eq 0 ]]; then
+        show_help
+        exit 0
+    fi
+
+    # Parse global options
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -v|--version)
+                show_version
+                exit 0
+                ;;
+            --debug)
+                export DEBUG_MODE=true
+                shift
+                ;;
+            -*)
+                log_error "Unknown option: $1"
+                echo "Run 'eoapi-cli --help' for usage information"
+                exit 1
+                ;;
+            *)
+                # This should be the command
+                break
+                ;;
+        esac
+    done
+
+    # Get command
+    if [[ $# -eq 0 ]]; then
+        log_error "No command specified"
+        echo "Run 'eoapi-cli --help' for usage information"
+        exit 1
+    fi
+
+    local command="$1"
+    shift
+
+    # Validate command
+    if ! validate_command "$command"; then
+        log_error "Invalid command: $command"
+        echo ""
+        echo "Available commands:"
+        for cmd in "${COMMANDS[@]}"; do
+            echo "  - $cmd"
+        done
+        echo ""
+        echo "Run 'eoapi-cli --help' for usage information"
+        exit 1
+    fi
+
+    # Execute command
+    execute_command "$command" "$@"
+}
+
+# Run main function
+main "$@"
