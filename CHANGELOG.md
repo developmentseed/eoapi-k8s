@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking changes
+
+- Removed all default resource specifications from values.yaml and profile files. Users must now explicitly set resource limits/requests based on their infrastructure needs. This simplifies the chart and acknowledges that resource requirements vary greatly based on workload and infrastructure. If you were relying on the default resource specifications, add them to your values override file:
+
+```yaml
+stac:
+  settings:
+    resources:
+      requests:
+        cpu: "512m"
+        memory: "1024Mi"
+      limits:
+        cpu: "1024m"
+        memory: "2048Mi"
+```
+
 ### Added
 
 - Expose PgSTAC configuration options in Helm chart values (`pgstacBootstrap.settings.pgstacSettings`). These are being dynamically applied via templated SQL during bootstrap.
@@ -30,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made all python tests comply with mypy strict validation
 - Improved documentation about access to grafana
 - Reorganized the helm chart templates files [#352](https://github.com/developmentseed/eoapi-k8s/pull/352)
+- Removed all default resource specifications from values.yaml
 
 ## [0.7.13] - 2025-11-04
 

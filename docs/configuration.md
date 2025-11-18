@@ -29,7 +29,6 @@ Most fields have sensible defaults. Here are the core configuration options:
 |:--------------|:----------------|:------------|:------------|
 | `service.port` | Port for all services (vector/raster/stac) | 8080 | any valid port |
 | `gitSha` | SHA for deployment tracking | gitshaABC123 | any valid SHA |
-| `previousVersion` | Previous version during upgrades | "" | semantic version |
 
 ## Database Configuration
 
