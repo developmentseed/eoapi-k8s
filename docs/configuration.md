@@ -137,6 +137,91 @@ pgstacBootstrap:
       context_stats_ttl: "12 hours"
 ```
 
+### Queryables Configuration
+
+Configure custom queryables for STAC API search using `pypgstac load-queryables`. Queryables can be loaded from files in the chart or from external ConfigMaps.
+
+#### Basic Configuration
+
+Each queryable requires a `name` field and either a `file` (from chart) or `configMapRef` (external ConfigMap):
+
+```yaml
+pgstacBootstrap:
+  settings:
+    queryables:
+      # File-based queryable from chart
+      - name: "common-queryables.json"
+        file: "initdb-data/queryables/test-queryables.json"
+
+      # External ConfigMap reference
+      - name: "custom-queryables.json"
+        configMapRef:
+          name: my-custom-queryables-configmap
+          key: queryables.json
+```
+
+#### Configuration Parameters
+
+| **Parameter** | **Description** | **Required** | **Example** |
+|:--------------|:----------------|:-------------|:------------|
+| `name` | Name for the queryables file | Yes | "common-queryables.json" |
+| `file` | Path to queryables file in chart | No* | "initdb-data/queryables/test-queryables.json" |
+| `configMapRef.name` | Name of external ConfigMap | No* | "my-queryables-cm" |
+| `configMapRef.key` | Key in the ConfigMap | No* | "queryables.json" |
+| `indexFields` | Fields to create indexes for | No | ["platform", "instruments"] |
+| `deleteMissing` | Delete queryables not in this file | No | true |
+| `collections` | Apply to specific collections | No | ["collection-1", "collection-2"] |
+
+\* Either `file` or `configMapRef` must be provided
+
+#### Advanced Example
+
+Mix file-based and ConfigMap-based queryables with optional parameters:
+
+```yaml
+pgstacBootstrap:
+  settings:
+    queryables:
+      # Standard queryables from chart with indexes
+      - name: "common-queryables.json"
+        file: "initdb-data/queryables/common-queryables.json"
+        indexFields: ["platform", "instruments"]
+        deleteMissing: true
+
+      # Custom queryables from external ConfigMap
+      - name: "sentinel-queryables.json"
+        configMapRef:
+          name: sentinel-queryables-cm
+          key: queryables.json
+        indexFields: ["sat:orbit_state", "sar:instrument_mode"]
+        collections: ["sentinel-1-grd"]
+
+      # Collection-specific queryables
+      - name: "landsat-queryables.json"
+        configMapRef:
+          name: landsat-queryables-cm
+          key: data.json
+        collections: ["landsat-c2-l2"]
+```
+
+#### External ConfigMap Setup
+
+When using `configMapRef`, create the ConfigMap separately:
+
+```bash
+# From a file
+kubectl create configmap my-queryables-cm \
+  --from-file=queryables.json=./my-queryables.json \
+  -n eoapi
+
+# From literal JSON
+kubectl create configmap my-queryables-cm \
+  --from-literal=queryables.json='{"$schema": "...", "properties": {...}}' \
+  -n eoapi
+```
+
+The queryables will be automatically loaded during the PgSTAC bootstrap process.
+
 ## Cloud Storage Authentication
 
 eoAPI services access COG files in cloud storage buckets. Use cloud-native authentication instead of long-lived credentials:
