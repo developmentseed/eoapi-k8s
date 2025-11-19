@@ -152,7 +152,7 @@ pgstacBootstrap:
       # File-based queryable from chart
       - name: "common-queryables.json"
         file: "initdb-data/queryables/test-queryables.json"
-        
+
       # External ConfigMap reference
       - name: "custom-queryables.json"
         configMapRef:
@@ -187,7 +187,7 @@ pgstacBootstrap:
         file: "initdb-data/queryables/common-queryables.json"
         indexFields: ["platform", "instruments"]
         deleteMissing: true
-        
+
       # Custom queryables from external ConfigMap
       - name: "sentinel-queryables.json"
         configMapRef:
@@ -195,7 +195,7 @@ pgstacBootstrap:
           key: queryables.json
         indexFields: ["sat:orbit_state", "sar:instrument_mode"]
         collections: ["sentinel-1-grd"]
-        
+
       # Collection-specific queryables
       - name: "landsat-queryables.json"
         configMapRef:
