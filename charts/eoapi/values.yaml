@@ -166,7 +166,7 @@ pgstacBootstrap:
     # Queryables configuration
     # List of queryables configurations to load using pypgstac load-queryables
     # Each item requires a mandatory 'name' field and either 'file' or 'configMapRef'
-    # 
+    #
     # Example using files from the chart:
     # queryables:
     #   - name: "common-queryables.json"
