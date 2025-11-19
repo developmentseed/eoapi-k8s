@@ -133,7 +133,7 @@ def test_stac_custom_path(stac_endpoint: str) -> None:
 def test_stac_queryables(stac_endpoint: str) -> None:
     """test queryables endpoint returns expected schema."""
     # Load expected queryables from test file
-    queryables_file = Path(__file__).parent.parent.parent / "charts" / "eoapi" / "initdb-data" / "queryables" / "test-queryables.json"
+    queryables_file = Path(__file__).parent.parent.parent.parent / "charts" / "eoapi" / "initdb-data" / "queryables" / "test-queryables.json"
     with open(queryables_file) as f:
         expected_queryables = json.load(f)
 
