@@ -197,15 +197,14 @@ spec:
               # Load queryables configurations
               echo "Loading queryables configurations..."
               {{- range $idx, $config := .Values.pgstacBootstrap.settings.queryables }}
-              {{- $filename := splitList "/" $config.file | last }}
-              echo "Processing queryables file: {{ $filename }}"
+              echo "Processing queryables: {{ $config.name }}"
               pypgstac load-queryables \
               {{- if $config.deleteMissing }}
                 --delete-missing \
               {{- end }}
               {{- if $config.collections }}
                 # Complex escaping needed due to multiple interpretation layers:
-                # 1. Helm processes the template: \\\" becomes \" in the rendered YAML
+                # 1. Helm processes the template: \\\\\" becomes \" in the rendered YAML
                 # 2. YAML processes the string: \" becomes " in the shell script
                 # 3. Shell receives: --collection-ids '["collection1","collection2"]'
                 # 4. pypgstac gets a proper JSON array string as expected
@@ -214,21 +213,48 @@ spec:
               {{- if $config.indexFields }}
                 --index-fields {{ join "," $config.indexFields }} \
               {{- end }}
-                "/opt/queryables/{{ $filename }}"
+                "/opt/queryables/{{ $config.name }}"
               {{- end }}
 
               echo "Queryables loading complete"
           resources:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
-            - mountPath: /opt/queryables
-              name: {{ .Release.Name }}-queryables-volume
+            {{- range $idx, $config := .Values.pgstacBootstrap.settings.queryables }}
+            {{- if $config.file }}
+            - mountPath: /opt/queryables/{{ $config.name }}
+              name: {{ $.Release.Name }}-queryables-volume
+              subPath: {{ $config.name }}
+            {{- else if $config.configMapRef }}
+            - mountPath: /opt/queryables/{{ $config.name }}
+              name: {{ $.Release.Name }}-queryables-configmapref-{{ $idx }}
+              subPath: {{ $config.configMapRef.key }}
+            {{- end }}
+            {{- end }}
           env:
             {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
       volumes:
+        {{- $hasFileBasedQueryables := false }}
+        {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
+          {{- if $config.file }}
+            {{- $hasFileBasedQueryables = true }}
+          {{- end }}
+        {{- end }}
+        {{- if $hasFileBasedQueryables }}
         - name: {{ .Release.Name }}-queryables-volume
           configMap:
             name: {{ .Release.Name }}-pgstac-queryables-config
+        {{- end }}
+        {{- range $idx, $config := .Values.pgstacBootstrap.settings.queryables }}
+          {{- if $config.configMapRef }}
+        - name: {{ $.Release.Name }}-queryables-configmapref-{{ $idx }}
+          configMap:
+            name: {{ $config.configMapRef.name }}
+            items:
+              - key: {{ $config.configMapRef.key }}
+                path: {{ $config.configMapRef.key }}
+          {{- end }}
+        {{- end }}
       {{- with .Values.pgstacBootstrap.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
