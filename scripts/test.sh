@@ -150,9 +150,10 @@ test_all() {
 
     if validate_cluster 2>/dev/null; then
         test_integration || ((failed++))
-        test_autoscaling || ((failed++))
+        test_autoscaling || ((failed++))        test_autoscaling || ((failed++))
+        test_notification || ((failed++))
     else
-        log_warn "Skipping integration and autoscaling tests - no cluster connection"
+        log_warn "Skipping integration tests - no cluster connection"
     fi
 
     if [[ $failed -eq 0 ]]; then
