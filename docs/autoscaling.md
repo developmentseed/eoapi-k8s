@@ -44,6 +44,46 @@ stac:
       requestRate: 50000m  # 50 requests/second
 ```
 
+## Concurrency settings
+
+Each main eoAPI service has `WEB_CONCURRENCY` and database pool settings that should be adjusted based on your scaling strategy:
+
+### Without autoscaling (default)
+
+Higher concurrency per pod to handle some considerate load:
+
+```yaml
+stac:
+  settings:
+    envVars:
+      WEB_CONCURRENCY: "10"  # More workers per pod
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "5"  # Total: 10-50 connections per pod
+```
+
+### With autoscaling enabled
+
+Lower concurrency for predictable resource usage:
+
+```yaml
+stac:
+  autoscaling:
+    enabled: true
+  settings:
+    envVars:
+      WEB_CONCURRENCY: "4"   # Fewer workers, let HPA scale pods
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "3"  # Total: 4-12 connections per pod
+```
+
+### Service-specific recommentations
+
+| Service | WEB_CONCURRENCY (no autoscaling) | WEB_CONCURRENCY (with autoscaling) | Rationale |
+|---------|----------------------------------|-------------------------------------|-----------|
+| STAC    | 10                               | 4-6                                 | High request volume, DB intensive |
+| Raster  | 4                                | 2-3                                 | CPU intensive image operations |
+| Vector  | 8                                | 4-5                                 | Complex spatial queries |
+
 ### Scaling Policies
 
 1. Go to the [releases section](https://github.com/developmentseed/eoapi-k8s/releases) of this repository and find the latest
