@@ -137,6 +137,42 @@ pgstacBootstrap:
       context_stats_ttl: "12 hours"
 ```
 
+## Cloud Storage Authentication
+
+eoAPI services access COG files in cloud storage buckets. Use cloud-native authentication instead of long-lived credentials:
+
+### AWS (IRSA)
+
+```yaml
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/eoapi-s3-access
+```
+
+The raster service automatically uses IRSA credentials via the AWS SDK credential chain.
+
+### Azure (Workload Identity)
+
+```yaml
+serviceAccount:
+  create: true
+  annotations:
+    azure.workload.identity/client-id: "your-client-id"
+    azure.workload.identity/tenant-id: "your-tenant-id"
+```
+
+### GCP (Workload Identity)
+
+```yaml
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: eoapi-gcs-sa@project.iam.gserviceaccount.com
+```
+
+All services using GDAL (raster API with titiler-pgstac) automatically use these credentials through their respective cloud SDKs. No environment variables or hardcoded credentials needed.
+
 ## Ingress Configuration
 
 Unified ingress configuration supporting both NGINX and Traefik:
