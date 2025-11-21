@@ -12,7 +12,7 @@ external_links:
 
 ## Solution Overview
 
-We have implemented support for STAC Auth Proxy integration with EOAPI-K8S through service-specific ingress control. This feature allows the STAC service to be accessible only internally while other services remain externally available.
+We have implemented support for STAC Auth Proxy integration with eoAPI-K8S through service-specific ingress control. This feature allows the STAC service to be accessible only internally while other services remain externally available.
 
 ## Implementation Details
 
