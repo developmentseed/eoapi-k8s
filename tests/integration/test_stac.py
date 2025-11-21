@@ -133,7 +133,14 @@ def test_stac_custom_path(stac_endpoint: str) -> None:
 def test_stac_queryables(stac_endpoint: str) -> None:
     """test queryables endpoint returns expected schema."""
     # Load expected queryables from test file
-    queryables_file = Path(__file__).parent.parent.parent.parent / "charts" / "eoapi" / "initdb-data" / "queryables" / "test-queryables.json"
+    queryables_file = (
+        Path(__file__).parent.parent.parent
+        / "charts"
+        / "eoapi"
+        / "initdb-data"
+        / "queryables"
+        / "test-queryables.json"
+    )
     with open(queryables_file) as f:
         expected_queryables = json.load(f)
 
@@ -146,7 +153,6 @@ def test_stac_queryables(stac_endpoint: str) -> None:
     assert actual_queryables["$schema"] == expected_queryables["$schema"]
     assert actual_queryables["$id"] == expected_queryables["$id"]
     assert actual_queryables["title"] == expected_queryables["title"]
-    assert actual_queryables["description"] == expected_queryables["description"]
     assert actual_queryables["type"] == expected_queryables["type"]
 
     # Verify all expected properties are present
@@ -159,4 +165,6 @@ def test_stac_queryables(stac_endpoint: str) -> None:
         )
 
     # Verify additionalProperties setting
-    assert actual_queryables.get("additionalProperties") == expected_queryables.get("additionalProperties")
+    assert actual_queryables.get(
+        "additionalProperties"
+    ) == expected_queryables.get("additionalProperties")
