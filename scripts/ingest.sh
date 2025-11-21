@@ -2,15 +2,12 @@
 
 # eoAPI Data Ingestion Script
 
-# Source shared utilities
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 source "$SCRIPT_DIR/lib/common.sh"
 
-# Default files
 DEFAULT_COLLECTIONS_FILE="./collections.json"
 DEFAULT_ITEMS_FILE="./items.json"
 
-# Check for provided parameters or use defaults
 if [ "$#" -eq 2 ]; then
     EOAPI_COLLECTIONS_FILE="$1"
     EOAPI_ITEMS_FILE="$2"

@@ -9,7 +9,7 @@ from conftest import (
     get_namespace,
     get_release_name,
     kubectl_get,
-    kubectl_port_forward,
+    kubectl_proxy,
     wait_for_url,
 )
 
@@ -184,26 +184,24 @@ class TestMetricsCollection:
         service = json.loads(result.stdout)["items"][0]
         service_name = service["metadata"]["name"]
 
-        # Try to port-forward to Prometheus
-        local_port = 19090
-        prometheus_port = 80
+        # Try kubectl proxy instead of port-forward
+        proxy_port = 8001
 
         process = None
         try:
-            process = kubectl_port_forward(
-                service_name, local_port, prometheus_port, namespace
-            )
+            process = kubectl_proxy(proxy_port)
 
-            # Wait for port forward to establish
-            if not wait_for_url(
-                f"http://localhost:{local_port}/api/v1/targets"
-            ):
-                pytest.skip("Could not establish connection to Prometheus")
+            # Build proxy URL for Prometheus service
+            proxy_url = f"http://localhost:{proxy_port}/api/v1/namespaces/{namespace}/services/{service_name}:80/proxy"
+
+            # Wait for proxy to establish
+            if not wait_for_url(f"{proxy_url}/api/v1/targets"):
+                pytest.skip(
+                    "Could not establish connection to Prometheus via proxy"
+                )
 
             # Check Prometheus targets
-            response = requests.get(
-                f"http://localhost:{local_port}/api/v1/targets"
-            )
+            response = requests.get(f"{proxy_url}/api/v1/targets")
             assert response.status_code == 200, (
                 "Failed to get Prometheus targets"
             )
@@ -269,10 +267,10 @@ class TestAutoscalingIntegration:
 
         # Expected HPA names based on the Helm chart
         expected_hpas = [
-            f"{release}-pgstac",
-            f"{release}-raster",
-            f"{release}-stac",
-            f"{release}-vector",
+            f"{release}-multidim-hpa",
+            f"{release}-raster-hpa",
+            f"{release}-stac-hpa",
+            f"{release}-vector-hpa",
         ]
 
         found_hpas = {hpa["metadata"]["name"] for hpa in hpas}
@@ -401,20 +399,20 @@ class TestGrafanaDashboards:
         service = services[0]
         service_name = service["metadata"]["name"]
 
-        # Port forward to Grafana
-        local_port = 13000
-        grafana_port = 80
+        # Use kubectl proxy to access Grafana
+        proxy_port = 8002
 
         process = None
         try:
-            process = kubectl_port_forward(
-                service_name, local_port, grafana_port, namespace
-            )
+            process = kubectl_proxy(proxy_port)
 
-            if not wait_for_url(f"http://localhost:{local_port}/api/health"):
-                pytest.skip("Could not connect to Grafana")
+            # Build proxy URL for Grafana service
+            proxy_url = f"http://localhost:{proxy_port}/api/v1/namespaces/{namespace}/services/{service_name}:80/proxy"
 
-            response = requests.get(f"http://localhost:{local_port}/api/health")
+            if not wait_for_url(f"{proxy_url}/api/health"):
+                pytest.skip("Could not connect to Grafana via proxy")
+
+            response = requests.get(f"{proxy_url}/api/health")
             assert response.status_code == 200, "Grafana health check failed"
 
             health_data = response.json()

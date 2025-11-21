@@ -1,61 +1,54 @@
 # eoAPI Scripts - Shared Utilities
 
-This directory contains shared utility functions used across eoAPI deployment, testing, and ingestion scripts.
+Shared utility functions for eoAPI deployment, testing, and ingestion scripts.
 
 ## Usage
 
-Source the common utilities in your scripts:
-
 ```bash
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-source "$SCRIPT_DIR/lib/common.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 ```
 
-## Available Functions
+## Functions
+
+### Argument Parsing
+
+`parse_standard_options "$@"` - Parses standard options and sets:
+- `DEBUG_MODE` - Debug output enabled (-d/--debug)
+- `NAMESPACE` - Kubernetes namespace (-n/--namespace)
+- `REMAINING_ARGS` - Array of non-option arguments
 
 ### Logging
-- `log_info "message"` - Info messages (green)
-- `log_warn "message"` - Warning messages (yellow)
-- `log_error "message"` - Error messages (red)
-- `log_debug "message"` - Debug messages (blue)
+
+- `log_info` - Information messages (blue)
+- `log_success` - Success messages (green)
+- `log_warn` - Warning messages (yellow)
+- `log_error` - Error messages (red, stderr)
+- `log_debug` - Debug messages (shown when DEBUG_MODE=true or in CI)
 
 ### Validation
-- `command_exists "tool"` - Check if command is available
-- `validate_tools tool1 tool2 ...` - Validate required tools exist
-- `validate_cluster` - Check Kubernetes cluster connectivity
-- `validate_namespace "namespace"` - Check if namespace exists
-- `validate_eoapi_deployment "namespace" "release"` - Validate eoAPI deployment
+
+- `check_requirements tool1 tool2...` - Verify required tools are installed
+- `validate_cluster` - Check kubectl connectivity
+- `validate_namespace "namespace"` - Verify namespace exists
+- `validate_eoapi_deployment "namespace" "release"` - Validate deployment health
 
 ### Detection
-- `is_ci_environment` - Returns true if running in CI
-- `detect_release_name ["namespace"]` - Auto-detect eoAPI release name
-- `detect_namespace` - Auto-detect eoAPI namespace
 
-### Utilities
-- `wait_for_pods "namespace" "selector" ["timeout"]` - Wait for pods to be ready
+- `is_ci` - Returns true if running in CI environment
+- `detect_release_name ["namespace"]` - Auto-detect eoAPI release name
+- `detect_namespace` - Auto-detect eoAPI namespace from deployed resources
 
 ### Pre-flight Checks
+
 - `preflight_deploy` - Validate deployment prerequisites
-- `preflight_ingest "namespace" "collections_file" "items_file"` - Validate ingestion prerequisites
+- `preflight_ingest "namespace" "collections" "items"` - Validate ingestion inputs
 - `preflight_test "helm|integration"` - Validate test prerequisites
+
+### Utilities
+
+- `wait_for_pods "namespace" "selector" ["timeout"]` - Wait for pod readiness
+- `command_exists "cmd"` - Check if command is available
 
 ## Error Handling
 
-All functions use proper error handling with `set -euo pipefail`. Scripts automatically exit on errors with descriptive messages.
-
-## Example
-
-```bash
-#!/bin/bash
-source "$(dirname "$0")/lib/common.sh"
-
-# Validate prerequisites
-preflight_deploy || exit 1
-
-# Use utilities
-NAMESPACE=$(detect_namespace)
-RELEASE=$(detect_release_name "$NAMESPACE")
-
-log_info "Deploying $RELEASE to $NAMESPACE"
-validate_eoapi_deployment "$NAMESPACE" "$RELEASE"
-```
+Scripts use `set -euo pipefail` and trap EXIT for cleanup. CI environments automatically enable debug mode.

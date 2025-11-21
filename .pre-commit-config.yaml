@@ -41,7 +41,7 @@ repos:
       - id: mypy
         name: mypy strict mode for tests
         args: ['--strict', '--ignore-missing-imports']
-        files: ^\.github/workflows/tests/.*\.py$
+        files: ^tests\/integration\/.*\.py$
         additional_dependencies: ['types-psycopg2', 'httpx', 'pytest', 'types-requests']
 
   # Fast Helm syntax check only
@@ -65,7 +65,7 @@ repos:
 
       - id: helm-schema-validation
         name: Helm Schema Validation
-        entry: make validate-schema
+        entry: ./eoapi-cli test schema
         language: system
         files: ^charts/.+\.(json|yaml|yml)$
         pass_filenames: false

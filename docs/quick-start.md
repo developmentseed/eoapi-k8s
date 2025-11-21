@@ -15,20 +15,21 @@ external_links:
 - [helm](https://helm.sh/docs/intro/install/)
 - A Kubernetes cluster (local or cloud-based)
 - `kubectl` configured for your cluster (ensure `KUBECONFIG` environment variable is set to point to your cluster configuration file, or use `kubectl config use-context <your-context>` to set the active cluster)
-- [helm unittest](https://github.com/helm-unittest/helm-unittest?tab=readme-ov-file#install) if contributing to the repository and running `make tests`
+- [helm unittest](https://github.com/helm-unittest/helm-unittest?tab=readme-ov-file#install) if contributing to the repository and running `./eoapi-cli test unit`
 
 ## Option 1: One-Command Installation
 
-The fastest way to get started is using our Makefile commands:
+The fastest way to get started is using our eoAPI CLI:
 
-For local development with Minikube:
+For local development with k3s/k3d:
 ```bash
-make minikube
+./eoapi-cli cluster start
+./eoapi-cli deployment run
 ```
 
 For cloud deployment:
 ```bash
-make deploy
+./eoapi-cli deployment run
 ```
 
 This will automatically:
@@ -85,5 +86,5 @@ minikube addons enable ingress
 
 2. Optional: Load sample data:
 ```bash
-make ingest
+./eoapi-cli ingest collections.json items.json
 ```
