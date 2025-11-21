@@ -90,7 +90,6 @@ pgstacBootstrap:
 ######################
 # ALL API SERVICES
 ######################
-# Enable all available services
 stac:
   enabled: true
   ingress:
@@ -110,8 +109,8 @@ stac:
     envVars:
       HOST: "0.0.0.0"
       PORT: "8080"
+      ENABLE_TRANSACTIONS_EXTENSIONS: "true"
       WEB_CONCURRENCY: "5"
-      # Debug mode for development
       STAC_FASTAPI_DEBUG: "True"
       STAC_FASTAPI_CORS_ORIGINS: "*"
 
@@ -172,7 +171,6 @@ vector:
       PORT: "8080"
       WEB_CONCURRENCY: "5"
 
-# Experimental: Multidimensional service
 multidim:
   enabled: true
   ingress:
@@ -379,8 +377,7 @@ serviceAccount:
   name: ""
   automount: true
 
-# Enable connection pooling for development
 database:
   enabled: true
   connectionPooling:
-    enabled: false  # Simplify for local development
+    enabled: false

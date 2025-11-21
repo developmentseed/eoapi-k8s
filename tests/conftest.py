@@ -2,10 +2,9 @@ import json
 import os
 import subprocess
 import time
-from typing import Any, Dict, Generator, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
-import psycopg2
-import psycopg2.extensions
+# Database connection removed - using STAC API instead
 import pytest
 import requests
 
@@ -23,54 +22,6 @@ def vector_endpoint() -> str:
 @pytest.fixture(scope="session")
 def stac_endpoint() -> str:
     return os.getenv("STAC_ENDPOINT", "http://127.0.0.1/stac")
-
-
-@pytest.fixture(scope="session")
-def db_connection() -> Generator[psycopg2.extensions.connection, None, None]:
-    required_vars = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"]
-    missing_vars = [var for var in required_vars if not os.getenv(var)]
-    if missing_vars:
-        pytest.fail(
-            f"Database tests skipped - required environment variables not set: {', '.join(missing_vars)}"
-        )
-
-    connection_params = {
-        "host": os.getenv("PGHOST"),
-        "port": os.getenv("PGPORT"),
-        "database": os.getenv("PGDATABASE"),
-        "user": os.getenv("PGUSER"),
-        "password": os.getenv("PGPASSWORD"),
-    }
-
-    conn = None
-    last_error = None
-
-    for sslmode in ["prefer", "require", "disable"]:
-        try:
-            conn = psycopg2.connect(
-                host=os.environ["PGHOST"],
-                port=int(os.environ["PGPORT"]),
-                database=os.environ["PGDATABASE"],
-                user=os.environ["PGUSER"],
-                password=os.environ["PGPASSWORD"],
-                sslmode=sslmode,
-                connect_timeout=5,
-            )
-            conn.set_isolation_level(
-                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT
-            )
-            break  # Connection successful
-        except psycopg2.Error as e:
-            last_error = e
-            continue
-
-    if conn is None:
-        pytest.fail(
-            f"Cannot connect to database with any SSL mode: {last_error}"
-        )
-
-    yield conn
-    conn.close()
 
 
 def get_namespace() -> str:

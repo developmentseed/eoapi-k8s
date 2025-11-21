@@ -41,7 +41,7 @@ repos:
       - id: mypy
         name: mypy strict mode for tests
         args: ['--strict', '--ignore-missing-imports']
-        files: ^scripts\/tests\/integration\/.*\.py$
+        files: ^tests\/integration\/.*\.py$
         additional_dependencies: ['types-psycopg2', 'httpx', 'pytest', 'types-requests']
 
   # Fast Helm syntax check only

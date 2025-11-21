@@ -5,17 +5,13 @@
 
 set -euo pipefail
 
-# Script directory detection
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="${SCRIPT_DIR}/scripts"
 
-# Source common utilities
 source "${SCRIPTS_DIR}/lib/common.sh"
 
-# Version
 readonly VERSION="0.1.0"
 
-# Available commands
 readonly COMMANDS=(
     "cluster"
     "deployment"
@@ -24,7 +20,6 @@ readonly COMMANDS=(
     "docs"
 )
 
-# Show main help
 show_help() {
     cat <<EOF
 eoAPI CLI v${VERSION}
@@ -74,13 +69,11 @@ For more information, visit: https://github.com/developmentseed/eoapi-k8s
 EOF
 }
 
-# Show version
 show_version() {
     echo "eoAPI CLI v${VERSION}"
     echo "Copyright (c) Development Seed"
 }
 
-# Validate command exists
 validate_command() {
     local cmd="$1"
 
@@ -93,7 +86,6 @@ validate_command() {
     return 1
 }
 
-# Get script path for command
 get_command_script() {
     local cmd="$1"
 
@@ -119,7 +111,6 @@ get_command_script() {
     esac
 }
 
-# Execute command
 execute_command() {
     local cmd="$1"
     shift
@@ -142,7 +133,6 @@ execute_command() {
     exec "$script_path" "$@"
 }
 
-# Main entry point
 main() {
     # Handle no arguments
     if [[ $# -eq 0 ]]; then
@@ -177,7 +167,6 @@ main() {
         esac
     done
 
-    # Get command
     if [[ $# -eq 0 ]]; then
         log_error "No command specified"
         echo "Run 'eoapi-cli --help' for usage information"
@@ -187,7 +176,6 @@ main() {
     local command="$1"
     shift
 
-    # Validate command
     if ! validate_command "$command"; then
         log_error "Invalid command: $command"
         echo ""
@@ -200,9 +188,7 @@ main() {
         exit 1
     fi
 
-    # Execute command
     execute_command "$command" "$@"
 }
 
-# Run main function
 main "$@"
