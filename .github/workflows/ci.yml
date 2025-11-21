@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: Set release name
         run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
@@ -91,7 +91,7 @@ jobs:
           node-version: '24'
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: Check documentation
         run: ./eoapi-cli docs check
