@@ -233,7 +233,6 @@ raster:
       GDAL_HTTP_VERSION: "2"
       GDAL_HTTP_MAX_RETRY: "3"
       GDAL_HTTP_RETRY_DELAY: "1"
-      GDAL_SKIP: "VRT"
       PYTHONWARNINGS: "ignore"
       VSI_CACHE: "TRUE"
       VSI_CACHE_SIZE: "5000000"
