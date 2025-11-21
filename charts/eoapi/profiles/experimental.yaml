@@ -68,7 +68,8 @@ pgstacBootstrap:
 
     # Queryables configuration for testing
     queryables:
-      - file: "initdb-data/queryables/test-queryables.json"
+      - name: test-queryables.json
+        file: "initdb-data/queryables/test-queryables.json"
         indexFields: ["platform", "instruments"]
         deleteMissing: true
 

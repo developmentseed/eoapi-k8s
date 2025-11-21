@@ -1,0 +1,402 @@
+suite: queryables configuration tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/database/pgstacbootstrap/configmap.yaml
+  - templates/database/pgstacbootstrap/job.yaml
+tests:
+  # ConfigMap Tests - File-based queryables
+  - it: should create queryables configmap with file-based queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+              indexFields: ["platform", "instruments"]
+              deleteMissing: true
+    template: templates/database/pgstacbootstrap/configmap.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-queryables-config
+      - isNotEmpty:
+          path: data["common-queryables.json"]
+
+  - it: should NOT create queryables configmap when only configMapRef is used
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables:
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+    template: templates/database/pgstacbootstrap/configmap.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-settings-config
+
+  - it: should create queryables configmap for mixed file and configMapRef
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+    template: templates/database/pgstacbootstrap/configmap.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - isNotEmpty:
+          path: data["common-queryables.json"]
+
+  - it: should NOT create queryables configmap when queryables is empty
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables: []
+    template: templates/database/pgstacbootstrap/configmap.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-settings-config
+
+  # Job Tests - File-based queryables
+  - it: should create queryables job with file-based queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+              indexFields: ["platform", "instruments"]
+              deleteMissing: true
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-load-queryables
+
+  - it: should mount file-based queryables with correct path
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /opt/queryables/common-queryables.json
+            name: RELEASE-NAME-queryables-volume
+            subPath: common-queryables.json
+
+  - it: should create volume for file-based queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: RELEASE-NAME-queryables-volume
+            configMap:
+              name: RELEASE-NAME-pgstac-queryables-config
+
+  - it: should include correct pypgstac command for file-based queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+              indexFields: ["platform", "instruments"]
+              deleteMissing: true
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--delete-missing'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--index-fields platform,instruments'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '"/opt/queryables/common-queryables.json"'
+
+  # Job Tests - ConfigMapRef queryables
+  - it: should mount configMapRef queryables with correct path
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /opt/queryables/custom-queryables.json
+            name: RELEASE-NAME-queryables-configmapref-0
+            subPath: queryables.json
+
+  - it: should create volume for configMapRef queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: RELEASE-NAME-queryables-configmapref-0
+            configMap:
+              name: my-custom-configmap
+              items:
+                - key: queryables.json
+                  path: queryables.json
+
+  - it: should include correct pypgstac command for configMapRef queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+              indexFields: ["custom:field1"]
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--index-fields custom:field1'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '"/opt/queryables/custom-queryables.json"'
+
+  # Job Tests - Mixed queryables
+  - it: should handle mixed file and configMapRef queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+              indexFields: ["platform"]
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+              indexFields: ["custom:field1"]
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 2
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /opt/queryables/common-queryables.json
+            name: RELEASE-NAME-queryables-volume
+            subPath: common-queryables.json
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /opt/queryables/custom-queryables.json
+            name: RELEASE-NAME-queryables-configmapref-1
+            subPath: queryables.json
+
+  - it: should create correct volumes for mixed queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "common-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+            - name: "custom-queryables.json"
+              configMapRef:
+                name: my-custom-configmap
+                key: queryables.json
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 2
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: RELEASE-NAME-queryables-volume
+            configMap:
+              name: RELEASE-NAME-pgstac-queryables-config
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: RELEASE-NAME-queryables-configmapref-1
+            configMap:
+              name: my-custom-configmap
+              items:
+                - key: queryables.json
+                  path: queryables.json
+
+  # Job Tests - Multiple configMapRef queryables
+  - it: should handle multiple configMapRef queryables
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "custom1.json"
+              configMapRef:
+                name: configmap-1
+                key: data.json
+            - name: "custom2.json"
+              configMapRef:
+                name: configmap-2
+                key: queryables.json
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 2
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /opt/queryables/custom1.json
+            name: RELEASE-NAME-queryables-configmapref-0
+            subPath: data.json
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /opt/queryables/custom2.json
+            name: RELEASE-NAME-queryables-configmapref-1
+            subPath: queryables.json
+
+  # Job Tests - Optional parameters
+  - it: should include collections parameter when specified
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "collection-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+              collections: ["collection-1", "collection-2"]
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--collection-ids'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'collection-1'
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'collection-2'
+
+  - it: should work without optional parameters
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "simple-queryables.json"
+              file: "initdb-data/queryables/test-queryables.json"
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '\"/opt/queryables/simple-queryables.json\"'
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--delete-missing'
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--collection-ids'
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '--index-fields'
+
+  # Job Tests - NOT created when queryables is empty
+  - it: should NOT create queryables job when queryables is empty
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables: []
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-load-samples
+
+  - it: should NOT create queryables job when pgstacBootstrap is disabled
+    set:
+      pgstacBootstrap:
+        enabled: false
+        settings:
+          queryables:
+            - name: "test.json"
+              file: "initdb-data/queryables/test-queryables.json"
+    template: templates/database/pgstacbootstrap/job.yaml
+    asserts:
+      - hasDocuments:
+          count: 0

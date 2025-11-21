@@ -1,10 +1,39 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "https://stac-extensions.github.io/item-search/v1.0.0/schema.json",
-  "title": "Test Queryables",
-  "description": "Test queryables for eoapi",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://localhost/stac/queryables",
+  "title": "STAC Queryables.",
   "type": "object",
   "properties": {
+    "id": {
+      "$ref": "https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json#/definitions/core/allOf/2/properties/id",
+      "title": "Item ID",
+      "description": "Item identifier"
+    },
+    "datetime": {
+      "type": "string",
+      "title": "Acquired",
+      "format": "date-time",
+      "pattern": "(\\+00:00|Z)$",
+      "description": "Datetime"
+    },
+    "geometry": {
+      "$ref": "https://geojson.org/schema/Feature.json",
+      "title": "Item Geometry",
+      "description": "Item Geometry"
+    },
+    "platform": {
+      "description": "Platform or satellite name",
+      "type": "string",
+      "title": "Platform"
+    },
+    "instruments": {
+      "description": "Instrument(s) used",
+      "type": "array",
+      "title": "Instruments",
+      "items": {
+        "type": "string"
+      }
+    },
     "eo:cloud_cover": {
       "description": "Estimate of cloud cover as a percentage (0-100) of the entire scene",
       "type": "number",
@@ -25,19 +54,6 @@
       "title": "Sun Elevation",
       "minimum": -90,
       "maximum": 90
-    },
-    "platform": {
-      "description": "Platform or satellite name",
-      "type": "string",
-      "title": "Platform"
-    },
-    "instruments": {
-      "description": "Instrument(s) used",
-      "type": "array",
-      "title": "Instruments",
-      "items": {
-        "type": "string"
-      }
     }
   },
   "additionalProperties": true

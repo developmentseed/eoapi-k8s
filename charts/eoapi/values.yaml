@@ -165,15 +165,26 @@ pgstacBootstrap:
 
     # Queryables configuration
     # List of queryables configurations to load using pypgstac load-queryables
-    # Each item specifies a file path and optional parameters
-    # Example:
+    # Each item requires a mandatory 'name' field and either 'file' or 'configMapRef'
+    #
+    # Example using files from the chart:
     # queryables:
-    #   - file: "initdb-data/queryables/common-queryables.json"
+    #   - name: "common-queryables.json"
+    #     file: "initdb-data/queryables/common-queryables.json"
     #     indexFields: ["platform", "instruments"]
     #     deleteMissing: true
-    #   - file: "initdb-data/queryables/collection-specific.json"
+    #   - name: "collection-specific.json"
+    #     file: "initdb-data/queryables/collection-specific.json"
     #     collections: ["my-collection-1", "my-collection-2"]
     #     indexFields: ["custom:field1", "custom:field2"]
+    #     deleteMissing: true
+    #
+    # Example using external ConfigMap references:
+    #   - name: "custom-queryables.json"
+    #     configMapRef:
+    #       name: my-custom-queryables-configmap
+    #       key: queryables.json
+    #     indexFields: ["custom:field1"]
     #     deleteMissing: true
     queryables: []
 
