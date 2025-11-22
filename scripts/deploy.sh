@@ -391,7 +391,10 @@ deploy_eoapi() {
         HELM_CMD="$HELM_CMD --set observability.grafana.enabled=true"
         HELM_CMD="$HELM_CMD --set monitoring.prometheusAdapter.prometheus.url=http://$RELEASE_NAME-prometheus-server.eoapi.svc.cluster.local"
 
-
+        # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when experimental profile is used
+        # The experimental profile enables stac-auth-proxy, so we need to set the correct service names
+        HELM_CMD="$HELM_CMD --set stac-auth-proxy.env.UPSTREAM_URL=http://$RELEASE_NAME-stac:8080"
+        HELM_CMD="$HELM_CMD --set stac-auth-proxy.env.OIDC_DISCOVERY_URL=http://$RELEASE_NAME-mock-oidc-server.$NAMESPACE.svc.cluster.local:8080/.well-known/openid-configuration"
 
         HELM_CMD="$HELM_CMD --set eoapi-notifier.enabled=true"
         HELM_CMD="$HELM_CMD --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
