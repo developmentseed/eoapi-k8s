@@ -370,6 +370,11 @@ stac-auth-proxy:
   enabled: true
   service:
     port: 8080
+  # Wait for mock-oidc to be ready in testing scenarios
+  initContainers:
+    - name: wait-for-mock-oidc
+      image: busybox:1.35
+      command: ['sh', '-c', 'until nc -z eoapi-mock-oidc-server.eoapi.svc.cluster.local 8080; do echo waiting for mock-oidc; sleep 2; done']
   env:
     UPSTREAM_URL: "http://eoapi-stac:8080"
     # For testing one could deploy a mock OIDC server (https://github.com/alukach/mock-oidc-server)
