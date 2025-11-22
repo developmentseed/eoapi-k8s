@@ -69,10 +69,12 @@ run_deployment() {
     helm dependency update charts/eoapi
 
     local helm_cmd="helm upgrade --install $RELEASE_NAME charts/eoapi -n $NAMESPACE --create-namespace"
+    local use_experimental=false
 
     if [[ -f "charts/eoapi/profiles/experimental.yaml" ]]; then
         log_info "Applying experimental profile..."
         helm_cmd="$helm_cmd -f charts/eoapi/profiles/experimental.yaml"
+        use_experimental=true
     fi
     if [[ -f "charts/eoapi/profiles/local/k3s.yaml" ]]; then
         log_info "Applying k3s local profile..."
@@ -81,6 +83,18 @@ run_deployment() {
 
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].type=pgstac"
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
+
+    # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when experimental profile is used
+    # The experimental profile enables stac-auth-proxy, so we need to set the correct service names
+    # Also configure STAC service to run without root path when behind auth proxy
+    if [[ "$use_experimental" == "true" ]]; then
+        helm_cmd="$helm_cmd --set stac-auth-proxy.env.UPSTREAM_URL=http://$RELEASE_NAME-stac:8080"
+        helm_cmd="$helm_cmd --set stac-auth-proxy.env.OIDC_DISCOVERY_URL=http://$RELEASE_NAME-mock-oidc-server.$NAMESPACE.svc.cluster.local:8080/.well-known/openid-configuration"
+        # Note: initContainer service names are dynamically replaced by the stac-auth-proxy-patch job
+        # Configure STAC service to run without root path when behind auth proxy
+        # Empty string makes STAC service run at root path (no --root-path argument)
+        helm_cmd="$helm_cmd --set 'stac.overrideRootPath='"
+    fi
 
     if is_ci; then
         log_info "Applying CI-specific configurations..."

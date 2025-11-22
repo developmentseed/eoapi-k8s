@@ -365,13 +365,54 @@ ingress:
     enabled: false
 
 stac-auth-proxy:
-  enabled: false
+  enabled: true
+  service:
+    port: 8080
+  # Wait for dependencies to be ready before starting stac-auth-proxy
+  initContainers:
+    - name: wait-for-mock-oidc
+      image: busybox:1.35
+      command: ['sh', '-c', 'until nc -z eoapi-mock-oidc-server.eoapi.svc.cluster.local 8080; do echo waiting for mock-oidc; sleep 2; done']
+    - name: wait-for-stac
+      image: busybox:1.35
+      command: ['sh', '-c', 'until nc -z eoapi-stac.eoapi.svc.cluster.local 8080; do echo waiting for stac service; sleep 2; done']
   env:
-    UPSTREAM_URL: "http://eoapi-stac:8080/stac"
+    UPSTREAM_URL: "http://eoapi-stac:8080"
     # For testing one could deploy a mock OIDC server (https://github.com/alukach/mock-oidc-server)
-    OIDC_DISCOVERY_URL: "http://mock-oidc-server.default.svc.cluster.local/.well-known/openid-configuration"
+    OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"
     # For production, point to your actual OpenID Connect provider
     # OIDC_DISCOVERY_URL: "https://your-auth-provider.com/.well-known/openid-configuration"
+
+######################
+# MOCK OIDC SERVER
+######################
+# Mock OIDC server for testing authentication
+# WARNING: Only for development/testing, never use in production!
+mockOidcServer:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/alukach/mock-oidc-server
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8888
+  clientId: "test-client"
+  clientSecret: "test-secret"
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+  extraEnv: []
 
 ######################
 # SERVICE

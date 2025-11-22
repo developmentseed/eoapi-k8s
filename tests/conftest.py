@@ -11,17 +11,17 @@ import requests
 
 @pytest.fixture(scope="session")
 def raster_endpoint() -> str:
-    return os.getenv("RASTER_ENDPOINT", "http://127.0.0.1/raster")
+    return os.getenv("RASTER_ENDPOINT", "http://localhost/raster")
 
 
 @pytest.fixture(scope="session")
 def vector_endpoint() -> str:
-    return os.getenv("VECTOR_ENDPOINT", "http://127.0.0.1/vector")
+    return os.getenv("VECTOR_ENDPOINT", "http://localhost/vector")
 
 
 @pytest.fixture(scope="session")
 def stac_endpoint() -> str:
-    return os.getenv("STAC_ENDPOINT", "http://127.0.0.1/stac")
+    return os.getenv("STAC_ENDPOINT", "http://localhost/stac")
 
 
 def get_namespace() -> str:

@@ -536,6 +536,13 @@ eoapi-notifier:
             # For HTTP endpoints, use: endpoint: https://webhook.example.com
 
 ######################
+# MOCK OIDC SERVER
+######################
+# Mock OIDC server for testing authentication (experimental profile only)
+mockOidcServer:
+  enabled: false
+
+######################
 # KNATIVE
 ######################
 # Optional Knative components for CloudEvents and serverless workloads
