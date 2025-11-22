@@ -1,0 +1,34 @@
+{{- if index .Values "stac-auth-proxy" "enabled" }}
+{{- if index .Values "stac-auth-proxy" "initContainers" }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-stac-auth-proxy-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "patch"]
+  resourceNames:
+    - {{ .Release.Name }}-stac-auth-proxy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-stac-auth-proxy-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "eoapi.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ .Release.Name }}-stac-auth-proxy-patch
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}
