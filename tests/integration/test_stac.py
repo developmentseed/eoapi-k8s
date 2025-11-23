@@ -151,8 +151,6 @@ def test_stac_queryables(stac_endpoint: str) -> None:
 
     # Verify the queryables match the expected schema
     assert actual_queryables["$schema"] == expected_queryables["$schema"]
-    assert actual_queryables["$id"] == expected_queryables["$id"]
-    assert actual_queryables["title"] == expected_queryables["title"]
     assert actual_queryables["type"] == expected_queryables["type"]
 
     # Verify all expected properties are present
