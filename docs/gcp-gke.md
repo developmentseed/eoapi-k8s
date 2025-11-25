@@ -124,3 +124,52 @@ helm upgrade --install cert-manager jetstack/cert-manager \
 ```
 
 Now we are ready to install eoapi. See the [eoapi installation instructions](./helm-install.md) for more details.
+
+# Configure Workload Identity for GCS Bucket Access
+
+eoAPI services need to access COG files in GCS buckets. Use Workload Identity for secure, temporary credential access instead of long-lived credentials:
+
+1. **Enable Workload Identity on your cluster** (if not already enabled):
+   ```bash
+   gcloud container clusters update sandbox \
+       --workload-pool=PROJECT_ID.svc.id.goog \
+       --zone=us-central1-a
+   ```
+
+2. **Create a Google Service Account**:
+   ```bash
+   gcloud iam service-accounts create eoapi-gcs-sa \
+       --display-name="eoAPI GCS Service Account"
+   ```
+
+3. **Grant GCS permissions** to the service account:
+   ```bash
+   # For specific bucket access
+   gsutil iam ch serviceAccount:eoapi-gcs-sa@PROJECT_ID.iam.gserviceaccount.com:objectViewer gs://your-bucket-name
+
+   # Or use IAM roles for multiple buckets
+   gcloud projects add-iam-policy-binding PROJECT_ID \
+       --member="serviceAccount:eoapi-gcs-sa@PROJECT_ID.iam.gserviceaccount.com" \
+       --role="roles/storage.objectViewer"
+   ```
+
+4. **Create Kubernetes service account** and bind it:
+   ```bash
+   kubectl create serviceaccount eoapi-sa -n eoapi
+
+   gcloud iam service-accounts add-iam-policy-binding eoapi-gcs-sa@PROJECT_ID.iam.gserviceaccount.com \
+       --role roles/iam.workloadIdentityUser \
+       --member "serviceAccount:PROJECT_ID.svc.id.goog[eoapi/eoapi-sa]"
+
+   kubectl annotate serviceaccount eoapi-sa -n eoapi \
+       iam.gke.io/gcp-service-account=eoapi-gcs-sa@PROJECT_ID.iam.gserviceaccount.com
+   ```
+
+5. **Configure eoAPI** in your `values.yaml`:
+   ```yaml
+   serviceAccount:
+     create: false  # We already created it
+     name: eoapi-sa
+   ```
+
+The raster service will automatically use Workload Identity credentials. No hardcoded credentials needed!

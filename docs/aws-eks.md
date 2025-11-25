@@ -216,3 +216,78 @@ Assert that things are set up correctly:
    # service/nginx-ingress-nginx-controller             LoadBalancer   10.100.36.152    eoapi-k8s-553d3ea234b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com   80:30342/TCP,443:30742/TCP   2d17h
    # service/nginx-ingress-nginx-controller-admission   ClusterIP      10.100.34.22     <none>                                                                          443/TCP                      2d17h
    ```
+
+---
+
+## Configure IRSA for S3 Bucket Access
+
+eoAPI services (especially the raster API) need to access COG files in S3 buckets. Instead of using long-lived credentials, use IRSA (IAM Roles for Service Accounts) for secure, temporary credential access:
+
+1. **Create an IAM policy** for S3 bucket access:
+
+   ```sh
+   cat <<EOF > eoapi-s3-policy.json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "s3:GetObject",
+           "s3:ListBucket"
+         ],
+         "Resource": [
+           "arn:aws:s3:::your-bucket-name/*",
+           "arn:aws:s3:::your-bucket-name"
+         ]
+       }
+     ]
+   }
+   EOF
+
+   aws iam create-policy \
+       --policy-name eoapi-s3-access \
+       --policy-document file://eoapi-s3-policy.json
+   ```
+
+2. **Create an IAM role and service account**:
+
+   ```sh
+   eksctl create iamserviceaccount \
+       --name eoapi-sa \
+       --namespace default \
+       --cluster $CLUSTER_NAME \
+       --region $REGION \
+       --attach-policy-arn arn:aws:iam::${AWS_ACCOUNT_ID}:policy/eoapi-s3-access \
+       --approve
+   ```
+
+   This command automatically creates a service account with the necessary annotation:
+   ```yaml
+   # This is what eksctl creates for you:
+   apiVersion: v1
+   kind: ServiceAccount
+   metadata:
+     name: eoapi-sa
+     namespace: default
+     annotations:
+       eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/eksctl-${CLUSTER_NAME}-addon-iamserviceaccount-default-eoapi-sa
+   ```
+
+3. **Configure EOAPI** to use the service account in your `values.yaml`:
+
+   ```yaml
+   serviceAccount:
+     create: false  # We already created it with eksctl
+     name: eoapi-sa
+   ```
+
+   **Alternative:** If you prefer to let the Helm chart create the service account, skip step 2 and use:
+   ```yaml
+   serviceAccount:
+     create: true
+     annotations:
+       eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/your-existing-iam-role
+   ```
+
+The raster service will automatically use IRSA credentials via the AWS SDK credential chain. No hardcoded credentials needed!
