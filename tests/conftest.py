@@ -24,6 +24,44 @@ def stac_endpoint() -> str:
     return os.getenv("STAC_ENDPOINT", "http://localhost/stac")
 
 
+@pytest.fixture(scope="session")
+def mock_oidc_endpoint() -> str:
+    return os.getenv("MOCK_OIDC_ENDPOINT", "http://localhost/mock-oidc")
+
+
+def get_mock_token(mock_oidc_endpoint: Optional[str] = None) -> str:
+    """Get valid JWT token from mock OIDC server."""
+    if mock_oidc_endpoint is None:
+        mock_oidc_endpoint = os.getenv(
+            "MOCK_OIDC_ENDPOINT", "http://localhost/mock-oidc"
+        )
+
+    response = requests.post(
+        mock_oidc_endpoint,
+        data={
+            "username": "test-user",
+            "scopes": "openid profile stac:read stac:write",
+        },
+        timeout=5,
+    )
+
+    if response.status_code == 200:
+        html = response.text
+        if 'value="' in html:
+            token = html.split('value="')[1].split('"')[0]
+            return f"Bearer {token}"
+
+    raise Exception(
+        f"Could not get token from mock OIDC server at {mock_oidc_endpoint}"
+    )
+
+
+@pytest.fixture
+def auth_token(mock_oidc_endpoint: str) -> str:
+    """Get valid JWT token for auth testing."""
+    return get_mock_token(mock_oidc_endpoint)
+
+
 def get_namespace() -> str:
     """Get the namespace from environment variable."""
     return os.environ.get("NAMESPACE", "eoapi")
@@ -76,7 +114,7 @@ def kubectl_port_forward(
 
 
 def kubectl_proxy(
-    port: int = 8001, namespace: str = None
+    port: int = 8001, namespace: Optional[str] = None
 ) -> subprocess.Popen[str]:
     """Start kubectl proxy for accessing services via Kubernetes API."""
     cmd = ["kubectl", "proxy", f"--port={port}"]

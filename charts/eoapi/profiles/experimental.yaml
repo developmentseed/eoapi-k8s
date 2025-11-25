@@ -401,6 +401,9 @@ mockOidcServer:
   service:
     type: ClusterIP
     port: 8080
+  ingress:
+    enabled: true
+    path: "/mock-oidc"
   resources:
     limits:
       cpu: 100m

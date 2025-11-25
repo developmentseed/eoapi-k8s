@@ -13,9 +13,9 @@ client = httpx.Client(
 
 
 @pytest.fixture
-def valid_token() -> str:
-    """Generate a realistic JWT token for auth testing."""
-    return "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEifQ.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJzdWIiOiJ0ZXN0LXVzZXIiLCJhdWQiOiJzdGFjLWFwaSIsImlhdCI6MTcwNDEwNDQwMCwiZXhwIjoyMDA0MTA0NDAwLCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIHN0YWM6cmVhZCBzdGFjOndyaXRlIn0.fake-signature"
+def valid_token(auth_token: str) -> str:
+    """Get valid JWT token for auth testing."""
+    return auth_token
 
 
 def test_stac_auth_without_token(stac_endpoint: str) -> None:
@@ -92,9 +92,9 @@ def test_stac_auth_with_valid_token(
         },
     )
 
-    # With mock OIDC server deployed, the token should be rejected (invalid signature)
-    assert resp.status_code in [401, 403], (
-        f"Expected auth rejection with test token, got {resp.status_code}: {resp.text[:100]}"
+    # With valid token from mock OIDC server, request should succeed
+    assert resp.status_code in [200, 201], (
+        f"Expected success with valid token, got {resp.status_code}: {resp.text[:100]}"
     )
 
 

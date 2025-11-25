@@ -49,13 +49,16 @@ def notifications_enabled() -> bool:
 
 
 @pytest.fixture
-def stac_client() -> Dict[str, Any]:
-    """Create a STAC API client configuration."""
+def stac_client(auth_token: str) -> Dict[str, Any]:
+    """Create a STAC API client configuration with valid token from mock OIDC."""
     stac_endpoint = os.getenv("STAC_ENDPOINT", "http://localhost/stac")
 
     return {
         "base_url": stac_endpoint,
-        "headers": {"Content-Type": "application/json"},
+        "headers": {
+            "Content-Type": "application/json",
+            "Authorization": auth_token,
+        },
         "timeout": 10,
     }
 
@@ -234,6 +237,21 @@ def test_update_notification(
         f"Failed to create item: {response.text}"
     )
 
+    before_time = time.time()
+
+    updated_item["properties"]["description"] = "Updated for notification test"
+
+    response = requests.put(
+        f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item['id']}",
+        json=updated_item,
+        headers=stac_client["headers"],
+        timeout=stac_client["timeout"],
+    )
+
+    assert response.status_code in [200, 201], (
+        f"Failed to create item: {response.text}"
+    )
+
     test_item["properties"]["test_version"] = "v2"
 
     before_time = time.time()
@@ -300,6 +318,18 @@ def test_delete_notification(
     before_time = time.time()
 
     response = requests.delete(
+        f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item['id']}",
+        headers=stac_client["headers"],
+        timeout=stac_client["timeout"],
+    )
+
+    assert response.status_code in [200, 201], (
+        f"Failed to create item: {response.text}"
+    )
+
+    before_time = time.time()
+
+    response = requests.delete(
         f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item_id}",
         headers=stac_client["headers"],
         timeout=stac_client["timeout"],
@@ -351,6 +381,7 @@ def test_bulk_operations_notification(
             headers=stac_client["headers"],
             timeout=stac_client["timeout"],
         )
+
         assert response.status_code in [200, 201], (
             f"Failed to create item: {response.text}"
         )
