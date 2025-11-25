@@ -78,6 +78,16 @@ spec:
                   number: {{ $.Values.service.port }}
           {{- end }}
 
+          {{- if and $.Values.mockOidcServer.enabled $.Values.mockOidcServer.ingress.enabled }}
+          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.mockOidcServer.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: {{ $.Release.Name }}-mock-oidc-server
+                port:
+                  number: {{ $.Values.mockOidcServer.service.port | default 8080 }}
+          {{- end }}
+
           {{- if $.Values.docServer.enabled }}
           - pathType: Prefix
             path: "/{{ $.Values.ingress.rootPath | default "" }}"
@@ -136,6 +146,16 @@ spec:
                 name: {{ .Release.Name }}-multidim
                 port:
                   number: {{ .Values.service.port }}
+          {{- end }}
+
+          {{- if and .Values.mockOidcServer.enabled .Values.mockOidcServer.ingress.enabled }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.mockOidcServer.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: {{ .Release.Name }}-mock-oidc-server
+                port:
+                  number: {{ .Values.mockOidcServer.service.port | default 8080 }}
           {{- end }}
 
           {{- if .Values.docServer.enabled }}

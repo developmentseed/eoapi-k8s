@@ -19,4 +19,7 @@ spec:
       {{- if .Values.multidim.enabled }}
       - {{ .Values.multidim.ingress.path }}
       {{- end }}
+      {{- if and .Values.mockOidcServer.enabled .Values.mockOidcServer.ingress.enabled }}
+      - {{ .Values.mockOidcServer.ingress.path }}
+      {{- end }}
 {{- end }}

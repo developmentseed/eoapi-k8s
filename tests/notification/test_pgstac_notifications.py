@@ -239,22 +239,8 @@ def test_update_notification(
 
     before_time = time.time()
 
-    updated_item["properties"]["description"] = "Updated for notification test"
-
-    response = requests.put(
-        f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item['id']}",
-        json=updated_item,
-        headers=stac_client["headers"],
-        timeout=stac_client["timeout"],
-    )
-
-    assert response.status_code in [200, 201], (
-        f"Failed to create item: {response.text}"
-    )
-
+    test_item["properties"]["description"] = "Updated for notification test"
     test_item["properties"]["test_version"] = "v2"
-
-    before_time = time.time()
 
     response = requests.put(
         f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item_id}",
@@ -263,7 +249,7 @@ def test_update_notification(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 204], (
+    assert response.status_code in [200, 201], (
         f"Failed to update item: {response.text}"
     )
 
@@ -307,18 +293,6 @@ def test_delete_notification(
     response = requests.post(
         f"{stac_client['base_url']}/collections/noaa-emergency-response/items",
         json=test_item,
-        headers=stac_client["headers"],
-        timeout=stac_client["timeout"],
-    )
-
-    assert response.status_code in [200, 201], (
-        f"Failed to create item: {response.text}"
-    )
-
-    before_time = time.time()
-
-    response = requests.delete(
-        f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item['id']}",
         headers=stac_client["headers"],
         timeout=stac_client["timeout"],
     )

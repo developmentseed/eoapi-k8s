@@ -1,6 +1,7 @@
 """Test STAC API with auth proxy authentication."""
 
 import os
+import time
 
 import httpx
 import pytest
@@ -24,7 +25,7 @@ def test_stac_auth_without_token(stac_endpoint: str) -> None:
         f"{stac_endpoint}/collections/noaa-emergency-response/items",
         headers={"Content-Type": "application/json"},
         json={
-            "id": "test-no-token",
+            "id": f"test-no-token-{int(time.time() * 1000)}",
             "type": "Feature",
             "stac_version": "1.0.0",
             "properties": {"datetime": "2024-01-01T00:00:00Z"},
@@ -52,7 +53,7 @@ def test_stac_auth_with_invalid_token(stac_endpoint: str) -> None:
             "Content-Type": "application/json",
         },
         json={
-            "id": "test-invalid-token",
+            "id": f"test-invalid-token-{int(time.time() * 1000)}",
             "type": "Feature",
             "stac_version": "1.0.0",
             "properties": {"datetime": "2024-01-01T00:00:00Z"},
@@ -80,7 +81,7 @@ def test_stac_auth_with_valid_token(
             "Content-Type": "application/json",
         },
         json={
-            "id": "test-valid-token",
+            "id": f"test-valid-token-{int(time.time() * 1000)}",
             "type": "Feature",
             "stac_version": "1.0.0",
             "properties": {"datetime": "2024-01-01T00:00:00Z"},
