@@ -1,6 +1,8 @@
 """test EOapi."""
 
+import json
 import os
+from pathlib import Path
 
 import httpx
 
@@ -126,3 +128,41 @@ def test_stac_custom_path(stac_endpoint: str) -> None:
     )
     # assert resp.status_code == 307
     assert resp.status_code == 404
+
+
+def test_stac_queryables(stac_endpoint: str) -> None:
+    """test queryables endpoint returns expected schema."""
+    # Load expected queryables from test file
+    queryables_file = (
+        Path(__file__).parent.parent.parent
+        / "charts"
+        / "eoapi"
+        / "initdb-data"
+        / "queryables"
+        / "test-queryables.json"
+    )
+    with open(queryables_file) as f:
+        expected_queryables = json.load(f)
+
+    # Get queryables from API
+    resp = client.get(f"{stac_endpoint}/queryables")
+    assert resp.status_code == 200
+    actual_queryables = resp.json()
+
+    # Verify the queryables match the expected schema
+    assert actual_queryables["$schema"] == expected_queryables["$schema"]
+    assert actual_queryables["type"] == expected_queryables["type"]
+
+    # Verify all expected properties are present
+    for prop_name, prop_schema in expected_queryables["properties"].items():
+        assert prop_name in actual_queryables["properties"], (
+            f"Expected property '{prop_name}' not found in queryables"
+        )
+        assert actual_queryables["properties"][prop_name] == prop_schema, (
+            f"Property '{prop_name}' schema doesn't match expected schema"
+        )
+
+    # Verify additionalProperties setting
+    assert actual_queryables.get(
+        "additionalProperties"
+    ) == expected_queryables.get("additionalProperties")
