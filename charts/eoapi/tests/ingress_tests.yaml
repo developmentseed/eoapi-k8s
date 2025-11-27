@@ -38,7 +38,6 @@ tests:
       ingress.className: "traefik"
       ingress.pathType: "Prefix"
       ingress.host: "eoapi.local"
-      testing: true
       raster.enabled: false
       stac.enabled: true
       vector.enabled: false
@@ -70,7 +69,6 @@ tests:
       ingress.className: "traefik"
       ingress.pathType: "Prefix"
       ingress.host: "eoapi.local"
-      testing: false
       raster.enabled: false
       stac.enabled: false
       vector.enabled: false
