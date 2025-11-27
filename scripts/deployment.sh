@@ -69,12 +69,12 @@ run_deployment() {
     helm dependency update charts/eoapi
 
     local helm_cmd="helm upgrade --install $RELEASE_NAME charts/eoapi -n $NAMESPACE --create-namespace"
-    local use_experimental=false
+    local testing_mode=false
 
     if [[ -f "charts/eoapi/profiles/experimental.yaml" ]]; then
         log_info "Applying experimental profile..."
         helm_cmd="$helm_cmd -f charts/eoapi/profiles/experimental.yaml"
-        use_experimental=true
+        testing_mode=true
     fi
     if [[ -f "charts/eoapi/profiles/local/k3s.yaml" ]]; then
         log_info "Applying k3s local profile..."
@@ -84,13 +84,26 @@ run_deployment() {
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].type=pgstac"
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
 
-    # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when experimental profile is used
-    # The experimental profile enables stac-auth-proxy, so we need to set the correct service names
+    # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when testing mode is enabled
+    # Testing mode enables stac-auth-proxy, so we need to set the correct service names
     # Also configure STAC service to run without root path when behind auth proxy
-    if [[ "$use_experimental" == "true" ]]; then
-        helm_cmd="$helm_cmd --set stac-auth-proxy.env.UPSTREAM_URL=http://$RELEASE_NAME-stac:8080"
-        helm_cmd="$helm_cmd --set stac-auth-proxy.env.OIDC_DISCOVERY_URL=http://$RELEASE_NAME-mock-oidc-server.$NAMESPACE.svc.cluster.local:8080/.well-known/openid-configuration"
-        # Note: initContainer service names are dynamically replaced by the stac-auth-proxy-patch job
+    if [[ "$testing_mode" == "true" ]]; then
+        # Create temporary values file for dynamic stac-auth-proxy configuration
+        local temp_values="/tmp/stac-auth-proxy-values-${RELEASE_NAME}.yaml"
+        cat > "$temp_values" <<EOF
+stac-auth-proxy:
+  env:
+    UPSTREAM_URL: "http://${RELEASE_NAME}-stac:8080"
+    OIDC_DISCOVERY_URL: "http://${RELEASE_NAME}-mock-oidc-server.${NAMESPACE}.svc.cluster.local:8080/.well-known/openid-configuration"
+  initContainers:
+    - name: wait-for-mock-oidc
+      image: busybox:1.35
+      command: ['sh', '-c', 'until nc -z ${RELEASE_NAME}-mock-oidc-server.${NAMESPACE}.svc.cluster.local 8080; do echo waiting for mock-oidc; sleep 2; done']
+    - name: wait-for-stac
+      image: busybox:1.35
+      command: ['sh', '-c', 'until nc -z ${RELEASE_NAME}-stac.${NAMESPACE}.svc.cluster.local 8080; do echo waiting for stac service; sleep 2; done']
+EOF
+        helm_cmd="$helm_cmd -f $temp_values"
         # Configure STAC service to run without root path when behind auth proxy
         # Empty string makes STAC service run at root path (no --root-path argument)
         helm_cmd="$helm_cmd --set 'stac.overrideRootPath='"
@@ -98,14 +111,14 @@ run_deployment() {
 
     if is_ci; then
         log_info "Applying CI-specific configurations..."
-
-        helm_cmd="$helm_cmd --set testing=true"
         helm_cmd="$helm_cmd --set monitoring.prometheusAdapter.prometheus.url=http://$RELEASE_NAME-prometheus-server.eoapi.svc.cluster.local"
+        testing_mode=true
     fi
 
     helm_cmd="$helm_cmd --timeout $TIMEOUT"
 
     log_info "Deploying eoAPI..."
+    local deploy_result=0
     if eval "$helm_cmd"; then
         log_success "eoAPI deployed successfully"
 
@@ -153,8 +166,15 @@ run_deployment() {
         fi
     else
         log_error "Deployment failed"
-        return 1
+        deploy_result=1
     fi
+
+    # Cleanup temporary files
+    if [[ "$testing_mode" == "true" ]] && [[ -f "/tmp/stac-auth-proxy-values-${RELEASE_NAME}.yaml" ]]; then
+        rm -f "/tmp/stac-auth-proxy-values-${RELEASE_NAME}.yaml"
+    fi
+
+    return $deploy_result
 }
 
 debug_deployment() {
