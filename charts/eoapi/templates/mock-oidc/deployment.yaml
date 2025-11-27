@@ -41,18 +41,30 @@ spec:
         - name: http
           containerPort: {{ .Values.mockOidcServer.port | default 8888 }}
           protocol: TCP
-        livenessProbe:
+        startupProbe:
           httpGet:
             path: /.well-known/openid-configuration
             port: http
           initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 12
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /.well-known/openid-configuration
+            port: http
+          initialDelaySeconds: 30
           periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 3
         readinessProbe:
           httpGet:
             path: /.well-known/openid-configuration
             port: http
           initialDelaySeconds: 5
           periodSeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
         {{- if .Values.mockOidcServer.resources }}
         resources:
           {{- toYaml .Values.mockOidcServer.resources | nindent 10 }}
