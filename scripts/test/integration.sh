@@ -98,11 +98,13 @@ run_integration_tests() {
     export STAC_ENDPOINT="${STAC_ENDPOINT:-http://$actual_host/stac}"
     export RASTER_ENDPOINT="${RASTER_ENDPOINT:-http://$actual_host/raster}"
     export VECTOR_ENDPOINT="${VECTOR_ENDPOINT:-http://$actual_host/vector}"
+    export MOCK_OIDC_ENDPOINT="${MOCK_OIDC_ENDPOINT:-http://$actual_host/mock-oidc}"
 
     log_info "Test endpoints configured:"
     log_info "  STAC: $STAC_ENDPOINT"
     log_info "  Raster: $RASTER_ENDPOINT"
     log_info "  Vector: $VECTOR_ENDPOINT"
+    log_info "  Mock OIDC: $MOCK_OIDC_ENDPOINT"
 
     log_info "Running service warmup..."
     for endpoint in "$STAC_ENDPOINT" "$RASTER_ENDPOINT/healthz" "$VECTOR_ENDPOINT/healthz"; do

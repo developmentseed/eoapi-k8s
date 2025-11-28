@@ -364,6 +364,48 @@ ingress:
   tls:
     enabled: false
 
+stac-auth-proxy:
+  enabled: true
+  service:
+    port: 8080
+  # For testing this will be set dynamically; for production, point to your OIDC server
+  # env:
+  #  OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"
+
+######################
+# MOCK OIDC SERVER
+######################
+# Mock OIDC server for testing authentication
+# WARNING: Only for development/testing, never use in production!
+mockOidcServer:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/alukach/mock-oidc-server
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8888
+  clientId: "test-client"
+  clientSecret: "test-secret"
+  service:
+    type: ClusterIP
+    port: 8080
+  ingress:
+    enabled: true
+    path: "/mock-oidc"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+  extraEnv: []
+
 ######################
 # SERVICE
 ######################

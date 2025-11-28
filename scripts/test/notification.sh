@@ -38,11 +38,13 @@ run_notification_tests() {
             export STAC_ENDPOINT="http://${ingress_host}/stac"
             export RASTER_ENDPOINT="http://${ingress_host}/raster"
             export VECTOR_ENDPOINT="http://${ingress_host}/vector"
+            export MOCK_OIDC_ENDPOINT="http://${ingress_host}/mock-oidc"
         else
             # Fall back to localhost (assumes port-forward or local ingress)
             export STAC_ENDPOINT="http://localhost/stac"
             export RASTER_ENDPOINT="http://localhost/raster"
             export VECTOR_ENDPOINT="http://localhost/vector"
+            export MOCK_OIDC_ENDPOINT="http://localhost/mock-oidc"
         fi
     fi
     export NAMESPACE

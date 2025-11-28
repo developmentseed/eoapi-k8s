@@ -198,7 +198,7 @@ def test_database_notification_triggers_exist() -> None:
     assert "True" in result.stdout, "eoapi-notifier pod should be ready"
 
 
-def test_end_to_end_notification_flow() -> None:
+def test_end_to_end_notification_flow(auth_token: str) -> None:
     """Test complete flow: database item change → eoapi-notifier → Knative CloudEvents sink."""
 
     # Check if notifications are enabled
@@ -261,11 +261,14 @@ def test_end_to_end_notification_flow() -> None:
         text=True,
     ).stdout
 
-    # Create item via STAC API
+    # Create item via STAC API using auth token
     response = requests.post(
         f"{stac_endpoint}/collections/noaa-emergency-response/items",
         json=test_item,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": auth_token,
+        },
         timeout=10,
     )
 
@@ -294,7 +297,10 @@ def test_end_to_end_notification_flow() -> None:
     # Clean up
     requests.delete(
         f"{stac_endpoint}/collections/noaa-emergency-response/items/{test_item['id']}",
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": auth_token,
+        },
         timeout=10,
     )
 

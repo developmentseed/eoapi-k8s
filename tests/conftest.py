@@ -11,17 +11,62 @@ import requests
 
 @pytest.fixture(scope="session")
 def raster_endpoint() -> str:
-    return os.getenv("RASTER_ENDPOINT", "http://127.0.0.1/raster")
+    return os.getenv("RASTER_ENDPOINT", "http://localhost/raster")
 
 
 @pytest.fixture(scope="session")
 def vector_endpoint() -> str:
-    return os.getenv("VECTOR_ENDPOINT", "http://127.0.0.1/vector")
+    return os.getenv("VECTOR_ENDPOINT", "http://localhost/vector")
 
 
 @pytest.fixture(scope="session")
 def stac_endpoint() -> str:
-    return os.getenv("STAC_ENDPOINT", "http://127.0.0.1/stac")
+    return os.getenv("STAC_ENDPOINT", "http://localhost/stac")
+
+
+@pytest.fixture(scope="session")
+def mock_oidc_endpoint() -> str:
+    return os.getenv("MOCK_OIDC_ENDPOINT", "http://localhost/mock-oidc")
+
+
+def get_mock_token(mock_oidc_endpoint: Optional[str] = None) -> str:
+    """Get valid JWT token from mock OIDC server."""
+    if mock_oidc_endpoint is None:
+        mock_oidc_endpoint = os.getenv(
+            "MOCK_OIDC_ENDPOINT", "http://localhost/mock-oidc"
+        )
+
+    response = requests.post(
+        f"{mock_oidc_endpoint}/",
+        data={
+            "username": "test-user",
+            "scopes": "openid profile stac:read stac:write",
+        },
+        timeout=5,
+    )
+
+    if response.status_code == 200:
+        html = response.text
+        # Extract token from textarea element
+        if "<textarea" in html and ">" in html:
+            # Find the textarea content between > and </textarea>
+            start_marker = html.find("<textarea")
+            if start_marker != -1:
+                content_start = html.find(">", start_marker) + 1
+                content_end = html.find("</textarea>", content_start)
+                if content_start != -1 and content_end != -1:
+                    token = html[content_start:content_end].strip()
+                    return f"Bearer {token}"
+
+    raise Exception(
+        f"Could not get token from mock OIDC server at {mock_oidc_endpoint}"
+    )
+
+
+@pytest.fixture
+def auth_token(mock_oidc_endpoint: str) -> str:
+    """Get valid JWT token for auth testing."""
+    return get_mock_token(mock_oidc_endpoint)
 
 
 def get_namespace() -> str:
@@ -76,7 +121,7 @@ def kubectl_port_forward(
 
 
 def kubectl_proxy(
-    port: int = 8001, namespace: str = None
+    port: int = 8001, namespace: Optional[str] = None
 ) -> subprocess.Popen[str]:
     """Start kubectl proxy for accessing services via Kubernetes API."""
     cmd = ["kubectl", "proxy", f"--port={port}"]

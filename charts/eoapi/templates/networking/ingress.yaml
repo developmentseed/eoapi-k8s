@@ -49,7 +49,11 @@ spec:
             path: {{ $.Values.stac.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
+                {{- if index $.Values "stac-auth-proxy" "enabled" }}
+                name: {{ $.Release.Name }}-stac-auth-proxy
+                {{- else }}
                 name: {{ $.Release.Name }}-stac
+                {{- end }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
@@ -72,6 +76,16 @@ spec:
                 name: {{ $.Release.Name }}-multidim
                 port:
                   number: {{ $.Values.service.port }}
+          {{- end }}
+
+          {{- if and $.Values.mockOidcServer.enabled $.Values.mockOidcServer.ingress.enabled }}
+          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.mockOidcServer.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: {{ $.Release.Name }}-mock-oidc-server
+                port:
+                  number: {{ $.Values.mockOidcServer.service.port | default 8080 }}
           {{- end }}
 
           {{- if $.Values.docServer.enabled }}
@@ -105,7 +119,11 @@ spec:
             path: {{ .Values.stac.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
+                {{- if index .Values "stac-auth-proxy" "enabled" }}
+                name: {{ .Release.Name }}-stac-auth-proxy
+                {{- else }}
                 name: {{ .Release.Name }}-stac
+                {{- end }}
                 port:
                   number: {{ .Values.service.port }}
           {{- end }}
@@ -128,6 +146,16 @@ spec:
                 name: {{ .Release.Name }}-multidim
                 port:
                   number: {{ .Values.service.port }}
+          {{- end }}
+
+          {{- if and .Values.mockOidcServer.enabled .Values.mockOidcServer.ingress.enabled }}
+          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.mockOidcServer.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            backend:
+              service:
+                name: {{ .Release.Name }}-mock-oidc-server
+                port:
+                  number: {{ .Values.mockOidcServer.service.port | default 8080 }}
           {{- end }}
 
           {{- if .Values.docServer.enabled }}
