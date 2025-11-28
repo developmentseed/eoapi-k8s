@@ -535,7 +535,7 @@ knative:
   # CloudEvents sink configuration (deployed when eoapi-notifier uses CloudEvents output)
   cloudEventsSink:
     enabled: false
-    image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.4
+    image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.5
     resources: {}
 
 # Knative operator sub-chart configuration
