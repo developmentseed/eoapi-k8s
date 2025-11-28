@@ -7,9 +7,6 @@
 #   helm install eoapi ./charts/eoapi -f profiles/experimental.yaml
 #   helm upgrade eoapi ./charts/eoapi -f profiles/experimental.yaml
 
-# Enable testing mode for experimental features
-testing: false
-
 ######################
 # DATABASE
 ######################

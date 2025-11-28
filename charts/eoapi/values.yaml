@@ -14,12 +14,6 @@ comment_install: >
 # the correct updated value otherwise it's defaulted
 gitSha: "gitshaABC123"
 
-######################
-# TESTING
-######################
-# only used in CI for running parallel helm installs
-testing: false
-
 #######################
 # SERVICE ACCOUNT
 #######################
