@@ -337,8 +337,8 @@ class TestScalingBehavior:
         # Use simple GET endpoints that are guaranteed to work
         load_endpoints = [
             "/stac/collections",
-            "/stac",  # Root endpoint
-            "/raster/",  # Raster root endpoint (no /collections endpoint)
+            "/stac",
+            "/raster/",
             "/vector/collections",
         ]
 

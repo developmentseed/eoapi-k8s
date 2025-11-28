@@ -270,11 +270,151 @@ cleanup_on_exit() {
 
 trap cleanup_on_exit EXIT
 
-# Export functions
+get_base_url() {
+    local namespace="${1:-eoapi}"
+
+    # Try localhost first (most common in local dev)
+    if curl -s -f -m 3 "http://localhost/stac" >/dev/null 2>&1; then
+        echo "http://localhost"
+        return 0
+    fi
+
+    # Try ingress if configured
+    local host
+    host=$(kubectl get ingress -n "$namespace" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "")
+    if [[ -n "$host" ]] && curl -s -f -m 3 "http://$host/stac" >/dev/null 2>&1; then
+        echo "http://$host"
+        return 0
+    fi
+
+    return 1
+}
+
+validate_autoscaling_environment() {
+    local namespace="$1"
+
+    validate_cluster || return 1
+    validate_namespace "$namespace" || return 1
+
+    # Check HPA exists
+    if ! kubectl get hpa -n "$namespace" >/dev/null 2>&1 || [[ $(kubectl get hpa -n "$namespace" --no-headers 2>/dev/null | wc -l) -eq 0 ]]; then
+        log_error "No HPA resources found. Deploy with autoscaling enabled."
+        return 1
+    fi
+
+    # Check metrics server
+    if ! kubectl get deployment -A | grep -q metrics-server; then
+        log_error "metrics-server required for autoscaling tests"
+        return 1
+    fi
+
+    return 0
+}
+
+validate_python_environment() {
+    if ! command_exists python3; then
+        log_error "python3 is required but not found"
+        log_info "Install python3 to continue"
+        return 1
+    fi
+
+    log_debug "Python3 environment validated"
+    return 0
+}
+
+install_python_requirements() {
+    local requirements_file="$1"
+    local project_root="${2:-}"
+
+    local full_path="$requirements_file"
+    [[ -n "$project_root" ]] && full_path="$project_root/$requirements_file"
+
+    [[ ! -f "$full_path" ]] && { log_error "Requirements file not found: $full_path"; return 1; }
+
+    # Already in a venv? Just install
+    if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+        log_debug "Using existing virtual environment: $VIRTUAL_ENV"
+        if python3 -m pip install -q -r "$full_path"; then
+            return 0
+        else
+            log_error "Failed to install requirements in existing venv"
+            return 1
+        fi
+    fi
+
+    # Check if .venv exists and activate it
+    local venv_dir="${project_root:-.}/.venv"
+    if [[ -d "$venv_dir" ]]; then
+        log_debug "Activating existing venv: $venv_dir"
+        # shellcheck source=/dev/null
+        if source "$venv_dir/bin/activate"; then
+            if python3 -m pip install -q -r "$full_path"; then
+                return 0
+            else
+                log_warn "Failed to install in existing venv, will recreate"
+                deactivate 2>/dev/null || true
+                rm -rf "$venv_dir"
+            fi
+        else
+            log_warn "Failed to activate venv, will recreate"
+            rm -rf "$venv_dir"
+        fi
+    fi
+
+    # Create new venv (prefer uv for speed)
+    log_info "Creating virtual environment at $venv_dir..."
+    if command_exists uv; then
+        if uv venv "$venv_dir" >/dev/null 2>&1; then
+            # shellcheck source=/dev/null
+            source "$venv_dir/bin/activate" || { log_error "Failed to activate uv venv"; return 1; }
+            if uv pip install -q -r "$full_path"; then
+                return 0
+            else
+                log_error "uv pip install failed"
+                return 1
+            fi
+        fi
+        log_warn "uv venv creation failed, falling back to python3 -m venv"
+    fi
+
+    if python3 -m venv "$venv_dir" 2>&1; then
+        # shellcheck source=/dev/null
+        source "$venv_dir/bin/activate" || { log_error "Failed to activate venv"; return 1; }
+        if python3 -m pip install -q -r "$full_path"; then
+            return 0
+        else
+            log_error "pip install failed"
+            return 1
+        fi
+    fi
+
+    log_error "Failed to create virtual environment"
+    log_info "Try manually: python3 -m venv .venv && source .venv/bin/activate && pip install -r $requirements_file"
+    return 1
+}
+
+validate_python_with_requirements() {
+    local requirements_file="${1:-}"
+    local project_root="${2:-}"
+
+    validate_python_environment || return 1
+
+    if [[ -n "$requirements_file" ]]; then
+        install_python_requirements "$requirements_file" "$project_root" || {
+            log_warn "Python requirements installation failed, but continuing..."
+            return 0  # Don't fail the entire operation
+        }
+    fi
+
+    return 0
+}
+
+# Export all functions for use in other scripts
 export -f log_info log_success log_warn log_error log_debug
 export -f command_exists validate_tools check_requirements validate_cluster
-export -f is_ci validate_namespace
+export -f is_ci validate_namespace get_base_url
 export -f detect_release_name detect_namespace
-export -f wait_for_pods validate_eoapi_deployment
+export -f wait_for_pods validate_eoapi_deployment validate_autoscaling_environment
 export -f preflight_deploy preflight_ingest preflight_test
+export -f validate_python_environment install_python_requirements validate_python_with_requirements
 export -f show_standard_options
