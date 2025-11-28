@@ -21,11 +21,9 @@ USAGE:
 
 COMMANDS:
     baseline        Low load, verify monitoring works
-    services        Test each service individually
     autoscaling     Test HPA scaling under load
-    mixed           Realistic scenario
+    normal          Realistic scenario
     stress          Find breaking points
-    soak            Long-running stability
     chaos           Kill pods during load, test resilience
     all             Run all load tests
 
@@ -203,19 +201,14 @@ load_autoscaling() {
     fi
 }
 
-load_mixed() {
-    log_info "Running mixed load test scenario..."
+load_normal() {
+    log_info "Running normal load test scenario..."
     # TODO: Implement realistic mixed scenario
 }
 
 load_stress() {
     log_info "Running stress test to find breaking points..."
     # TODO: Implement stress testing
-}
-
-load_soak() {
-    log_info "Running soak test for stability..."
-    # TODO: Implement long-running stability test
 }
 
 load_chaos() {
@@ -231,9 +224,8 @@ load_all() {
     load_baseline || ((failed++))
     load_services || ((failed++))
     load_autoscaling || ((failed++))
-    load_mixed || ((failed++))
+    load_normal || ((failed++))
     load_stress || ((failed++))
-    load_soak || ((failed++))
     load_chaos || ((failed++))
 
     if [[ $failed -eq 0 ]]; then
@@ -267,7 +259,7 @@ main() {
                 RELEASE_NAME="$2"
                 shift 2
                 ;;
-            baseline|services|autoscaling|mixed|stress|soak|chaos|all)
+            baseline|services|autoscaling|normal|stress|chaos|all)
                 command="$1"
                 shift
                 break
@@ -292,14 +284,11 @@ main() {
         autoscaling)
             load_autoscaling
             ;;
-        mixed)
+        normal)
             load_mixed
             ;;
         stress)
             load_stress
-            ;;
-        soak)
-            load_soak
             ;;
         chaos)
             load_chaos
