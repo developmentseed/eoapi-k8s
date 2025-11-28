@@ -21,7 +21,7 @@ USAGE:
 
 COMMANDS:
     baseline        Low load, verify monitoring works
-    autoscaling     Test HPA scaling under load
+    autoscaling     Delegate to autoscaling.sh for HPA tests
     normal          Realistic scenario
     stress          Find breaking points
     chaos           Kill pods during load, test resilience
@@ -37,33 +37,33 @@ EXAMPLES:
     # Run baseline load test
     $(basename "$0") baseline
 
-    # Test individual services
-    $(basename "$0") services --debug
-
     # Test autoscaling behavior
     $(basename "$0") autoscaling --debug
+
+    # Find breaking points
+    $(basename "$0") stress --debug
 
     # Run all load tests
     $(basename "$0") all
 EOF
 }
 
-get_base_url() {
-    # Try localhost first (most common in local dev)
-    if curl -s -f -m 3 "http://localhost/stac" >/dev/null 2>&1; then
-        echo "http://localhost"
-        return 0
-    fi
 
-    # Try ingress if configured
-    local host
-    host=$(kubectl get ingress -n "$NAMESPACE" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "")
-    if [[ -n "$host" ]] && curl -s -f -m 3 "http://$host/stac" >/dev/null 2>&1; then
-        echo "http://$host"
-        return 0
-    fi
+wait_for_services() {
+    local base_url="$1"
 
-    return 1
+    # Wait for deployments to be available
+    for service in stac raster vector; do
+        kubectl wait --for=condition=Available deployment/"${RELEASE_NAME}-${service}" -n "$NAMESPACE" --timeout=60s 2>/dev/null || \
+            log_warn "Service $service may not be ready"
+    done
+
+    # Test basic connectivity
+    for endpoint in "$base_url/stac" "$base_url/raster/healthz" "$base_url/vector/healthz"; do
+        if ! curl -s -f -m 5 "$endpoint" >/dev/null 2>&1; then
+            log_warn "Endpoint not responding: $endpoint"
+        fi
+    done
 }
 
 test_endpoint() {
@@ -99,17 +99,13 @@ load_baseline() {
     validate_namespace "$NAMESPACE" || return 1
 
     local base_url
-    if ! base_url=$(get_base_url); then
+    if ! base_url=$(get_base_url "$NAMESPACE"); then
         log_error "Cannot reach eoAPI endpoints"
         return 1
     fi
     log_info "Using base URL: $base_url"
 
-    # Wait for deployments
-    for service in stac raster vector; do
-        kubectl wait --for=condition=Available deployment/"${RELEASE_NAME}-${service}" -n "$NAMESPACE" --timeout=60s 2>/dev/null || \
-            log_warn "Service $service may not be ready"
-    done
+    wait_for_services "$base_url"
 
     log_info "Running light load tests..."
     log_info "Monitor pods: kubectl get pods -n $NAMESPACE -w"
@@ -141,79 +137,135 @@ load_services() {
 load_autoscaling() {
     log_info "Running autoscaling tests..."
 
-    validate_cluster || return 1
-    validate_namespace "$NAMESPACE" || return 1
+    validate_autoscaling_environment "$NAMESPACE" || return 1
 
-    # Check HPA exists
-    if ! kubectl get hpa -n "$NAMESPACE" >/dev/null 2>&1 || [[ $(kubectl get hpa -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l) -eq 0 ]]; then
-        log_error "No HPA resources found. Deploy with autoscaling enabled."
-        return 1
-    fi
+    validate_python_with_requirements "tests/requirements.txt" "${SCRIPT_DIR}/.." || return 1
 
-    # Check metrics server
-    if ! kubectl get deployment -A | grep -q metrics-server; then
-        log_error "metrics-server required for autoscaling tests"
-        return 1
-    fi
-
-    local base_url
-    if ! base_url=$(get_base_url); then
-        log_error "Cannot reach eoAPI endpoints"
-        return 1
-    fi
-    log_info "Using base URL: $base_url"
-
-    # Wait for services
+    # Wait for deployments
     for service in stac raster vector; do
         kubectl wait --for=condition=Available deployment/"${RELEASE_NAME}-${service}" -n "$NAMESPACE" --timeout=90s || return 1
     done
 
-    log_info "Current HPA status:"
-    kubectl get hpa -n "$NAMESPACE"
+    # Get ingress host
+    local ingress_host
+    ingress_host=$(kubectl get ingress -n "$NAMESPACE" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "localhost")
 
-    log_info "Generating sustained load to trigger autoscaling..."
+    # Set environment for Python tests
+    export STAC_ENDPOINT="http://$ingress_host/stac"
+    export RASTER_ENDPOINT="http://$ingress_host/raster"
+    export VECTOR_ENDPOINT="http://$ingress_host/vector"
 
-    # Generate load that should trigger HPA (10 min, 15 concurrent)
-    if command_exists hey; then
-        log_info "Starting sustained load test (10 minutes)..."
-        hey -z 600s -c 15 "$base_url/stac/search" -m POST \
-            -H "Content-Type: application/json" -d '{"limit":100}' &
-        local load_pid=$!
+    log_info "Running Python autoscaling tests..."
+    cd "${SCRIPT_DIR}/.."
 
-        # Monitor HPA changes every 30s
-        log_info "Monitoring HPA scaling..."
-        for i in {1..20}; do
-            sleep 30
-            log_info "HPA status after ${i}x30s:"
-            kubectl get hpa -n "$NAMESPACE" --no-headers | awk '{print $1 ": " $6 "/" $7 " replicas, CPU: " $3}'
-        done
+    local cmd="python3 -m pytest tests/autoscaling"
+    [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd -v --tb=short"
 
-        # Stop load test
-        kill $load_pid 2>/dev/null || true
-        wait $load_pid 2>/dev/null || true
-
-        log_info "Final HPA status:"
-        kubectl get hpa -n "$NAMESPACE"
-        log_success "Autoscaling test completed"
+    if eval "$cmd"; then
+        log_success "Autoscaling tests passed"
     else
-        log_error "hey required for autoscaling tests"
+        log_error "Autoscaling tests failed"
         return 1
     fi
 }
 
 load_normal() {
     log_info "Running normal load test scenario..."
-    # TODO: Implement realistic mixed scenario
+
+    validate_cluster || return 1
+    validate_namespace "$NAMESPACE" || return 1
+    validate_python_with_requirements "tests/requirements.txt" "${SCRIPT_DIR}/.." || return 1
+
+    local base_url
+    if ! base_url=$(get_base_url "$NAMESPACE"); then
+        log_error "Cannot reach eoAPI endpoints"
+        return 1
+    fi
+
+    wait_for_services "$base_url"
+
+    log_info "Running Python normal load test..."
+    cd "${SCRIPT_DIR}/.."
+
+    local cmd="python3 -m tests.load.load_tester normal --base-url $base_url"
+    [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd --duration 30 --users 5"
+
+    log_debug "Running: $cmd"
+
+    if eval "$cmd"; then
+        log_success "Normal load test completed"
+    else
+        log_error "Normal load test failed"
+        return 1
+    fi
 }
 
 load_stress() {
     log_info "Running stress test to find breaking points..."
-    # TODO: Implement stress testing
+
+    validate_cluster || return 1
+    validate_namespace "$NAMESPACE" || return 1
+
+    validate_python_with_requirements "tests/requirements.txt" "${SCRIPT_DIR}/.." || return 1
+
+    local base_url
+    if ! base_url=$(get_base_url "$NAMESPACE"); then
+        log_error "Cannot reach eoAPI endpoints"
+        return 1
+    fi
+
+    wait_for_services "$base_url"
+
+    log_info "Running Python stress test module..."
+    cd "${SCRIPT_DIR}/.."
+
+    local cmd="python3 -m tests.load.load_tester --base-url $base_url"
+    [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd --test-duration 5 --max-workers 20"
+
+    log_debug "Running: $cmd"
+
+    if eval "$cmd"; then
+        log_success "Stress test completed"
+    else
+        log_error "Stress test failed"
+        return 1
+    fi
 }
 
 load_chaos() {
     log_info "Running chaos testing with pod failures..."
-    # TODO: Implement chaos testing
+
+    validate_cluster || return 1
+    validate_namespace "$NAMESPACE" || return 1
+    validate_python_with_requirements "tests/requirements.txt" "${SCRIPT_DIR}/.." || return 1
+
+    if ! command_exists kubectl; then
+        log_error "kubectl required for chaos testing"
+        return 1
+    fi
+
+    local base_url
+    if ! base_url=$(get_base_url "$NAMESPACE"); then
+        log_error "Cannot reach eoAPI endpoints"
+        return 1
+    fi
+
+    wait_for_services "$base_url"
+
+    log_info "Running Python chaos test..."
+    cd "${SCRIPT_DIR}/.."
+
+    local cmd="python3 -m tests.load.load_tester chaos --base-url $base_url --namespace $NAMESPACE"
+    [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd --duration 60 --kill-interval 30"
+
+    log_debug "Running: $cmd"
+
+    if eval "$cmd"; then
+        log_success "Chaos test completed"
+    else
+        log_error "Chaos test failed"
+        return 1
+    fi
 }
 
 load_all() {
@@ -285,7 +337,7 @@ main() {
             load_autoscaling
             ;;
         normal)
-            load_mixed
+            load_normal
             ;;
         stress)
             load_stress

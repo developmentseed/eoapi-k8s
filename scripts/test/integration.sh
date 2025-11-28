@@ -17,14 +17,9 @@ run_integration_tests() {
 
     log_info "Running integration tests..."
 
-    check_requirements python3 kubectl || return 1
+    check_requirements kubectl || return 1
     validate_cluster || return 1
-
-    log_info "Installing Python test dependencies..."
-    python3 -m pip install --user -r "${PROJECT_ROOT}/tests/requirements.txt" >/dev/null 2>&1 || {
-        log_warn "Could not install test dependencies automatically"
-        log_info "Try manually: pip install -r tests/requirements.txt"
-    }
+    validate_python_with_requirements "tests/requirements.txt" "$PROJECT_ROOT" || return 1
 
     if ! kubectl get deployment -n "$NAMESPACE" -l "app.kubernetes.io/instance=$RELEASE_NAME" &>/dev/null; then
         log_error "eoAPI deployment not found (release: $RELEASE_NAME, namespace: $NAMESPACE)"
