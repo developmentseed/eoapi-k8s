@@ -58,11 +58,11 @@ EXAMPLES:
     # Run integration tests only
     eoapi-cli test integration
 
-    # Run autoscaling tests only
-    eoapi-cli test autoscaling
-
     # Run load tests
     eoapi-cli load all
+
+    # Run autoscaling load tests only
+    eoapi-cli load autoscaling
 
     # Ingest sample data
     eoapi-cli ingest sample-data
