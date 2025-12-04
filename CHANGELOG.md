@@ -7,17 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Added documentation for cloud-native bucket access [#364](https://github.com/developmentseed/eoapi-k8s/pull/364)
-- Removed unused testing variable and unused deploy script [#369](https://github.com/developmentseed/eoapi-k8s/pull/369)
-
 ### Added
 
 - Added support for ConfigMap reference-based queryables configuration in addition to file-based queryables. Queryables can now be sourced from external ConfigMaps using `configMapRef`, from chart files using `file`, or a combination of both [#360](https://github.com/developmentseed/eoapi-k8s/pull/360)
+- Added documentation for cloud-native bucket access [#364](https://github.com/developmentseed/eoapi-k8s/pull/364)
+- Removed unused testing variable and unused deploy script [#369](https://github.com/developmentseed/eoapi-k8s/pull/369)
 
 ## Changed
 
 - Unified scripts and removed Makefile, combined all into one CLI command `eoapi-cli` [#359](https://github.com/developmentseed/eoapi-k8s/pull/359)
 - Added stac-auth-proxy for authentication and authorization on the STAC API [#358](https://github.com/developmentseed/eoapi-k8s/pull/358)
+- Fixed call to run_queued_queries pgstac procedure call [#377](https://github.com/developmentseed/eoapi-k8s/pull/377)
 
 ## [0.8.0] - 2025-11-20
 

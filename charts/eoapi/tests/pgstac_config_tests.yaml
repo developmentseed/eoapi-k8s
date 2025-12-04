@@ -98,7 +98,7 @@ tests:
           value: "*/15 * * * *"
       - matchRegex:
           path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
-          pattern: "RUN run_queued_queries\\(\\);"
+          pattern: "CALL run_queued_queries\\(\\);"
 
   # Extent Updater Tests
   - it: should create extent updater when update_collection_extent is false
