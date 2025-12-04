@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1]
+
 ### Added
 
 - Added support for ConfigMap reference-based queryables configuration in addition to file-based queryables. Queryables can now be sourced from external ConfigMaps using `configMapRef`, from chart files using `file`, or a combination of both [#360](https://github.com/developmentseed/eoapi-k8s/pull/360)
 - Added documentation for cloud-native bucket access [#364](https://github.com/developmentseed/eoapi-k8s/pull/364)
 - Removed unused testing variable and unused deploy script [#369](https://github.com/developmentseed/eoapi-k8s/pull/369)
 
-## Changed
+### Changed
 
 - Unified scripts and removed Makefile, combined all into one CLI command `eoapi-cli` [#359](https://github.com/developmentseed/eoapi-k8s/pull/359)
 - Added stac-auth-proxy for authentication and authorization on the STAC API [#358](https://github.com/developmentseed/eoapi-k8s/pull/358)
 - Fixed call to run_queued_queries pgstac procedure call [#377](https://github.com/developmentseed/eoapi-k8s/pull/377)
+
+### Dependencies
+
+- Updated helm release grafana to 10.3.0 [#375](https://github.com/developmentseed/eoapi-k8s/pull/375)
+- Updated helm release prometheus to 27.49.0 [#374](https://github.com/developmentseed/eoapi-k8s/pull/374)
+- Updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.1.2 [#368](https://github.com/developmentseed/eoapi-k8s/pull/368)
+- Updated actions/checkout action to v6 [#363](https://github.com/developmentseed/eoapi-k8s/pull/363)
 
 ## [0.8.0] - 2025-11-20
 
