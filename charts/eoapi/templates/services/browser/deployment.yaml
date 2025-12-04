@@ -7,7 +7,7 @@ metadata:
     app: {{ .Release.Name }}-browser
     gitsha: {{ .Values.gitSha }}
 spec:
-  replicas: {{.Values.browser.replicaCount}}
+  replicas: {{ .Values.browser.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-browser
@@ -23,5 +23,16 @@ spec:
           - containerPort: 8080
           env:
             - name: SB_catalogUrl
-              value: "{{ .Values.stac.ingress.path }}"
+              value: "http://{{ .Values.ingress.host }}{{ .Values.stac.ingress.path }}"
+            {{- if index .Values "stac-auth-proxy" "enabled" }}
+            - name: SB_authConfig
+              value: |
+                {
+                  "type": "openIdConnect",
+                  "openIdConnectUrl": "http://{{ .Values.ingress.host }}{{ .Values.mockOidcServer.ingress.path }}/.well-known/openid-configuration",
+                  "oidcOptions": {
+                    "client_id": "{{ .Values.browser.oidcClientId | default "test-client" }}"
+                  }
+                }
+            {{- end }}
 {{- end }}
