@@ -221,7 +221,7 @@ spec:
             {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
           volumeMounts:
             {{- range $idx, $config := .Values.pgstacBootstrap.settings.queryables }}
-            {{- if $config.file }}
+            {{- if and $config.file (typeIs "string" $config.file) }}
             - mountPath: /opt/queryables/{{ $config.name }}
               name: {{ $.Release.Name }}-queryables-volume
               subPath: {{ $config.name }}
@@ -236,7 +236,7 @@ spec:
       volumes:
         {{- $hasFileBasedQueryables := false }}
         {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
-          {{- if $config.file }}
+          {{- if and $config.file (typeIs "string" $config.file) }}
             {{- $hasFileBasedQueryables = true }}
           {{- end }}
         {{- end }}
