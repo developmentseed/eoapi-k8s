@@ -250,6 +250,13 @@
             }
           }
         },
+        "jobAnnotations": {
+          "type": "object",
+          "description": "Additional annotations to add to the pgstac bootstrap jobs (useful for ArgoCD sync waves)",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "settings": {
           "type": "object",
           "properties": {

@@ -222,6 +222,10 @@ kubectl create configmap my-queryables-cm \
 
 The queryables will be automatically loaded during the PgSTAC bootstrap process.
 
+### ArgoCD Integration
+
+For ArgoCD deployments, you can control job sync order using the `jobAnnotations` field. See the [ArgoCD Integration Guide](argocd.md) for detailed configuration and best practices.
+
 ## Cloud Storage Authentication
 
 eoAPI services access COG files in cloud storage buckets. Use cloud-native authentication instead of long-lived credentials:
