@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed Helm template to check queryables `file` field with schema validation [#671](https://github.com/developmentseed/eoapi-k8s/pull/671)
+- Fixed Helm template to check queryables `file` field with schema validation [#380](https://github.com/developmentseed/eoapi-k8s/pull/380)
 
 ## [0.8.1]
 
