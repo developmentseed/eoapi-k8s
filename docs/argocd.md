@@ -121,7 +121,7 @@ spec:
       values: |
         # Required values
         gitSha: "abc123def456"
-        
+
         # Database initialization with ArgoCD integration
         pgstacBootstrap:
           enabled: true
@@ -129,20 +129,20 @@ spec:
             argocd.argoproj.io/hook: "PreSync"
             argocd.argoproj.io/sync-wave: "-1"
             argocd.argoproj.io/hook-delete-policy: "HookSucceeded"
-          
+
         # Service configuration
         apiServices: ["stac", "raster", "vector"]
-        
+
         # Ingress setup
         ingress:
           enabled: true
           className: "nginx"
           host: "eoapi.example.com"
-        
+
   destination:
     server: https://kubernetes.default.svc
     namespace: eoapi
-  
+
   syncPolicy:
     automated:
       prune: true
