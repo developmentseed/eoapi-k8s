@@ -50,7 +50,7 @@ data:
 {{- if .Values.pgstacBootstrap.settings.queryables }}
 {{- $hasFileBasedQueryables := false }}
 {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
-  {{- if $config.file }}
+  {{- if and $config.file (typeIs "string" $config.file) }}
     {{- $hasFileBasedQueryables = true }}
   {{- end }}
 {{- end }}
@@ -65,7 +65,7 @@ metadata:
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
-  {{- if $config.file }}
+  {{- if and $config.file (typeIs "string" $config.file) }}
   {{ $config.name }}: |
     {{- $.Files.Get $config.file | nindent 4 }}
   {{- end }}
