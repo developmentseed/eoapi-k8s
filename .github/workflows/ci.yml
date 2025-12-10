@@ -34,6 +34,9 @@ jobs:
       - name: Run Helm unit tests
         run: ./eoapi-cli test unit
 
+      - name: Check container images for root user
+        run: ./eoapi-cli test images
+
   integration-tests:
     name: Integration tests
     needs: fast-checks

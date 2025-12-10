@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ensured non-root container images [#382](https://github.com/developmentseed/eoapi-k8s/pull/382)
+
 ### Fixed
 
 - Fixed Helm template to check queryables `file` field with schema validation [#380](https://github.com/developmentseed/eoapi-k8s/pull/380)
