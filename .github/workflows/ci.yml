@@ -45,6 +45,9 @@ jobs:
         with:
           charts: charts/eoapi
 
+      - name: Check container images for root user
+        run: ./eoapi-cli test images
+
   integration-tests:
     name: Integration tests
     needs: fast-checks

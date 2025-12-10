@@ -40,12 +40,12 @@ spec:
     spec:
       containers:
       - name: doc-server
-        image: nginx:alpine
+        image: nginxinc/nginx-unprivileged:alpine
         volumeMounts:
         - name: {{ .Release.Name }}-doc-html
           mountPath: /usr/share/nginx/html
         ports:
-        - containerPort: 80
+        - containerPort: 8080
       volumes:
       - name: {{ .Release.Name }}-doc-html
         configMap:
@@ -71,6 +71,6 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
 ---
 {{- end }}
