@@ -153,6 +153,8 @@ pgstacBootstrap:
   image:
     name: ghcr.io/stac-utils/pgstac-pypgstac
     tag: v0.9.8
+  # Annotations to add to the pgstac bootstrap job
+  jobAnnotations: {}
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
