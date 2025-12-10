@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added support for annotations on the PgSTAC bootstrap job via `pgstacBootstrap.jobAnnotations` in values.yaml [#381](https://github.com/developmentseed/eoapi-k8s/pull/381)
+
 ### Fixed
 
 - Fixed Helm template to check queryables `file` field with schema validation [#380](https://github.com/developmentseed/eoapi-k8s/pull/380)
