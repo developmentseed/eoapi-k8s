@@ -421,6 +421,8 @@ stac-auth-proxy:
     # OIDC_DISCOVERY_URL must be configured when enabling auth
   ingress:
     enabled: false  # Handled by main eoapi ingress
+  service:
+    port: 8080
   resources: {}
 
 vector:
