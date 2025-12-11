@@ -13,14 +13,17 @@ metadata:
   labels:
     app: {{ .Release.Name }}-ingress-browser
   annotations:
-    {{- if .Values.ingress.annotations }}
-{{ toYaml .Values.ingress.annotations | indent 4 }}
-    {{- end }}
     {{- if eq .Values.ingress.className "nginx" }}
     nginx.ingress.kubernetes.io/rewrite-target: /browser/$2
     nginx.ingress.kubernetes.io/use-regex: "true"
     {{- else if eq .Values.ingress.className "traefik" }}
+    # Traefik with NGINX provider supports nginx annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /browser/$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: web
+    {{- end }}
+    {{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
     {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
@@ -33,8 +36,8 @@ spec:
       http:
         paths:
           {{- if and $.Values.browser.enabled (or (not (hasKey $.Values.browser "ingress")) $.Values.browser.ingress.enabled) }}
-          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: "/browser{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
+          - pathType: {{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: "/browser{{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}(/|$)(.*){{ end }}"
             backend:
               service:
                 name: {{ .Release.Name }}-browser
@@ -49,8 +52,8 @@ spec:
       http:
         paths:
           {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
-          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: "/browser{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
+          - pathType: {{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: "/browser{{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}(/|$)(.*){{ end }}"
             backend:
               service:
                 name: {{ .Release.Name }}-browser

@@ -16,6 +16,9 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/use-regex: "true"
     {{- else if eq .Values.ingress.className "traefik" }}
+    # Traefik with NGINX provider supports nginx annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: web
     {{- end }}
     {{- if .Values.ingress.annotations }}
@@ -32,8 +35,8 @@ spec:
       http:
         paths:
           {{- if and $.Values.raster.enabled (or (not (hasKey $.Values.raster "ingress")) $.Values.raster.ingress.enabled) }}
-          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ $.Values.raster.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.raster.ingress.path }}{{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ $.Release.Name }}-raster
@@ -42,8 +45,8 @@ spec:
           {{- end }}
 
           {{- if and $.Values.stac.enabled (or (not (hasKey $.Values.stac "ingress")) $.Values.stac.ingress.enabled) }}
-          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ $.Values.stac.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.stac.ingress.path }}{{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 {{- if index $.Values "stac-auth-proxy" "enabled" }}
@@ -56,8 +59,8 @@ spec:
           {{- end }}
 
           {{- if and $.Values.vector.enabled (or (not (hasKey $.Values.vector "ingress")) $.Values.vector.ingress.enabled) }}
-          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ $.Values.vector.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.vector.ingress.path }}{{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ $.Release.Name }}-vector
@@ -66,8 +69,8 @@ spec:
           {{- end }}
 
           {{- if and $.Values.multidim.enabled (or (not (hasKey $.Values.multidim "ingress")) $.Values.multidim.ingress.enabled) }}
-          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ $.Values.multidim.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.multidim.ingress.path }}{{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ $.Release.Name }}-multidim
@@ -76,8 +79,8 @@ spec:
           {{- end }}
 
           {{- if and $.Values.mockOidcServer.enabled $.Values.mockOidcServer.ingress.enabled }}
-          - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ $.Values.mockOidcServer.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ $.Values.mockOidcServer.ingress.path }}{{ if or (eq $.Values.ingress.className "nginx") (eq $.Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ $.Release.Name }}-mock-oidc-server
@@ -102,8 +105,8 @@ spec:
       http:
         paths:
           {{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
-          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.raster.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.raster.ingress.path }}{{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ .Release.Name }}-raster
@@ -112,8 +115,8 @@ spec:
           {{- end }}
 
           {{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
-          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.stac.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.stac.ingress.path }}{{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 {{- if index .Values "stac-auth-proxy" "enabled" }}
@@ -126,8 +129,8 @@ spec:
           {{- end }}
 
           {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
-          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.vector.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.vector.ingress.path }}{{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ .Release.Name }}-vector
@@ -136,8 +139,8 @@ spec:
           {{- end }}
 
           {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
-          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.multidim.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.multidim.ingress.path }}{{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ .Release.Name }}-multidim
@@ -146,8 +149,8 @@ spec:
           {{- end }}
 
           {{- if and .Values.mockOidcServer.enabled .Values.mockOidcServer.ingress.enabled }}
-          - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.mockOidcServer.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+          - pathType: {{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            path: {{ .Values.mockOidcServer.ingress.path }}{{ if or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik") }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ .Release.Name }}-mock-oidc-server
