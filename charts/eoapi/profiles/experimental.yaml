@@ -358,7 +358,7 @@ autoscaling:
 ######################
 ingress:
   enabled: true
-  className: "nginx"
+  className: "traefik"
   pathType: "Prefix"
   host: "localhost"
   tls:

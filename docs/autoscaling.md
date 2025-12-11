@@ -408,19 +408,19 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
   - host: your-domain.com
     http:
       paths: [...]
 
-# For nginx ingress
+# For traefik ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: eoapi-ingress
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
   - host: abc5929f88f8c45c38f6cbab2faad43c-776419634.us-west-2.elb.amazonaws.com
     http:

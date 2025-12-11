@@ -115,6 +115,13 @@ EOF
         testing_mode=true
     fi
 
+    # Allow overriding ingress className via environment variable (optional, for special cases)
+    # Default is traefik, which works with Traefik's NGINX provider
+    if [[ -n "${INGRESS_CLASS_NAME:-}" ]]; then
+        log_info "Overriding ingress className to: ${INGRESS_CLASS_NAME}"
+        helm_cmd="$helm_cmd --set ingress.className=${INGRESS_CLASS_NAME}"
+    fi
+
     helm_cmd="$helm_cmd --timeout $TIMEOUT"
 
     log_info "Deploying eoAPI..."
