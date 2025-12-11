@@ -21,7 +21,6 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
     {{- else if eq .Values.ingress.className "traefik" }}
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-{{ $.Release.Name }}-strip-prefix-middleware@kubernetescrd
     {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
