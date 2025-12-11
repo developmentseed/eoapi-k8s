@@ -136,7 +136,7 @@ spec:
         # Ingress setup
         ingress:
           enabled: true
-          className: "nginx"
+          className: "traefik"
           host: "eoapi.example.com"
 
   destination:

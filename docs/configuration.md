@@ -269,7 +269,7 @@ Unified ingress configuration supporting both NGINX and Traefik:
 | **Values Key** | **Description** | **Default** | **Choices** |
 |:--------------|:----------------|:------------|:------------|
 | `ingress.enabled` | Enable ingress | true | true/false |
-| `ingress.className` | Ingress controller | "nginx" | "nginx", "traefik" |
+| `ingress.className` | Ingress controller | "traefik" | "traefik", "nginx" |
 | `ingress.host` | Ingress hostname | "" | valid hostname |
 | `ingress.rootPath` | Doc server root path | "" | valid path |
 

@@ -33,10 +33,9 @@ tests:
           path: spec.ingressClassName
           value: "nginx"
 
-  - it: "stac ingress with traefik controller"
+  - it: "stac ingress with traefik controller (using nginx provider)"
     set:
       ingress.className: "traefik"
-      ingress.pathType: "Prefix"
       ingress.host: "eoapi.local"
       raster.enabled: false
       stac.enabled: true
@@ -48,15 +47,15 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac"
+          value: "/stac(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
-          value: "Prefix"
+          value: "ImplementationSpecific"
       - equal:
           path: metadata.annotations
           value:
-            traefik.ingress.kubernetes.io/router.entrypoints: web
-            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/use-regex: "true"
       - equal:
           path: spec.ingressClassName
           value: "traefik"

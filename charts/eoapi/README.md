@@ -98,7 +98,7 @@ apiServices:
 # Configure ingress
 ingress:
   enabled: true
-  className: "nginx"  # or "traefik"
+  className: "traefik"  # Or "nginx" for legacy setups
   host: "your-domain.com"  # Optional
 
 # Database options
@@ -130,7 +130,7 @@ pgstacBootstrap:
 | `postgresql.type` | Database deployment type | `postgrescluster` |
 | `postgrescluster.enabled` | Enable PostgreSQL cluster. Must be set to `false` when using external databases | `true` |
 | `ingress.enabled` | Enable ingress | `true` |
-| `ingress.className` | Ingress controller class | `nginx` |
+| `ingress.className` | Ingress controller class | `traefik` |
 | `browser.enabled` | Enable STAC Browser interface | `true` |
 | `pgstacBootstrap.enabled` | Enable database initialization | `true` |
 | `notifications.sources.pgstac` | Enable PostgreSQL notification triggers for STAC item changes | `false` |
