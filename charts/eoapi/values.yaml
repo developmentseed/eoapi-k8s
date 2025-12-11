@@ -492,6 +492,7 @@ browser:
     tag: 3.3.4
   ingress:
     enabled: true  # Control ingress specifically for browser service
+  oidcClientId: "some-client-id"
 
 docServer:
   enabled: true
