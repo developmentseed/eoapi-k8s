@@ -415,15 +415,41 @@ stac:
 # STAC Auth Proxy - authentication layer for STAC API
 stac-auth-proxy:
   enabled: false
-  env:
-    DEFAULT_PUBLIC: "true"
-    # UPSTREAM_URL will be set dynamically in template to point to stac service
-    # OIDC_DISCOVERY_URL must be configured when enabling auth
   ingress:
     enabled: false  # Handled by main eoapi ingress
   service:
     port: 8080
   resources: {}
+  env:
+    # OIDC_DISCOVERY_URL must be configured when enabling auth
+    # UPSTREAM_URL will be set dynamically in template to point to stac service
+    #
+    # Authentication filters settings:
+    DEFAULT_PUBLIC: "true" # This enables standard profile for authentication filters
+    # Alternatively with the following settings custom filters can be added
+    # These must be mounted with extraVolumes/extraVolumeMounts (see below)
+    # COLLECTIONS_FILTER_CLS: stac_auth_proxy.custom_filters:CollectionsFilter
+    # ITEMS_FILTER_CLS: stac_auth_proxy.custom_filters:ItemsFilter
+
+  # Path to custom filters file (relative to chart root)
+  # When extraVolumes is configured, a ConfigMap will be created from this file
+  # customFiltersFile: "data/stac-auth-proxy/custom_filters.py"
+
+  # Additional volumes to mount (e.g., for custom filter files)
+  extraVolumes: []
+  # Example:
+  # extraVolumes:
+  #   - name: filters
+  #     configMap:
+  #       name: stac-auth-proxy-filters
+  # Additional volume mounts for the container
+  extraVolumeMounts: []
+  # Example:
+  # extraVolumeMounts:
+  #   - name: filters
+  #     mountPath: /app/src/stac_auth_proxy/custom_filters.py
+  #     subPath: custom_filters.py
+  #     readOnly: true
 
 vector:
   enabled: true

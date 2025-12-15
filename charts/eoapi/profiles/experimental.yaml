@@ -370,6 +370,25 @@ stac-auth-proxy:
   # env:
   #  OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"
 
+  # Custom filters configuration
+  # NOTE: extraVolumes/extraVolumeMounts support requires stac-auth-proxy chart version with PR #114 merged
+  # See: https://github.com/developmentseed/stac-auth-proxy/pull/114
+  # Uncomment when using a compatible version:
+  #
+  # Path to custom filters file (defaults to data/stac-auth-proxy/custom_filters.py)
+  # customFiltersFile: "data/stac-auth-proxy/custom_filters.py"
+  #
+  # extraVolumes:
+  #   - name: filters
+  #     configMap:
+  #       name: "{{ .Release.Name }}-stac-auth-proxy-filters"
+  #
+  # extraVolumeMounts:
+  #   - name: filters
+  #     mountPath: /app/src/stac_auth_proxy/custom_filters.py
+  #     subPath: custom_filters.py
+  #     readOnly: true
+
 ######################
 # MOCK OIDC SERVER
 ######################

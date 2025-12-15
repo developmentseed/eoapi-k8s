@@ -1,0 +1,16 @@
+{{- if index .Values "stac-auth-proxy" "enabled" }}
+{{- $stacAuthProxy := index .Values "stac-auth-proxy" }}
+{{- if and (hasKey $stacAuthProxy "extraVolumes") $stacAuthProxy.extraVolumes }}
+{{- $filterFile := $stacAuthProxy.customFiltersFile | default "data/stac-auth-proxy/custom_filters.py" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-stac-auth-proxy-filters
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: stac-auth-proxy
+data:
+  custom_filters.py: |
+{{ .Files.Get $filterFile | indent 4 }}
+{{- end }}
+{{- end }}
