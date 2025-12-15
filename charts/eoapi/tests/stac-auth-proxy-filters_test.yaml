@@ -1,0 +1,77 @@
+suite: test stac-auth-proxy custom filters ConfigMap
+templates:
+  - templates/_helpers/core.tpl
+  - templates/core/stac-auth-proxy-filters-configmap.yaml
+
+tests:
+  - it: should create ConfigMap when stac-auth-proxy is enabled and extraVolumes is defined
+    set:
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.extraVolumes:
+        - name: filters
+          configMap:
+            name: test-filters
+    template: templates/core/stac-auth-proxy-filters-configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: eoapi-stac-auth-proxy-custom-filters
+      - isNotEmpty:
+          path: data
+
+  - it: should not create ConfigMap when stac-auth-proxy is disabled
+    set:
+      stac-auth-proxy.enabled: false
+      stac-auth-proxy.extraVolumes:
+        - name: filters
+          configMap:
+            name: test-filters
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create ConfigMap when extraVolumes is not defined
+    set:
+      stac-auth-proxy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should have correct labels
+    set:
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.extraVolumes:
+        - name: filters
+          configMap:
+            name: test-filters
+    template: templates/core/stac-auth-proxy-filters-configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: stac-auth-proxy
+      - exists:
+          path: metadata.labels["app.kubernetes.io/name"]
+      - exists:
+          path: metadata.labels["app.kubernetes.io/instance"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: should use custom file path when customFiltersFile is specified
+    set:
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.customFiltersFile: "data/eoepca_filters.py"
+      stac-auth-proxy.extraVolumes:
+        - name: filters
+          configMap:
+            name: test-filters
+    template: templates/core/stac-auth-proxy-filters-configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: eoapi-stac-auth-proxy-custom-filters
+      - isNotEmpty:
+          path: data

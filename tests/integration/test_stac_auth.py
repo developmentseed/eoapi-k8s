@@ -106,3 +106,119 @@ def test_stac_read_operations_work(stac_endpoint: str) -> None:
 
     resp = client.get(f"{stac_endpoint}/collections")
     assert resp.status_code == 200
+
+
+def test_stac_auth_custom_filters_mounted() -> None:
+    """Test that custom filters ConfigMap, env vars, and file mount work correctly."""
+    import subprocess
+
+    namespace = os.getenv("NAMESPACE", "eoapi")
+    release = os.getenv("RELEASE_NAME", "eoapi")
+
+    # Check ConfigMap exists
+    result = subprocess.run(
+        [
+            "kubectl",
+            "get",
+            "configmap",
+            "-n",
+            namespace,
+            "eoapi-stac-auth-proxy-custom-filters",
+            "-o",
+            "jsonpath={.data.custom_filters\\.py}",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        pytest.skip("Custom filters ConfigMap not found (feature may be disabled)")
+
+    # Verify ConfigMap contains filter classes
+    assert "class CollectionsFilter" in result.stdout
+    assert "class ItemsFilter" in result.stdout
+
+    # Get stac-auth-proxy pod name
+    result = subprocess.run(
+        [
+            "kubectl",
+            "get",
+            "pod",
+            "-n",
+            namespace,
+            "-l",
+            f"app.kubernetes.io/name=stac-auth-proxy,app.kubernetes.io/instance={release}",
+            "-o",
+            "jsonpath={.items[0].metadata.name}",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    pod_name = result.stdout.strip()
+
+    if not pod_name:
+        pytest.skip("stac-auth-proxy pod not found")
+
+    # Check env vars are set
+    result = subprocess.run(
+        [
+            "kubectl",
+            "exec",
+            "-n",
+            namespace,
+            pod_name,
+            "--",
+            "printenv",
+            "COLLECTIONS_FILTER_CLS",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, "COLLECTIONS_FILTER_CLS env var not set"
+    assert (
+        "stac_auth_proxy.custom_filters:CollectionsFilter" in result.stdout
+    ), f"Unexpected COLLECTIONS_FILTER_CLS value: {result.stdout}"
+
+    result = subprocess.run(
+        [
+            "kubectl",
+            "exec",
+            "-n",
+            namespace,
+            pod_name,
+            "--",
+            "printenv",
+            "ITEMS_FILTER_CLS",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, "ITEMS_FILTER_CLS env var not set"
+    assert (
+        "stac_auth_proxy.custom_filters:ItemsFilter" in result.stdout
+    ), f"Unexpected ITEMS_FILTER_CLS value: {result.stdout}"
+
+    # Check if custom_filters.py is mounted at correct path
+    result = subprocess.run(
+        [
+            "kubectl",
+            "exec",
+            "-n",
+            namespace,
+            pod_name,
+            "--",
+            "cat",
+            "/app/src/stac_auth_proxy/custom_filters.py",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    # Verify mounted file contains expected filter classes
+    assert "class CollectionsFilter" in result.stdout
+    assert "class ItemsFilter" in result.stdout
+    assert 'return "1=1"' in result.stdout
