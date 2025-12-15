@@ -48,6 +48,18 @@ jobs:
       - name: Set release name
         run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
 
+      - name: Clean up disk space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          echo "=== Docker cleanup ==="
+          docker system prune -af --volumes || true
+          echo "=== Remove unused packages ==="
+          sudo apt-get clean || true
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          echo "=== Disk space after cleanup ==="
+          df -h
+
       - name: Start K3s cluster
         uses: jupyterhub/action-k3s-helm@v4
         with:
@@ -78,8 +90,11 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
+          echo "=== Cleaning up Helm release and namespace ==="
           helm uninstall "$RELEASE_NAME" -n eoapi || true
           kubectl delete namespace eoapi || true
+          echo "=== Cleaning up Docker resources ==="
+          docker system prune -af --volumes || true
 
   validate-docs:
     name: Validate documentation
