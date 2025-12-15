@@ -415,7 +415,11 @@ stac:
 # STAC Auth Proxy - authentication layer for STAC API
 stac-auth-proxy:
   enabled: false
+  image:
+    tag: "v0.10.2-rc2"
   env:
+    ROOT_PATH: "/stac"
+    OVERRIDE_HOST: "false"
     DEFAULT_PUBLIC: "true"
     # UPSTREAM_URL will be set dynamically in template to point to stac service
     # OIDC_DISCOVERY_URL must be configured when enabling auth
@@ -492,6 +496,7 @@ browser:
     tag: 3.3.4
   ingress:
     enabled: true  # Control ingress specifically for browser service
+  oidcClientId: "some-client-id"
 
 docServer:
   enabled: true
