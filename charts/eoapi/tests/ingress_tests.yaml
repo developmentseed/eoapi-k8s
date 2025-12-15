@@ -1,6 +1,6 @@
 suite: unified ingress tests
 templates:
-  - templates/services/ingress.yaml
+  - templates/networking/ingress.yaml
 tests:
   - it: "vector ingress with nginx controller"
     set:
@@ -33,13 +33,13 @@ tests:
           path: spec.ingressClassName
           value: "nginx"
 
-  - it: "stac ingress with traefik controller"
+  - it: "raster ingress with traefik controller"
     set:
       ingress.className: "traefik"
       ingress.pathType: "Prefix"
       ingress.host: "eoapi.local"
-      raster.enabled: false
-      stac.enabled: true
+      raster.enabled: true
+      stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false
@@ -48,7 +48,7 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac"
+          value: "/raster"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: "Prefix"
@@ -95,8 +95,7 @@ tests:
       ingress.className: "nginx"
       raster.enabled: true
       raster.ingress.path: "/titiler"
-      stac.enabled: true
-      stac.ingress.path: "/api"
+      stac.enabled: false
       vector.enabled: true
       vector.ingress.path: "/features"
       multidim.enabled: false
@@ -109,18 +108,12 @@ tests:
           value: "/titiler(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[1].path
-          value: "/api(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[2].path
           value: "/features(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: "ImplementationSpecific"
       - equal:
           path: spec.rules[0].http.paths[1].pathType
-          value: "ImplementationSpecific"
-      - equal:
-          path: spec.rules[0].http.paths[2].pathType
           value: "ImplementationSpecific"
       - equal:
           path: metadata.annotations
@@ -131,9 +124,9 @@ tests:
   - it: "custom paths with traefik controller"
     set:
       ingress.className: "traefik"
-      raster.enabled: false
-      stac.enabled: true
-      stac.ingress.path: "/api"
+      raster.enabled: true
+      raster.ingress.path: "/titiler"
+      stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false
@@ -142,7 +135,7 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/api"
+          value: "/titiler"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: "Prefix"
@@ -159,8 +152,8 @@ tests:
         - "2.eoapi.dev"
         - "1.eoapi.dev"
       raster.enabled: true
-      stac.enabled: true
-      vector.enabled: false
+      stac.enabled: false
+      vector.enabled: true
       multidim.enabled: false
       browser.enabled: false
     asserts:
@@ -177,13 +170,13 @@ tests:
           value: "/raster(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[1].path
-          value: "/stac(/|$)(.*)"
+          value: "/vector(/|$)(.*)"
       - equal:
           path: spec.rules[1].http.paths[0].path
           value: "/raster(/|$)(.*)"
       - equal:
           path: spec.rules[1].http.paths[1].path
-          value: "/stac(/|$)(.*)"
+          value: "/vector(/|$)(.*)"
 
   - it: "multiple hosts with traefik controller"
     set:
@@ -191,8 +184,8 @@ tests:
       ingress.hosts:
         - "2.eoapi.dev"
         - "1.eoapi.dev"
-      raster.enabled: false
-      stac.enabled: true
+      raster.enabled: true
+      stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false
@@ -207,13 +200,13 @@ tests:
           value: "1.eoapi.dev"
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac"
+          value: "/raster"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: "Prefix"
       - equal:
           path: spec.rules[1].http.paths[0].path
-          value: "/stac"
+          value: "/raster"
       - equal:
           path: spec.rules[1].http.paths[0].pathType
           value: "Prefix"
@@ -226,8 +219,8 @@ tests:
         - "1.eoapi.dev"
       ingress.tls.enabled: true
       ingress.tls.secretName: "eoapi-tls"
-      raster.enabled: false
-      stac.enabled: true
+      raster.enabled: true
+      stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false
@@ -250,8 +243,8 @@ tests:
       ingress.host: "1.eoapi.dev"
       ingress.tls.enabled: true
       ingress.tls.secretName: "eoapi-tls"
-      raster.enabled: false
-      stac.enabled: true
+      raster.enabled: true
+      stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false
@@ -274,8 +267,8 @@ tests:
       ingress.host: "should-be-ignored.com"
       ingress.hosts:
         - "1.eoapi.dev"
-      raster.enabled: false
-      stac.enabled: true
+      raster.enabled: true
+      stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false

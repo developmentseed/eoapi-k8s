@@ -59,6 +59,7 @@ tests:
       multidim.enabled: false
       browser.enabled: true
       stac-auth-proxy.enabled: true
+      stac-auth-proxy.env.OIDC_DISCOVERY_URL: "http://localhost/mock-oidc/.well-known/openid-configuration"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
       mockOidcServer.ingress.path: "/mock-oidc"
@@ -81,6 +82,35 @@ tests:
               {
                 "type": "openIdConnect",
                 "openIdConnectUrl": "http://localhost/mock-oidc/.well-known/openid-configuration",
+                "oidcOptions": {
+                  "client_id": "test-client"
+                }
+              }
+  - it: "stac browser deployment with custom OIDC_DISCOVERY_URL"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.env.OIDC_DISCOVERY_URL: "https://auth.example.com/.well-known/openid-configuration"
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      browser.oidcClientId: "test-client"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_authConfig
+            value: |
+              {
+                "type": "openIdConnect",
+                "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
                 "oidcOptions": {
                   "client_id": "test-client"
                 }

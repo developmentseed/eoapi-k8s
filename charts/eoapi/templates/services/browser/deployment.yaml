@@ -26,13 +26,17 @@ spec:
               value: "http://{{ .Values.ingress.host }}{{ .Values.stac.ingress.path }}"
             {{- if index .Values "stac-auth-proxy" "enabled" }}
             - name: SB_authConfig
+              {{- if .Values.browser.authConfig }}
+              value: {{ .Values.browser.authConfig }}
+              {{- else }}
               value: |
                 {
                   "type": "openIdConnect",
-                  "openIdConnectUrl": "http://{{ .Values.ingress.host }}{{ .Values.mockOidcServer.ingress.path }}/.well-known/openid-configuration",
+                  "openIdConnectUrl": "{{ index .Values "stac-auth-proxy" "env" "OIDC_DISCOVERY_URL" }}",
                   "oidcOptions": {
                     "client_id": "{{ .Values.browser.oidcClientId | default "test-client" }}"
                   }
                 }
+              {{- end }}
             {{- end }}
 {{- end }}
