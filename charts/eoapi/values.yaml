@@ -32,9 +32,10 @@ service:
 
 ingress:
   # Unified ingress configuration for both nginx and traefik
+  # Traefik 3.5+ supports nginx annotations via the nginx provider
   enabled: true
   # ingressClassName: "nginx" or "traefik"
-  className: "nginx"
+  className: "traefik"
   rootPath: ""        # Root path for doc server
   # Single host domain configuration (default)
   host: ""

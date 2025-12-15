@@ -343,7 +343,7 @@ knative:
 ######################
 ingress:
   enabled: true
-  className: "nginx"
+  className: "traefik"
   pathType: "Prefix"
   host: "eoapi.example.com"  # CHANGE THIS to your domain
   tls:

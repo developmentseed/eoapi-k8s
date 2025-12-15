@@ -1,13 +1,15 @@
 ---
 title: "Unified Ingress Configuration"
-description: "NGINX and Traefik ingress setup with TLS and cert-manager integration"
+description: "Traefik ingress setup with NGINX compatibility, TLS and cert-manager integration"
 external_links:
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
-  - name: "NGINX Ingress Controller"
-    url: "https://kubernetes.github.io/ingress-nginx/"
   - name: "Traefik Documentation"
     url: "https://doc.traefik.io/traefik/"
+  - name: "Traefik NGINX Provider"
+    url: "https://doc.traefik.io/traefik/routing/providers/kubernetes-ingress-nginx/"
+  - name: "NGINX Ingress Controller"
+    url: "https://kubernetes.github.io/ingress-nginx/"
   - name: "cert-manager"
     url: "https://cert-manager.io/"
 ---
@@ -18,23 +20,26 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 ## Overview
 
-eoAPI includes a streamlined ingress configuration with smart defaults for different controllers. This approach:
+eoAPI defaults to **Traefik** as the ingress controller, leveraging Traefik's NGINX provider for seamless compatibility with NGINX ingress annotations. This approach:
 
+- Uses Traefik 3.5+ with NGINX provider support for zero-drama migration from ingress-nginx
+- Maintains compatibility with existing NGINX ingress annotations
 - Eliminates manual pathType and suffix configurations
-- Uses controller-specific optimizations for NGINX and Traefik
 - Provides separate configuration for STAC browser
-- Maintains backward compatibility while improving usability
+- Maintains backward compatibility with NGINX ingress controller
 
 ## Configuration
 
-The ingress configuration has been simplified in the `values.yaml` file:
+The ingress configuration defaults to Traefik with NGINX provider support:
 
 ```yaml
 ingress:
   # Unified ingress configuration for both nginx and traefik
+  # Traefik 3.5+ supports nginx annotations via the nginx provider
+  # Set --experimental.kubernetesIngressNGINX and --providers.kubernetesIngressNGINX when deploying Traefik
   enabled: true
-  # ingressClassName: "nginx" or "traefik"
-  className: "nginx"
+  # ingressClassName: "traefik" (default) or "nginx"
+  className: "traefik"
   # Root path for doc server
   rootPath: ""
   # Host configuration
@@ -47,43 +52,63 @@ ingress:
     secretName: eoapi-tls
 ```
 
+## Deploying Traefik with NGINX Provider
+
+To use Traefik as a drop-in replacement for ingress-nginx, deploy Traefik with the NGINX provider enabled:
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+
+helm upgrade --install traefik traefik/traefik \
+  --namespace traefik \
+  --create-namespace \
+  --version ~v37.3.0 \
+  --set providers.kubernetesGateway.enabled=true \
+  --set 'additionalArguments[0]=--providers.kubernetesIngressNGINX' \
+  --set 'additionalArguments[1]=--experimental.kubernetesIngressNGINX=true' \
+  --wait
+```
+
+This enables Traefik to understand and process NGINX ingress annotations, allowing you to migrate from ingress-nginx with minimal changes.
+
 ## Controller-Specific Behavior
 
-### NGINX Ingress Controller
+### Traefik Ingress Controller (Default)
 
-For NGINX, the system automatically:
-- Uses `ImplementationSpecific` pathType
-- Adds regex-based path matching
-- Sets up proper rewrite rules
+Traefik is now the default ingress controller. When using Traefik with the NGINX provider:
+- Uses `ImplementationSpecific` pathType (same as NGINX)
+- Supports NGINX ingress annotations natively
+- Handles regex-based path matching via NGINX annotations
+- Automatically processes rewrite rules from NGINX annotations
 
-Basic NGINX configuration:
+The eoAPI chart automatically applies NGINX annotations when using Traefik, which are understood by Traefik's NGINX provider:
+
+```yaml
+ingress:
+  enabled: true
+  className: "traefik"  # Default
+  host: "example.domain.com"
+  annotations:
+    # NGINX annotations work with Traefik's NGINX provider
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+```
+
+### NGINX Ingress Controller (Legacy)
+
+For backward compatibility, NGINX ingress controller is still supported:
+
 ```yaml
 ingress:
   enabled: true
   className: "nginx"
   annotations:
-    # Additional custom annotations if needed
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/enable-access-log: "true"
 ```
 
-### Traefik Ingress Controller
-
-For Traefik, the system:
-- Uses `Prefix` pathType by default
-- Automatically configures strip-prefix middleware
-- Handles path-based routing appropriately
-
-Basic Traefik configuration:
-```yaml
-ingress:
-  enabled: true
-  className: "traefik"
-  # When using TLS, setting host is required
-  host: "example.domain.com"
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-```
+**Note:** With ingress-nginx entering maintenance mode (EoL March 2026), migrating to Traefik is recommended.
 
 ## STAC Browser Configuration
 
@@ -131,7 +156,7 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx  # or traefik, depending on your setup
+          class: traefik  # or nginx for legacy setups
 ```
 
 3. After testing with staging, create the production issuer:
@@ -149,14 +174,14 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx  # or traefik, depending on your setup
+          class: traefik  # or nginx for legacy setups
 ```
 
 4. Configure your eoAPI ingress to use cert-manager:
 ```yaml
 ingress:
   enabled: true
-  className: "nginx"  # or "traefik"
+  className: "traefik"  # Default, or "nginx" for legacy setups
   host: "eoapi.example.com"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -165,14 +190,44 @@ ingress:
     secretName: eoapi-tls  # cert-manager will create this secret
 ```
 
-## Migration from 0.7.0
+## Migration from ingress-nginx to Traefik
+
+### Why Migrate?
+
+With ingress-nginx entering maintenance mode (EoL March 2026), migrating to Traefik provides:
+- **Security**: Traefik's secure-by-design architecture eliminates template injection vulnerabilities
+- **Future-proof**: Gateway API leadership and modern cloud-native design
+- **Zero-drama migration**: NGINX provider allows using existing annotations without changes
+- **Production-ready**: Battle-tested at scale with 3.4+ billion downloads
+
+### Migration Steps
+
+1. **Deploy Traefik with NGINX provider** (see [Deploying Traefik](#deploying-traefik-with-nginx-provider) above)
+
+2. **Update your values.yaml**:
+   ```yaml
+   ingress:
+     className: "traefik"  # Changed from "nginx"
+   ```
+
+3. **No annotation changes needed**: Your existing NGINX annotations will work with Traefik's NGINX provider
+
+4. **Verify the migration**:
+   ```bash
+   kubectl get ingress
+   kubectl get pods -n traefik
+   ```
+
+5. **Test your endpoints** to ensure everything works as expected
+
+### Migration from 0.7.0
 
 If you're upgrading from version 0.7.0:
 
 1. Remove any `pathType` and `pathSuffix` configurations from your values
 2. The system will automatically use the appropriate settings for your chosen controller
-3. For NGINX users, regex path matching is now enabled by default
-4. For Traefik users, strip-prefix middleware is automatically configured
+3. NGINX annotations work with both NGINX and Traefik (via NGINX provider)
+4. Regex path matching is enabled by default for both controllers
 
 ## Path Structure
 
