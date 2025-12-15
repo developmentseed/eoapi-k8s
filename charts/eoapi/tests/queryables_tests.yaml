@@ -14,7 +14,7 @@ tests:
           loadSamples: false
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
               indexFields: ["platform", "instruments"]
               deleteMissing: true
     template: templates/database/pgstacbootstrap/configmap.yaml
@@ -54,7 +54,7 @@ tests:
           loadSamples: false
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
             - name: "custom-queryables.json"
               configMapRef:
                 name: my-custom-configmap
@@ -89,7 +89,7 @@ tests:
         settings:
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
               indexFields: ["platform", "instruments"]
               deleteMissing: true
     template: templates/database/pgstacbootstrap/job.yaml
@@ -108,7 +108,7 @@ tests:
         settings:
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
     template: templates/database/pgstacbootstrap/job.yaml
     documentIndex: 2
     asserts:
@@ -126,7 +126,7 @@ tests:
         settings:
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
     template: templates/database/pgstacbootstrap/job.yaml
     documentIndex: 2
     asserts:
@@ -144,7 +144,7 @@ tests:
         settings:
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
               indexFields: ["platform", "instruments"]
               deleteMissing: true
     template: templates/database/pgstacbootstrap/job.yaml
@@ -233,7 +233,7 @@ tests:
         settings:
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
               indexFields: ["platform"]
             - name: "custom-queryables.json"
               configMapRef:
@@ -266,7 +266,7 @@ tests:
         settings:
           queryables:
             - name: "common-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
             - name: "custom-queryables.json"
               configMapRef:
                 name: my-custom-configmap
@@ -335,7 +335,7 @@ tests:
         settings:
           queryables:
             - name: "collection-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
               collections: ["collection-1", "collection-2"]
     template: templates/database/pgstacbootstrap/job.yaml
     documentIndex: 2
@@ -357,7 +357,7 @@ tests:
         settings:
           queryables:
             - name: "simple-queryables.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
     template: templates/database/pgstacbootstrap/job.yaml
     documentIndex: 2
     asserts:
@@ -395,7 +395,7 @@ tests:
         settings:
           queryables:
             - name: "test.json"
-              file: "initdb-data/queryables/test-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
     template: templates/database/pgstacbootstrap/job.yaml
     asserts:
       - hasDocuments:

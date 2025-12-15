@@ -166,11 +166,11 @@ pgstacBootstrap:
     # Example using files from the chart:
     # queryables:
     #   - name: "common-queryables.json"
-    #     file: "initdb-data/queryables/common-queryables.json"
+    #     file: "data/initdb/queryables/common-queryables.json"
     #     indexFields: ["platform", "instruments"]
     #     deleteMissing: true
     #   - name: "collection-specific.json"
-    #     file: "initdb-data/queryables/collection-specific.json"
+    #     file: "data/initdb/queryables/collection-specific.json"
     #     collections: ["my-collection-1", "my-collection-2"]
     #     indexFields: ["custom:field1", "custom:field2"]
     #     deleteMissing: true

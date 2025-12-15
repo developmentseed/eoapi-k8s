@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Helm template to check queryables `file` field with schema validation [#380](https://github.com/developmentseed/eoapi-k8s/pull/380)
 - Cleaned up docker resources in CI workflow [#386](https://github.com/developmentseed/eoapi-k8s/pull/386)
 
+### Changed
+
+- Consolidated service data into one data directory [#387](https://github.com/developmentseed/eoapi-k8s/pull/387)
+
 ## [0.8.1]
 
 ### Added
