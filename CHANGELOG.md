@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added support for annotations on the PgSTAC bootstrap job via `pgstacBootstrap.jobAnnotations` in values.yaml [#381](https://github.com/developmentseed/eoapi-k8s/pull/381)
 - Added load testing scripts [#373](https://github.com/developmentseed/eoapi-k8s/pull/373)
+- Added auth support to STAC Browser [#376](https://github.com/developmentseed/eoapi-k8s/pull/376)
 
 ### Fixed
 

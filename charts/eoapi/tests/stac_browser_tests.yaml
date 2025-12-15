@@ -51,3 +51,61 @@ tests:
       - equal:
           path: metadata.annotations.annotation2
           value: world
+  - it: "stac browser deployment with auth enabled"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      stac-auth-proxy.enabled: true
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      mockOidcServer.ingress.path: "/mock-oidc"
+      browser.oidcClientId: "test-client"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogUrl
+            value: "http://localhost/stac"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_authConfig
+            value: |
+              {
+                "type": "openIdConnect",
+                "openIdConnectUrl": "http://localhost/mock-oidc/.well-known/openid-configuration",
+                "oidcOptions": {
+                  "client_id": "test-client"
+                }
+              }
+  - it: "stac browser deployment without auth"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      stac-auth-proxy.enabled: false
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogUrl
+            value: "http://localhost/stac"
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_authConfig
