@@ -137,7 +137,8 @@ def test_stac_queryables(stac_endpoint: str) -> None:
         Path(__file__).parent.parent.parent
         / "charts"
         / "eoapi"
-        / "initdb-data"
+        / "data"
+        / "initdb"
         / "queryables"
         / "test-queryables.json"
     )

@@ -7,5 +7,5 @@ metadata:
     eoapi_dashboard: "1"
 data:
   kubernetes.json: |-
-{{ .Files.Get "dashboards/eoAPI-Dashboard.json" | indent 4 }}
+{{ .Files.Get "data/dashboards/eoAPI-Dashboard.json" | indent 4 }}
 {{- end }}

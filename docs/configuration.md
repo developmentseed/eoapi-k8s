@@ -151,7 +151,7 @@ pgstacBootstrap:
     queryables:
       # File-based queryable from chart
       - name: "common-queryables.json"
-        file: "initdb-data/queryables/test-queryables.json"
+        file: "data/initdb/queryables/test-queryables.json"
 
       # External ConfigMap reference
       - name: "custom-queryables.json"
@@ -165,7 +165,7 @@ pgstacBootstrap:
 | **Parameter** | **Description** | **Required** | **Example** |
 |:--------------|:----------------|:-------------|:------------|
 | `name` | Name for the queryables file | Yes | "common-queryables.json" |
-| `file` | Path to queryables file in chart | No* | "initdb-data/queryables/test-queryables.json" |
+| `file` | Path to queryables file in chart | No* | "data/initdb/queryables/test-queryables.json" |
 | `configMapRef.name` | Name of external ConfigMap | No* | "my-queryables-cm" |
 | `configMapRef.key` | Key in the ConfigMap | No* | "queryables.json" |
 | `indexFields` | Fields to create indexes for | No | ["platform", "instruments"] |
@@ -184,7 +184,7 @@ pgstacBootstrap:
     queryables:
       # Standard queryables from chart with indexes
       - name: "common-queryables.json"
-        file: "initdb-data/queryables/common-queryables.json"
+        file: "data/initdb/queryables/common-queryables.json"
         indexFields: ["platform", "instruments"]
         deleteMissing: true
 

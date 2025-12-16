@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  HELM_VERSION: v3.15.2
+  HELM_VERSION: latest
   PGO_VERSION: 5.7.4
 
 jobs:
@@ -32,7 +32,9 @@ jobs:
         run: ./eoapi-cli test schema
 
       - name: Run Helm unit tests
-        run: ./eoapi-cli test unit
+        uses: d3adb5/helm-unittest-action@v2
+        with:
+          charts: charts/eoapi
 
   integration-tests:
     name: Integration tests
@@ -44,6 +46,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.14'
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
 
       - name: Set release name
         run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
@@ -64,7 +71,6 @@ jobs:
         uses: jupyterhub/action-k3s-helm@v4
         with:
           k3s-channel: latest
-          helm-version: ${{ env.HELM_VERSION }}
           metrics-enabled: true
           docker-enabled: true
 

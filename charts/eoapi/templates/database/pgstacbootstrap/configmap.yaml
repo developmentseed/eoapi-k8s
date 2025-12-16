@@ -13,9 +13,9 @@ metadata:
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   pgstac-settings.sql: |
-    {{- tpl ($.Files.Get "initdb-data/settings/pgstac-settings.sql.tpl") $ | nindent 4 }}
+    {{- tpl ($.Files.Get "data/initdb/settings/pgstac-settings.sql.tpl") $ | nindent 4 }}
     {{- if (index .Values "eoapi-notifier").enabled }}
-    {{ $.Files.Get "initdb-data/settings/pgstac-notification-triggers.sql" | nindent 4 }}
+    {{ $.Files.Get "data/initdb/settings/pgstac-notification-triggers.sql" | nindent 4 }}
     {{- end }}
 ---
 {{- if .Values.pgstacBootstrap.settings.loadSamples }}
@@ -29,7 +29,7 @@ metadata:
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   initdb.sql: |
-    {{- range $path, $bytes := $.Files.Glob "initdb-data/samples/*.sql"  -}}
+    {{- range $path, $bytes := $.Files.Glob "data/initdb/samples/*.sql"  -}}
     {{ $.Files.Get $path | nindent 4 }}
     {{- end }}
 ---
@@ -42,7 +42,7 @@ metadata:
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
-  {{- range $path, $bytes := $.Files.Glob "initdb-data/samples/*.json"  -}}
+  {{- range $path, $bytes := $.Files.Glob "data/initdb/samples/*.json"  -}}
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
   {{- end }}
 {{- end }}

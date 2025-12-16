@@ -102,9 +102,10 @@ test_unit() {
 
     check_requirements helm || return 1
 
-    if ! helm plugin list | grep -q unittest; then
-        log_info "Installing Helm unittest plugin..."
-        helm plugin install https://github.com/helm-unittest/helm-unittest.git
+    if ! helm plugin list 2>/dev/null | grep -q unittest; then
+        log_error "Helm unittest plugin not installed"
+        log_info "Install it with: curl -fsSL https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/install-binary.sh | bash"
+        return 1
     fi
 
     if helm unittest "$CHART_PATH"; then
