@@ -6,7 +6,7 @@ on:
       - published
 
 env:
-  HELM_VERSION: v3.15.2
+  HELM_VERSION: v3.18.3
 
 jobs:
   release:
