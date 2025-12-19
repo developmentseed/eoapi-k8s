@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Consolidated service data into one data directory [#387](https://github.com/developmentseed/eoapi-k8s/pull/387)
 
+### Dependencies
+
+- Updated STAC Browser image to version 4.0.0 [#376](https://github.com/developmentseed/eoapi-k8s/pull/376)
+
 ## [0.8.1]
 
 ### Added

@@ -57,7 +57,7 @@
       "matchPackageNames": [
         "/ghcr.io/developmentseed/tipg/",
         "/ghcr.io/developmentseed/titiler-md-demo/",
-        "/ghcr.io/developmentseed/eoapi-k8s-stac-browser/"
+        "/ghcr.io/developmentseed/eoapi-k8s/stac-browser/"
       ],
       "automerge": false,
       "platformAutomerge": false,

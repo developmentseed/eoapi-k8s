@@ -492,8 +492,8 @@ browser:
   enabled: true
   image:
     # we use a custom image with pathPrefix built into it
-    name: ghcr.io/developmentseed/eoapi-k8s-stac-browser
-    tag: 3.3.4
+    name: ghcr.io/developmentseed/eoapi-k8s/stac-browser
+    tag: 4.0.0
   ingress:
     enabled: true  # Control ingress specifically for browser service
     path: "/browser"
