@@ -496,8 +496,12 @@ browser:
     tag: 3.3.4
   ingress:
     enabled: true  # Control ingress specifically for browser service
-  # OAuth2 client ID for browser (frontend app). Reads OIDC_DISCOVERY_URL from stac-auth-proxy.env
-  oidcClientId: "some-client-id"
+    path: "/browser"
+  # OAuth2 client ID for browser (frontend app)
+  oidcClientId: "stac-browser"
+  # OIDC discovery URL for browser (must be externally accessible URL)
+  # Required when stac-auth-proxy is enabled
+  oidcDiscoveryUrl: ""
 
 docServer:
   enabled: true
