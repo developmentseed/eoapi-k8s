@@ -23,7 +23,7 @@ spec:
           - containerPort: 8080
           env:
             - name: SB_catalogUrl
-              value: "http://{{ .Values.ingress.host }}{{ .Values.stac.ingress.path }}"
+              value: "{{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}{{ .Values.stac.ingress.path }}"
             {{- if index .Values "stac-auth-proxy" "enabled" }}
             - name: SB_authConfig
               {{- if .Values.browser.authConfig }}
@@ -35,7 +35,7 @@ spec:
                   "openIdConnectUrl": "{{ .Values.browser.oidcDiscoveryUrl }}",
                   "oidcOptions": {
                     "client_id": "{{ .Values.browser.oidcClientId | default "test-client" }}",
-                    "redirect_uri": "http://{{ .Values.ingress.host }}{{ .Values.browser.ingress.path | default "/browser" | trimSuffix "/" }}/auth"
+                    "redirect_uri": "{{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}{{ .Values.browser.ingress.path | default "/browser" | trimSuffix "/" }}/auth"
                   }
                 }
               {{- end }}
