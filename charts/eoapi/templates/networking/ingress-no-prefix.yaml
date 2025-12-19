@@ -49,7 +49,7 @@ spec:
 
           {{- if and $.Values.browser.enabled (or (not (hasKey $.Values.browser "ingress")) $.Values.browser.ingress.enabled) }}
           - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: "/browser{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
+            path: "{{ $.Values.browser.ingress.path | default "/browser" }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
             backend:
               service:
                 name: {{ $.Release.Name }}-browser
@@ -79,7 +79,7 @@ spec:
 
           {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: "/browser{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
+            path: "{{ .Values.browser.ingress.path | default "/browser" }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}"
             backend:
               service:
                 name: {{ .Release.Name }}-browser
