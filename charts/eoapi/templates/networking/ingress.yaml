@@ -22,7 +22,7 @@ metadata:
     # Traefik stripPrefix middleware for services that need path stripping (excludes STAC)
     {{- if eq .Values.ingress.className "traefik" }}
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-{{ $.Release.Name }}-strip-prefix-middleware@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd
     {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
@@ -136,7 +136,7 @@ spec:
 
           {{- if .Values.docServer.enabled }}
           - pathType: Prefix
-            path: "/{{ $.Values.ingress.rootPath | default "" }}"
+            path: "/{{ .Values.ingress.rootPath | default "" }}"
             backend:
               service:
                 name: {{ .Release.Name }}-doc-server
