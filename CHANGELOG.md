@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support for annotations on the PgSTAC bootstrap job via `pgstacBootstrap.jobAnnotations` in values.yaml [#381](https://github.com/developmentseed/eoapi-k8s/pull/381)
+- Added support for custom filters configuration via `customFiltersFile` in values.yaml [#388](https://github.com/developmentseed/eoapi-k8s/pull/388)
 
 ### Fixed
 
