@@ -2,10 +2,8 @@
 """
 Pytest-based chaos tests for eoAPI services
 
-This module provides chaos engineering tests to verify service resilience
-during infrastructure failures, network issues, and resource constraints.
-
-Fixtures are imported from conftest.py to avoid duplication.
+Refactored to use parametrization, centralized config, and test helpers
+to reduce duplication and improve maintainability.
 """
 
 import subprocess
@@ -13,272 +11,275 @@ import time
 
 import pytest
 
-from .load_tester import LoadTester
+from .config import Concurrency, Durations, Endpoints, Thresholds
+from .test_helpers import (
+    assert_recovery,
+    assert_success_rate,
+    build_url,
+    create_tester,
+)
+
+
+def check_kubectl_available() -> bool:
+    """Check if kubectl is available"""
+    try:
+        subprocess.run(
+            ["kubectl", "version", "--client"],
+            check=True,
+            capture_output=True,
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
 
 
 class TestChaosResilience:
     """Tests for service resilience during infrastructure chaos"""
 
     @pytest.mark.slow
-    def test_pod_failure_resilience(self, base_url: str):
+    def test_pod_failure_resilience(self, chaos_tester):
         """Test service resilience during pod failures"""
-        try:
-            subprocess.run(
-                ["kubectl", "version", "--client"],
-                check=True,
-                capture_output=True,
-            )
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            pytest.skip("kubectl not available or not in cluster environment")
+        if not check_kubectl_available():
+            pytest.skip("kubectl not available")
 
-        tester = LoadTester(base_url, timeout=5)
-
-        results = tester.run_chaos_test(
-            duration=60, kill_interval=30, endpoint="/stac/collections"
+        results = chaos_tester.run_chaos_test(
+            duration=Durations.LONG // 5,
+            kill_interval=30,
+            endpoint=Endpoints.STAC_COLLECTIONS,
         )
 
-        # Even with chaos, should maintain some service level
-        assert results["success_rate"] >= 60.0, (
-            f"Chaos test failed: {results['success_rate']:.1f}% success rate "
-            f"during pod failures (expected >= 60%)"
+        assert_success_rate(
+            results, Thresholds.CHAOS_MODERATE, "pod failure chaos"
         )
 
     @pytest.mark.slow
-    def test_multiple_service_failures(self, base_url: str):
-        """Test resilience when multiple services experience issues"""
-        try:
-            subprocess.run(
-                ["kubectl", "get", "pods"],
-                check=True,
-                capture_output=True,
-            )
-        except (subprocess.CalledProcessError, FileNotFoundError):
+    @pytest.mark.parametrize(
+        "endpoint,threshold",
+        [
+            (Endpoints.STAC_COLLECTIONS, Thresholds.CHAOS_MODERATE),
+            (Endpoints.RASTER_HEALTH, Thresholds.CHAOS_HIGH),
+            (Endpoints.VECTOR_HEALTH, Thresholds.CHAOS_HIGH),
+        ],
+    )
+    def test_multiple_service_failures(
+        self, chaos_tester, endpoint: str, threshold: float
+    ):
+        """Test resilience when services experience chaos"""
+        if not check_kubectl_available():
             pytest.skip("kubectl not available")
 
-        tester = LoadTester(base_url, timeout=8)
-
-        # Test different endpoints during chaos
-        endpoints = ["/stac/collections", "/raster/healthz", "/vector/healthz"]
-        results = []
-
-        for endpoint in endpoints:
-            chaos_results = tester.run_chaos_test(
-                duration=45,
-                kill_interval=20,
-                endpoint=endpoint,
-            )
-            results.append(chaos_results["success_rate"])
-
-        # At least one service should maintain reasonable uptime
-        max_success_rate = max(results)
-        assert max_success_rate >= 70.0, (
-            f"All services failed during chaos: max {max_success_rate:.1f}% "
-            f"across {len(results)} endpoints (expected >= 70%)"
+        results = chaos_tester.run_chaos_test(
+            duration=45, kill_interval=20, endpoint=endpoint
         )
 
-    def test_gradual_failure_recovery(self, base_url: str):
+        assert_success_rate(results, threshold, f"chaos: {endpoint}")
+
+    def test_gradual_failure_recovery(self, load_tester):
         """Test service recovery after gradual failure introduction"""
-        tester = LoadTester(base_url, max_workers=10, timeout=3)
-        url = f"{base_url}/stac/collections"
+        url = build_url(load_tester.base_url, Endpoints.STAC_COLLECTIONS)
 
         # Phase 1: Normal operation
-        _, _, normal_rate = tester.test_concurrency_level(url, 3, 10)
-
-        # Phase 2: Introduce failures (simulate with aggressive timeouts)
-        aggressive_tester = LoadTester(base_url, max_workers=10, timeout=1)
-        _, _, degraded_rate = aggressive_tester.test_concurrency_level(
-            url, 5, 15
+        normal_metrics = load_tester.test_concurrency_level(
+            url, Concurrency.LIGHT, Durations.NORMAL
         )
 
-        # Phase 3: Recovery (return to normal)
-        time.sleep(5)  # Recovery time
-        _, _, recovery_rate = tester.test_concurrency_level(url, 3, 10)
+        # Phase 2: Introduce failures (aggressive timeout)
+        aggressive = create_tester(
+            base_url=load_tester.base_url, max_workers=10, timeout=1
+        )
+        degraded_metrics = aggressive.test_concurrency_level(
+            url, Concurrency.MODERATE, Durations.MODERATE // 2
+        )
 
-        assert normal_rate >= 90.0, (
-            f"Baseline performance too low: {normal_rate:.1f}% (expected >= 90%)"
+        # Phase 3: Recovery
+        time.sleep(5)
+        recovery_metrics = load_tester.test_concurrency_level(
+            url, Concurrency.LIGHT, Durations.NORMAL
         )
-        assert recovery_rate >= 85.0, (
-            f"Service didn't recover properly after failure: {recovery_rate:.1f}% "
-            f"(expected >= 85%)"
+
+        assert_success_rate(
+            normal_metrics, Thresholds.API_SUSTAINED, "baseline"
         )
+        assert_recovery(degraded_metrics, recovery_metrics, context="gradual")
 
 
 class TestChaosNetwork:
     """Tests for network-related chaos scenarios"""
 
-    def test_network_instability(self, base_url: str):
+    def test_network_instability(self, load_tester):
         """Test behavior under network instability"""
-        # Simulate network issues with very short timeouts
-        tester = LoadTester(base_url, max_workers=5, timeout=2)
-        url = f"{base_url}/stac/collections"
-
-        success, total, rate = tester.test_concurrency_level(url, 3, 10)
-
-        # Should handle some failures gracefully
-        assert rate >= 50.0, (
-            f"Complete failure under network instability: {rate:.1f}% "
-            f"(expected >= 50% with 2s timeout)"
+        tester = create_tester(
+            base_url=load_tester.base_url, max_workers=5, timeout=2
         )
-        assert total > 0, (
-            "No requests made during instability test (expected > 0)"
+        url = build_url(tester.base_url, Endpoints.STAC_COLLECTIONS)
+
+        metrics = tester.test_concurrency_level(
+            url, Concurrency.LIGHT, Durations.NORMAL
         )
 
-    def test_timeout_cascade_prevention(self, base_url: str):
+        assert_success_rate(
+            metrics, Thresholds.CHAOS_LOW, "network instability"
+        )
+        assert metrics["total_requests"] > 0, "No requests made"
+
+    def test_timeout_cascade_prevention(self, load_tester):
         """Test that timeout issues don't cascade across requests"""
-        # Use progressively shorter timeouts to simulate degradation
         timeouts = [5, 3, 1, 2, 4]  # Recovery pattern
-        url = f"{base_url}/stac/collections"
+        url = build_url(load_tester.base_url, Endpoints.STAC_COLLECTIONS)
 
         results = []
         for timeout in timeouts:
-            tester = LoadTester(base_url, max_workers=3, timeout=timeout)
-            _, _, rate = tester.test_concurrency_level(url, 2, 5)
-            results.append(rate)
+            tester = create_tester(
+                base_url=load_tester.base_url, max_workers=3, timeout=timeout
+            )
+            metrics = tester.test_concurrency_level(
+                url, Concurrency.SINGLE + 1, Durations.SHORT
+            )
+            results.append(metrics)
             time.sleep(1)
 
-        # Should show recovery in later phases
-        recovery_rate = results[-1]
-        assert recovery_rate >= 80.0, (
-            f"No recovery from timeout cascade: {recovery_rate:.1f}% in final phase "
-            f"(expected >= 80%)"
+        recovery_rate = results[-1]["success_rate"]
+        assert recovery_rate >= Thresholds.STRESS_MODERATE, (
+            f"No recovery from timeout cascade: {recovery_rate:.1f}% "
+            f"< {Thresholds.STRESS_MODERATE:.1f}%"
         )
 
-    def test_concurrent_failure_modes(self, base_url: str):
+    @pytest.mark.parametrize(
+        "endpoint,threshold",
+        [
+            (Endpoints.STAC_COLLECTIONS, Thresholds.CHAOS_MODERATE),
+            (Endpoints.RASTER_HEALTH, Thresholds.CHAOS_MODERATE),
+            (Endpoints.VECTOR_HEALTH, Thresholds.CHAOS_MODERATE),
+        ],
+    )
+    def test_concurrent_failure_modes(
+        self, load_tester, endpoint: str, threshold: float
+    ):
         """Test multiple failure modes occurring simultaneously"""
-        # Combine short timeouts with high concurrency
-        tester = LoadTester(base_url, max_workers=5, timeout=10)
+        metrics = load_tester.test_concurrency_level(
+            build_url(load_tester.base_url, endpoint),
+            Concurrency.MODERATE - 1,
+            Durations.MODERATE // 2 + 2,
+        )
 
-        endpoints = ["/stac/collections", "/raster/healthz", "/vector/healthz"]
-        concurrent_results = []
-
-        # Test all endpoints simultaneously under stress
-        for endpoint in endpoints:
-            url = f"{base_url}{endpoint}"
-            _, _, rate = tester.test_concurrency_level(url, 4, 12)
-            concurrent_results.append(rate)
-
-        # At least health endpoints should maintain some reliability
-        health_rates = [r for i, r in enumerate(concurrent_results) if i > 0]
-        if health_rates:
-            max_health_rate = max(health_rates)
-            assert max_health_rate >= 60.0, (
-                f"All health endpoints failed: max {max_health_rate:.1f}% "
-                f"(expected >= 60% even under concurrent failure)"
-            )
+        assert_success_rate(
+            metrics, threshold, f"concurrent failure: {endpoint}"
+        )
 
 
 class TestChaosResource:
     """Tests for resource constraint chaos scenarios"""
 
-    def test_resource_exhaustion_simulation(self, base_url: str):
+    def test_resource_exhaustion_simulation(self, load_tester):
         """Test behavior when resources are constrained"""
-        # Simulate resource exhaustion with many concurrent requests
-        tester = LoadTester(base_url, max_workers=25, timeout=5)
-        url = f"{base_url}/stac/collections"
-
-        success, total, rate = tester.test_concurrency_level(url, 20, 15)
-
-        # Should gracefully degrade, not completely fail
-        assert rate >= 30.0, (
-            f"Complete failure under resource pressure: {rate:.1f}% "
-            f"with 20 workers (expected >= 30% graceful degradation)"
+        tester = create_tester(
+            base_url=load_tester.base_url, max_workers=25, timeout=5
         )
-        assert total >= 50, (
-            f"Insufficient load applied for resource test: {total} requests "
-            f"(expected >= 50)"
+        url = build_url(tester.base_url, Endpoints.STAC_COLLECTIONS)
+
+        metrics = tester.test_concurrency_level(
+            url, Concurrency.STRESS, Durations.MODERATE // 2
         )
 
-    def test_memory_pressure_resilience(self, base_url: str):
+        assert_success_rate(metrics, Thresholds.DEGRADED, "resource exhaustion")
+        assert metrics["total_requests"] >= 50, (
+            f"Insufficient load: {metrics['total_requests']} < 50"
+        )
+
+    def test_memory_pressure_resilience(self, load_tester):
         """Test resilience under simulated memory pressure"""
-        # Use many concurrent connections to simulate memory pressure
-        tester = LoadTester(base_url, max_workers=30, timeout=8)
-
-        # Test with sustained high concurrency
-        url = (
-            f"{base_url}/raster/healthz"  # Health endpoint should be resilient
+        tester = create_tester(
+            base_url=load_tester.base_url, max_workers=30, timeout=8
         )
-        success, total, rate = tester.test_concurrency_level(url, 15, 20)
+        url = build_url(tester.base_url, Endpoints.RASTER_HEALTH)
 
-        # Health endpoints should maintain higher reliability
-        assert rate >= 50.0, (
-            f"Health endpoint failed under memory pressure: {rate:.1f}% "
-            f"with 15 workers over 20s (expected >= 50%)"
+        metrics = tester.test_concurrency_level(
+            url, Concurrency.HIGH, Durations.MODERATE - 10
         )
 
-    def test_connection_pool_exhaustion(self, base_url: str):
+        assert_success_rate(metrics, Thresholds.CHAOS_LOW, "memory pressure")
+
+    def test_connection_pool_exhaustion(self, load_tester):
         """Test behavior when connection pools are exhausted"""
-        # Create multiple testers to exhaust connection pools
         testers = [
-            LoadTester(base_url, max_workers=10, timeout=3) for _ in range(3)
+            create_tester(
+                base_url=load_tester.base_url, max_workers=10, timeout=3
+            )
+            for _ in range(3)
         ]
 
-        url = f"{base_url}/stac/collections"
+        url = build_url(load_tester.base_url, Endpoints.STAC_COLLECTIONS)
         results = []
 
-        # Concurrent tests from multiple testers
-        for i, tester in enumerate(testers):
-            _, _, rate = tester.test_concurrency_level(url, 6, 8)
-            results.append(rate)
+        for tester in testers:
+            metrics = tester.test_concurrency_level(
+                url, Concurrency.MODERATE + 1, Durations.NORMAL - 2
+            )
+            results.append(metrics["success_rate"])
 
-        # At least one connection pool should work reasonably
         max_rate = max(results)
-        assert max_rate >= 40.0, (
-            f"All connection pools failed: max {max_rate:.1f}% "
-            f"across {len(results)} testers (expected >= 40%)"
+        assert max_rate >= Thresholds.CHAOS_MODERATE - 20, (
+            f"All pools exhausted: max {max_rate:.1f}% "
+            f"< {Thresholds.CHAOS_MODERATE - 20:.1f}%"
         )
 
 
 class TestChaosRecovery:
     """Tests for service recovery patterns after chaos events"""
 
-    def test_automatic_recovery_timing(self, base_url: str):
+    def test_automatic_recovery_timing(self, load_tester):
         """Test automatic service recovery after failures"""
-        tester = LoadTester(base_url, max_workers=8, timeout=15)
-        url = f"{base_url}/stac/collections"
+        url = build_url(load_tester.base_url, Endpoints.STAC_COLLECTIONS)
 
-        # Phase 1: Induce failures
-        failure_tester = LoadTester(base_url, max_workers=20, timeout=1)
-        _, _, failure_rate = failure_tester.test_concurrency_level(url, 15, 10)
+        # Induce failures
+        failure_tester = create_tester(
+            base_url=load_tester.base_url, max_workers=20, timeout=1
+        )
+        failure_metrics = failure_tester.test_concurrency_level(
+            url, Concurrency.HIGH, Durations.NORMAL
+        )
 
-        # Phase 2: Monitor recovery over time
-        recovery_times = [5, 10, 15]  # Recovery intervals
+        # Monitor recovery
+        recovery_times = [5, 10, 15]
         recovery_rates = []
 
         for wait_time in recovery_times:
             time.sleep(wait_time)
-            _, _, rate = tester.test_concurrency_level(url, 3, 5)
-            recovery_rates.append(rate)
+            metrics = load_tester.test_concurrency_level(
+                url, Concurrency.LIGHT, Durations.SHORT
+            )
+            recovery_rates.append(metrics["success_rate"])
 
-        # Should show progressive recovery
         final_rate = recovery_rates[-1]
-        assert final_rate >= 80.0, (
-            f"No recovery after chaos: {final_rate:.1f}% after {recovery_times[-1]}s "
-            f"(expected >= 80%)"
+        assert final_rate >= Thresholds.STRESS_MODERATE, (
+            f"No recovery after {recovery_times[-1]}s: {final_rate:.1f}% "
+            f"< {Thresholds.STRESS_MODERATE:.1f}%"
         )
 
-    def test_service_degradation_levels(self, base_url: str):
+    def test_service_degradation_levels(self, load_tester):
         """Test graceful degradation under increasing chaos"""
-        url = f"{base_url}/stac/collections"
+        url = build_url(load_tester.base_url, Endpoints.STAC_COLLECTIONS)
 
-        # Progressive degradation test
         chaos_levels = [
-            (5, 10, 5),  # Light chaos
-            (3, 15, 8),  # Medium chaos
-            (1, 20, 12),  # Heavy chaos
+            (5, Concurrency.NORMAL, Durations.SHORT),  # Light
+            (3, Concurrency.HIGH, Durations.NORMAL - 2),  # Medium
+            (1, Concurrency.STRESS, Durations.MODERATE // 2 + 2),  # Heavy
         ]
 
         degradation_rates = []
         for timeout, workers, duration in chaos_levels:
-            tester = LoadTester(base_url, max_workers=25, timeout=timeout)
-            _, _, rate = tester.test_concurrency_level(url, workers, duration)
-            degradation_rates.append(rate)
-            time.sleep(3)  # Brief recovery between tests
+            tester = create_tester(
+                base_url=load_tester.base_url, max_workers=25, timeout=timeout
+            )
+            metrics = tester.test_concurrency_level(url, workers, duration)
+            degradation_rates.append(metrics["success_rate"])
+            time.sleep(3)
 
-        # Should show controlled degradation, not cliff-edge failure
-        assert degradation_rates[0] >= 70.0, (
-            f"Failed at low chaos level: {degradation_rates[0]:.1f}% (expected >= 70%)"
+        assert degradation_rates[0] >= Thresholds.STRESS_LOW, (
+            f"Failed at low chaos: {degradation_rates[0]:.1f}% "
+            f"< {Thresholds.STRESS_LOW:.1f}%"
         )
-        assert min(degradation_rates) >= 20.0, (
-            f"Complete failure under chaos: {min(degradation_rates):.1f}% "
-            f"(expected >= 20% even at high chaos)"
+        assert min(degradation_rates) >= Thresholds.DEGRADED - 10, (
+            f"Complete failure: {min(degradation_rates):.1f}% "
+            f"< {Thresholds.DEGRADED - 10:.1f}%"
         )

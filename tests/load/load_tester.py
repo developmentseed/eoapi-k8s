@@ -23,6 +23,13 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 try:
     from .prometheus_utils import (
         PrometheusClient,
@@ -34,13 +41,6 @@ try:
 except ImportError:
     PROMETHEUS_AVAILABLE = False
     logger.warning("Prometheus utilities not available")
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 # Constants
 DEFAULT_MAX_WORKERS = 50
@@ -325,11 +325,11 @@ class LoadTester:
 
     def run_normal_load(
         self,
-        endpoints: list = None,
+        endpoints: Optional[List[str]] = None,
         duration: int = 60,
         concurrent_users: int = MODERATE_LOAD_WORKERS,
         ramp_up: int = 30,
-    ) -> dict:
+    ) -> Dict:
         """
         Run realistic mixed-workload test
 
@@ -380,7 +380,7 @@ class LoadTester:
         duration: int = 300,
         kill_interval: int = 60,
         endpoint: str = "/stac/collections",
-    ) -> dict:
+    ) -> Dict:
         """
         Run chaos test by killing pods during load
 
