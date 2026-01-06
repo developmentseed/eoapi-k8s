@@ -6,23 +6,23 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Release.Name }}-pgstac-settings-config
+  name: {{ .Release.Name }}-pgstac-settings-config
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 data:
   pgstac-settings.sql: |
-    {{- tpl ($.Files.Get "data/initdb/settings/pgstac-settings.sql.tpl") $ | nindent 4 }}
+    {{- tpl (.Files.Get "data/initdb/settings/pgstac-settings.sql.tpl") . | nindent 4 }}
     {{- if (index .Values "eoapi-notifier").enabled }}
-    {{ $.Files.Get "data/initdb/settings/pgstac-notification-triggers.sql" | nindent 4 }}
+    {{ .Files.Get "data/initdb/settings/pgstac-notification-triggers.sql" | nindent 4 }}
     {{- end }}
 ---
 {{- if .Values.pgstacBootstrap.settings.loadSamples }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Release.Name }}-initdb-sql-config
+  name: {{ .Release.Name }}-initdb-sql-config
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
@@ -36,7 +36,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Release.Name }}-initdb-json-config
+  name: {{ .Release.Name }}-initdb-json-config
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
@@ -58,7 +58,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Release.Name }}-pgstac-queryables-config
+  name: {{ .Release.Name }}-pgstac-queryables-config
   annotations:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"

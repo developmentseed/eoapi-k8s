@@ -206,6 +206,8 @@ browser:
   enabled: true
   settings:
     resources: {}
+  # STAC Browser needs external OIDC URL (accessible from user's browser)
+  oidcDiscoveryUrl: "http://localhost/mock-oidc/.well-known/openid-configuration"
 
 docServer:
   enabled: true
@@ -385,6 +387,9 @@ mockOidcServer:
   port: 8888
   clientId: "test-client"
   clientSecret: "test-secret"
+  extraEnv:
+    - name: ISSUER
+      value: "http://localhost/mock-oidc"
   service:
     type: ClusterIP
     port: 8080
@@ -402,7 +407,6 @@ mockOidcServer:
   tolerations: []
   affinity: {}
   imagePullSecrets: []
-  extraEnv: []
 
 ######################
 # SERVICE

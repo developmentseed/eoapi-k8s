@@ -415,7 +415,11 @@ stac:
 # STAC Auth Proxy - authentication layer for STAC API
 stac-auth-proxy:
   enabled: false
+  image:
+    tag: "v0.11.0"
   env:
+    ROOT_PATH: "/stac"
+    OVERRIDE_HOST: "false"
     DEFAULT_PUBLIC: "true"
     # UPSTREAM_URL will be set dynamically in template to point to stac service
     # OIDC_DISCOVERY_URL must be configured when enabling auth
@@ -488,10 +492,16 @@ browser:
   enabled: true
   image:
     # we use a custom image with pathPrefix built into it
-    name: ghcr.io/developmentseed/eoapi-k8s-stac-browser
-    tag: 3.3.4
+    name: ghcr.io/developmentseed/eoapi-k8s/stac-browser
+    tag: 4.0.0
   ingress:
     enabled: true  # Control ingress specifically for browser service
+    path: "/browser"
+  # OAuth2 client ID for browser (frontend app)
+  oidcClientId: "stac-browser"
+  # OIDC discovery URL for browser (must be externally accessible URL)
+  # Required when stac-auth-proxy is enabled
+  oidcDiscoveryUrl: ""
 
 docServer:
   enabled: true

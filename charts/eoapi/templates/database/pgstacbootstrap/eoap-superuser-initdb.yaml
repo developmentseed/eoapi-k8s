@@ -47,27 +47,27 @@ spec:
             - name: PGUSER
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
                   key: user
             - name: PGPORT
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
                   key: port
             - name: PGHOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
                   key: host
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
                   key: password
             - name: PGDATABASE
               valueFrom:
                 secretKeyRef:
-                  name: {{ $.Values.postgrescluster.name | default $.Release.Name }}-pguser-postgres
+                  name: {{ .Values.postgrescluster.name | default .Release.Name }}-pguser-postgres
                   key: dbname
       volumes:
         - name: {{ .Release.Name }}-initdb-config
