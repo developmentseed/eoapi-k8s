@@ -28,10 +28,13 @@ COMMANDS:
     all             Run all load tests
 
 OPTIONS:
-    -h, --help      Show this help message
-    -d, --debug     Enable debug mode
-    -n, --namespace Set Kubernetes namespace
-    --release NAME  Helm release name (default: ${RELEASE_NAME})
+    -h, --help              Show this help message
+    -d, --debug             Enable debug mode
+    -n, --namespace         Set Kubernetes namespace
+    --release NAME          Helm release name (default: ${RELEASE_NAME})
+    --report-json FILE      Export metrics to JSON file
+    --prometheus-url URL    Prometheus URL for infrastructure metrics
+    --collect-infra-metrics Collect infrastructure metrics from Prometheus
 
 EXAMPLES:
     # Run baseline load test
@@ -40,8 +43,11 @@ EXAMPLES:
     # Test autoscaling behavior
     $(basename "$0") autoscaling --debug
 
-    # Find breaking points
-    $(basename "$0") stress --debug
+    # Find breaking points with metrics export
+    $(basename "$0") stress --debug --report-json stress-results.json
+
+    # Run with Prometheus integration
+    $(basename "$0") normal --prometheus-url http://prometheus:9090 --collect-infra-metrics
 
     # Run all load tests
     $(basename "$0") all
@@ -195,8 +201,11 @@ load_normal() {
     log_info "Running Python normal load test..."
     cd "${SCRIPT_DIR}/.."
 
-    local cmd="python3 -m tests.load.load_tester normal --base-url $base_url"
+    local cmd="python3 -m tests.load.load_tester normal --base-url $base_url --namespace $NAMESPACE"
     [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd --duration 30 --users 5"
+    [[ -n "${REPORT_JSON:-}" ]] && cmd="$cmd --report-json $REPORT_JSON"
+    [[ -n "${PROMETHEUS_URL:-}" ]] && cmd="$cmd --prometheus-url $PROMETHEUS_URL"
+    [[ "${COLLECT_INFRA_METRICS:-false}" == "true" ]] && cmd="$cmd --collect-infra-metrics"
 
     log_debug "Running: $cmd"
 
@@ -217,8 +226,11 @@ load_stress() {
     log_info "Running Python stress test module..."
     cd "${SCRIPT_DIR}/.."
 
-    local cmd="python3 -m tests.load.load_tester stress --base-url $base_url"
+    local cmd="python3 -m tests.load.load_tester stress --base-url $base_url --namespace $NAMESPACE"
     [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd --test-duration 5 --max-workers 20"
+    [[ -n "${REPORT_JSON:-}" ]] && cmd="$cmd --report-json $REPORT_JSON"
+    [[ -n "${PROMETHEUS_URL:-}" ]] && cmd="$cmd --prometheus-url $PROMETHEUS_URL"
+    [[ "${COLLECT_INFRA_METRICS:-false}" == "true" ]] && cmd="$cmd --collect-infra-metrics"
 
     log_debug "Running: $cmd"
 
@@ -246,6 +258,8 @@ load_chaos() {
 
     local cmd="python3 -m tests.load.load_tester chaos --base-url $base_url --namespace $NAMESPACE"
     [[ "$DEBUG_MODE" == "true" ]] && cmd="$cmd --duration 60 --kill-interval 30"
+    [[ -n "${REPORT_JSON:-}" ]] && cmd="$cmd --report-json $REPORT_JSON"
+    [[ -n "${PROMETHEUS_URL:-}" ]] && cmd="$cmd --prometheus-url $PROMETHEUS_URL"
 
     log_debug "Running: $cmd"
 
@@ -299,6 +313,18 @@ main() {
             --release)
                 RELEASE_NAME="$2"
                 shift 2
+                ;;
+            --report-json)
+                export REPORT_JSON="$2"
+                shift 2
+                ;;
+            --prometheus-url)
+                export PROMETHEUS_URL="$2"
+                shift 2
+                ;;
+            --collect-infra-metrics)
+                export COLLECT_INFRA_METRICS=true
+                shift
                 ;;
             baseline|services|autoscaling|normal|stress|chaos|all)
                 command="$1"

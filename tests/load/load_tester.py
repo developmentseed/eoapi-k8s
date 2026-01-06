@@ -8,17 +8,32 @@ load testing: stress, normal, and chaos testing.
 
 import argparse
 import concurrent.futures
+import json
 import logging
 import os
 import random
+import statistics
 import subprocess
 import sys
 import time
-from typing import Tuple
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+try:
+    from .prometheus_utils import (
+        PrometheusClient,
+        collect_test_metrics,
+        summarize_metrics,
+    )
+
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    logger.warning("Prometheus utilities not available")
 
 # Configure logging
 logging.basicConfig(
@@ -49,6 +64,8 @@ class LoadTester:
         base_url: str,
         max_workers: int = DEFAULT_MAX_WORKERS,
         timeout: int = DEFAULT_TIMEOUT,
+        prometheus_url: Optional[str] = None,
+        namespace: str = "eoapi",
     ):
         """
         Initialize LoadTester with validation
@@ -57,6 +74,8 @@ class LoadTester:
             base_url: Base URL for eoAPI services
             max_workers: Maximum number of concurrent workers
             timeout: Request timeout in seconds
+            prometheus_url: Optional Prometheus URL for infrastructure metrics
+            namespace: Kubernetes namespace for Prometheus queries
 
         Raises:
             ValueError: If parameters are invalid
@@ -78,7 +97,19 @@ class LoadTester:
         self.base_url = base_url.rstrip("/")
         self.max_workers = max_workers
         self.timeout = timeout
+        self.prometheus_url = prometheus_url
+        self.namespace = namespace
         self.session = self._create_session()
+
+        # Initialize Prometheus client if available and URL provided
+        self.prometheus = None
+        if PROMETHEUS_AVAILABLE and prometheus_url:
+            self.prometheus = PrometheusClient(prometheus_url)
+            if self.prometheus.available:
+                logger.info(f"Prometheus integration enabled: {prometheus_url}")
+            else:
+                logger.info("Prometheus integration disabled (unavailable)")
+                self.prometheus = None
 
         logger.info(
             f"LoadTester initialized: base_url={self.base_url}, "
@@ -103,40 +134,50 @@ class LoadTester:
         logger.debug("HTTP session created with retry strategy")
         return session
 
-    def make_request(self, url: str) -> bool:
+    def make_request(self, url: str) -> Tuple[bool, float]:
         """
-        Make a single request and return success status
+        Make a single request and return success status with latency
 
         Args:
             url: URL to request
 
         Returns:
-            True if request succeeded with 200 status, False otherwise
+            Tuple of (success, latency_ms) where success is True if 200 status
         """
+        start_time = time.time()
         try:
             response = self.session.get(url, timeout=self.timeout)
+            latency_ms = (time.time() - start_time) * 1000
             success = response.status_code == 200
             if not success:
                 logger.debug(
                     f"Request to {url} returned status {response.status_code}"
                 )
-            return success
+            return success, latency_ms
         except requests.exceptions.Timeout:
+            latency_ms = (time.time() - start_time) * 1000
             logger.debug(f"Request to {url} timed out after {self.timeout}s")
-            return False
+            return False, latency_ms
         except requests.exceptions.ConnectionError as e:
+            latency_ms = (time.time() - start_time) * 1000
             logger.debug(f"Connection error for {url}: {e}")
-            return False
+            return False, latency_ms
         except requests.exceptions.RequestException as e:
+            latency_ms = (time.time() - start_time) * 1000
             logger.debug(f"Request failed for {url}: {e}")
-            return False
+            return False, latency_ms
         except Exception as e:
+            latency_ms = (time.time() - start_time) * 1000
             logger.error(f"Unexpected error in make_request for {url}: {e}")
-            return False
+            return False, latency_ms
 
     def test_concurrency_level(
-        self, url: str, workers: int, duration: int = 10
-    ) -> Tuple[int, int, float]:
+        self,
+        url: str,
+        workers: int,
+        duration: int = 10,
+        collect_infra_metrics: bool = False,
+    ) -> Dict:
         """
         Test a specific concurrency level for a given duration
 
@@ -144,17 +185,20 @@ class LoadTester:
             url: URL to test
             workers: Number of concurrent workers
             duration: Test duration in seconds
+            collect_infra_metrics: Whether to collect Prometheus infrastructure metrics
 
         Returns:
-            Tuple of (success_count, total_requests, success_rate)
+            Dict with metrics including success rate, latencies, throughput, and optional infra metrics
         """
         logger.info(
             f"Testing {url} with {workers} concurrent requests for {duration}s"
         )
 
+        test_start = datetime.now()
         start_time = time.time()
         success_count = 0
         total_requests = 0
+        latencies: List[float] = []
 
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=workers
@@ -168,20 +212,69 @@ class LoadTester:
                 total_requests += 1
                 time.sleep(REQUEST_DELAY)
 
-            # Collect results
+            # Collect results and latencies
             for future in concurrent.futures.as_completed(futures):
-                if future.result():
+                success, latency_ms = future.result()
+                if success:
                     success_count += 1
+                latencies.append(latency_ms)
 
+        test_end = datetime.now()
+        actual_duration = time.time() - start_time
         success_rate = (
             (success_count / total_requests) * 100 if total_requests > 0 else 0
         )
+
+        # Calculate latency metrics
+        metrics = {
+            "success_count": success_count,
+            "total_requests": total_requests,
+            "success_rate": success_rate,
+            "duration": actual_duration,
+            "throughput": total_requests / actual_duration
+            if actual_duration > 0
+            else 0,
+        }
+
+        if latencies:
+            sorted_latencies = sorted(latencies)
+            metrics.update(
+                {
+                    "latency_min": min(latencies),
+                    "latency_max": max(latencies),
+                    "latency_avg": statistics.mean(latencies),
+                    "latency_p50": statistics.median(sorted_latencies),
+                    "latency_p95": sorted_latencies[
+                        int(len(sorted_latencies) * 0.95)
+                    ]
+                    if len(sorted_latencies) > 1
+                    else sorted_latencies[0],
+                    "latency_p99": sorted_latencies[
+                        int(len(sorted_latencies) * 0.99)
+                    ]
+                    if len(sorted_latencies) > 1
+                    else sorted_latencies[0],
+                }
+            )
+
         logger.info(
-            f"Workers: {workers}, Success rate: {success_rate:.1f}% "
-            f"({success_count}/{total_requests})"
+            f"Workers: {workers}, Success: {success_rate:.1f}% ({success_count}/{total_requests}), "
+            f"Latency p50/p95/p99: {metrics.get('latency_p50', 0):.0f}/{metrics.get('latency_p95', 0):.0f}/{metrics.get('latency_p99', 0):.0f}ms, "
+            f"Throughput: {metrics['throughput']:.1f} req/s"
         )
 
-        return success_count, total_requests, success_rate
+        # Collect infrastructure metrics if requested and available
+        if collect_infra_metrics and self.prometheus:
+            logger.info("Collecting infrastructure metrics from Prometheus...")
+            infra_metrics = collect_test_metrics(
+                self.prometheus_url, self.namespace, test_start, test_end
+            )
+            if infra_metrics:
+                metrics["infrastructure"] = infra_metrics
+                summary = summarize_metrics(infra_metrics)
+                logger.info(f"Infrastructure metrics: {summary}")
+
+        return metrics
 
     def find_breaking_point(
         self,
@@ -190,7 +283,7 @@ class LoadTester:
         step_size: int = 5,
         test_duration: int = 10,
         cooldown: int = 2,
-    ) -> int:
+    ) -> Tuple[int, Dict]:
         """
         Find the breaking point by gradually increasing concurrent load
 
@@ -202,7 +295,7 @@ class LoadTester:
             cooldown: Time to wait between tests
 
         Returns:
-            Number of workers at breaking point
+            Tuple of (breaking_point_workers, all_metrics)
         """
         url = f"{self.base_url}{endpoint}"
         logger.info(f"Starting stress test on {url}")
@@ -210,25 +303,25 @@ class LoadTester:
             f"Max workers: {self.max_workers}, Success threshold: {success_threshold}%"
         )
 
+        all_metrics = {}
         for workers in range(step_size, self.max_workers + 1, step_size):
-            _, _, success_rate = self.test_concurrency_level(
-                url, workers, test_duration
-            )
+            metrics = self.test_concurrency_level(url, workers, test_duration)
+            all_metrics[workers] = metrics
 
             # Stop if success rate drops below threshold
-            if success_rate < success_threshold:
+            if metrics["success_rate"] < success_threshold:
                 logger.info(
                     f"Breaking point found at {workers} concurrent requests "
-                    f"(success rate: {success_rate:.1f}%)"
+                    f"(success rate: {metrics['success_rate']:.1f}%)"
                 )
-                return workers
+                return workers, all_metrics
 
             # Cool down between test levels
             if cooldown > 0:
                 time.sleep(cooldown)
 
         logger.info("Stress test completed - no breaking point found")
-        return self.max_workers
+        return self.max_workers, all_metrics
 
     def run_normal_load(
         self,
@@ -267,15 +360,17 @@ class LoadTester:
 
             # Gradual ramp-up
             workers = max(1, concurrent_users // len(endpoints))
-            success, total, rate = self.test_concurrency_level(
+            metrics = self.test_concurrency_level(
                 url, workers, duration // len(endpoints)
             )
 
-            results[endpoint] = {
-                "success_count": success,
-                "total_requests": total,
-                "success_rate": rate,
-            }
+            results[endpoint] = metrics
+
+        # Add infrastructure summary if Prometheus is enabled
+        if self.prometheus:
+            logger.info(
+                "Note: Use --collect-infra-metrics for detailed infrastructure data"
+            )
 
         return results
 
@@ -336,7 +431,8 @@ class LoadTester:
 
         def generate_load():
             while time.time() - start_time < duration:
-                if self.make_request(url):
+                success, _ = self.make_request(url)
+                if success:
                     load_results["success"] += 1
                 load_results["total"] += 1
                 time.sleep(0.5)
@@ -387,6 +483,62 @@ class LoadTester:
         return results
 
 
+def print_metrics_summary(metrics: Dict, title: str = "Test Results"):
+    """
+    Print concise, readable metrics summary
+
+    Args:
+        metrics: Metrics dictionary from test
+        title: Title for the summary
+    """
+    print(f"\n{'=' * 60}")
+    print(f"{title}")
+    print(f"{'=' * 60}")
+    print(
+        f"Success Rate:  {metrics.get('success_rate', 0):.1f}% "
+        f"({metrics.get('success_count', 0)}/{metrics.get('total_requests', 0)})"
+    )
+
+    if "latency_p50" in metrics:
+        print(
+            f"Latency (ms):  p50={metrics['latency_p50']:.0f} "
+            f"p95={metrics['latency_p95']:.0f} "
+            f"p99={metrics['latency_p99']:.0f} "
+            f"(min={metrics['latency_min']:.0f}, max={metrics['latency_max']:.0f}, avg={metrics['latency_avg']:.0f})"
+        )
+
+    if "throughput" in metrics:
+        print(f"Throughput:    {metrics['throughput']:.1f} req/s")
+
+    if "duration" in metrics:
+        print(f"Duration:      {metrics['duration']:.1f}s")
+
+    # Infrastructure metrics summary
+    if "infrastructure" in metrics:
+        print("\nInfrastructure Metrics:")
+        summary = summarize_metrics(metrics["infrastructure"])
+        for key, value in summary.items():
+            print(f"  {key}: {value}")
+
+    print(f"{'=' * 60}\n")
+
+
+def export_metrics_json(metrics: Dict, filename: str):
+    """
+    Export metrics to JSON file
+
+    Args:
+        metrics: Metrics dictionary to export
+        filename: Output filename
+    """
+    try:
+        with open(filename, "w") as f:
+            json.dump(metrics, f, indent=2)
+        logger.info(f"Metrics exported to {filename}")
+    except Exception as e:
+        logger.error(f"Failed to export metrics: {e}")
+
+
 def main():
     """Main entry point for eoAPI load testing CLI"""
     parser = argparse.ArgumentParser(description="eoAPI Load Testing CLI")
@@ -420,6 +572,28 @@ def main():
         action="store_true",
         help="Enable verbose debug logging",
     )
+    parser.add_argument(
+        "--report-json",
+        type=str,
+        help="Export metrics to JSON file",
+    )
+    parser.add_argument(
+        "--prometheus-url",
+        type=str,
+        default=os.getenv("PROMETHEUS_URL"),
+        help="Prometheus URL for infrastructure metrics (default: from PROMETHEUS_URL env)",
+    )
+    parser.add_argument(
+        "--namespace",
+        type=str,
+        default="eoapi",
+        help="Kubernetes namespace (default: eoapi)",
+    )
+    parser.add_argument(
+        "--collect-infra-metrics",
+        action="store_true",
+        help="Collect infrastructure metrics from Prometheus during tests",
+    )
 
     # Stress test arguments
     stress_group = parser.add_argument_group("stress test options")
@@ -449,11 +623,6 @@ def main():
     # Chaos test arguments
     chaos_group = parser.add_argument_group("chaos test options")
     chaos_group.add_argument(
-        "--namespace",
-        default="eoapi",
-        help="Kubernetes namespace (default: eoapi)",
-    )
-    chaos_group.add_argument(
         "--kill-interval",
         type=int,
         default=60,
@@ -472,29 +641,56 @@ def main():
             base_url=args.base_url,
             max_workers=getattr(args, "max_workers", DEFAULT_MAX_WORKERS),
             timeout=args.timeout,
+            prometheus_url=args.prometheus_url,
+            namespace=args.namespace,
         )
 
         if args.test_type == "stress":
-            result = tester.find_breaking_point(
+            breaking_point, all_metrics = tester.find_breaking_point(
                 endpoint=args.endpoint,
                 success_threshold=args.success_threshold,
                 step_size=args.step_size,
                 test_duration=args.test_duration,
                 cooldown=args.cooldown,
             )
+
+            # Print summary for breaking point
+            if breaking_point in all_metrics:
+                print_metrics_summary(
+                    all_metrics[breaking_point],
+                    f"Stress Test - Breaking Point at {breaking_point} workers",
+                )
+
+            # Export if requested
+            if args.report_json:
+                export_metrics_json(
+                    {"breaking_point": breaking_point, "metrics": all_metrics},
+                    args.report_json,
+                )
+
             logger.info(
-                f"Stress test completed. Breaking point: {result} workers"
+                f"Stress test completed. Breaking point: {breaking_point} workers"
             )
-            sys.exit(1 if result < args.max_workers else 0)
+            sys.exit(1 if breaking_point < args.max_workers else 0)
 
         elif args.test_type == "normal":
             results = tester.run_normal_load(
                 duration=args.duration,
                 concurrent_users=args.users,
             )
+
+            # Print summary for each endpoint
+            for endpoint, metrics in results.items():
+                print_metrics_summary(metrics, f"Normal Load Test - {endpoint}")
+
             avg_success = sum(
                 r["success_rate"] for r in results.values()
             ) / len(results)
+
+            # Export if requested
+            if args.report_json:
+                export_metrics_json(results, args.report_json)
+
             logger.info(
                 f"Normal load test completed. Average success rate: {avg_success:.1f}%"
             )
@@ -506,6 +702,14 @@ def main():
                 duration=args.duration,
                 kill_interval=args.kill_interval,
             )
+
+            # Print summary
+            print_metrics_summary(results, "Chaos Test Results")
+
+            # Export if requested
+            if args.report_json:
+                export_metrics_json(results, args.report_json)
+
             logger.info(
                 f"Chaos test completed. Success rate: {results['success_rate']:.1f}%"
             )

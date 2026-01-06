@@ -28,11 +28,14 @@ class TestNormalMixedLoad:
         for endpoint, result in results.items():
             assert result["success_rate"] >= 90.0, (
                 f"{endpoint} failed with {result['success_rate']:.1f}% success rate "
-                f"under mixed load"
+                f"under mixed load (p95 latency: {result.get('latency_p95', 0):.0f}ms)"
             )
             assert result["total_requests"] > 0, (
                 f"No requests made to {endpoint} during normal load test"
             )
+            # Verify latency metrics are collected
+            assert "latency_p50" in result, "Missing latency metrics"
+            assert "throughput" in result, "Missing throughput metric"
 
     def test_stac_workflow_simulation(self, base_url: str):
         """Simulate typical STAC API workflow"""
@@ -50,11 +53,9 @@ class TestNormalMixedLoad:
 
         for endpoint in workflow_endpoints:
             url = f"{base_url}{endpoint}"
-            success, requests, rate = tester.test_concurrency_level(
-                url, workers=3, duration=8
-            )
-            total_success += success
-            total_requests += requests
+            metrics = tester.test_concurrency_level(url, workers=3, duration=8)
+            total_success += metrics["success_count"]
+            total_requests += metrics["total_requests"]
 
             # Brief pause between workflow steps
             time.sleep(1)
@@ -80,8 +81,8 @@ class TestNormalMixedLoad:
         results = []
         for workers, duration in traffic_pattern:
             url = f"{base_url}/stac/collections"
-            _, _, rate = tester.test_concurrency_level(url, workers, duration)
-            results.append(rate)
+            metrics = tester.test_concurrency_level(url, workers, duration)
+            results.append(metrics["success_rate"])
             time.sleep(2)  # Transition time
 
         avg_performance = sum(results) / len(results)
@@ -100,16 +101,14 @@ class TestNormalSustained:
         url = f"{base_url}/stac/collections"
 
         # Sustained load for 45 seconds
-        success, total, rate = tester.test_concurrency_level(
-            url, workers=5, duration=45
-        )
+        metrics = tester.test_concurrency_level(url, workers=5, duration=45)
 
-        assert rate >= 95.0, (
-            f"Sustained moderate load failed: {rate:.1f}% success rate "
+        assert metrics["success_rate"] >= 95.0, (
+            f"Sustained moderate load failed: {metrics['success_rate']:.1f}% success rate "
             f"with 5 workers over 45s (expected >= 95%)"
         )
-        assert total >= 200, (
-            f"Too few requests for sustained test: {total} (expected >= 200)"
+        assert metrics["total_requests"] >= 200, (
+            f"Too few requests for sustained test: {metrics['total_requests']} (expected >= 200)"
         )
 
     def test_consistent_response_times(self, base_url: str):
@@ -120,12 +119,10 @@ class TestNormalSustained:
         # Collect response time samples
         response_times = []
         for _ in range(10):
-            start_time = time.time()
-            success = tester.make_request(url)
-            response_time = time.time() - start_time
+            success, latency_ms = tester.make_request(url)
 
             if success:
-                response_times.append(response_time)
+                response_times.append(latency_ms / 1000)  # Convert to seconds
 
             time.sleep(0.5)
 
@@ -149,13 +146,11 @@ class TestNormalSustained:
         url = f"{base_url}/raster/healthz"  # Health endpoint should be very stable
 
         # Run for 60 seconds with steady load
-        success, total, rate = tester.test_concurrency_level(
-            url, workers=4, duration=60
-        )
+        metrics = tester.test_concurrency_level(url, workers=4, duration=60)
 
         # Health endpoints should be extremely reliable
-        assert rate >= 98.0, (
-            f"Health endpoint instability under 60s load: {rate:.1f}% success rate "
+        assert metrics["success_rate"] >= 98.0, (
+            f"Health endpoint instability under 60s load: {metrics['success_rate']:.1f}% success rate "
             f"(expected >= 98%)"
         )
 
@@ -169,16 +164,14 @@ class TestNormalUserPatterns:
 
         # Simulate 6 concurrent users, each making requests over time
         url = f"{base_url}/stac/collections"
-        success, total, rate = tester.test_concurrency_level(
-            url, workers=6, duration=25
-        )
+        metrics = tester.test_concurrency_level(url, workers=6, duration=25)
 
-        assert rate >= 93.0, (
-            f"Concurrent user test failed: {rate:.1f}% success rate "
+        assert metrics["success_rate"] >= 93.0, (
+            f"Concurrent user test failed: {metrics['success_rate']:.1f}% success rate "
             f"with 6 concurrent users over 25s (expected >= 93%)"
         )
-        assert total >= 100, (
-            f"Insufficient concurrent user simulation: {total} requests (expected >= 100)"
+        assert metrics["total_requests"] >= 100, (
+            f"Insufficient concurrent user simulation: {metrics['total_requests']} requests (expected >= 100)"
         )
 
     def test_user_session_duration(self, base_url: str):
@@ -195,8 +188,8 @@ class TestNormalUserPatterns:
         total_success_rate = 0
         for endpoint, workers, duration in session_patterns:
             url = f"{base_url}{endpoint}"
-            _, _, rate = tester.test_concurrency_level(url, workers, duration)
-            total_success_rate += rate
+            metrics = tester.test_concurrency_level(url, workers, duration)
+            total_success_rate += metrics["success_rate"]
 
         avg_session_success = total_success_rate / len(session_patterns)
         assert avg_session_success >= 94.0, (
@@ -219,14 +212,12 @@ class TestNormalUserPatterns:
         results = {}
         for endpoint, workers, duration in usage_pattern:
             url = f"{base_url}{endpoint}"
-            success, total, rate = tester.test_concurrency_level(
-                url, workers, duration
-            )
-            results[endpoint] = {"rate": rate, "total": total}
+            metrics = tester.test_concurrency_level(url, workers, duration)
+            results[endpoint] = metrics
 
         # All endpoints should perform well under their expected load
         for endpoint, result in results.items():
-            assert result["rate"] >= 90.0, (
-                f"{endpoint} failed under expected load: {result['rate']:.1f}% "
-                f"({result['total']} requests, expected >= 90% success)"
+            assert result["success_rate"] >= 90.0, (
+                f"{endpoint} failed under expected load: {result['success_rate']:.1f}% "
+                f"({result['total_requests']} requests, expected >= 90% success)"
             )
