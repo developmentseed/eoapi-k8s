@@ -39,9 +39,10 @@ def test_stac_auth_without_token(stac_endpoint: str) -> None:
 
     if resp.status_code in [200, 201]:
         # Auth proxy should reject requests without tokens
-        assert resp.status_code in [401, 403], (
-            f"Expected auth error, got {resp.status_code}: {resp.text[:100]}"
-        )
+        assert resp.status_code in [
+            401,
+            403,
+        ], f"Expected auth error, got {resp.status_code}: {resp.text[:100]}"
 
 
 def test_stac_auth_with_invalid_token(stac_endpoint: str) -> None:
@@ -65,14 +66,12 @@ def test_stac_auth_with_invalid_token(stac_endpoint: str) -> None:
         },
     )
 
-    assert resp.status_code in [401, 403], (
-        f"Expected auth error with invalid token, got {resp.status_code}: {resp.text[:100]}"
-    )
+    assert (
+        resp.status_code in [401, 403]
+    ), f"Expected auth error with invalid token, got {resp.status_code}: {resp.text[:100]}"
 
 
-def test_stac_auth_with_valid_token(
-    stac_endpoint: str, valid_token: str
-) -> None:
+def test_stac_auth_with_valid_token(stac_endpoint: str, valid_token: str) -> None:
     """Test write operation with valid token - tests actual auth proxy behavior."""
     resp = client.post(
         f"{stac_endpoint}/collections/noaa-emergency-response/items",
@@ -94,9 +93,10 @@ def test_stac_auth_with_valid_token(
     )
 
     # With valid token from mock OIDC server, request should succeed
-    assert resp.status_code in [200, 201], (
-        f"Expected success with valid token, got {resp.status_code}: {resp.text[:100]}"
-    )
+    assert resp.status_code in [
+        200,
+        201,
+    ], f"Expected success with valid token, got {resp.status_code}: {resp.text[:100]}"
 
 
 def test_stac_read_operations_work(stac_endpoint: str) -> None:

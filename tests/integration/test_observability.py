@@ -32,9 +32,9 @@ class TestMonitoringStackDeployment:
 
         ready_replicas = deployment["status"].get("readyReplicas", 0)
         desired_replicas = deployment["spec"]["replicas"]
-        assert ready_replicas == desired_replicas, (
-            f"Prometheus not ready: {ready_replicas}/{desired_replicas} replicas"
-        )
+        assert (
+            ready_replicas == desired_replicas
+        ), f"Prometheus not ready: {ready_replicas}/{desired_replicas} replicas"
 
     def test_grafana_deployment(self) -> None:
         namespace = get_namespace()
@@ -52,9 +52,9 @@ class TestMonitoringStackDeployment:
         deployment = deployments["items"][0]
         ready_replicas = deployment["status"].get("readyReplicas", 0)
         desired_replicas = deployment["spec"]["replicas"]
-        assert ready_replicas == desired_replicas, (
-            f"Grafana not ready: {ready_replicas}/{desired_replicas} replicas"
-        )
+        assert (
+            ready_replicas == desired_replicas
+        ), f"Grafana not ready: {ready_replicas}/{desired_replicas} replicas"
 
     def test_prometheus_adapter_deployment(self) -> None:
         namespace = get_namespace()
@@ -64,9 +64,7 @@ class TestMonitoringStackDeployment:
             label_selector="app.kubernetes.io/name=prometheus-adapter",
         )
 
-        assert result.returncode == 0, (
-            "Failed to get Prometheus Adapter deployment"
-        )
+        assert result.returncode == 0, "Failed to get Prometheus Adapter deployment"
 
         deployments = json.loads(result.stdout)
         assert deployments["items"], "No Prometheus Adapter deployment found"
@@ -74,9 +72,9 @@ class TestMonitoringStackDeployment:
         deployment = deployments["items"][0]
         ready_replicas = deployment["status"].get("readyReplicas", 0)
         desired_replicas = deployment["spec"]["replicas"]
-        assert ready_replicas == desired_replicas, (
-            f"Prometheus Adapter not ready: {ready_replicas}/{desired_replicas} replicas"
-        )
+        assert (
+            ready_replicas == desired_replicas
+        ), f"Prometheus Adapter not ready: {ready_replicas}/{desired_replicas} replicas"
 
     def test_kube_state_metrics_deployment(self) -> None:
         """Test kube-state-metrics deployment is running."""
@@ -87,9 +85,7 @@ class TestMonitoringStackDeployment:
             label_selector="app.kubernetes.io/name=kube-state-metrics",
         )
 
-        assert result.returncode == 0, (
-            "Failed to get kube-state-metrics deployment"
-        )
+        assert result.returncode == 0, "Failed to get kube-state-metrics deployment"
 
         deployments = json.loads(result.stdout)
         assert deployments["items"], "No kube-state-metrics deployment found"
@@ -97,9 +93,9 @@ class TestMonitoringStackDeployment:
         deployment = deployments["items"][0]
         ready_replicas = deployment["status"].get("readyReplicas", 0)
         desired_replicas = deployment["spec"]["replicas"]
-        assert ready_replicas == desired_replicas, (
-            f"kube-state-metrics not ready: {ready_replicas}/{desired_replicas} replicas"
-        )
+        assert (
+            ready_replicas == desired_replicas
+        ), f"kube-state-metrics not ready: {ready_replicas}/{desired_replicas} replicas"
 
     def test_node_exporter_deployment(self) -> None:
         """Test node-exporter DaemonSet is running."""
@@ -119,9 +115,9 @@ class TestMonitoringStackDeployment:
         ready = daemonset["status"].get("numberReady", 0)
         desired = daemonset["status"].get("desiredNumberScheduled", 0)
         assert ready > 0, "No node-exporter pods are ready"
-        assert ready == desired, (
-            f"node-exporter not fully deployed: {ready}/{desired} nodes"
-        )
+        assert (
+            ready == desired
+        ), f"node-exporter not fully deployed: {ready}/{desired} nodes"
 
 
 class TestMetricsCollection:
@@ -138,9 +134,9 @@ class TestMetricsCollection:
             )
 
         api_response = json.loads(result.stdout)
-        assert api_response["kind"] == "APIResourceList", (
-            "Invalid custom metrics API response"
-        )
+        assert (
+            api_response["kind"] == "APIResourceList"
+        ), "Invalid custom metrics API response"
         assert (
             api_response["groupVersion"] == "custom.metrics.k8s.io/v1beta1"
         ), "Wrong API version"
@@ -196,20 +192,14 @@ class TestMetricsCollection:
 
             # Wait for proxy to establish
             if not wait_for_url(f"{proxy_url}/api/v1/targets"):
-                pytest.skip(
-                    "Could not establish connection to Prometheus via proxy"
-                )
+                pytest.skip("Could not establish connection to Prometheus via proxy")
 
             # Check Prometheus targets
             response = requests.get(f"{proxy_url}/api/v1/targets")
-            assert response.status_code == 200, (
-                "Failed to get Prometheus targets"
-            )
+            assert response.status_code == 200, "Failed to get Prometheus targets"
 
             targets_data = response.json()
-            assert targets_data["status"] == "success", (
-                "Failed to retrieve targets"
-            )
+            assert targets_data["status"] == "success", "Failed to retrieve targets"
 
             active_targets = targets_data["data"]["activeTargets"]
 
@@ -224,9 +214,7 @@ class TestMetricsCollection:
                 "kubernetes-apiservers",
             }
 
-            found_jobs = {
-                target["labels"].get("job") for target in active_targets
-            }
+            found_jobs = {target["labels"].get("job") for target in active_targets}
 
             # At least some of the expected jobs should be present
             common_jobs = expected_jobs.intersection(found_jobs)
@@ -242,9 +230,7 @@ class TestMetricsCollection:
 
             # Warning about unhealthy targets but don't fail the test
             if unhealthy_targets:
-                print(
-                    f"Warning: {len(unhealthy_targets)} unhealthy targets found"
-                )
+                print(f"Warning: {len(unhealthy_targets)} unhealthy targets found")
 
         finally:
             if process:
@@ -279,21 +265,17 @@ class TestAutoscalingIntegration:
         existing_hpas = [hpa for hpa in expected_hpas if hpa in found_hpas]
 
         if not existing_hpas:
-            pytest.skip(
-                "No eoAPI HPA resources found - autoscaling may be disabled"
-            )
+            pytest.skip("No eoAPI HPA resources found - autoscaling may be disabled")
 
         # For each found HPA, check configuration
         for hpa_name in existing_hpas:
             hpa = next(h for h in hpas if h["metadata"]["name"] == hpa_name)
             spec = hpa["spec"]
 
-            assert spec["minReplicas"] >= 1, (
-                f"HPA {hpa_name} min replicas too low"
-            )
-            assert spec["maxReplicas"] > spec["minReplicas"], (
-                f"HPA {hpa_name} max replicas not greater than min"
-            )
+            assert spec["minReplicas"] >= 1, f"HPA {hpa_name} min replicas too low"
+            assert (
+                spec["maxReplicas"] > spec["minReplicas"]
+            ), f"HPA {hpa_name} max replicas not greater than min"
 
     def test_hpa_metrics_available(self) -> None:
         """Test that HPA can access metrics for scaling decisions."""
@@ -325,16 +307,14 @@ class TestAutoscalingIntegration:
             )
 
             if scaling_active:
-                assert scaling_active["status"] == "True", (
-                    f"HPA {name} scaling is not active: {scaling_active.get('message', 'Unknown reason')}"
-                )
+                assert (
+                    scaling_active["status"] == "True"
+                ), f"HPA {name} scaling is not active: {scaling_active.get('message', 'Unknown reason')}"
 
             # If we have been running for a while, we should have metrics
             # But on fresh deployments, metrics might not be available yet
             if current_metrics is not None:
-                assert len(current_metrics) > 0, (
-                    f"HPA {name} has no current metrics"
-                )
+                assert len(current_metrics) > 0, f"HPA {name} has no current metrics"
 
     def test_service_resource_requests_configured(self) -> None:
         """Verify pods have resource requests for HPA to function."""
@@ -416,9 +396,7 @@ class TestGrafanaDashboards:
             assert response.status_code == 200, "Grafana health check failed"
 
             health_data = response.json()
-            assert health_data.get("database") == "ok", (
-                "Grafana database not healthy"
-            )
+            assert health_data.get("database") == "ok", "Grafana database not healthy"
 
         finally:
             if process:
@@ -448,11 +426,9 @@ class TestGrafanaDashboards:
                     admin_secret = secret
                     break
 
-        assert admin_secret is not None, (
-            "Grafana admin credentials secret not found"
-        )
+        assert admin_secret is not None, "Grafana admin credentials secret not found"
 
         secret_data = admin_secret.get("data", {})
-        assert "admin-password" in secret_data, (
-            "admin-password not found in Grafana secret"
-        )
+        assert (
+            "admin-password" in secret_data
+        ), "admin-password not found in Grafana secret"

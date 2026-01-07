@@ -30,7 +30,7 @@ def generate_load(
     success_count = 0
     error_count = 0
     scaling_errors = 0
-    error_details = {}  # Track specific error types
+    error_details: dict[str, int] = {}  # Track specific error types
 
     def worker() -> None:
         nonlocal success_count, error_count, scaling_errors, error_details
@@ -45,20 +45,14 @@ def generate_load(
                         # These are expected during scaling
                         scaling_errors += 1
                         error_key = f"HTTP_{response.status_code}"
-                        error_details[error_key] = (
-                            error_details.get(error_key, 0) + 1
-                        )
+                        error_details[error_key] = error_details.get(error_key, 0) + 1
                     else:
                         error_count += 1
                         error_key = f"HTTP_{response.status_code}"
-                        error_details[error_key] = (
-                            error_details.get(error_key, 0) + 1
-                        )
+                        error_details[error_key] = error_details.get(error_key, 0) + 1
                 except requests.Timeout:
                     scaling_errors += 1
-                    error_details["Timeout"] = (
-                        error_details.get("Timeout", 0) + 1
-                    )
+                    error_details["Timeout"] = error_details.get("Timeout", 0) + 1
                 except requests.ConnectionError:
                     scaling_errors += 1
                     error_details["ConnectionError"] = (
@@ -67,9 +61,7 @@ def generate_load(
                 except requests.RequestException as e:
                     scaling_errors += 1
                     error_key = type(e).__name__
-                    error_details[error_key] = (
-                        error_details.get(error_key, 0) + 1
-                    )
+                    error_details[error_key] = error_details.get(error_key, 0) + 1
                 time.sleep(delay)
 
     # Start concurrent workers
@@ -112,21 +104,17 @@ class TestHPAConfiguration:
             spec = hpa["spec"]
             hpa_name = hpa["metadata"]["name"]
 
-            assert "scaleTargetRef" in spec, (
-                f"HPA {hpa_name} missing scaleTargetRef"
-            )
+            assert "scaleTargetRef" in spec, f"HPA {hpa_name} missing scaleTargetRef"
             assert "minReplicas" in spec, f"HPA {hpa_name} missing minReplicas"
             assert "maxReplicas" in spec, f"HPA {hpa_name} missing maxReplicas"
-            assert "metrics" in spec, (
-                f"HPA {hpa_name} missing metrics configuration"
-            )
+            assert "metrics" in spec, f"HPA {hpa_name} missing metrics configuration"
 
             min_replicas = spec["minReplicas"]
             max_replicas = spec["maxReplicas"]
             assert min_replicas > 0, f"HPA {hpa_name} minReplicas must be > 0"
-            assert max_replicas > min_replicas, (
-                f"HPA {hpa_name} maxReplicas must be > minReplicas"
-            )
+            assert (
+                max_replicas > min_replicas
+            ), f"HPA {hpa_name} maxReplicas must be > minReplicas"
 
             metrics = spec["metrics"]
             assert len(metrics) > 0, f"HPA {hpa_name} has no metrics configured"
@@ -137,9 +125,9 @@ class TestHPAConfiguration:
                 if m.get("type") == "Resource"
                 and m.get("resource", {}).get("name") == "cpu"
             ]
-            assert len(cpu_metrics) > 0, (
-                f"HPA {hpa_name} must have CPU metric configured"
-            )
+            assert (
+                len(cpu_metrics) > 0
+            ), f"HPA {hpa_name} must have CPU metric configured"
 
             print(
                 f"✅ HPA {hpa_name}: {min_replicas}-{max_replicas} replicas, {len(metrics)} metrics"
@@ -175,16 +163,16 @@ class TestHPAConfiguration:
                 None,
             )
 
-            assert target_deployment is not None, (
-                f"HPA {hpa_name} target deployment {target_name} not found"
-            )
+            assert (
+                target_deployment is not None
+            ), f"HPA {hpa_name} target deployment {target_name} not found"
 
             # Check deployment has ready replicas
             status = target_deployment.get("status", {})
             ready_replicas = status.get("readyReplicas", 0)
-            assert ready_replicas > 0, (
-                f"Target deployment {target_name} has no ready replicas"
-            )
+            assert (
+                ready_replicas > 0
+            ), f"Target deployment {target_name} has no ready replicas"
 
             print(
                 f"✅ HPA {hpa_name} target deployment {target_name} is ready ({ready_replicas} replicas)"
@@ -211,9 +199,7 @@ class TestCPUScaling:
             except Exception as e:
                 print(f"⚠️  Cannot get metrics for {service}: {e}")
 
-        assert len(metrics_available) > 0, (
-            "No CPU metrics available for any service"
-        )
+        assert len(metrics_available) > 0, "No CPU metrics available for any service"
 
     def test_hpa_cpu_utilization_calculation(self) -> None:
         """Verify HPA calculates CPU utilization correctly."""
@@ -243,12 +229,10 @@ class TestCPUScaling:
                     "averageUtilization"
                 )
                 if cpu_utilization is not None:
-                    assert 0 <= cpu_utilization <= 1000, (
-                        f"Invalid CPU utilization: {cpu_utilization}%"
-                    )
-                    print(
-                        f"✅ HPA {hpa_name} CPU utilization: {cpu_utilization}%"
-                    )
+                    assert (
+                        0 <= cpu_utilization <= 1000
+                    ), f"Invalid CPU utilization: {cpu_utilization}%"
+                    print(f"✅ HPA {hpa_name} CPU utilization: {cpu_utilization}%")
                 else:
                     print(
                         f"⚠️  HPA {hpa_name} CPU metric exists but no utilization value"
@@ -295,9 +279,7 @@ class TestCPUScaling:
             pod = running_pods[0]  # Check first running pod
             containers = pod["spec"]["containers"]
 
-            main_container = next(
-                (c for c in containers if c["name"] == service), None
-            )
+            main_container = next((c for c in containers if c["name"] == service), None)
             if not main_container:
                 continue
 
@@ -316,12 +298,10 @@ class TestCPUScaling:
             # Parse CPU request to verify it's reasonable
             if cpu_request.endswith("m"):
                 cpu_millicores = int(cpu_request[:-1])
-                assert cpu_millicores > 0, (
-                    f"Service {service} has zero CPU request"
-                )
-                assert cpu_millicores <= 2000, (
-                    f"Service {service} has very high CPU request: {cpu_millicores}m"
-                )
+                assert cpu_millicores > 0, f"Service {service} has zero CPU request"
+                assert (
+                    cpu_millicores <= 2000
+                ), f"Service {service} has very high CPU request: {cpu_millicores}m"
 
 
 class TestScalingBehavior:
@@ -423,9 +403,9 @@ class TestScalingBehavior:
             f"Load test had low success rate: {load_stats['success_rate']:.2%} "
             f"(scaling errors: {load_stats.get('scaling_errors', 0)})"
         )
-        assert load_stats["total_requests"] > 100, (
-            "Load test generated insufficient requests"
-        )
+        assert (
+            load_stats["total_requests"] > 100
+        ), "Load test generated insufficient requests"
 
         # Note: In CI environments with limited resources, actual scaling may not occur
         # The important thing is that the system handled the load successfully
@@ -485,8 +465,6 @@ class TestRequestRateScaling:
 
     def test_custom_metrics_for_request_rate(self) -> None:
         """Check if custom metrics for request rate scaling are available."""
-        namespace = get_namespace()
-
         # Check if custom metrics API has request rate metrics
         result = subprocess.run(
             ["kubectl", "get", "--raw", "/apis/custom.metrics.k8s.io/v1beta1"],
@@ -548,9 +526,7 @@ class TestRequestRateScaling:
                 # Check if it's configured but not yet available
                 spec_metrics = hpa["spec"]["metrics"]
                 configured_custom = [
-                    m
-                    for m in spec_metrics
-                    if m.get("type") in ["Pods", "Object"]
+                    m for m in spec_metrics if m.get("type") in ["Pods", "Object"]
                 ]
 
                 if configured_custom:

@@ -31,9 +31,7 @@ class TestLoadBaseline:
             (Endpoints.VECTOR_HEALTH, Thresholds.HEALTH_ENDPOINTS),
         ],
     )
-    def test_endpoint_light_load(
-        self, light_tester, endpoint: str, threshold: float
-    ):
+    def test_endpoint_light_load(self, light_tester, endpoint: str, threshold: float):
         """Test endpoints with light concurrent load"""
         metrics = run_and_assert(
             light_tester,
@@ -116,9 +114,7 @@ class TestLoadIntegration:
             (Endpoints.VECTOR_HEALTH, Thresholds.HEALTH_ENDPOINTS),
         ],
     )
-    def test_mixed_endpoint_load(
-        self, light_tester, endpoint: str, threshold: float
-    ):
+    def test_mixed_endpoint_load(self, light_tester, endpoint: str, threshold: float):
         """Test load across multiple endpoints simultaneously"""
         metrics = run_and_assert(
             light_tester,

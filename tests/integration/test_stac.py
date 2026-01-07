@@ -46,9 +46,7 @@ def test_stac_api(stac_endpoint: str) -> None:
                 assert link["href"].startswith(stac_endpoint.split("://")[1])
 
     # items
-    resp = client.get(
-        f"{stac_endpoint}/collections/noaa-emergency-response/items"
-    )
+    resp = client.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
     assert resp.status_code == 200
     items = resp.json()
     # Verify item links have correct base path
@@ -90,9 +88,9 @@ def test_stac_custom_path(stac_endpoint: str) -> None:
     # All links should use the custom path
     for link in landing["links"]:
         if link["href"].startswith("/"):
-            assert link["href"].startswith(base_path), (
-                f"Link {link['href']} doesn't start with {base_path}"
-            )
+            assert link["href"].startswith(
+                base_path
+            ), f"Link {link['href']} doesn't start with {base_path}"
 
     # Collections should also use the custom path
     resp = client.get(f"{stac_endpoint}/collections")
@@ -102,14 +100,12 @@ def test_stac_custom_path(stac_endpoint: str) -> None:
     for collection in collections:
         for link in collection["links"]:
             if link["href"].startswith("/"):
-                assert link["href"].startswith(base_path), (
-                    f"Collection link {link['href']} doesn't start with {base_path}"
-                )
+                assert link["href"].startswith(
+                    base_path
+                ), f"Collection link {link['href']} doesn't start with {base_path}"
 
     # Test a specific item
-    resp = client.get(
-        f"{stac_endpoint}/collections/noaa-emergency-response/items"
-    )
+    resp = client.get(f"{stac_endpoint}/collections/noaa-emergency-response/items")
     assert resp.status_code == 200
     items = resp.json()
 
@@ -117,9 +113,9 @@ def test_stac_custom_path(stac_endpoint: str) -> None:
     for feature in items["features"]:
         for link in feature["links"]:
             if link["href"].startswith("/"):
-                assert link["href"].startswith(base_path), (
-                    f"Item link {link['href']} doesn't start with {base_path}"
-                )
+                assert link["href"].startswith(
+                    base_path
+                ), f"Item link {link['href']} doesn't start with {base_path}"
 
     # viewer
     resp = client.get(
@@ -156,14 +152,14 @@ def test_stac_queryables(stac_endpoint: str) -> None:
 
     # Verify all expected properties are present
     for prop_name, prop_schema in expected_queryables["properties"].items():
-        assert prop_name in actual_queryables["properties"], (
-            f"Expected property '{prop_name}' not found in queryables"
-        )
-        assert actual_queryables["properties"][prop_name] == prop_schema, (
-            f"Property '{prop_name}' schema doesn't match expected schema"
-        )
+        assert (
+            prop_name in actual_queryables["properties"]
+        ), f"Expected property '{prop_name}' not found in queryables"
+        assert (
+            actual_queryables["properties"][prop_name] == prop_schema
+        ), f"Property '{prop_name}' schema doesn't match expected schema"
 
     # Verify additionalProperties setting
-    assert actual_queryables.get(
+    assert actual_queryables.get("additionalProperties") == expected_queryables.get(
         "additionalProperties"
-    ) == expected_queryables.get("additionalProperties")
+    )

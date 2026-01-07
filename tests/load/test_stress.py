@@ -48,9 +48,9 @@ class TestStressBreakingPoints:
         )
 
         min_workers = 4 if "search" in endpoint else 6
-        assert breaking_point >= min_workers, (
-            f"{endpoint} breaking point {breaking_point} < {min_workers} workers"
-        )
+        assert (
+            breaking_point >= min_workers
+        ), f"{endpoint} breaking point {breaking_point} < {min_workers} workers"
 
     @pytest.mark.parametrize(
         "endpoint,threshold",
@@ -98,9 +98,7 @@ class TestStressResilience:
             url, workers=Concurrency.SINGLE + 1, duration=Durations.SHORT
         )
 
-        assert_recovery(
-            stress_metrics, recovery_metrics, context="stress recovery"
-        )
+        assert_recovery(stress_metrics, recovery_metrics, context="stress recovery")
 
     def test_sustained_high_load(self, load_tester):
         """Test service behavior under sustained high load"""
@@ -112,9 +110,7 @@ class TestStressResilience:
             min_success_rate=Thresholds.STRESS_MODERATE,
         )
 
-        assert_success_rate(
-            metrics, Thresholds.STRESS_MODERATE, "sustained load"
-        )
+        assert_success_rate(metrics, Thresholds.STRESS_MODERATE, "sustained load")
 
     def test_burst_load_handling(self, load_tester):
         """Test handling of burst traffic patterns"""
@@ -162,9 +158,7 @@ class TestStressLimits:
         # Use short timeout to trigger timeouts
         from .test_helpers import create_tester
 
-        tester = create_tester(
-            base_url=load_tester.base_url, max_workers=20, timeout=2
-        )
+        tester = create_tester(base_url=load_tester.base_url, max_workers=20, timeout=2)
 
         url = build_url(tester.base_url, Endpoints.STAC_COLLECTIONS)
         metrics = tester.test_concurrency_level(

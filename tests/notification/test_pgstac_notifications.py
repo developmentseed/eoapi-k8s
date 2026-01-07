@@ -89,9 +89,7 @@ def test_notification_triggers_exist(
     stac_client: Dict[str, Any], notifications_enabled: bool
 ) -> None:
     """Test that notification system is working by performing a simple operation."""
-    assert notifications_enabled, (
-        "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
-    )
+    assert notifications_enabled, "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
 
     namespace = os.getenv("NAMESPACE", "eoapi")
     result = subprocess.run(
@@ -133,9 +131,10 @@ def test_notification_triggers_exist(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 201], (
-        f"Failed to create test item: {response.text}"
-    )
+    assert response.status_code in [
+        200,
+        201,
+    ], f"Failed to create test item: {response.text}"
 
     time.sleep(2)
     logs = get_notifier_logs_since(before_time)
@@ -147,9 +146,7 @@ def test_notification_triggers_exist(
     )
 
     assert (
-        "pgstac_items_change" in logs
-        or "INSERT" in logs
-        or test_item_id in logs
+        "pgstac_items_change" in logs or "INSERT" in logs or test_item_id in logs
     ), "Notification system should process item changes"
 
 
@@ -157,9 +154,7 @@ def test_insert_notification(
     stac_client: Dict[str, Any], notifications_enabled: bool
 ) -> None:
     """Test that INSERT operations trigger notifications."""
-    assert notifications_enabled, (
-        "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
-    )
+    assert notifications_enabled, "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
 
     test_item_id = f"test-insert-{int(time.time())}"
     test_item = {
@@ -183,9 +178,7 @@ def test_insert_notification(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 201], (
-        f"Failed to create item: {response.text}"
-    )
+    assert response.status_code in [200, 201], f"Failed to create item: {response.text}"
 
     time.sleep(2)
     logs = get_notifier_logs_since(before_time)
@@ -206,9 +199,7 @@ def test_update_notification(
     stac_client: Dict[str, Any], notifications_enabled: bool
 ) -> None:
     """Test that UPDATE operations trigger notifications."""
-    assert notifications_enabled, (
-        "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
-    )
+    assert notifications_enabled, "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
 
     test_item_id = f"test-update-{int(time.time())}"
     test_item = {
@@ -233,14 +224,12 @@ def test_update_notification(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 201], (
-        f"Failed to create item: {response.text}"
-    )
+    assert response.status_code in [200, 201], f"Failed to create item: {response.text}"
 
     before_time = time.time()
 
-    test_item["properties"]["description"] = "Updated for notification test"
-    test_item["properties"]["test_version"] = "v2"
+    test_item["properties"]["description"] = "Updated for notification test"  # type: ignore[index]
+    test_item["properties"]["test_version"] = "v2"  # type: ignore[index]
 
     response = requests.put(
         f"{stac_client['base_url']}/collections/noaa-emergency-response/items/{test_item_id}",
@@ -249,9 +238,7 @@ def test_update_notification(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 201], (
-        f"Failed to update item: {response.text}"
-    )
+    assert response.status_code in [200, 201], f"Failed to update item: {response.text}"
 
     time.sleep(2)
     logs = get_notifier_logs_since(before_time)
@@ -273,9 +260,7 @@ def test_delete_notification(
     stac_client: Dict[str, Any], notifications_enabled: bool
 ) -> None:
     """Test that DELETE operations trigger notifications."""
-    assert notifications_enabled, (
-        "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
-    )
+    assert notifications_enabled, "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
 
     test_item_id = f"test-delete-{int(time.time())}"
     test_item = {
@@ -297,9 +282,7 @@ def test_delete_notification(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 201], (
-        f"Failed to create item: {response.text}"
-    )
+    assert response.status_code in [200, 201], f"Failed to create item: {response.text}"
 
     before_time = time.time()
 
@@ -309,9 +292,7 @@ def test_delete_notification(
         timeout=stac_client["timeout"],
     )
 
-    assert response.status_code in [200, 204], (
-        f"Failed to delete item: {response.text}"
-    )
+    assert response.status_code in [200, 204], f"Failed to delete item: {response.text}"
 
     time.sleep(2)
     logs = get_notifier_logs_since(before_time)
@@ -326,9 +307,7 @@ def test_bulk_operations_notification(
     stac_client: Dict[str, Any], notifications_enabled: bool
 ) -> None:
     """Test that bulk operations trigger appropriate notifications."""
-    assert notifications_enabled, (
-        "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
-    )
+    assert notifications_enabled, "PgSTAC notifications not enabled - set notifications.sources.pgstac=true to test"
 
     test_items = []
     for i in range(3):
@@ -356,16 +335,15 @@ def test_bulk_operations_notification(
             timeout=stac_client["timeout"],
         )
 
-        assert response.status_code in [200, 201], (
-            f"Failed to create item: {response.text}"
-        )
+        assert response.status_code in [
+            200,
+            201,
+        ], f"Failed to create item: {response.text}"
 
     time.sleep(3)
     logs = get_notifier_logs_since(before_time)
 
-    found_count = sum(
-        1 for item in test_items if f"item_id='{item['id']}'" in logs
-    )
+    found_count = sum(1 for item in test_items if f"item_id='{item['id']}'" in logs)
 
     for item in test_items:
         requests.delete(
@@ -374,6 +352,4 @@ def test_bulk_operations_notification(
             timeout=stac_client["timeout"],
         )
 
-    assert found_count >= 2, (
-        f"Expected at least 2 notifications, found {found_count}"
-    )
+    assert found_count >= 2, f"Expected at least 2 notifications, found {found_count}"

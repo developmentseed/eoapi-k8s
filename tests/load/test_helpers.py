@@ -100,9 +100,7 @@ def assert_min_requests(
         AssertionError: If request count below minimum
     """
     total = metrics.get("total_requests", 0)
-    assert total >= min_count, (
-        f"{context}: {total} requests < {min_count} expected"
-    )
+    assert total >= min_count, f"{context}: {total} requests < {min_count} expected"
 
 
 def assert_has_latency_metrics(metrics: Dict) -> None:
@@ -196,9 +194,9 @@ def assert_recovery(
     )
 
     if min_improvement > 0:
-        assert improvement >= min_improvement, (
-            f"{context}: improvement {improvement:.1f}% < {min_improvement:.1f}%"
-        )
+        assert (
+            improvement >= min_improvement
+        ), f"{context}: improvement {improvement:.1f}% < {min_improvement:.1f}%"
 
 
 def validate_metrics_structure(metrics: Dict) -> None:

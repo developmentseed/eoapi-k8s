@@ -51,9 +51,7 @@ class PrometheusClient:
             logger.debug(f"Prometheus not available at {self.url}: {e}")
             return False
 
-    def query(
-        self, query: str, time: Optional[datetime] = None
-    ) -> Optional[Dict]:
+    def query(self, query: str, time: Optional[datetime] = None) -> Optional[Dict]:
         """
         Execute instant Prometheus query
 
@@ -68,7 +66,7 @@ class PrometheusClient:
             return None
 
         try:
-            params = {"query": query}
+            params: dict[str, str | float] = {"query": query}
             if time:
                 params["time"] = time.timestamp()
 
@@ -112,7 +110,7 @@ class PrometheusClient:
             return None
 
         try:
-            params = {
+            params: dict[str, str | float] = {
                 "query": query,
                 "start": start.timestamp(),
                 "end": end.timestamp(),
@@ -130,9 +128,7 @@ class PrometheusClient:
                 if data.get("status") == "success":
                     return data.get("data", {})
 
-            logger.warning(
-                f"Prometheus range query failed: {response.status_code}"
-            )
+            logger.warning(f"Prometheus range query failed: {response.status_code}")
             return None
         except Exception as e:
             logger.debug(f"Prometheus range query error: {e}")
@@ -229,7 +225,9 @@ def get_request_metrics(
 
     # Request rate (depends on ingress controller)
     # Try nginx ingress first
-    rate_query = f'rate(nginx_ingress_controller_requests{{namespace="{namespace}"}}[1m])'
+    rate_query = (
+        f'rate(nginx_ingress_controller_requests{{namespace="{namespace}"}}[1m])'
+    )
     metrics["request_rate"] = client.query_range(rate_query, start, end)
 
     # Request duration
@@ -238,9 +236,7 @@ def get_request_metrics(
         f"rate(nginx_ingress_controller_request_duration_seconds_bucket"
         f'{{namespace="{namespace}"}}[1m]))'
     )
-    metrics["request_latency_p95"] = client.query_range(
-        latency_query, start, end
-    )
+    metrics["request_latency_p95"] = client.query_range(latency_query, start, end)
 
     return metrics
 
@@ -267,15 +263,13 @@ def get_database_metrics(
 
     # PostgreSQL connections
     connections_query = f'pg_stat_activity_count{{namespace="{namespace}"}}'
-    metrics["db_connections"] = client.query_range(
-        connections_query, start, end
-    )
+    metrics["db_connections"] = client.query_range(connections_query, start, end)
 
     # Query duration
-    query_duration = f'rate(pg_stat_statements_mean_exec_time{{namespace="{namespace}"}}[1m])'
-    metrics["db_query_duration"] = client.query_range(
-        query_duration, start, end
+    query_duration = (
+        f'rate(pg_stat_statements_mean_exec_time{{namespace="{namespace}"}}[1m])'
     )
+    metrics["db_query_duration"] = client.query_range(query_duration, start, end)
 
     return metrics
 

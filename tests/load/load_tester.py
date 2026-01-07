@@ -88,9 +88,7 @@ class LoadTester:
                 f"base_url must start with http:// or https://: {base_url}"
             )
         if not isinstance(max_workers, int) or max_workers <= 0:
-            raise ValueError(
-                f"max_workers must be a positive integer: {max_workers}"
-            )
+            raise ValueError(f"max_workers must be a positive integer: {max_workers}")
         if not isinstance(timeout, int) or timeout <= 0:
             raise ValueError(f"timeout must be a positive integer: {timeout}")
 
@@ -150,9 +148,7 @@ class LoadTester:
             latency_ms = (time.time() - start_time) * 1000
             success = response.status_code == 200
             if not success:
-                logger.debug(
-                    f"Request to {url} returned status {response.status_code}"
-                )
+                logger.debug(f"Request to {url} returned status {response.status_code}")
             return success, latency_ms
         except requests.exceptions.Timeout:
             latency_ms = (time.time() - start_time) * 1000
@@ -190,9 +186,7 @@ class LoadTester:
         Returns:
             Dict with metrics including success rate, latencies, throughput, and optional infra metrics
         """
-        logger.info(
-            f"Testing {url} with {workers} concurrent requests for {duration}s"
-        )
+        logger.info(f"Testing {url} with {workers} concurrent requests for {duration}s")
 
         test_start = datetime.now()
         start_time = time.time()
@@ -200,9 +194,7 @@ class LoadTester:
         total_requests = 0
         latencies: List[float] = []
 
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=workers
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
 
             # Submit requests for the specified duration
@@ -226,7 +218,7 @@ class LoadTester:
         )
 
         # Calculate latency metrics
-        metrics = {
+        metrics: Dict[str, float | Dict] = {
             "success_count": success_count,
             "total_requests": total_requests,
             "success_rate": success_rate,
@@ -244,14 +236,10 @@ class LoadTester:
                     "latency_max": max(latencies),
                     "latency_avg": statistics.mean(latencies),
                     "latency_p50": statistics.median(sorted_latencies),
-                    "latency_p95": sorted_latencies[
-                        int(len(sorted_latencies) * 0.95)
-                    ]
+                    "latency_p95": sorted_latencies[int(len(sorted_latencies) * 0.95)]
                     if len(sorted_latencies) > 1
                     else sorted_latencies[0],
-                    "latency_p99": sorted_latencies[
-                        int(len(sorted_latencies) * 0.99)
-                    ]
+                    "latency_p99": sorted_latencies[int(len(sorted_latencies) * 0.99)]
                     if len(sorted_latencies) > 1
                     else sorted_latencies[0],
                 }
@@ -421,13 +409,16 @@ class LoadTester:
             logger.warning(f"Could not get pod list, chaos disabled: {e}")
             pods = []
 
-        results = {"killed_pods": [], "success_rate": 0}
+        results: Dict[str, list | float | int] = {
+            "killed_pods": [],
+            "success_rate": 0,
+        }
         start_time = time.time()
 
         # Background load generation
         import threading
 
-        load_results = {"success": 0, "total": 0}
+        load_results: Dict[str, int] = {"success": 0, "total": 0}
 
         def generate_load():
             while time.time() - start_time < duration:
@@ -462,7 +453,9 @@ class LoadTester:
                             check=True,
                             capture_output=True,
                         )
-                        results["killed_pods"].append(pod_to_kill)
+                        killed_pods = results["killed_pods"]
+                        if isinstance(killed_pods, list):
+                            killed_pods.append(pod_to_kill)
                         pods.remove(pod_to_kill)
                     except subprocess.CalledProcessError as e:
                         logger.error(f"Failed to kill pod {pod_to_kill}: {e}")
@@ -476,9 +469,10 @@ class LoadTester:
             ) * 100
             results.update(load_results)
 
+        killed_pods_list = results["killed_pods"]
         logger.info(
             f"Chaos test completed: {results['success_rate']:.1f}% success rate, "
-            f"killed {len(results['killed_pods'])} pods"
+            f"killed {len(killed_pods_list) if isinstance(killed_pods_list, list) else 0} pods"
         )
         return results
 
@@ -555,9 +549,7 @@ def main():
     # Common arguments
     parser.add_argument(
         "--base-url",
-        default=os.getenv("STAC_ENDPOINT", "http://localhost").replace(
-            "/stac", ""
-        ),
+        default=os.getenv("STAC_ENDPOINT", "http://localhost").replace("/stac", ""),
         help="Base URL for eoAPI (default: from STAC_ENDPOINT env or http://localhost)",
     )
     parser.add_argument(
@@ -598,9 +590,7 @@ def main():
     # Stress test arguments
     stress_group = parser.add_argument_group("stress test options")
     stress_group.add_argument("--endpoint", default="/stac/collections")
-    stress_group.add_argument(
-        "--max-workers", type=int, default=DEFAULT_MAX_WORKERS
-    )
+    stress_group.add_argument("--max-workers", type=int, default=DEFAULT_MAX_WORKERS)
     stress_group.add_argument(
         "--success-threshold", type=float, default=DEFAULT_SUCCESS_THRESHOLD
     )
@@ -683,9 +673,9 @@ def main():
             for endpoint, metrics in results.items():
                 print_metrics_summary(metrics, f"Normal Load Test - {endpoint}")
 
-            avg_success = sum(
-                r["success_rate"] for r in results.values()
-            ) / len(results)
+            avg_success = sum(r["success_rate"] for r in results.values()) / len(
+                results
+            )
 
             # Export if requested
             if args.report_json:

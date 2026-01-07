@@ -203,10 +203,7 @@ def test_mosaic_search(raster_endpoint: str) -> None:
     assert len(links) == 2
     assert links[0]["rel"] == "self"
     assert links[1]["rel"] == "next"
-    assert (
-        links[1]["href"]
-        == f"{raster_endpoint}/searches/list?limit=10&offset=10"
-    )
+    assert links[1]["href"] == f"{raster_endpoint}/searches/list?limit=10&offset=10"
 
     resp = client.get(
         f"{raster_endpoint}/searches/list", params={"limit": 1, "offset": 1}
@@ -219,49 +216,33 @@ def test_mosaic_search(raster_endpoint: str) -> None:
     links = resp.json()["links"]
     assert len(links) == 3
     assert links[0]["rel"] == "self"
-    assert (
-        links[0]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=1"
-    )
+    assert links[0]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=1"
     assert links[1]["rel"] == "next"
-    assert (
-        links[1]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=2"
-    )
+    assert links[1]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=2"
     assert links[2]["rel"] == "prev"
-    assert (
-        links[2]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=0"
-    )
+    assert links[2]["href"] == f"{raster_endpoint}/searches/list?limit=1&offset=0"
 
     # Filter on mosaic metadata
-    resp = client.get(
-        f"{raster_endpoint}/searches/list", params={"owner": "vincent"}
-    )
+    resp = client.get(f"{raster_endpoint}/searches/list", params={"owner": "vincent"})
     assert resp.status_code == 200
     assert resp.json()["context"]["matched"] == 7
     assert resp.json()["context"]["limit"] == 10
     assert resp.json()["context"]["returned"] == 7
 
     # sortBy
-    resp = client.get(
-        f"{raster_endpoint}/searches/list", params={"sortby": "lastused"}
-    )
+    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "lastused"})
     assert resp.status_code == 200
 
-    resp = client.get(
-        f"{raster_endpoint}/searches/list", params={"sortby": "usecount"}
-    )
+    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "usecount"})
     assert resp.status_code == 200
 
-    resp = client.get(
-        f"{raster_endpoint}/searches/list", params={"sortby": "-owner"}
-    )
+    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "-owner"})
     assert resp.status_code == 200
     assert (
         "owner" not in resp.json()["searches"][0]["search"]["metadata"]
     )  # some mosaic don't have owners
 
-    resp = client.get(
-        f"{raster_endpoint}/searches/list", params={"sortby": "owner"}
-    )
+    resp = client.get(f"{raster_endpoint}/searches/list", params={"sortby": "owner"})
     assert resp.status_code == 200
     assert "owner" in resp.json()["searches"][0]["search"]["metadata"]
 

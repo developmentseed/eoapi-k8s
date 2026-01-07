@@ -93,9 +93,9 @@ class TestNormalMixedLoad:
             time.sleep(2)
 
         avg_performance = sum(results) / len(results)
-        assert avg_performance >= Thresholds.API_ENDPOINTS, (
-            f"Traffic pattern handling: {avg_performance:.1f}% < {Thresholds.API_ENDPOINTS:.1f}%"
-        )
+        assert (
+            avg_performance >= Thresholds.API_ENDPOINTS
+        ), f"Traffic pattern handling: {avg_performance:.1f}% < {Thresholds.API_ENDPOINTS:.1f}%"
 
 
 class TestNormalSustained:
@@ -144,9 +144,7 @@ class TestNormalSustained:
             min_success_rate=Thresholds.HEALTH_ENDPOINTS,
         )
 
-        assert_success_rate(
-            metrics, Thresholds.HEALTH_ENDPOINTS, "60s stability test"
-        )
+        assert_success_rate(metrics, Thresholds.HEALTH_ENDPOINTS, "60s stability test")
 
 
 class TestNormalUserPatterns:
@@ -194,9 +192,9 @@ class TestNormalUserPatterns:
             total_success_rate += metrics["success_rate"]
 
         avg_session_success = total_success_rate / len(session_patterns)
-        assert avg_session_success >= Thresholds.API_NORMAL + 1, (
-            f"User sessions: {avg_session_success:.1f}% < {Thresholds.API_NORMAL + 1:.1f}%"
-        )
+        assert (
+            avg_session_success >= Thresholds.API_NORMAL + 1
+        ), f"User sessions: {avg_session_success:.1f}% < {Thresholds.API_NORMAL + 1:.1f}%"
 
     def test_api_usage_distribution(self, load_tester):
         """Test realistic API endpoint usage distribution"""

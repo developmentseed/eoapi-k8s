@@ -48,9 +48,7 @@ class TestChaosResilience:
             endpoint=Endpoints.STAC_COLLECTIONS,
         )
 
-        assert_success_rate(
-            results, Thresholds.CHAOS_MODERATE, "pod failure chaos"
-        )
+        assert_success_rate(results, Thresholds.CHAOS_MODERATE, "pod failure chaos")
 
     @pytest.mark.slow
     @pytest.mark.parametrize(
@@ -97,9 +95,7 @@ class TestChaosResilience:
             url, Concurrency.LIGHT, Durations.NORMAL
         )
 
-        assert_success_rate(
-            normal_metrics, Thresholds.API_SUSTAINED, "baseline"
-        )
+        assert_success_rate(normal_metrics, Thresholds.API_SUSTAINED, "baseline")
         assert_recovery(degraded_metrics, recovery_metrics, context="gradual")
 
 
@@ -108,18 +104,14 @@ class TestChaosNetwork:
 
     def test_network_instability(self, load_tester):
         """Test behavior under network instability"""
-        tester = create_tester(
-            base_url=load_tester.base_url, max_workers=5, timeout=2
-        )
+        tester = create_tester(base_url=load_tester.base_url, max_workers=5, timeout=2)
         url = build_url(tester.base_url, Endpoints.STAC_COLLECTIONS)
 
         metrics = tester.test_concurrency_level(
             url, Concurrency.LIGHT, Durations.NORMAL
         )
 
-        assert_success_rate(
-            metrics, Thresholds.CHAOS_LOW, "network instability"
-        )
+        assert_success_rate(metrics, Thresholds.CHAOS_LOW, "network instability")
         assert metrics["total_requests"] > 0, "No requests made"
 
     def test_timeout_cascade_prevention(self, load_tester):
@@ -162,9 +154,7 @@ class TestChaosNetwork:
             Durations.MODERATE // 2 + 2,
         )
 
-        assert_success_rate(
-            metrics, threshold, f"concurrent failure: {endpoint}"
-        )
+        assert_success_rate(metrics, threshold, f"concurrent failure: {endpoint}")
 
 
 class TestChaosResource:
@@ -172,9 +162,7 @@ class TestChaosResource:
 
     def test_resource_exhaustion_simulation(self, load_tester):
         """Test behavior when resources are constrained"""
-        tester = create_tester(
-            base_url=load_tester.base_url, max_workers=25, timeout=5
-        )
+        tester = create_tester(base_url=load_tester.base_url, max_workers=25, timeout=5)
         url = build_url(tester.base_url, Endpoints.STAC_COLLECTIONS)
 
         metrics = tester.test_concurrency_level(
@@ -182,15 +170,13 @@ class TestChaosResource:
         )
 
         assert_success_rate(metrics, Thresholds.DEGRADED, "resource exhaustion")
-        assert metrics["total_requests"] >= 50, (
-            f"Insufficient load: {metrics['total_requests']} < 50"
-        )
+        assert (
+            metrics["total_requests"] >= 50
+        ), f"Insufficient load: {metrics['total_requests']} < 50"
 
     def test_memory_pressure_resilience(self, load_tester):
         """Test resilience under simulated memory pressure"""
-        tester = create_tester(
-            base_url=load_tester.base_url, max_workers=30, timeout=8
-        )
+        tester = create_tester(base_url=load_tester.base_url, max_workers=30, timeout=8)
         url = build_url(tester.base_url, Endpoints.RASTER_HEALTH)
 
         metrics = tester.test_concurrency_level(
@@ -202,9 +188,7 @@ class TestChaosResource:
     def test_connection_pool_exhaustion(self, load_tester):
         """Test behavior when connection pools are exhausted"""
         testers = [
-            create_tester(
-                base_url=load_tester.base_url, max_workers=10, timeout=3
-            )
+            create_tester(base_url=load_tester.base_url, max_workers=10, timeout=3)
             for _ in range(3)
         ]
 
@@ -235,7 +219,8 @@ class TestChaosRecovery:
         failure_tester = create_tester(
             base_url=load_tester.base_url, max_workers=20, timeout=1
         )
-        failure_metrics = failure_tester.test_concurrency_level(
+        # Induce failures (don't need metrics, just stress the system)
+        _ = failure_tester.test_concurrency_level(
             url, Concurrency.HIGH, Durations.NORMAL
         )
 
