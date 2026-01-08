@@ -27,7 +27,6 @@ COMMANDS:
     unit            Run Helm unit tests
     integration     Run integration tests with pytest
     notification    Run notification tests with database access
-    autoscaling     Run autoscaling tests with pytest
     all             Run all tests
 
 OPTIONS:
@@ -49,9 +48,6 @@ EXAMPLES:
 
     # Run integration tests with debug
     $(basename "$0") integration --debug
-
-    # Run autoscaling tests with debug
-    $(basename "$0") autoscaling --debug
 
     # Run all tests
     $(basename "$0") all
@@ -124,13 +120,7 @@ test_integration() {
     "${SCRIPT_DIR}/test/integration.sh" "$pytest_args"
 }
 
-test_autoscaling() {
-    local pytest_args="${1:-}"
-    export NAMESPACE="$NAMESPACE"
-    export RELEASE_NAME="$RELEASE_NAME"
-    export DEBUG_MODE="$DEBUG_MODE"
-    "${SCRIPT_DIR}/test/autoscaling.sh" "$pytest_args"
-}
+
 
 test_notification() {
     local pytest_args="${1:-}"
@@ -151,7 +141,6 @@ test_all() {
 
     if validate_cluster 2>/dev/null; then
         test_integration || ((failed++))
-        test_autoscaling || ((failed++))
         test_notification || ((failed++))
     else
         log_warn "Skipping integration tests - no cluster connection"
@@ -193,7 +182,7 @@ main() {
                 pytest_args="$2"
                 shift 2
                 ;;
-            schema|lint|unit|notification|integration|autoscaling|all)
+            schema|lint|unit|notification|integration|all)
                 command="$1"
                 shift
                 break
@@ -223,9 +212,6 @@ main() {
             ;;
         notification)
             test_notification "$pytest_args"
-            ;;
-        autoscaling)
-            test_autoscaling "$pytest_args"
             ;;
         all)
             test_all

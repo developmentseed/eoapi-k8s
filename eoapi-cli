@@ -16,6 +16,7 @@ readonly COMMANDS=(
     "cluster"
     "deployment"
     "test"
+    "load"
     "ingest"
     "docs"
 )
@@ -38,6 +39,7 @@ COMMANDS:
     cluster         Manage local Kubernetes clusters for development
     deployment      Deploy and manage eoAPI instances
     test            Run tests (helm, integration, autoscaling)
+    load            Run load testing scenarios
     ingest          Load sample data into eoAPI services
     docs            Generate and serve documentation
 
@@ -56,8 +58,11 @@ EXAMPLES:
     # Run integration tests only
     eoapi-cli test integration
 
-    # Run autoscaling tests only
-    eoapi-cli test autoscaling
+    # Run load tests
+    eoapi-cli load all
+
+    # Run autoscaling load tests only
+    eoapi-cli load autoscaling
 
     # Ingest sample data
     eoapi-cli ingest sample-data
@@ -98,6 +103,9 @@ get_command_script() {
             ;;
         test)
             echo "${SCRIPTS_DIR}/test.sh"
+            ;;
+        load)
+            echo "${SCRIPTS_DIR}/load.sh"
             ;;
         ingest)
             echo "${SCRIPTS_DIR}/ingest.sh"

@@ -28,14 +28,12 @@ def test_eoapi_notifier_deployment() -> None:
         text=True,
     )
 
-    assert result.returncode == 0, (
-        "eoapi-notifier deployment not found - notifications not enabled"
-    )
+    assert (
+        result.returncode == 0
+    ), "eoapi-notifier deployment not found - notifications not enabled"
 
     ready_replicas = result.stdout.strip()
-    assert ready_replicas == "1", (
-        f"Expected 1 ready replica, got {ready_replicas}"
-    )
+    assert ready_replicas == "1", f"Expected 1 ready replica, got {ready_replicas}"
 
 
 def test_cloudevents_sink_exists() -> None:
@@ -57,13 +55,11 @@ def test_cloudevents_sink_exists() -> None:
         text=True,
     )
 
-    assert result.returncode == 0 and result.stdout.strip(), (
-        "Knative CloudEvents sink not found - notifications not configured"
-    )
+    assert (
+        result.returncode == 0 and result.stdout.strip()
+    ), "Knative CloudEvents sink not found - notifications not configured"
 
-    assert "cloudevents-sink" in result.stdout, (
-        "Knative CloudEvents sink should exist"
-    )
+    assert "cloudevents-sink" in result.stdout, "Knative CloudEvents sink should exist"
 
 
 def test_notification_configuration() -> None:
@@ -90,12 +86,10 @@ def test_notification_configuration() -> None:
 
     config_yaml = result.stdout.strip()
     assert "pgstac" in config_yaml, "Should have pgstac configured"
-    assert "cloudevents" in config_yaml, (
-        "Should have cloudevents output configured"
-    )
-    assert "pgstac_items_change" in config_yaml or "pgstac" in config_yaml, (
-        "Should have pgstac configuration"
-    )
+    assert "cloudevents" in config_yaml, "Should have cloudevents output configured"
+    assert (
+        "pgstac_items_change" in config_yaml or "pgstac" in config_yaml
+    ), "Should have pgstac configuration"
 
 
 def test_cloudevents_sink_logs_show_startup() -> None:
@@ -122,9 +116,7 @@ def test_cloudevents_sink_logs_show_startup() -> None:
     # CloudEvents sink can be either a real sink or the helloworld sample container
     assert (
         "listening on port" in logs or "helloworld: received a request" in logs
-    ), (
-        "Knative CloudEvents sink should be running (either real sink or helloworld sample)"
-    )
+    ), "Knative CloudEvents sink should be running (either real sink or helloworld sample)"
 
 
 def test_eoapi_notifier_logs_show_connection() -> None:
@@ -174,9 +166,9 @@ def test_database_notification_triggers_exist() -> None:
         text=True,
     )
 
-    assert result.stdout.strip(), (
-        "eoapi-notifier not deployed - notifications not enabled"
-    )
+    assert (
+        result.stdout.strip()
+    ), "eoapi-notifier not deployed - notifications not enabled"
 
     # Check that the notifier pod is ready
     result = subprocess.run(
@@ -221,7 +213,6 @@ def test_end_to_end_notification_flow(auth_token: str) -> None:
     # Use the ingress endpoint by default (tests run from outside cluster)
     stac_endpoint = os.getenv("STAC_ENDPOINT", "http://localhost/stac")
     namespace = os.getenv("NAMESPACE", "eoapi")
-    release_name = os.getenv("RELEASE_NAME", "eoapi")
 
     test_item = {
         "id": f"e2e-test-{int(time.time())}",
@@ -246,8 +237,8 @@ def test_end_to_end_notification_flow(auth_token: str) -> None:
         ],
     }
 
-    # Get notifier logs before the operation
-    before_logs = subprocess.run(
+    # Get notifier logs before the operation (baseline)
+    _ = subprocess.run(
         [
             "kubectl",
             "logs",
@@ -272,15 +263,14 @@ def test_end_to_end_notification_flow(auth_token: str) -> None:
         timeout=10,
     )
 
-    assert response.status_code in [200, 201], (
-        f"Failed to create item: {response.text}"
-    )
+    assert response.status_code in [200, 201], f"Failed to create item: {response.text}"
 
     # Wait briefly for notification to propagate
     time.sleep(3)
 
     # Get notifier logs after the operation
-    after_logs = subprocess.run(
+    # Get logs after the operation
+    after_logs: str = subprocess.run(
         [
             "kubectl",
             "logs",
@@ -295,8 +285,9 @@ def test_end_to_end_notification_flow(auth_token: str) -> None:
     ).stdout
 
     # Clean up
+    item_id = str(test_item.get("id", ""))  # type: ignore[union-attr]
     requests.delete(
-        f"{stac_endpoint}/collections/noaa-emergency-response/items/{test_item['id']}",
+        f"{stac_endpoint}/collections/noaa-emergency-response/items/{item_id}",
         headers={
             "Content-Type": "application/json",
             "Authorization": auth_token,
@@ -306,10 +297,10 @@ def test_end_to_end_notification_flow(auth_token: str) -> None:
 
     # Verify notification was processed
     # Check if the new event appears in the after_logs
+    keywords: list[str] = ["pgstac_items_change", item_id, "INSERT"]
     assert any(
-        keyword in after_logs
-        for keyword in ["pgstac_items_change", test_item["id"], "INSERT"]
-    ), f"Notification for item {test_item['id']} should be in logs"
+        keyword in after_logs for keyword in keywords
+    ), f"Notification for item {item_id} should be in logs"
 
     # Check Knative CloudEvents sink logs for any CloudEvents
     result = subprocess.run(
@@ -368,9 +359,9 @@ def test_k_sink_injection() -> None:
 
     k_sink_value = result.stdout.strip()
     if k_sink_value:
-        assert "cloudevents-sink" in k_sink_value, (
-            f"K_SINK should point to CloudEvents sink service, got: {k_sink_value}"
-        )
+        assert (
+            "cloudevents-sink" in k_sink_value
+        ), f"K_SINK should point to CloudEvents sink service, got: {k_sink_value}"
         print(f"✅ K_SINK properly injected: {k_sink_value}")
     else:
         # Check if SinkBinding exists - it may take time to inject
@@ -389,10 +380,7 @@ def test_k_sink_injection() -> None:
             text=True,
         )
 
-        if (
-            sinkbinding_result.returncode == 0
-            and sinkbinding_result.stdout.strip()
-        ):
+        if sinkbinding_result.returncode == 0 and sinkbinding_result.stdout.strip():
             pytest.fail(
                 "SinkBinding exists but K_SINK not yet injected - may need more time"
             )

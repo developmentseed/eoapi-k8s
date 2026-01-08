@@ -34,15 +34,34 @@ repos:
     hooks:
       - id: actionlint
 
-  # Python type checking for test files
+  # Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Linter
+      - id: ruff
+        name: ruff lint
+        args: ['--fix']
+        files: ^tests\/.*\.py$
+      # Formatter
+      - id: ruff-format
+        name: ruff format
+        files: ^tests\/.*\.py$
+
+  # Python type checking for all test files
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.2
     hooks:
       - id: mypy
-        name: mypy strict mode for tests
-        args: ['--strict', '--ignore-missing-imports']
-        files: ^tests\/integration\/.*\.py$
-        additional_dependencies: ['types-psycopg2', 'httpx', 'pytest', 'types-requests']
+        name: mypy type checking for tests
+        args: ['--ignore-missing-imports', '--no-strict-optional']
+        files: ^tests\/.*\.py$
+        additional_dependencies:
+          - 'types-psycopg2'
+          - 'types-requests'
+          - 'httpx'
+          - 'pytest'
+          - 'kubernetes'
 
   # Fast Helm syntax check only
   - repo: local

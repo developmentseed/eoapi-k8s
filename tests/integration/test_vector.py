@@ -57,13 +57,10 @@ def test_vector_api(vector_endpoint: str) -> None:
             )
             if "collections" in collections_data:
                 available_collections = [
-                    c.get("id", "unknown")
-                    for c in collections_data["collections"]
+                    c.get("id", "unknown") for c in collections_data["collections"]
                 ]
                 print(f"Available collections: {available_collections}")
-            assert False, (
-                f"Expected 7 collections but found {current_count} after {elapsed_time:.1f}s timeout"
-            )
+            assert False, f"Expected 7 collections but found {current_count} after {elapsed_time:.1f}s timeout"
 
         time.sleep(10)
         resp = client.get(f"{vector_endpoint}/collections")
@@ -76,9 +73,7 @@ def test_vector_api(vector_endpoint: str) -> None:
         f"Expected 7 matched collections, got {matched_count}. "
         f"Available: {[c.get('id', 'unknown') for c in collections_data.get('collections', [])]}"
     )
-    assert returned_count == 7, (
-        f"Expected 7 returned collections, got {returned_count}"
-    )
+    assert returned_count == 7, f"Expected 7 returned collections, got {returned_count}"
 
     collections = resp.json()["collections"]
     ids = [c["id"] for c in collections]

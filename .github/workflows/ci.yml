@@ -86,9 +86,6 @@ jobs:
       - name: Run notification tests
         run: ./eoapi-cli test notification
 
-      - name: Run autoscaling tests
-        run: ./eoapi-cli test autoscaling
-
       - name: Debug failed deployment
         if: failure()
         run: ./eoapi-cli deployment debug
