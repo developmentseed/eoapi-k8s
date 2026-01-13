@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Dependencies
 
 - Updated STAC Browser image to version 4.0.0 [#376](https://github.com/developmentseed/eoapi-k8s/pull/376)
+- Updated titiler-pgstac image to version 2.0.0 [#388](https://github.com/developmentseed/eoapi-k8s/pull/401)
 
 ## [0.8.1]
 
