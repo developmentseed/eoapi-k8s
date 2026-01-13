@@ -25,7 +25,7 @@ def test_mosaic_api(raster_endpoint: str) -> None:
     """test mosaic."""
     query = {
         "collections": ["noaa-emergency-response"],
-        "filter-lang": "cql-json",
+        "filter-lang": "cql2-json",
     }
     resp = client.post(f"{raster_endpoint}/searches/register", json=query)
     assert resp.headers["content-type"] == "application/json"

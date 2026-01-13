@@ -326,7 +326,7 @@ multidim:
       requestRate: 100000m
   image:
     name: ghcr.io/developmentseed/titiler-md-demo
-    tag: dd740a700ce655e785c7bd50331f9ac857be4126
+    tag: 6406b10406287ba9d3f345706d0c2be5f0265e02
   command:
     - "uvicorn"
     - "titiler_md_demo.main:app"
