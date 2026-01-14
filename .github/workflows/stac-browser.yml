@@ -1,18 +1,25 @@
 name: Build STAC Browser
 
 on:
-  release:
-    types: [released]
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'charts/eoapi/values.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/eoapi/values.yaml'
   workflow_dispatch:
     inputs:
       STAC_BROWSER_VERSION:
-        description: "STAC Browser version to build (e.g. v4.0.0)"
+        description: "STAC Browser version (e.g. v4.0.0)"
         required: true
         default: "v4.0.0"
 
 env:
   REGISTRY: ghcr.io
-  STAC_BROWSER_VERSION: ${{ github.event.inputs.STAC_BROWSER_VERSION || github.event.release.tag_name }}
 
 jobs:
   build-and-push:
@@ -20,22 +27,51 @@ jobs:
     name: Build and push STAC Browser image
 
     steps:
-      - name: Checkout STAC Browser repository
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.STAC_BROWSER_VERSION }}"
+          else
+            VERSION="v$(grep -A 2 'browser:' charts/eoapi/values.yaml | grep 'tag:' | awk '{print $2}')"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building STAC Browser $VERSION"
+
+      - name: Check if image exists
+        id: check
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${GITHUB_REPOSITORY,,}/stac-browser:${VERSION#v}"
+          if docker manifest inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Image $IMAGE already exists, skipping build"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Checkout STAC Browser
+        if: steps.check.outputs.exists == 'false'
         uses: actions/checkout@v6
         with:
           repository: radiantearth/stac-browser
-          ref: ${{ env.STAC_BROWSER_VERSION }}
+          ref: ${{ steps.version.outputs.version }}
 
-      - name: Set environment variables
+      - name: Set env vars
+        if: steps.check.outputs.exists == 'false'
         run: |
-          {
-            echo "VERSION=${STAC_BROWSER_VERSION#v}"
-            echo "IMAGE_NAME=$REGISTRY/${GITHUB_REPOSITORY,,}/stac-browser"
-            echo "COMMITED_AT=$(git show -s --format=%cI "$(git rev-parse HEAD)")"
-            echo "REVISION=$(git rev-parse --short HEAD)"
-          } >> "$GITHUB_ENV"
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "VERSION=${VERSION#v}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${{ env.REGISTRY }}/${GITHUB_REPOSITORY,,}/stac-browser" >> "$GITHUB_ENV"
+          echo "COMMITED_AT=$(git show -s --format=%cI HEAD)" >> "$GITHUB_ENV"
+          echo "REVISION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
-      - name: Collect Docker image metadata
+      - name: Docker metadata
+        if: steps.check.outputs.exists == 'false'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -48,14 +84,16 @@ jobs:
             type=raw,value=${{ env.VERSION }}
             type=raw,value=latest
 
-      - name: Log in to the GitHub container registry
+      - name: Login to registry
+        if: steps.check.outputs.exists == 'false'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push
+        if: steps.check.outputs.exists == 'false'
         uses: docker/build-push-action@v6
         with:
           context: .
