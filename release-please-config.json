@@ -1,19 +1,30 @@
 {
   "packages": {
     ".": {
-      "release-type": "helm",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "tag-separator": "",
       "extra-files": [
         {
           "type": "yaml",
           "path": "charts/eoapi/Chart.yaml",
           "jsonpath": "$.version"
         },
-        {
-          "type": "yaml",
-          "path": "charts/eoapi/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        },
         "charts/eoapi/README.md"
+      ],
+      "changelog-sections": [
+        {"type": "feat", "section": "Added"},
+        {"type": "fix", "section": "Fixed"},
+        {"type": "refactor", "section": "Changed"},
+        {"type": "chore", "section": "Maintenance", "hidden": false},
+        {"type": "docs", "section": "Other", "hidden": false},
+        {"type": "test", "section": "Other", "hidden": false},
+        {"type": "ci", "section": "Other", "hidden": false},
+        {"type": "perf", "section": "Other", "hidden": false},
+        {"type": "build", "section": "Other", "hidden": false},
+        {"type": "style", "section": "Other", "hidden": false},
+        {"type": "revert", "section": "Other", "hidden": false}
       ]
     }
   }

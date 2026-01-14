@@ -1,11 +1,11 @@
 name: PR Checks
+
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
 
 jobs:
-  pr-title-and-changelog:
-    name: PR Validation
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

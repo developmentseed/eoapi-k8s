@@ -1,11 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [0.8.1]
+## [0.8.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.8.0...v0.8.1) (2025-11-21)
 
 ### Added
 
@@ -19,14 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added stac-auth-proxy for authentication and authorization on the STAC API [#358](https://github.com/developmentseed/eoapi-k8s/pull/358)
 - Fixed call to run_queued_queries pgstac procedure call [#377](https://github.com/developmentseed/eoapi-k8s/pull/377)
 
-### Dependencies
+#### Maintenance
 
 - Updated helm release grafana to 10.3.0 [#375](https://github.com/developmentseed/eoapi-k8s/pull/375)
 - Updated helm release prometheus to 27.49.0 [#374](https://github.com/developmentseed/eoapi-k8s/pull/374)
 - Updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.1.2 [#368](https://github.com/developmentseed/eoapi-k8s/pull/368)
 - Updated actions/checkout action to v6 [#363](https://github.com/developmentseed/eoapi-k8s/pull/363)
 
-## [0.8.0] - 2025-11-20
+## [0.8.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.13...v0.8.0) (2025-11-20)
 
 ### Breaking changes
 
@@ -76,7 +71,7 @@ stac:
 - Reorganized the helm chart templates files [#352](https://github.com/developmentseed/eoapi-k8s/pull/352)
 - Removed all default resource specifications from values.yaml [#357](https://github.com/developmentseed/eoapi-k8s/pull/357)
 
-### Dependencies
+### Maintenance
 
 - Updated Python to 3.14.0 [#349](https://github.com/developmentseed/eoapi-k8s/pull/349)
 - Updated actions/setup-python action to v6 [#350](https://github.com/developmentseed/eoapi-k8s/pull/350)
@@ -89,7 +84,7 @@ stac:
 - Updated Node.js to 24.11.0 [#335](https://github.com/developmentseed/eoapi-k8s/pull/335)
 - Updated tipg to v1.3.0 [#355](https://github.com/developmentseed/eoapi-k8s/pull/355)
 
-## [0.7.13] - 2025-11-04
+## [0.7.13](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.12...v0.7.13) (2025-11-04)
 
 ### Added
 
@@ -100,22 +95,22 @@ stac:
 - Added knative in CI to test eoapi-notifier.
 - Restructured docs with flattened structure and added portable documentation generation
 
-## [0.7.12] - 2025-10-17
+## [0.7.12](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.11...v0.7.12) (2025-10-17)
 
 - Bumped eoapi-notifier dependency version to 0.0.7
 
-## [0.7.11] - 2025-10-17
+## [0.7.11](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.10...v0.7.11) (2025-10-17)
 
 - Bumped eoapi-notifier dependency version to 0.0.6
 
-## [0.7.10] - 2025-10-06
+## [0.7.10](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.9...v0.7.10) (2025-10-06)
 
 ### Fixed
 
 - Fixed `stac.overrideRootPath` empty string handling for stac-auth-proxy integration - empty string now properly omits `--root-path` argument entirely [#307](https://github.com/developmentseed/eoapi-k8s/pull/307)
 - Pin `metrics-server` to `bitnamilegacy` registry due to https://github.com/bitnami/charts/issues/35164 [#309](https://github.com/developmentseed/eoapi-k8s/pull/309)
 
-## [0.7.9] - 2025-09-26
+## [0.7.9](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.8...v0.7.9) (2025-09-26)
 
 ### Added
 
@@ -125,7 +120,7 @@ stac:
 - Adjusted Renovate Configuration to fit conventional commits [#295](https://github.com/developmentseed/eoapi-k8s/pull/295)
 - Notification triggers in database [#289](https://github.com/developmentseed/eoapi-k8s/pull/289)
 
-## [0.7.8] - 2025-09-10
+## [0.7.8](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.7...v0.7.8) (2025-09-10)
 
 ### Added
 
@@ -141,13 +136,13 @@ stac:
 
 - `multidim`, `raster`, `stac`, and `vector` now allow annotations [#286](https://github.com/developmentseed/eoapi-k8s/pull/286)
 
-## [0.7.7] - 2025-09-05
+## [0.7.7](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.6...v0.7.7) (2025-09-05)
 
 ### Fixed
 
 - Order of hook execution [#257](https://github.com/developmentseed/eoapi-k8s/pull/257)
 
-## [0.7.6] - 2025-09-03
+## [0.7.6](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.5...v0.7.6) (2025-09-03)
 
 ### Added
 
@@ -160,32 +155,32 @@ stac:
 - Issues regarding timeouts waiting for postgres initialisation [#251](https://github.com/developmentseed/eoapi-k8s/pull/251) [#252](https://github.com/developmentseed/eoapi-k8s/pull/252)
 - Aligned STAC Browser metadata to other services [#255](https://github.com/developmentseed/eoapi-k8s/pull/255)
 
-## [0.7.5] - 2025-07-11
+## [0.7.5](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.4...v0.7.5) (2025-07-11)
 
 ### Changed
 
 - Added option to override root-paths of API services [#245](https://github.com/developmentseed/eoapi-k8s/pull/245)
 
-## [0.7.4] - 2025-06-30
+## [0.7.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.3...v0.7.4) (2025-06-30)
 
 ### Changed
 
 - Added support for configurable API paths [#237](https://github.com/developmentseed/eoapi-k8s/pull/237)
 - Clarified database initialization permissions [#240](https://github.com/developmentseed/eoapi-k8s/pull/240)
 
-## [0.7.3] - 2025-05-27
+## [0.7.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.2...v0.7.3) (2025-05-27)
 
 ### Changed
 
 - Add CREATEROLE privilege to pgstac user [#236](https://github.com/developmentseed/eoapi-k8s/pull/236)
 
-## [v0.7.2] - 2025-05-27
+## [v0.7.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.1...v0.7.2) (2025-05-27)
 
 ### Changed
 
 Made 0.7.0 db upgrade run in ArgoCD.
 
-## [v0.7.1] - 2025-05-16
+## [v0.7.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.7.0...v0.7.1) (2025-05-16)
 
 ### Breaking Changes
 - Removed hard-coded cert-manager configuration from ingress template [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
@@ -203,7 +198,7 @@ Made 0.7.0 db upgrade run in ArgoCD.
 - Simplified TLS configuration to allow user-controlled certificate management [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
 - Updated documentation with comprehensive cert-manager setup guide [#227](https://github.com/developmentseed/eoapi-k8s/pull/227)
 
-## [v0.7.0] - 2025-04-30
+## [v0.7.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.6.0...v0.7.0) (2025-04-30)
 
 ### Breaking Changes
 - New unified ingress configuration requires migration from previous ingress setup [#219](https://github.com/developmentseed/eoapi-k8s/pull/219)
@@ -223,7 +218,7 @@ Made 0.7.0 db upgrade run in ArgoCD.
 ### Fixed
 - Fixed ArtifactHub.io Integration (Issue #16) [#216](https://github.com/developmentseed/eoapi-k8s/pull/216)
 
-## [v0.6.0] - 2025-04-03
+## [v0.6.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.5.3...v0.6.0) (2025-04-03)
 
 ### Breaking Changes
 - Database backups are now disabled by default. To enable them, set `backupsEnabled: true` in your values.yaml.
@@ -245,7 +240,7 @@ Made 0.7.0 db upgrade run in ArgoCD.
 - Fixed unsupported regex in ingress-nginx config [#189](https://github.com/developmentseed/eoapi-k8s/pull/189)
 - Reduced errors about too many db connections [#198](https://github.com/developmentseed/eoapi-k8s/pull/198)
 
-## [v0.5.3] - 2025-03-10
+## [v0.5.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.5.2...v0.5.3) (2025-03-10)
 
 ### Added
 - Allowed Repeated Helm Deployments [#169](https://github.com/developmentseed/eoapi-k8s/pull/169)
@@ -262,12 +257,12 @@ Made 0.7.0 db upgrade run in ArgoCD.
 ### Fixed
 - Fixed helm template error if docServer settings is not defined [#178](https://github.com/developmentseed/eoapi-k8s/pull/178)
 
-## [v0.5.2] - 2024-12-05
+## [v0.5.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.5.1...v0.5.2) (2024-12-05)
 
 ### Added
 - Allowed additional secrets to set environment variables [#167](https://github.com/developmentseed/eoapi-k8s/pull/167)
 
-## [v0.5.1] - 2024-11-22
+## [v0.5.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.5.0...v0.5.1) (2024-11-22)
 
 ### Added
 - Added ingest.sh script [#164](https://github.com/developmentseed/eoapi-k8s/pull/164)
@@ -275,7 +270,7 @@ Made 0.7.0 db upgrade run in ArgoCD.
 ### Fixed
 - Added passthrough for ca bundle secret into metrics server [#165](https://github.com/developmentseed/eoapi-k8s/pull/165)
 
-## [v0.5.0] - 2024-11-01
+## [v0.5.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.18...v0.5.0) (2024-11-01)
 
 ### Added
 - Documented choice of postgres operator [#160](https://github.com/developmentseed/eoapi-k8s/pull/160)
@@ -286,7 +281,7 @@ Made 0.7.0 db upgrade run in ArgoCD.
 - Updated titiler-pgstac version [#157](https://github.com/developmentseed/eoapi-k8s/pull/157)
 - Bumped eoapi chart and app versions [#158](https://github.com/developmentseed/eoapi-k8s/pull/158)
 
-## [v0.4.18] - 2024-09-25
+## [v0.4.18](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.17...v0.4.18) (2024-09-25)
 
 ### Fixed
 - Removed VSIL allowed extensions list [#152](https://github.com/developmentseed/eoapi-k8s/pull/152)
@@ -294,37 +289,37 @@ Made 0.7.0 db upgrade run in ArgoCD.
 ### Changed
 - Bumped eoapi chart version [#153](https://github.com/developmentseed/eoapi-k8s/pull/153)
 
-## [v0.4.17] - 2024-09-24
+## [v0.4.17](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.16...v0.4.17) (2024-09-24)
 
 ### Changed
 - Changed Dependency Order in Support Chart [#150](https://github.com/developmentseed/eoapi-k8s/pull/150)
 
-## [v0.4.16] - 2024-09-20
+## [v0.4.16](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.15...v0.4.16) (2024-09-20)
 
 ### Changed
 - Upgraded with postgres cluster 5.5.3 [#149](https://github.com/developmentseed/eoapi-k8s/pull/149)
 
-## [v0.4.15] - 2024-09-20
+## [v0.4.15](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.14...v0.4.15) (2024-09-20)
 
 ### Changed
 - Postgrescluster chart upgrade [#148](https://github.com/developmentseed/eoapi-k8s/pull/148)
 
-## [v0.4.14] - 2024-09-20
+## [v0.4.14](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.13...v0.4.14) (2024-09-20)
 
 ### Added
 - Added NFS Option to PGBackRest [#147](https://github.com/developmentseed/eoapi-k8s/pull/147)
 
-## [v0.4.13] - 2024-09-09
+## [v0.4.13](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.10...v0.4.13) (2024-09-09)
 
 ### Fixed
 - Added back postgrescluster dependency to main eoapi chart [#145](https://github.com/developmentseed/eoapi-k8s/pull/145)
 
-## [v0.4.10] - 2024-09-09
+## [v0.4.10](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.9...v0.4.10) (2024-09-09)
 
 ### Changed
 - Moved postgresql cluster file:// dependency to first-level chart dependency [#141](https://github.com/developmentseed/eoapi-k8s/pull/141)
 
-## [v0.4.9] - 2024-09-04
+## [v0.4.9](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.8...v0.4.9) (2024-09-04)
 
 ### Fixed
 - Fixed horizontal pod autoscaling rules [#140](https://github.com/developmentseed/eoapi-k8s/pull/140)
@@ -332,32 +327,32 @@ Made 0.7.0 db upgrade run in ArgoCD.
 ### Changed
 - Documentation updates [#139](https://github.com/developmentseed/eoapi-k8s/pull/139)
 
-## [v0.4.8] - 2024-09-03
+## [v0.4.8](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.7...v0.4.8) (2024-09-03)
 
 ### Changed
 - Enabled vector by default again [#138](https://github.com/developmentseed/eoapi-k8s/pull/138)
 
-## [v0.4.7] - 2024-09-03
+## [v0.4.7](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.6...v0.4.7) (2024-09-03)
 
 ### Added
 - Support and Autoscaling Additions [#135](https://github.com/developmentseed/eoapi-k8s/pull/135)
 
-## [v0.4.6] - 2024-07-17
+## [v0.4.6](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.2...v0.4.6) (2024-07-17)
 
 ### Changed
 - Bump chart patch versions [#131](https://github.com/developmentseed/eoapi-k8s/pull/131)
 
-## [v0.4.2] - 2024-07-11
+## [v0.4.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.1...v0.4.2) (2024-07-11)
 
 ### Fixed
 - Pinned pypgstac versions [#126](https://github.com/developmentseed/eoapi-k8s/pull/126)
 
-## [v0.4.1] - 2024-07-10
+## [v0.4.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.0...v0.4.1) (2024-07-10)
 
 ### Added
 - Added Release Documentation and Cleanup [#117](https://github.com/developmentseed/eoapi-k8s/pull/117)
 
-## [v0.4.0] - 2024-07-09
+## [v0.4.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.4.0...v0.4.0) (2024-07-09)
 
 ### Added
 - Started EKS IAC with Docs Walkthrough from Notes [#12](https://github.com/developmentseed/eoapi-k8s/pull/12)

@@ -244,8 +244,6 @@ def get_pod_count(namespace: str, service_name: str) -> int:
         return 0
 
     pods = json.loads(result.stdout)
-    running_pods = [
-        pod for pod in pods["items"] if pod["status"]["phase"] == "Running"
-    ]
+    running_pods = [pod for pod in pods["items"] if pod["status"]["phase"] == "Running"]
 
     return len(running_pods)
