@@ -24,6 +24,73 @@ entries:
           email: eoapi@developmentseed.org
     apiVersion: v2
     appVersion: 6.1.5
+    created: "2026-01-14T17:25:02.354834726Z"
+    dependencies:
+    - condition: postgrescluster.enabled
+      name: postgrescluster
+      repository: https://devseed.com/eoapi-k8s/
+      version: 5.7.4
+    - condition: eoapi-notifier.enabled
+      name: eoapi-notifier
+      repository: oci://ghcr.io/developmentseed/charts
+      version: 0.0.9
+    - condition: knative.enabled
+      name: knative-operator
+      repository: https://knative.github.io/operator
+      version: v1.20.0
+    - condition: monitoring.metricsServer.enabled
+      name: metrics-server
+      repository: https://charts.bitnami.com/bitnami
+      version: 7.4.12
+    - condition: monitoring.prometheus.enabled
+      name: prometheus
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 28.3.0
+    - condition: monitoring.prometheusAdapter.enabled
+      name: prometheus-adapter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.2.0
+    - condition: observability.grafana.enabled
+      name: grafana
+      repository: https://grafana.github.io/helm-charts
+      version: 10.5.6
+    - condition: stac-auth-proxy.enabled
+      name: stac-auth-proxy
+      repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
+      version: 0.11.1
+    description: Create a full Earth Observation API with Metadata, Raster and Vector
+      services
+    digest: 5dd9014031b49090162a50c94aedb3e288ddf273c7776c835f2fc616e2853dad
+    icon: https://eoapi.dev/img/eoAPI.png
+    kubeVersion: '>=1.23.0-0'
+    name: eoapi
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-0.9.1/eoapi-0.9.1.tgz
+    version: 0.9.1
+  - annotations:
+      artifacthub.io/changes: |
+        - Remove pathType and pathSuffix configurations
+        - Add upgrade job for pre-0.7.0 migrations
+        - Add separate browser ingress configuration
+        - Support custom PostgreSQL cluster naming
+      artifacthub.io/keywords: |
+        - earth observation
+        - geospatial
+        - kubernetes
+        - stac
+        - raster
+        - vector
+      artifacthub.io/links: |
+        - name: GitHub Repository
+          url: https://github.com/developmentseed/eoapi-k8s
+        - name: Documentation
+          url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+      artifacthub.io/maintainers: |
+        - name: DevelopmentSeed
+          email: eoapi@developmentseed.org
+    apiVersion: v2
+    appVersion: 6.1.5
     created: "2026-01-14T15:58:23.680083671Z"
     dependencies:
     - condition: postgrescluster.enabled
@@ -1350,4 +1417,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2026-01-14T15:58:23.680503048Z"
+generated: "2026-01-14T17:25:02.355045509Z"
