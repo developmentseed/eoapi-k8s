@@ -39,14 +39,14 @@ annotations:
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: "0.8.1"
+version: "0.8.2"
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 # We use the stac-fastapi-pgstac version as the app version
-appVersion: "6.1.0"
+appVersion: "6.1.5"
 
 dependencies:
   - name: postgrescluster
@@ -78,6 +78,6 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     condition: observability.grafana.enabled
   - name: stac-auth-proxy
-    version: "0.1.2"
+    version: "0.11.1"
     repository: "oci://ghcr.io/developmentseed/stac-auth-proxy/charts"
     condition: stac-auth-proxy.enabled

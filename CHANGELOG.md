@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2]
+
 ### Added
 
 - Added support for annotations on the PgSTAC bootstrap job via `pgstacBootstrap.jobAnnotations` in values.yaml [#381](https://github.com/developmentseed/eoapi-k8s/pull/381)
@@ -26,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated STAC Browser image to version 4.0.0 [#376](https://github.com/developmentseed/eoapi-k8s/pull/376)
 - Updated titiler-pgstac image to version 2.0.0 [#388](https://github.com/developmentseed/eoapi-k8s/pull/401)
+- Updated grafana image to version 10.5.5 [#399](https://github.com/developmentseed/eoapi-k8s/pull/399)
+- Updated prometheus image to version 28.3.0 [#400](https://github.com/developmentseed/eoapi-k8s/pull/400)
+- Updated stac-auth-proxy image to version 0.11.1 [#402](https://github.com/developmentseed/eoapi-k8s/pull/402)
+- Updated stac-fastapi-pgstac docker tag to v6.1.4 [#378](https://github.com/developmentseed/eoapi-k8s/pull/378)
 
 ## [0.8.1]
 
