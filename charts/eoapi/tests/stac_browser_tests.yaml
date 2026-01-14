@@ -64,6 +64,7 @@ tests:
       stac.ingress.path: "/stac"
       mockOidcServer.ingress.path: "/mock-oidc"
       browser.oidcClientId: "test-client"
+      browser.oidcDiscoveryUrl: "http://localhost/mock-oidc/.well-known/openid-configuration"
       gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
@@ -83,7 +84,8 @@ tests:
                 "type": "openIdConnect",
                 "openIdConnectUrl": "http://localhost/mock-oidc/.well-known/openid-configuration",
                 "oidcOptions": {
-                  "client_id": "test-client"
+                  "client_id": "test-client",
+                  "redirect_uri": "http://localhost/browser/auth"
                 }
               }
   - it: "stac browser deployment with custom OIDC_DISCOVERY_URL"
@@ -98,6 +100,7 @@ tests:
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
       browser.oidcClientId: "test-client"
+      browser.oidcDiscoveryUrl: "https://auth.example.com/.well-known/openid-configuration"
       gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
@@ -112,7 +115,8 @@ tests:
                 "type": "openIdConnect",
                 "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
                 "oidcOptions": {
-                  "client_id": "test-client"
+                  "client_id": "test-client",
+                  "redirect_uri": "http://localhost/browser/auth"
                 }
               }
   - it: "stac browser deployment without auth"
@@ -139,3 +143,44 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_authConfig
+  - it: "stac browser deployment with custom catalogUrl override"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.catalogUrl: "https://custom.example.com/stac"
+      ingress.host: "localhost"
+      ingress.tls.enabled: false
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogUrl
+            value: "https://custom.example.com/stac"
+  - it: "stac browser deployment with HTTPS and no catalogUrl override"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      ingress.host: "secure.example.com"
+      ingress.tls.enabled: true
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogUrl
+            value: "https://secure.example.com/stac"

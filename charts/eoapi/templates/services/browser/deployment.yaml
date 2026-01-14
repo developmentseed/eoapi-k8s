@@ -23,7 +23,7 @@ spec:
           - containerPort: 8080
           env:
             - name: SB_catalogUrl
-              value: "{{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}{{ .Values.stac.ingress.path }}"
+              value: {{ .Values.browser.catalogUrl | default (printf "%s://%s%s" (ternary "https" "http" .Values.ingress.tls.enabled) .Values.ingress.host .Values.stac.ingress.path) | quote }}
             {{- if index .Values "stac-auth-proxy" "enabled" }}
             - name: SB_authConfig
               {{- if .Values.browser.authConfig }}

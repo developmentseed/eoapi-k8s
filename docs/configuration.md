@@ -308,6 +308,7 @@ raster:
 | `browser.enabled` | Enable STAC browser | true | true/false |
 | `browser.replicaCount` | Number of replicas | 1 | integer > 0 |
 | `browser.ingress.enabled` | Enable browser ingress | true | true/false |
+| `browser.catalogUrl` | Override STAC catalog URL for browser. Useful when using custom ingress solutions (e.g., APISIX) with `ingress.enabled=false` | "" (auto-constructed from `ingress.host` and `stac.ingress.path`) | Valid URL string |
 
 ## Deployment Architecture
 
