@@ -11,12 +11,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Check Changelog
-        uses: dangoslen/changelog-enforcer@v3
-        with:
-          skipLabels: "skip-changelog, dependencies"
-          expectedLatestVersion: ""
-
       - name: Validate PR title
         uses: amannn/action-semantic-pull-request@v6
         env:

@@ -5,28 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-
-- Added support for annotations on the PgSTAC bootstrap job via `pgstacBootstrap.jobAnnotations` in values.yaml [#381](https://github.com/developmentseed/eoapi-k8s/pull/381)
-- Added load testing scripts [#373](https://github.com/developmentseed/eoapi-k8s/pull/373)
-- Added auth support to STAC Browser [#376](https://github.com/developmentseed/eoapi-k8s/pull/376)
-
-### Fixed
-
-- Fixed Helm template to check queryables `file` field with schema validation [#380](https://github.com/developmentseed/eoapi-k8s/pull/380)
-- Cleaned up docker resources in CI workflow [#386](https://github.com/developmentseed/eoapi-k8s/pull/386)
-
-### Changed
-
-- Consolidated service data into one data directory [#387](https://github.com/developmentseed/eoapi-k8s/pull/387)
-
-### Dependencies
-
-- Updated STAC Browser image to version 4.0.0 [#376](https://github.com/developmentseed/eoapi-k8s/pull/376)
-- Updated titiler-pgstac image to version 2.0.0 [#388](https://github.com/developmentseed/eoapi-k8s/pull/401)
-
 ## [0.8.1]
 
 ### Added
