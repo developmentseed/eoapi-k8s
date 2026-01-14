@@ -116,7 +116,7 @@ spec:
   source:
     repoURL: https://devseed.com/eoapi-k8s/
     chart: eoapi
-    targetRevision: "0.8.1"
+    targetRevision: "latest"
     helm:
       values: |
         # Required values

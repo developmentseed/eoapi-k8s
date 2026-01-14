@@ -416,7 +416,7 @@ stac:
 stac-auth-proxy:
   enabled: false
   image:
-    tag: "v0.11.0"
+    tag: "v0.11.1"
   env:
     ROOT_PATH: "/stac"
     OVERRIDE_HOST: "false"
