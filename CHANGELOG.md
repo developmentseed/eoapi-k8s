@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.9.0...v0.9.1) (2026-01-14)
+
+
+### Fixed
+
+* Allow stac browser catalogUrl override. ([#412](https://github.com/developmentseed/eoapi-k8s/issues/412)) ([a98113b](https://github.com/developmentseed/eoapi-k8s/commit/a98113b5612f47dec738991139bd8ec038e157df))
+
 ## [0.9.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.8.1...v0.9.0) (2026-01-14)
 
 
