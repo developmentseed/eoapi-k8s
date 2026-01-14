@@ -502,6 +502,10 @@ browser:
   # OIDC discovery URL for browser (must be externally accessible URL)
   # Required when stac-auth-proxy is enabled
   oidcDiscoveryUrl: ""
+  # Optional: Override the STAC catalog URL for the browser
+  # If not set, will be constructed from ingress.host and stac.ingress.path
+  # Useful when using custom ingress solutions with ingress.enabled=false
+  catalogUrl: ""
 
 docServer:
   enabled: true
