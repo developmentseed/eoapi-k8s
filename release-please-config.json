@@ -1,19 +1,9 @@
 {
   "packages": {
-    ".": {
+    "charts/eoapi": {
       "release-type": "helm",
       "extra-files": [
-        {
-          "type": "yaml",
-          "path": "charts/eoapi/Chart.yaml",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "yaml",
-          "path": "charts/eoapi/Chart.yaml",
-          "jsonpath": "$.appVersion"
-        },
-        "charts/eoapi/README.md"
+        "README.md"
       ]
     }
   }

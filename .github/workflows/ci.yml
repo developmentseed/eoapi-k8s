@@ -39,7 +39,7 @@ jobs:
   integration-tests:
     name: Integration tests
     needs: fast-checks
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -53,7 +53,7 @@ jobs:
           version: ${{ env.HELM_VERSION }}
 
       - name: Set release name
-        run: echo "RELEASE_NAME=eoapi-$(echo "${{ github.sha }}" | cut -c1-8)" >> "$GITHUB_ENV"
+        run: echo "RELEASE_NAME=eoapi-${GITHUB_SHA::8}" >> "$GITHUB_ENV"
 
       - name: Clean up disk space
         run: |
