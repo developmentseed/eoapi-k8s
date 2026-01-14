@@ -358,8 +358,8 @@ serviceAccount:
   create: true
   automount: true
   annotations: {}
-    # Add cloud provider annotations if needed
-    # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/eoapi-role
+  # Add cloud provider annotations if needed
+  # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/eoapi-role
 
 ######################
 # GENERAL SETTINGS
