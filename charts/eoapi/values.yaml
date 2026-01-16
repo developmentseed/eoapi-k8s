@@ -424,32 +424,36 @@ stac-auth-proxy:
   resources: {}
   env:
     # OIDC_DISCOVERY_URL must be configured when enabling auth (required)
+    # UPSTREAM_URL must be set to "http://<release-name>-stac:8080" (required)
     ROOT_PATH: "/stac"
     OVERRIDE_HOST: "false"
-    # UPSTREAM_URL will be set dynamically in template to point to stac service
     #
     # Authentication filters settings:
     DEFAULT_PUBLIC: "true" # This enables standard profile for authentication filters
-    # Alternatively with the following settings custom filters can be added
-    # These must be mounted with extraVolumes/extraVolumeMounts (see below)
+    #
+    # To use custom filters, ALL THREE of the following are required:
+    # 1. Set filter class environment variables (uncomment lines below)
+    # 2. Set customFiltersFile path (see below)
+    # 3. Configure extraVolumes and extraVolumeMounts (see below)
+    #
     # COLLECTIONS_FILTER_CLS: stac_auth_proxy.custom_filters:CollectionsFilter
     # ITEMS_FILTER_CLS: stac_auth_proxy.custom_filters:ItemsFilter
 
   # Path to custom filters file (relative to chart root)
-  # When extraVolumes is configured, a ConfigMap will be created from this file
+  # Creates a ConfigMap from this file - required for custom filters
   # customFiltersFile: "data/stac-auth-proxy/custom_filters.py"
 
-  # Additional volumes to mount (e.g., for custom filter files)
+  # Volume referencing the ConfigMap - required for custom filters
   extraVolumes: []
-  # Example:
+  # Example (required for custom filters):
   # extraVolumes:
   #   - name: filters
   #     configMap:
   #       name: stac-auth-proxy-filters
-  #
-  # Additional volume mounts for the container
+
+  # Volume mount making filters available to container - required for custom filters
   extraVolumeMounts: []
-  # Example:
+  # Example (required for custom filters):
   # extraVolumeMounts:
   #   - name: filters
   #     mountPath: /app/src/stac_auth_proxy/custom_filters.py
