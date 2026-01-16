@@ -31,6 +31,15 @@ jobs:
       - name: Validate Helm values schema
         run: ./eoapi-cli test schema
 
+      - name: Check app version consistency
+        run: |
+          CHART_VERSION=$(yq '.appVersion' charts/eoapi/Chart.yaml)
+          IMAGE_TAG=$(yq '.stac.image.tag' charts/eoapi/values.yaml)
+          if [ "$CHART_VERSION" != "$IMAGE_TAG" ]; then
+            echo "Version mismatch: Chart.yaml appVersion ($CHART_VERSION) != values.yaml stac.image.tag ($IMAGE_TAG)"
+            exit 1
+          fi
+
       - name: Run Helm unit tests
         uses: d3adb5/helm-unittest-action@v2
         with:
