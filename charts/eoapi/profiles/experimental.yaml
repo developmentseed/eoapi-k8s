@@ -369,8 +369,25 @@ ingress:
 stac-auth-proxy:
   enabled: true
   # For testing this will be set dynamically; for production, point to your OIDC server
-  # env:
-  #  OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"
+  env:
+    # OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"
+    # Custom filter classes
+    COLLECTIONS_FILTER_CLS: "stac_auth_proxy.custom_filters:CollectionsFilter"
+    ITEMS_FILTER_CLS: "stac_auth_proxy.custom_filters:ItemsFilter"
+
+  # Custom filters configuration
+  customFiltersFile: "data/stac-auth-proxy/custom_filters.py"
+
+  extraVolumes:
+    - name: filters
+      configMap:
+        name: eoapi-stac-auth-proxy-custom-filters
+
+  extraVolumeMounts:
+    - name: filters
+      mountPath: /app/src/stac_auth_proxy/custom_filters.py
+      subPath: custom_filters.py
+      readOnly: true
 
 ######################
 # MOCK OIDC SERVER

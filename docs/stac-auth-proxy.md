@@ -10,191 +10,108 @@ external_links:
 
 # STAC Auth Proxy
 
-## Solution Overview
+## Overview
 
-We have implemented support for STAC Auth Proxy integration with eoAPI-K8S through service-specific ingress control. This feature allows the STAC service to be accessible only internally while other services remain externally available.
+STAC Auth Proxy integration allows the STAC service to be accessible only through an authenticated proxy while other eoAPI services remain externally available.
 
-## Implementation Details
-
-### 1. Service-Specific Ingress Control
-
-Each service can now independently control its ingress settings via the values.yaml configuration:
-
-```yaml
-stac:
-  enabled: true
-  ingress:
-    enabled: false  # Disable external ingress for STAC only
-
-# Other services remain externally accessible
-raster:
-  enabled: true
-  ingress:
-    enabled: true
-```
-
-## Deployment Guide
+## Deployment
 
 ### 1. Configure eoAPI-K8S
+
+Disable external STAC ingress and configure root path:
 
 ```yaml
 # values.yaml for eoapi-k8s
 stac:
   enabled: true
+  overrideRootPath: ""  # No --root-path argument (proxy handles prefix)
   ingress:
-    enabled: false  # No external ingress for STAC
+    enabled: false  # Required: prevents unauthenticated direct access
 
 # Other services remain externally accessible
 raster:
   enabled: true
 vector:
   enabled: true
-multidim:
-  enabled: true
 ```
 
 ### 2. Deploy STAC Auth Proxy
 
-Deploy the stac-auth-proxy Helm chart in the same namespace:
+Configure stac-auth-proxy subchart to point to the STAC service:
 
 ```yaml
-# values.yaml for stac-auth-proxy
-backend:
-  service: stac  # Internal K8s service name
-  port: 8080     # Service port
-
-auth:
-  # Configure authentication settings
-  provider: oauth2
-  # ... other auth settings
-```
-
-### 3. Network Flow
-
-```mermaid
-graph LR
-    A[External Request] --> B[STAC Auth Proxy]
-    B -->|Authentication| C[Internal STAC Service]
-    D[External Request] -->|Direct Access| E[Raster/Vector/Other Services]
-```
-
-## Testing
-
-Verify the configuration:
-
-```bash
-# Check that STAC paths are excluded
-helm template eoapi --set stac.ingress.enabled=false,stac.enabled=true -f values.yaml
-
-# Verify other services remain accessible
-kubectl get ingress
-kubectl get services
-```
-
-Expected behavior:
-- STAC service accessible only within the cluster
-- Other services (raster, vector, etc.) accessible via their ingress paths
-- Auth proxy successfully routing authenticated requests to STAC
-
-## Troubleshooting
-
-1. **STAC Service Not Accessible Internally**
-   - Verify service is running: `kubectl get services`
-   - Check service port matches auth proxy configuration
-   - Verify network policies allow proxy-to-STAC communication
-
-2. **Other Services Affected**
-   - Confirm ingress configuration for other services
-   - Check ingress controller logs
-   - Verify service-specific settings in values.yaml
-
-## Root Path Configuration for Direct Service Access
-
-### Understanding usage of overrideRootPath with stac-auth-proxy
-
-When deploying the eoAPI-K8S with the STAC service behind a stac-auth-proxy, you may want to configure the `stac.overrideRootPath` parameter to control how the FastAPI application handles root path prefixes. This is particularly useful when the auth proxy is responsible for managing the `/stac` path prefix.
-
-When deploying stac-auth-proxy in front of the eoAPI service, you may need to configure the root path behavior to avoid URL conflicts. The `stac.overrideRootPath` parameter allows you to control how the STAC FastAPI application handles root path prefixes.
-
-### Setting overrideRootPath to Empty String
-
-For stac-auth-proxy deployments, you often want to set `stac.overrideRootPath` to an empty string:
-
-```yaml
-# values.yaml for eoapi-k8s
-stac:
+# values.yaml
+stac-auth-proxy:
   enabled: true
-  overrideRootPath: ""  # Empty string removes --root-path argument
-  ingress:
-    enabled: false  # Disable external ingress for STAC
+  env:
+    UPSTREAM_URL: "http://eoapi-stac:8080"  # Replace 'eoapi' with your release name
+    OIDC_DISCOVERY_URL: "https://your-auth-provider.com/.well-known/openid-configuration"
+    ALLOWED_JWT_AUDIENCES: "https://your-api-audience.com"  # Recommended: should match the audience configured in your identity provider for this API.
+    ROOT_PATH: "/stac"
 ```
 
-**Important**: This configuration creates an **intentional inconsistency**:
+For complete configuration options, see the [stac-auth-proxy configuration documentation](https://developmentseed.org/stac-auth-proxy/user-guide/configuration).
 
-- **Ingress routes**: Still configured for `/stac` (if ingress was enabled)
-- **FastAPI application**: Runs without any root path prefix (no `--root-path` argument)
+### 3. Authentication Policy
 
-### Why This Works for stac-auth-proxy
-
-This behavior is specifically designed for stac-auth-proxy scenarios where:
-
-1. **stac-auth-proxy** receives requests via its own ingress and handles the `/stac` path prefix
-2. **stac-auth-proxy** filters requests managing the `/stac` prefix and forwards them directly to the STAC service without the path prefix
-3. **STAC service** responds from its internal service as if it's running at the root path `/`
-
-### Configuration Examples
-
-#### Standard Deployment (with ingress)
+Control which endpoints require authentication:
 
 ```yaml
-stac:
-  enabled: true
-  # Default behavior - uses ingress.path as root-path
-  ingress:
-    enabled: true
-    path: "/stac"
+stac-auth-proxy:
+  env:
+    # Set a default policy: read operations (GET) are public, write operations (POST, PUT, PATCH, DELETE) require authentication
+    DEFAULT_PUBLIC: "true" # This is "false" if not specified
+
+    # Alternatively, you may set your custom policies (JSON objects)
+    PRIVATE_ENDPOINTS: |
+      {
+        "^/collections$": ["POST"],
+        "^/collections/([^/]+)$": ["PUT", "PATCH", "DELETE"],
+        "^/collections/([^/]+)/items$": ["POST"],
+        "^/collections/([^/]+)/items/([^/]+)$": ["PUT", "PATCH", "DELETE"]
+      }
+
+    PUBLIC_ENDPOINTS: |
+      {
+        "^/$": ["GET"],
+        "^/conformance$": ["GET"],
+        "^/healthz": ["GET"]
+      }
 ```
 
-Result: FastAPI runs with `--root-path=/stac`
-
-#### stac-auth-proxy Deployment
+ Or, you can also create more complex custom filters (see [upstream documentation](https://developmentseed.org/stac-auth-proxy/user-guide/record-level-auth/#custom-filter-factories)). For this you will need to add the extra file and configure **all three** requirements:
 
 ```yaml
-stac:
-  enabled: true
-  overrideRootPath: ""  # Empty string - no --root-path argument
-  ingress:
-    enabled: false  # Access via auth proxy only
+stac-auth-proxy:
+  # 1. Set filter class environment variables
+  env:
+    COLLECTIONS_FILTER_CLS: stac_auth_proxy.custom_filters:CollectionsFilter
+    ITEMS_FILTER_CLS: stac_auth_proxy.custom_filters:ItemsFilter
+
+  # 2. Specify custom filters file path
+  customFiltersFile: "data/stac-auth-proxy/custom_filters.py"
+
+  # 3. Configure volume mount
+  extraVolumes:
+    - name: filters
+      configMap:
+        name: stac-auth-proxy-filters
+  extraVolumeMounts:
+    - name: filters
+      mountPath: /app/src/stac_auth_proxy/custom_filters.py
+      subPath: custom_filters.py
+      readOnly: true
 ```
 
-Result: FastAPI runs without `--root-path` argument
+**Note**: All three components are required. `customFiltersFile` creates the ConfigMap, `extraVolumes` references it, `extraVolumeMounts` loads it into the container.
 
-#### Custom Root Path
+## Root Path Behavior
 
-```yaml
-stac:
-  enabled: true
-  overrideRootPath: "/api/v1/stac"  # Custom path
+### Why `overrideRootPath: ""`
+
+stac-auth-proxy manages the `/stac` prefix and forwards requests without it to the STAC service. Setting `overrideRootPath: ""` removes the `--root-path` argument so FastAPI responds as if running at root `/`.
+
+**Request flow**:
 ```
-
-Result: FastAPI runs with `--root-path=/api/v1/stac`
-
-### Request Flow with stac-auth-proxy
-
-```mermaid
-graph LR
-    A[Client Request: /stac/collections] --> B[stac-auth-proxy]
-    B -->|Authentication & Authorization| C[Forward: /collections]
-    C --> D[STAC Service: receives /collections]
-    D --> E[Response: collections data]
-    E --> B
-    B --> A
+Client: /stac/collections → Proxy: /collections → STAC service receives: /collections
 ```
-
-## Additional Notes
-
-- The solution leverages Kubernetes service discovery for internal communication
-- No changes required to the STAC service itself
-- Zero downtime deployment possible
-- Existing deployments without auth proxy remain compatible
-- The `overrideRootPath: ""` configuration is specifically for proxy scenarios
