@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.10.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.9.1...v0.10.0) (2026-01-16)
+
+
+### Added
+
+* Add custom filter logic for stac-auth-proxy ([#388](https://github.com/developmentseed/eoapi-k8s/issues/388)) ([019204e](https://github.com/developmentseed/eoapi-k8s/commit/019204e0c71c11a4653f3b0318a110e70d4b3586))
+
+
+### Fixed
+
+* app version corresponds to stac-fastapi-pgstac. ([#420](https://github.com/developmentseed/eoapi-k8s/issues/420)) ([6099bc9](https://github.com/developmentseed/eoapi-k8s/commit/6099bc9e701ad47f93554bcb96f6c9e8ec63b4bb))
+
+
+### Maintenance
+
+* **deps:** updated actions/create-github-app-token action to v2.2.1. ([#415](https://github.com/developmentseed/eoapi-k8s/issues/415)) ([0454056](https://github.com/developmentseed/eoapi-k8s/commit/045405679518875a70e3835559d92b7623ce7530))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.2.0 ([#419](https://github.com/developmentseed/eoapi-k8s/issues/419)) ([439c233](https://github.com/developmentseed/eoapi-k8s/commit/439c233d9ea8a3728459299c8f3c8ffcf1e6cc0e))
+* **deps:** updated helm release grafana to 10.5.7. ([#414](https://github.com/developmentseed/eoapi-k8s/issues/414)) ([b306578](https://github.com/developmentseed/eoapi-k8s/commit/b306578e9840fb977a5daf058d0624650f4c0a50))
+* **deps:** updated helm release grafana to 10.5.8. ([#418](https://github.com/developmentseed/eoapi-k8s/issues/418)) ([94eda53](https://github.com/developmentseed/eoapi-k8s/commit/94eda536c4018ca4504cab81b196f1123832097d))
+* **deps:** updated helm release prometheus to 28.4.0. ([#416](https://github.com/developmentseed/eoapi-k8s/issues/416)) ([f1f7703](https://github.com/developmentseed/eoapi-k8s/commit/f1f770384f1a1a8a2a72c63326aef8df2d6e111f))
+
 ## [0.9.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.9.0...v0.9.1) (2026-01-14)
 
 
