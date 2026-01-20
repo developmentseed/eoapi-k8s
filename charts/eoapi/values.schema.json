@@ -464,6 +464,15 @@
               "description": "Enable ingress for browser"
             }
           }
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "resources": {
+              "type": "object",
+              "description": "Resource requirements for browser"
+            }
+          }
         }
       }
     },
@@ -474,6 +483,23 @@
           "type": "boolean",
           "default": true,
           "description": "Enable documentation server"
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "resources": {
+              "type": "object",
+              "description": "Resource requirements for doc server"
+            },
+            "affinity": {
+              "type": "object",
+              "description": "Affinity settings for doc server"
+            },
+            "tolerations": {
+              "type": "object",
+              "description": "Tolerations for doc server"
+            }
+          }
         }
       }
     },

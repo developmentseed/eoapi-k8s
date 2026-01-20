@@ -40,4 +40,6 @@ spec:
                 }
               {{- end }}
             {{- end }}
+          resources:
+          {{- toYaml .Values.browser.settings.resources | nindent 12 }}
 {{- end }}
