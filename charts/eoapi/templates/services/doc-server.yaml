@@ -46,6 +46,20 @@ spec:
           mountPath: /usr/share/nginx/html
         ports:
         - containerPort: 80
+        {{- if .Values.docServer.settings }}
+        {{- with .Values.docServer.settings.resources }}
+        resources:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.docServer.settings.affinity }}
+        affinity:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.docServer.settings.tolerations }}
+        tolerations:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
       volumes:
       - name: {{ .Release.Name }}-doc-html
         configMap:
@@ -57,6 +71,10 @@ spec:
       {{- end }}
       {{- with .Values.docServer.settings.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.docServer.settings.resources }}
+      resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
