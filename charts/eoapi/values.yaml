@@ -537,6 +537,8 @@ browser:
   # If not set, will be constructed from ingress.host and stac.ingress.path
   # Useful when using custom ingress solutions with ingress.enabled=false
   catalogUrl: ""
+  settings:
+    resources: {}
 
 docServer:
   enabled: true
