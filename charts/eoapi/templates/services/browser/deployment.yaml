@@ -27,13 +27,13 @@ spec:
             {{- if index .Values "stac-auth-proxy" "enabled" }}
             - name: SB_authConfig
               {{- if .Values.browser.authConfig }}
-              value: {{ .Values.browser.authConfig }}
+              value: {{ .Values.browser.authConfig | toJson | quote }}
               {{- else }}
               value: |
                 {
                   "type": "openIdConnect",
                   "openIdConnectUrl": "{{ .Values.browser.oidcDiscoveryUrl }}",
-                  "oidcOptions": {
+                  "oidcConfig": {
                     "client_id": "{{ .Values.browser.oidcClientId | default "test-client" }}",
                     "redirect_uri": "{{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}{{ .Values.browser.ingress.path | default "/browser" | trimSuffix "/" }}/auth"
                   }
