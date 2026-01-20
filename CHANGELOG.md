@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.0...v0.10.1) (2026-01-20)
+
+
+### Fixed
+
+* stac browser oidc config options. ([#422](https://github.com/developmentseed/eoapi-k8s/issues/422)) ([298edba](https://github.com/developmentseed/eoapi-k8s/commit/298edba4bdcd7af9f90f589e600d9d98d0e39bcb))
+
+
+### Maintenance
+
+* **deps:** updated helm release prometheus to 28.6.0. ([#421](https://github.com/developmentseed/eoapi-k8s/issues/421)) ([3f02f50](https://github.com/developmentseed/eoapi-k8s/commit/3f02f50e8afd9bd1c1e905754f43dcb0be270fac))
+
 ## [0.10.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.9.1...v0.10.0) (2026-01-16)
 
 
