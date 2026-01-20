@@ -83,7 +83,7 @@ tests:
               {
                 "type": "openIdConnect",
                 "openIdConnectUrl": "http://localhost/mock-oidc/.well-known/openid-configuration",
-                "oidcOptions": {
+                "oidcConfig": {
                   "client_id": "test-client",
                   "redirect_uri": "http://localhost/browser/auth"
                 }
@@ -114,7 +114,7 @@ tests:
               {
                 "type": "openIdConnect",
                 "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
-                "oidcOptions": {
+                "oidcConfig": {
                   "client_id": "test-client",
                   "redirect_uri": "http://localhost/browser/auth"
                 }
@@ -184,3 +184,30 @@ tests:
           content:
             name: SB_catalogUrl
             value: "https://secure.example.com/stac"
+  - it: "stac browser deployment with custom authConfig object"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.env.OIDC_DISCOVERY_URL: "https://auth.example.com/.well-known/openid-configuration"
+      ingress.host: "example.com"
+      ingress.tls.enabled: true
+      stac.ingress.path: "/stac"
+      browser.authConfig:
+        type: "openIdConnect"
+        openIdConnectUrl: "https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration"
+        oidcConfig:
+          client_id: "eoapi"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_authConfig
+            value: '{"oidcConfig":{"client_id":"eoapi"},"openIdConnectUrl":"https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration","type":"openIdConnect"}'
