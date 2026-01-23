@@ -25,6 +25,7 @@ COMMANDS:
     schema          Validate Helm chart schema
     lint            Run Helm lint on chart
     unit            Run Helm unit tests
+    images          Check container images for root user
     integration     Run integration tests with pytest
     notification    Run notification tests with database access
     all             Run all tests
@@ -112,6 +113,14 @@ test_unit() {
     fi
 }
 
+test_images() {
+    log_info "Checking container images for root user..."
+
+    check_requirements docker helm || return 1
+
+    "${SCRIPT_DIR}/test/images.sh"
+}
+
 test_integration() {
     local pytest_args="${1:-}"
     export NAMESPACE="$NAMESPACE"
@@ -138,6 +147,7 @@ test_all() {
     test_schema || ((failed++))
     test_lint || ((failed++))
     test_unit || ((failed++))
+    test_images || ((failed++))
 
     if validate_cluster 2>/dev/null; then
         test_integration || ((failed++))
@@ -182,7 +192,7 @@ main() {
                 pytest_args="$2"
                 shift 2
                 ;;
-            schema|lint|unit|notification|integration|all)
+            schema|lint|unit|images|notification|integration|all)
                 command="$1"
                 shift
                 break
@@ -206,6 +216,9 @@ main() {
             ;;
         unit)
             test_unit
+            ;;
+        images)
+            test_images
             ;;
         integration)
             test_integration "$pytest_args"
