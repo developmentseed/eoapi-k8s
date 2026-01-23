@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.10.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.1...v0.10.2) (2026-01-23)
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/stac-utils/pgstac-pypgstac docker tag to v0.9.9 ([#426](https://github.com/developmentseed/eoapi-k8s/issues/426)) ([d1116ff](https://github.com/developmentseed/eoapi-k8s/commit/d1116ff1af4f34ce53e8cde016f8c6ac22772544))
+* **deps:** updated helm release grafana to 10.5.12. ([#427](https://github.com/developmentseed/eoapi-k8s/issues/427)) ([d96a86e](https://github.com/developmentseed/eoapi-k8s/commit/d96a86efc9c5fe5f20df2f71e9897ebc4730e48a))
+* **deps:** updated helm release prometheus to 28.6.0. ([#425](https://github.com/developmentseed/eoapi-k8s/issues/425)) ([c13eb3f](https://github.com/developmentseed/eoapi-k8s/commit/c13eb3f422a20ef60458f00894887c881f5eb01a))
+* **deps:** updated registry.k8s.io/ingress-nginx/kube-webhook-certgen docker tag to v1.6.6 ([#428](https://github.com/developmentseed/eoapi-k8s/issues/428)) ([0a0bae1](https://github.com/developmentseed/eoapi-k8s/commit/0a0bae12d6511cbda5d1c9b4419a0f06ad82736f))
+
 ## [0.10.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.0...v0.10.1) (2026-01-20)
 
 
