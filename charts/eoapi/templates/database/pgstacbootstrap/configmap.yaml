@@ -11,6 +11,8 @@ metadata:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    argocd.argoproj.io/hook: "PreSync"
+    argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
 data:
   pgstac-settings.sql: |
     {{- tpl (.Files.Get "data/initdb/settings/pgstac-settings.sql.tpl") . | nindent 4 }}
@@ -27,6 +29,8 @@ metadata:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    argocd.argoproj.io/hook: "PreSync"
+    argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
 data:
   initdb.sql: |
     {{- range $path, $bytes := $.Files.Glob "data/initdb/samples/*.sql"  -}}
@@ -41,6 +45,8 @@ metadata:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    argocd.argoproj.io/hook: "PreSync"
+    argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
 data:
   {{- range $path, $bytes := $.Files.Glob "data/initdb/samples/*.json"  -}}
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
@@ -63,6 +69,8 @@ metadata:
     helm.sh/hook: "post-install,post-upgrade"
     helm.sh/hook-weight: "-7"
     helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    argocd.argoproj.io/hook: "PreSync"
+    argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
 data:
   {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
   {{- if and $config.file (typeIs "string" $config.file) }}
@@ -79,6 +87,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-initdb
+  annotations:
+    argocd.argoproj.io/hook: "PreSync"
+    argocd.argoproj.io/sync-wave: "-7"
+    argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
 data:
   initdb.sql: |
     \c {{ .Values.pgstacBootstrap.settings.database }}

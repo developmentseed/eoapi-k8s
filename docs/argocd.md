@@ -14,19 +14,7 @@ This guide covers deploying eoAPI with ArgoCD, focusing on sync order management
 
 ## Overview
 
-eoAPI includes database initialization jobs that must complete before application services start. ArgoCD's sync waves and hooks provide fine-grained control over resource deployment order.
-
-## Quick Start
-
-For most ArgoCD deployments, add these annotations to ensure proper sync order:
-
-```yaml
-pgstacBootstrap:
-  jobAnnotations:
-    argocd.argoproj.io/hook: "PreSync"
-    argocd.argoproj.io/sync-wave: "-1"
-    argocd.argoproj.io/hook-delete-policy: "HookSucceeded"
-```
+eoAPI uses database setup jobs that must finish before the API services start. ArgoCD sync hooks and sync waves let you control the order in which resources are applied.
 
 ## Database Bootstrap Jobs
 
@@ -53,12 +41,11 @@ The jobs use Helm hook weights to ensure proper ordering:
 Use **PreSync** for database initialization jobs to ensure they complete before application deployment:
 
 ```yaml
-pgstacBootstrap:
-  jobAnnotations:
-    argocd.argoproj.io/hook: "PreSync"
+annotations:
+  argocd.argoproj.io/hook: "PreSync"
 ```
 
-#### Why PreSync?
+#### Why use PreSync?
 
 - **Database First**: Schema must exist before application services start
 - **Prevents Race Conditions**: Services won't start until database is ready
@@ -70,9 +57,8 @@ pgstacBootstrap:
 Control execution order within phases using sync waves:
 
 ```yaml
-pgstacBootstrap:
-  jobAnnotations:
-    argocd.argoproj.io/sync-wave: "-1"  # Run before wave 0 (default)
+annotations:
+  argocd.argoproj.io/sync-wave: "0"
 ```
 
 #### Wave Strategy
@@ -84,23 +70,70 @@ pgstacBootstrap:
 | `0` | Applications (default) | Main services |
 | `1` | Ingress, monitoring | Post-deployment |
 
-### Cleanup Policies
+### PreSync executions
 
-Configure job cleanup after successful execution:
+### Phase `-7`
 
-```yaml
-pgstacBootstrap:
-  jobAnnotations:
-    argocd.argoproj.io/hook-delete-policy: "HookSucceeded"
-```
+All required resources are created or updated:
 
-#### Available Policies
+- `PostgresCluster` (Required by all jobs)
+- Config: `-pgstac-settings-config`
+- Config: `-initdb-sql-config`
+- Config: `-initdb-json-config`
+- Config: `-pgstac-queryables-config`
+- Config: `-initdb`
 
-| Policy | Behavior |
-|:-------|:---------|
-| `HookSucceeded` | Delete after successful completion |
-| `HookFailed` | Delete after failure |
-| `BeforeHookCreation` | Delete before creating new hook |
+### Phase `-6`
+
+Database users are created:
+
+- Job: `-pgstac-superuser-init-db`
+  - Depends on: Config `-initdb`
+
+### Phase `-5`
+
+Database schema and settings are applied:
+
+- Job: `-pgstac-migrate`
+  - Depends on: Config: `-pgstac-settings-config`
+
+### Phase `-4`
+
+Sample data is loaded:
+
+- Job: `-pgstac-load-samples`
+  - Depends on:
+    - Config: `-initdb-sql-config`
+    - Config: `-initdb-json-config`
+    - Job: `-pgstac-migrate`
+
+### Phase `-3`
+
+Queryables are loaded:
+
+- Job: `-pgstac-load-queryables`
+    - Depends on
+        - Config: Custom Queryable ConfigsMap
+        - Job: `-pgstac-migrate`
+        - Job: `-pgstac-load-samples` (Optional)
+
+> NOTE:
+> Queryables are user-defined. Make sure their ConfigMap uses a PreSync hook and runs before phase `-3`.
+>
+> Example:
+>
+> ```yaml
+> apiVersion: v1
+> kind: ConfigMap
+> metadata:
+>   name: montandon-eoapi-stac-queryables
+>   annotations:
+>     argocd.argoproj.io/hook: "PreSync"
+>     argocd.argoproj.io/sync-wave: "-7"
+>     argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+> data:
+>   ...
+> ```
 
 ## Complete Configuration Example
 
@@ -125,10 +158,6 @@ spec:
         # Database initialization with ArgoCD integration
         pgstacBootstrap:
           enabled: true
-          jobAnnotations:
-            argocd.argoproj.io/hook: "PreSync"
-            argocd.argoproj.io/sync-wave: "-1"
-            argocd.argoproj.io/hook-delete-policy: "HookSucceeded"
 
         # Service configuration
         apiServices: ["stac", "raster", "vector"]
