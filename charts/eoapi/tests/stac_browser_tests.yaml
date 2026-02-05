@@ -211,3 +211,40 @@ tests:
           content:
             name: SB_authConfig
             value: '{"oidcConfig":{"client_id":"eoapi"},"openIdConnectUrl":"https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration","type":"openIdConnect"}'
+  - it: "stac browser deployment with custom resources set"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.settings.resources.limits.cpu: "250m"
+      browser.settings.resources.limits.memory: "200Mi"
+      browser.settings.resources.requests.cpu: "64m"
+      browser.settings.resources.requests.memory: "100Mi"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          content:
+            name: cpu
+            value: "250m"
+      - contains:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          content:
+            name: memory
+            value: "200Mi"
+      - contains:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          content:
+            name: cpu
+            value: "64m"
+      - contains:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          content:
+            name: memory
+            value: "100Mi"
+  
