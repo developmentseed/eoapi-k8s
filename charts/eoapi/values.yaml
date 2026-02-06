@@ -100,6 +100,7 @@ postgrescluster:
   postGISVersion: "3.4"
   pgBouncerReplicas: 1
   monitoring: false
+  postgresClusterAnnotations: {}
   # Configure Patroni to set proper schema permissions
   patroni:
     dynamicConfiguration:
@@ -153,6 +154,52 @@ pgstacBootstrap:
   image:
     name: ghcr.io/stac-utils/pgstac-pypgstac
     tag: v0.9.9
+  configMaps:
+    pgstacSettings:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    initdbSql:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    initdbJson:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    pgstacQueryables:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    initdb:
+      annotations: {}
+  jobs:
+    pgstacSuperuserInitDb:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-6"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacMigrate:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-5"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacLoadSamples:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-4"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacLoadQueryables:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-3"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+
+
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
@@ -602,6 +649,22 @@ knative:
     enabled: false
     image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.7
     resources: {}
+    service:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "10"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    sinkBinding:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "30"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+  jobs:
+    init:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "0"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 
 # Knative operator sub-chart configuration
 knative-operator:

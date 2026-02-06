@@ -137,6 +137,10 @@ Queryables are loaded:
 
 ## Complete Configuration Example
 
+Using pre-defined [values/argocd.yaml](charts/eoapi/values/argocd.yaml)
+> [!CAUTION]
+> This configuration might be outdated and may not work as expected. Feel free to contribute fixes or improvements.
+
 ```yaml
 # Application values for ArgoCD deployment
 apiVersion: argoproj.io/v1alpha1
@@ -151,6 +155,8 @@ spec:
     chart: eoapi
     targetRevision: "latest"
     helm:
+      valueFiles:
+        - values/argocd.yaml
       values: |
         # Required values
         gitSha: "abc123def456"

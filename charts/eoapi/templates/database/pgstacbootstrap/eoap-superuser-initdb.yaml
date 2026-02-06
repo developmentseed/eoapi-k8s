@@ -9,11 +9,10 @@ metadata:
   name: {{ .Release.Name }}-pgstac-superuser-init-db
   labels:
     app: {{ .Release.Name }}-pgstac-superuser-init-db
+  {{- with .Values.pgstacBootstrap.jobs.pgstacSuperuserInitDb.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-6"
-    helm.sh/hook-delete-policy: "before-hook-creation"
-    argocd.argoproj.io/hook: "PreSync"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   template:
     metadata:
