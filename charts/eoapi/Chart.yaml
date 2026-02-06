@@ -45,7 +45,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: monitoring.metricsServer.enabled
   - name: prometheus
-    version: 28.8.0
+    version: 28.8.1
     repository: https://prometheus-community.github.io/helm-charts
     condition: monitoring.prometheus.enabled
   - name: prometheus-adapter
