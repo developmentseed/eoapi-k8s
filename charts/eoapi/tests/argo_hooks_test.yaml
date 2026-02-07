@@ -1,0 +1,24 @@
+suite: argo hooks are correctly applied
+values:
+  - ../values/argocd.yaml
+set:
+  pgstacBootstrap:
+    enabled: true
+tests:
+  - it: Pgstacbootstrap ConfigMaps
+    template: templates/database/pgstacbootstrap/configmap.yaml
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            argocd.argoproj.io/hook: "PreSync"
+            argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+  - it: Pgstacbootstrap Jobs
+    templates:
+      - templates/database/pgstacbootstrap/job.yaml
+      - templates/database/pgstacbootstrap/eoap-superuser-initdb.yaml
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            argocd.argoproj.io/hook: "PreSync"

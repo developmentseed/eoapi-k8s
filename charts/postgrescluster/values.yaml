@@ -294,6 +294,9 @@ backupsEnabled: false
 # Kubernetes Settings #
 #######################
 
+# annotations for the PostgresCluster resource
+# postgresClusterAnnotations: {}
+
 # metadata contains any metadata that should be applied to all PGO managed
 # objects in this Postgres cluster. This includes "annotations" and "labels" as
 # sub-keys.

@@ -26,13 +26,10 @@ metadata:
   name: {{ .Release.Name }}-pgstac-migrate
   labels:
     app: {{ .Release.Name }}-pgstac-migrate
+  {{- with .Values.pgstacBootstrap.jobs.pgstacMigrate.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-5"
-    helm.sh/hook-delete-policy: "before-hook-creation"
-    {{- with .Values.pgstacBootstrap.jobAnnotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   template:
     metadata:
@@ -97,13 +94,10 @@ metadata:
   name: {{ .Release.Name }}-pgstac-load-samples
   labels:
     app: {{ .Release.Name }}-pgstac-load-samples
+  {{- with .Values.pgstacBootstrap.jobs.pgstacLoadSamples.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-4"
-    helm.sh/hook-delete-policy: "before-hook-creation"
-    {{- with .Values.pgstacBootstrap.jobAnnotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   template:
     metadata:
@@ -171,13 +165,10 @@ metadata:
   name: {{ .Release.Name }}-pgstac-load-queryables
   labels:
     app: {{ .Release.Name }}-pgstac-load-queryables
+  {{- with .Values.pgstacBootstrap.jobs.pgstacLoadQueryables.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-3"
-    helm.sh/hook-delete-policy: "before-hook-creation"
-    {{- with .Values.pgstacBootstrap.jobAnnotations }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
 spec:
   template:
     metadata:

@@ -7,10 +7,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-pgstac-settings-config
+  {{- with .Values.pgstacBootstrap.configMaps.pgstacSettings.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-7"
-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
   pgstac-settings.sql: |
     {{- tpl (.Files.Get "data/initdb/settings/pgstac-settings.sql.tpl") . | nindent 4 }}
@@ -23,10 +23,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-initdb-sql-config
+  {{- with .Values.pgstacBootstrap.configMaps.initdbSql.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-7"
-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
   initdb.sql: |
     {{- range $path, $bytes := $.Files.Glob "data/initdb/samples/*.sql"  -}}
@@ -37,10 +37,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-initdb-json-config
+  {{- with .Values.pgstacBootstrap.configMaps.initdbJson.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-7"
-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
   {{- range $path, $bytes := $.Files.Glob "data/initdb/samples/*.json"  -}}
   {{- base $path | nindent 2 -}}: | {{- $.Files.Get $path | nindent 4 -}}
@@ -59,10 +59,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-pgstac-queryables-config
+  {{- with .Values.pgstacBootstrap.configMaps.pgstacQueryables.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "-7"
-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
   {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
   {{- if and $config.file (typeIs "string" $config.file) }}
@@ -79,6 +79,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-initdb
+  {{- with .Values.pgstacBootstrap.configMaps.initdb.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 data:
   initdb.sql: |
     \c {{ .Values.pgstacBootstrap.settings.database }}
