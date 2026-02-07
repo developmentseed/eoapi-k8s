@@ -137,9 +137,9 @@ Queryables are loaded:
 
 ## Complete Configuration Example
 
-Using pre-defined [values/argocd.yaml](charts/eoapi/values/argocd.yaml)
-> [!CAUTION]
-> This configuration might be outdated and may not work as expected. Feel free to contribute fixes or improvements.
+Use the pre-defined file: [values/argocd.yaml](https://github.com/developmentseed/eoapi-k8s/blob/main/charts/eoapi/values/argocd.yaml)
+> Note:
+> If this configuration does not work as expected, please feel free to submit fixes or improvements.
 
 ```yaml
 # Application values for ArgoCD deployment
@@ -191,5 +191,5 @@ spec:
 
 - [ArgoCD Sync Phases and Waves](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/)
 - [ArgoCD Resource Hooks](https://argo-cd.readthedocs.io/en/stable/user-guide/resource_hooks/)
-- [Helm Install Process](../helm-install.md)
-- [Configuration Options](../configuration.md)
+- [Helm Install Process](./helm-install.md)
+- [Configuration Options](./configuration.md)
