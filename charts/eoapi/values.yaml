@@ -772,7 +772,6 @@ observability:
 
 # Metrics Server sub-chart configuration
 # These values are passed directly to the metrics-server sub-chart
-# Using official kubernetes-sigs chart with non-root image from registry.k8s.io
 metrics-server:
   apiService:
     create: true

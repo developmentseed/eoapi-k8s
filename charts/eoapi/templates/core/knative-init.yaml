@@ -23,8 +23,12 @@ spec:
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
       containers:
       - name: knative-init
-        image: bitnami/kubectl:latest
+        image: alpine/kubectl:1.34.1
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          runAsGroup: 65534
         command:
         - /bin/bash
         - -c

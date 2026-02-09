@@ -53,11 +53,17 @@ if [[ -z "$rendered_yaml" ]] || echo "$rendered_yaml" | grep -q "Error:"; then
   exit 1
 fi
 
+# Check if kubectl has securityContext with runAsNonRoot
+kubectl_has_security_context=false
+if echo "$rendered_yaml" | grep -A 5 'image:.*kubectl' | grep -q 'runAsNonRoot: true'; then
+  kubectl_has_security_context=true
+  log_debug "kubectl image has runAsNonRoot: true in securityContext"
+fi
+
 images=()
 while IFS= read -r line; do
   [[ -n "$line" ]] && images+=("$line")
 done < <(
-  # Extract images with context to identify test hooks
   echo "$rendered_yaml" | awk '
     BEGIN { in_test_hook = 0 }
     /^---/ { in_test_hook = 0 }
@@ -68,9 +74,7 @@ done < <(
       gsub(/["'\''"]/, "", image)
       gsub(/^[[:space:]]+/, "", image)
       if (image && image != "") {
-        # Skip if in test hook
         if (!in_test_hook) {
-          # Skip images with testing patterns (but allow "test-release" in image names)
           if (image !~ /\/mock/ &&
               image !~ /\/sample/ &&
               image !~ /\/bats\// &&
@@ -113,8 +117,14 @@ check_image() {
     fi
 
     if [ -z "$user" ] || [ "$user" == "0" ] || [ "$user" == "root" ] || [ "$user" == "0:0" ]; then
-      echo -e "${RED}⚠️  RUNS AS ROOT${NC} (User: ${user:-not set})"
-      ((root_count++))
+      # Check if this is kubectl with securityContext
+      if [[ "$image" =~ kubectl ]] && [[ "$kubectl_has_security_context" == "true" ]]; then
+        echo -e "${GREEN}✓ Non-root via securityContext${NC} (runAsNonRoot: true)"
+        ((non_root_count++))
+      else
+        echo -e "${RED}⚠️  RUNS AS ROOT${NC} (User: ${user:-not set})"
+        ((root_count++))
+      fi
     else
       echo -e "${GREEN}✓ Non-root${NC} (User: $user)"
       ((non_root_count++))
