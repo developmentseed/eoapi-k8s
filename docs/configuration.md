@@ -224,7 +224,7 @@ The queryables will be automatically loaded during the PgSTAC bootstrap process.
 
 ### ArgoCD Integration
 
-For ArgoCD deployments, you can control job sync order using the `jobAnnotations` field. See the [ArgoCD Integration Guide](argocd.md) for detailed configuration and best practices.
+For ArgoCD deployments, See the [ArgoCD Integration Guide](argocd.md) for detailed configuration and best practices.
 
 ## Cloud Storage Authentication
 

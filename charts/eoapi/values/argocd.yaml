@@ -1,0 +1,54 @@
+postgrescluster:
+  postgresClusterAnnotations:
+    argocd.argoproj.io/hook: "PreSync"
+    argocd.argoproj.io/sync-wave: "-7"
+
+knative:
+  cloudEventsSink:
+    service:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+    sinkBinding:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+  jobs:
+    init:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+
+pgstacBootstrap:
+  configMaps:
+    pgstacSettings:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+    initdbSql:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+    initdbJson:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+    pgstacQueryables:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+    initdb:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/sync-wave: "-7"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+  jobs:
+    pgstacSuperuserInitDb:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+    pgstacMigrate:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+    pgstacLoadSamples:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"
+    pgstacLoadQueryables:
+      annotations:
+        argocd.argoproj.io/hook: "PreSync"

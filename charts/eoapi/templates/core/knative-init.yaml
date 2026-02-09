@@ -7,10 +7,10 @@ metadata:
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: knative-init
+  {{- with .Values.knative.jobs.init.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "0"
-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   template:
     metadata:
