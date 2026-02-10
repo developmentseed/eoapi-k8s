@@ -31,7 +31,10 @@ chart `version: ` (which follows semver) and `appVersion: ` (which does not foll
    5. click the "Publish release"
 
 
-5. This last step then kicks off another GH Actions workflow called "release.yaml" which publishes any helm charts
-that had version bumps since the last time
+5. This last step triggers the **release-please.yml** workflow (publish job), which runs chart-releaser and publishes any helm charts that had version bumps since the last release. The **postgrescluster** chart is released automatically when a new version is merged to main (see below); by release time it is already in the Helm repo, so eoapi can depend on it from the remote.
 
-6. Verify the release is all good by running `helm repo update && helm search repo eoapi --versions`
+6. Verify the release: `helm repo update && helm search repo eoapi --versions`
+
+## Postgrescluster (automatic on main)
+
+When a new **postgrescluster** chart version is merged to main, the `release.yml` workflow (push trigger) packages the chart, creates a GitHub Release with tag `postgrescluster-<version>` (via chart-releaser and the same GitHub App as release-please, `DS_RELEASE_BOT_*`), and updates the Helm repo index—all in the same run. No manual release step is needed for postgrescluster. The "proper" release (step 4 above, tag `vX.Y.Z`) is for eoapi; do it after postgrescluster has been auto-released if eoapi depends on the new version.

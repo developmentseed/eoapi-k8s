@@ -1,43 +1,85 @@
-name: Release Helm Chart
-
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - "charts/postgrescluster/Chart.yaml"
+  workflow_dispatch:
+
+name: release-postgrescluster
+
+permissions:
+  contents: write
+  pull-requests: write
 
 env:
   HELM_VERSION: v3.18.3
 
 jobs:
-  release:
-    if: "!startsWith(github.ref, 'refs/tags/eoapi-')"
+  release-postgrescluster:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
+      - name: Get postgrescluster version
+        id: version
+        run: |
+          v=$(grep '^version:' charts/postgrescluster/Chart.yaml | sed 's/.*: *//' | tr -d ' \r')
+          echo "version=$v" >> $GITHUB_OUTPUT
+
+      - name: Skip if tag already exists
+        id: skip
+        run: |
+          git fetch --tags
+          if git rev-parse "postgrescluster-${{ steps.version.outputs.version }}" >/dev/null 2>&1; then echo "skip=true" >> $GITHUB_OUTPUT; else echo "skip=false" >> $GITHUB_OUTPUT; fi
+
+      - uses: azure/setup-helm@v4
+        if: steps.skip.outputs.skip == 'false'
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install chart-releaser
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.8.1/chart-releaser_1.8.1_linux_amd64.tar.gz"
+          tar -xzf cr.tar.gz -C /usr/local/bin
+          rm cr.tar.gz
+          cr version
+
       - name: Configure git
+        if: steps.skip.outputs.skip == 'false'
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
 
-      - uses: azure/setup-helm@v4
-        with:
-          version: ${{ env.HELM_VERSION }}
-
-      - name: Add Helm repos
+      - name: Package and publish postgrescluster chart
+        if: steps.skip.outputs.skip == 'false'
         run: |
-          helm repo add eoapi https://devseed.com/eoapi-k8s/
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo add grafana https://grafana.github.io/helm-charts
-          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-          helm repo list
-
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
-        with:
-          charts_dir: charts
+          mkdir -p .cr-release-packages
+          helm package charts/postgrescluster --destination .cr-release-packages
+          cr upload \
+            --owner ${{ github.repository_owner }} \
+            --git-repo ${{ github.event.repository.name }} \
+            --package-path .cr-release-packages \
+            --commit "$(git rev-parse HEAD)" \
+            --skip-existing \
+            --token ${{ secrets.GITHUB_TOKEN }}
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CR_SKIP_EXISTING: true
-          CR_INDEX_PATH: "."
+
+      - name: Update Helm repo index
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          base_url="https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/download/postgrescluster-${{ steps.version.outputs.version }}"
+          git clone --branch gh-pages --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}.git" gh-pages
+          helm repo index .cr-release-packages --merge gh-pages/index.yaml --url "$base_url"
+          cp .cr-release-packages/index.yaml gh-pages/index.yaml
+          cd gh-pages
+          git add index.yaml
+          git diff --staged --quiet || (git commit -m "Update index for postgrescluster-${{ steps.version.outputs.version }}" && git push)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
