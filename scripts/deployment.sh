@@ -14,7 +14,7 @@ source "${SCRIPT_DIR}/lib/k8s.sh"
 # Defaults
 readonly RELEASE_NAME="${RELEASE_NAME:-eoapi}"
 readonly NAMESPACE="${NAMESPACE:-eoapi}"
-readonly PGO_VERSION="${PGO_VERSION:-5.7.4}"
+readonly PGO_VERSION="${PGO_VERSION:-5.7.10}"
 readonly TIMEOUT="${TIMEOUT:-6m}"
 
 show_help() {

@@ -29,7 +29,7 @@ version: 0.10.2
 appVersion: 6.2.1
 dependencies:
   - name: postgrescluster
-    version: 5.7.4
+    version: 5.7.10
     repository: https://devseed.com/eoapi-k8s/
     condition: postgrescluster.enabled
   - name: eoapi-notifier

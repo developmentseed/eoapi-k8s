@@ -5,11 +5,9 @@ type: application
 # The version below should match the version on the PostgresCluster CRD
 # from CrunchyData's Postgres Operator
 # https://access.crunchydata.com/documentation/postgres-operator/latest/releases
-version: 5.7.4
-appVersion: 5.7.4
-# Removed invalid 'force' property
+version: 5.7.10
+appVersion: 5.7.10
 
-# Artifacthub metadata
 annotations:
   artifacthub.io/changes: |
     - Adds integration with Artifacthub.io
