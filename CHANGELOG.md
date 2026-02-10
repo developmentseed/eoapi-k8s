@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.11.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.0...v0.11.1) (2026-02-10)
+
+
+### Fixed
+
+* kubectl alpine for knative-sink. ([41f0377](https://github.com/developmentseed/eoapi-k8s/commit/41f0377c5bbdf756670f614e7a6b41fab6523ebd))
+
+
+### Maintenance
+
+* **deps:** updated crunchy postgres-operator to 5.8.6. ([fc5c731](https://github.com/developmentseed/eoapi-k8s/commit/fc5c731f1a400a1cab5dc03638df1af072818bf4))
+
+
+### Other
+
+* improved postrgesql chart release. ([fa222be](https://github.com/developmentseed/eoapi-k8s/commit/fa222be202329555ac5a4fa9e20d657e18776779))
+
 ## [0.11.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.2...v0.11.0) (2026-02-10)
 
 
