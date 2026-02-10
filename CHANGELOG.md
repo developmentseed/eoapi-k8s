@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.2...v0.11.0) (2026-02-10)
+
+
+### Added
+
+* Ensure non-root container images. ([#382](https://github.com/developmentseed/eoapi-k8s/issues/382)) ([0832309](https://github.com/developmentseed/eoapi-k8s/commit/0832309fcbe800a52501c1851f0e149da1c13a94))
+
+
+### Maintenance
+
+* **deps:** updated crunchy postgres-operator to 5.7.10. ([#441](https://github.com/developmentseed/eoapi-k8s/issues/441)) ([22df25f](https://github.com/developmentseed/eoapi-k8s/commit/22df25f0a2ea449bc7d863c54363c0f88f150fb0))
+
 ## [0.10.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.1...v0.10.2) (2026-02-09)
 
 
