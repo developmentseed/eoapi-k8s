@@ -1588,6 +1588,33 @@ entries:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/eoapi-support-0.1.4/eoapi-support-0.1.4.tgz
     version: 0.1.4
   postgrescluster:
+  - annotations:
+      artifacthub.io/changes: |
+        - Adds integration with Artifacthub.io
+      artifacthub.io/keywords: |
+        - postgres
+        - database
+        - postgis
+        - pgstac
+        - kubernetes
+      artifacthub.io/links: |
+        - name: GitHub Repository
+          url: https://github.com/developmentseed/eoapi-k8s
+        - name: Documentation
+          url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+      artifacthub.io/maintainers: |
+        - name: DevelopmentSeed
+          email: eoapi@developmentseed.org
+    apiVersion: v2
+    appVersion: 5.7.10
+    created: "2026-02-10T18:36:36.8475166Z"
+    description: A Helm chart for eoapi database dep for k8s
+    digest: f0b945de52ff9f624e7376ba71e293a688e01e79b8f9d6b0117606b3d83e04a7
+    name: postgrescluster
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.7.10/postgrescluster-5.7.10.tgz
+    version: 5.7.10
   - apiVersion: v2
     appVersion: 5.7.4
     created: "2025-04-03T15:56:38.160105774Z"
@@ -1618,4 +1645,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2026-02-09T14:42:27.544902509Z"
+generated: "2026-02-10T18:36:36.846965448Z"
