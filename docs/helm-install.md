@@ -16,7 +16,7 @@ external_links:
 
    ```bash
    # Check latest version at: https://github.com/CrunchyData/postgres-operator/releases
-   $ helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version 5.7.0
+   $ helm install --set disable_check_for_upgrades=true pgo oci://registry.developers.crunchydata.com/crunchydata/pgo --version 5.8.6
    ```
 
 1. Add the eoapi repo from https://devseed.com/eoapi-k8s/:

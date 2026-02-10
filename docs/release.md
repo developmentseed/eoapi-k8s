@@ -33,7 +33,7 @@ chart `version: ` (which follows semver) and `appVersion: ` (which does not foll
 
 5. This last step triggers the **release-please.yml** workflow (publish job), which runs chart-releaser and publishes any helm charts that had version bumps since the last release. The **postgrescluster** chart is released automatically when a new version is merged to main (see below); by release time it is already in the Helm repo, so eoapi can depend on it from the remote.
 
-6. Verify the release: `helm repo update && helm search repo eoapi --versions`
+6. Verify the release: `helm repo update && helm search repo eoapi --versions`. If a new chart version does not appear, the index may be cached; try `helm repo update --force-update` or re-add the repo using the GitHub Pages URL: `helm repo add eoapi https://developmentseed.github.io/eoapi-k8s/`
 
 ## Postgrescluster (automatic on main)
 

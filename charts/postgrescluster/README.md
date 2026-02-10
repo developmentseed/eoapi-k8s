@@ -18,7 +18,7 @@ Install the PostgreSQL Operator first:
 ```bash
 helm install --set disable_check_for_upgrades=true pgo \
   oci://registry.developers.crunchydata.com/crunchydata/pgo \
-  --version 5.7.10
+  --version 5.8.6
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ This chart is typically used as a dependency of the main eoAPI chart:
 # In eoAPI's Chart.yaml
 dependencies:
   - name: postgrescluster
-    version: 5.7.10
+    version: 5.8.6
     repository: "https://devseed.com/eoapi-k8s/"
     condition: postgrescluster.enabled
 ```
