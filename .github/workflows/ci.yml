@@ -8,7 +8,7 @@ on:
 
 env:
   HELM_VERSION: latest
-  PGO_VERSION: 5.7.4
+  PGO_VERSION: 5.7.10
 
 jobs:
   fast-checks:
