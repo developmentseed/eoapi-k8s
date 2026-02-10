@@ -1606,6 +1606,33 @@ entries:
         - name: DevelopmentSeed
           email: eoapi@developmentseed.org
     apiVersion: v2
+    appVersion: 5.8.6
+    created: "2026-02-10T19:05:20.364110184Z"
+    description: A Helm chart for eoapi database dep for k8s
+    digest: 2f1cb0d35ef3be5947a5dff79303f15ed3dcc3542ebdc82448315788152b838a
+    name: postgrescluster
+    type: application
+    urls:
+    - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.8.6/postgrescluster-5.8.6.tgz
+    version: 5.8.6
+  - annotations:
+      artifacthub.io/changes: |
+        - Adds integration with Artifacthub.io
+      artifacthub.io/keywords: |
+        - postgres
+        - database
+        - postgis
+        - pgstac
+        - kubernetes
+      artifacthub.io/links: |
+        - name: GitHub Repository
+          url: https://github.com/developmentseed/eoapi-k8s
+        - name: Documentation
+          url: https://github.com/developmentseed/eoapi-k8s/tree/main/docs
+      artifacthub.io/maintainers: |
+        - name: DevelopmentSeed
+          email: eoapi@developmentseed.org
+    apiVersion: v2
     appVersion: 5.7.10
     created: "2026-02-10T18:36:36.8475166Z"
     description: A Helm chart for eoapi database dep for k8s
@@ -1645,4 +1672,4 @@ entries:
     urls:
     - https://github.com/developmentseed/eoapi-k8s/releases/download/postgrescluster-5.5.2/postgrescluster-5.5.2.tgz
     version: 5.5.2
-generated: "2026-02-10T18:36:36.846965448Z"
+generated: "2026-02-10T19:05:20.363554147Z"
