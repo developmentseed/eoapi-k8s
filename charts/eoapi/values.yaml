@@ -642,7 +642,7 @@ mockOidcServer:
 # Optional Knative components for CloudEvents and serverless workloads
 knative:
   enabled: false
-  version: "1.17"
+  version: "1.21"
   initTimeout: "600s"
   # CloudEvents sink configuration (deployed when eoapi-notifier uses CloudEvents output)
   cloudEventsSink:
@@ -668,7 +668,7 @@ knative:
 
 # Knative operator sub-chart configuration
 knative-operator:
-  tag: "v1.17.8"
+  tag: "v1.21.0"
   resources: {}
 
 ######################
