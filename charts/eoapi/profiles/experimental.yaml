@@ -250,14 +250,14 @@ eoapi-notifier:
 ######################
 knative:
   enabled: true
-  version: "1.17"
+  version: "1.21"
   initTimeout: "600s"
   cloudEventsSink:
     enabled: true
     resources: {}
 
 knative-operator:
-  tag: "v1.17.8"
+  tag: "v1.21.0"
   resources: {}
 
 ######################
