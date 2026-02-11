@@ -26,7 +26,7 @@ annotations:
     - raster
     - vector
 version: 0.11.1
-appVersion: 6.2.1
+appVersion: 6.2.2
 dependencies:
   - name: postgrescluster
     version: 5.8.6
