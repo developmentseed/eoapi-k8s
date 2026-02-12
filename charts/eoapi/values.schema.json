@@ -568,14 +568,6 @@
             "resources": {
               "type": "object",
               "description": "Resource requirements for doc server"
-            },
-            "affinity": {
-              "type": "object",
-              "description": "Affinity settings for doc server"
-            },
-            "tolerations": {
-              "type": "object",
-              "description": "Tolerations for doc server"
             }
           }
         }
