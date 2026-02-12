@@ -55,7 +55,7 @@ If you prefer more control over the installation process:
 helm upgrade --install \
   --set disable_check_for_upgrades=true pgo \
   oci://registry.developers.crunchydata.com/crunchydata/pgo \
-  --version 5.7.4
+  --version 5.8.6
 ```
 
 2. Add the eoAPI helm repository:

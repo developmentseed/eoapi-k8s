@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       STAC_BROWSER_VERSION:
-        description: "STAC Browser version to build (e.g. v4.0.0)"
+        description: "STAC Browser version to build"
         required: true
-        default: "v4.0.0"
+        default: "v4.0.1"
 
 env:
   REGISTRY: ghcr.io

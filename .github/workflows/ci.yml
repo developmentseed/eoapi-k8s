@@ -8,7 +8,7 @@ on:
 
 env:
   HELM_VERSION: latest
-  PGO_VERSION: 5.7.4
+  PGO_VERSION: "5.8.6"
 
 jobs:
   fast-checks:
@@ -44,6 +44,9 @@ jobs:
         uses: d3adb5/helm-unittest-action@v2
         with:
           charts: charts/eoapi
+
+      - name: Check container images for root user
+        run: ./eoapi-cli test images
 
   integration-tests:
     name: Integration tests

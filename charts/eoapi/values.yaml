@@ -100,6 +100,7 @@ postgrescluster:
   postGISVersion: "3.4"
   pgBouncerReplicas: 1
   monitoring: false
+  postgresClusterAnnotations: {}
   # Configure Patroni to set proper schema permissions
   patroni:
     dynamicConfiguration:
@@ -153,8 +154,52 @@ pgstacBootstrap:
   image:
     name: ghcr.io/stac-utils/pgstac-pypgstac
     tag: v0.9.9
-  # Annotations to add to the pgstac bootstrap job
-  jobAnnotations: {}
+  configMaps:
+    pgstacSettings:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    initdbSql:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    initdbJson:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    pgstacQueryables:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-7"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    initdb:
+      annotations: {}
+  jobs:
+    pgstacSuperuserInitDb:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-6"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacMigrate:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-5"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacLoadSamples:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-4"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacLoadQueryables:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-3"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+
+
   settings:
     # General configuration options
     loadSamples: true      # Set to false to disable sample data loading
@@ -389,7 +434,7 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 6.2.1
+    tag: 6.2.2
   command:
     - "uvicorn"
     - "stac_fastapi.pgstac.app:app"
@@ -524,7 +569,7 @@ browser:
   image:
     # we use a custom image with pathPrefix built into it
     name: ghcr.io/developmentseed/eoapi-k8s/stac-browser
-    tag: 4.0.0
+    tag: 4.0.1
   ingress:
     enabled: true  # Control ingress specifically for browser service
     path: "/browser"
@@ -601,17 +646,33 @@ mockOidcServer:
 # Optional Knative components for CloudEvents and serverless workloads
 knative:
   enabled: false
-  version: "1.17"
+  version: "1.21"
   initTimeout: "600s"
   # CloudEvents sink configuration (deployed when eoapi-notifier uses CloudEvents output)
   cloudEventsSink:
     enabled: false
     image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.7
     resources: {}
+    service:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "10"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+    sinkBinding:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "30"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+  jobs:
+    init:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "0"
+        helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
 
 # Knative operator sub-chart configuration
 knative-operator:
-  tag: "v1.17.8"
+  tag: "v1.21.0"
   resources: {}
 
 ######################
@@ -716,9 +777,5 @@ observability:
 # Metrics Server sub-chart configuration
 # These values are passed directly to the metrics-server sub-chart
 metrics-server:
-  image:
-    registry: docker.io
-    repository: bitnamilegacy/metrics-server
-    tag: "0.8.0-debian-12-r4"
   apiService:
     create: true

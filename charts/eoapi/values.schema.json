@@ -111,7 +111,6 @@
         }
       }
     },
-
     "postgresql": {
       "type": "object",
       "properties": {
@@ -211,6 +210,10 @@
           "type": "boolean",
           "description": "Enable monitoring"
         },
+        "postgresClusterAnnotations": {
+          "type": "object",
+          "description": "Annotations to add to the PostgresCluster resource"
+        },
         "patroni": {
           "type": "object",
           "description": "Patroni configuration"
@@ -250,11 +253,86 @@
             }
           }
         },
-        "jobAnnotations": {
+        "configMaps": {
           "type": "object",
-          "description": "Additional annotations to add to the pgstac bootstrap jobs (useful for ArgoCD sync waves)",
-          "additionalProperties": {
-            "type": "string"
+          "properties": {
+            "pgstacSettings": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "initdbSql": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "initdbJson": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "pgstacQueryables": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "initdb": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            }
+          }
+        },
+        "jobs": {
+          "type": "object",
+          "properties": {
+            "pgstacSuperuserInitDb": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "pgstacMigrate": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "pgstacLoadSamples": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            },
+            "pgstacLoadQueryables": {
+                "type": "object",
+                "properties": {
+                    "annotations": {
+                        "type": "object"
+                    }
+                 }
+            }
           }
         },
         "settings": {

@@ -25,7 +25,7 @@ helm repo add eoapi https://devseed.com/eoapi-k8s/
 # Install the PostgreSQL operator (required)
 helm install --set disable_check_for_upgrades=true pgo \
   oci://registry.developers.crunchydata.com/crunchydata/pgo \
-  --version 5.7.4
+  --version 5.8.6
 
 # Install eoAPI with core profile (stable services only)
 helm install eoapi eoapi/eoapi -f profiles/core.yaml

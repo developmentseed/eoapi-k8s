@@ -25,11 +25,11 @@ annotations:
     - stac
     - raster
     - vector
-version: 0.10.1
-appVersion: 6.2.1
+version: 0.11.1
+appVersion: 6.2.2
 dependencies:
   - name: postgrescluster
-    version: 5.7.4
+    version: 5.8.6
     repository: https://devseed.com/eoapi-k8s/
     condition: postgrescluster.enabled
   - name: eoapi-notifier
@@ -37,15 +37,15 @@ dependencies:
     repository: oci://ghcr.io/developmentseed/charts
     condition: eoapi-notifier.enabled
   - name: knative-operator
-    version: v1.20.1
+    version: v1.21.0
     repository: https://knative.github.io/operator
     condition: knative.enabled
   - name: metrics-server
-    version: 7.4.12
-    repository: https://charts.bitnami.com/bitnami
+    version: 3.13.0
+    repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: monitoring.metricsServer.enabled
   - name: prometheus
-    version: 28.8.1
+    version: 28.9.0
     repository: https://prometheus-community.github.io/helm-charts
     condition: monitoring.prometheus.enabled
   - name: prometheus-adapter

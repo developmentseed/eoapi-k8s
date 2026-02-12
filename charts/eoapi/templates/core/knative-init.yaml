@@ -7,10 +7,10 @@ metadata:
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: knative-init
+  {{- with .Values.knative.jobs.init.annotations }}
   annotations:
-    helm.sh/hook: "post-install,post-upgrade"
-    helm.sh/hook-weight: "0"
-    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   template:
     metadata:
@@ -23,10 +23,14 @@ spec:
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
       containers:
       - name: knative-init
-        image: bitnami/kubectl:latest
+        image: alpine/kubectl:1.34.1
         imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          runAsGroup: 65534
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
           set -e
@@ -45,7 +49,7 @@ spec:
           echo "Current deployments in release namespace:"
           kubectl get deployments -n "$RELEASE_NAMESPACE" -o wide 2>/dev/null || echo "No deployments in release namespace"
           echo "All deployments across cluster:"
-          kubectl get deployments --all-namespaces | grep -v "^NAMESPACE" | head -10
+          kubectl get deployments --all-namespaces | grep -v "^NAMESPACE" | head -10 || true
           echo ""
 
           while [ $attempt -le $max_attempts ]; do
@@ -259,12 +263,7 @@ spec:
 
           # Wait for essential CRDs to be available
           echo "Waiting for essential Knative CRDs to be created..."
-          essential_crds=(
-            "services.serving.knative.dev"
-            "sinkbindings.sources.knative.dev"
-          )
-
-          for crd in "${essential_crds[@]}"; do
+          for crd in services.serving.knative.dev sinkbindings.sources.knative.dev; do
             echo "Checking for CRD: $crd"
             timeout=600
             counter=0

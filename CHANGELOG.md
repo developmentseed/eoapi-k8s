@@ -1,5 +1,62 @@
 # Changelog
 
+## [0.11.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.0...v0.11.1) (2026-02-10)
+
+
+### Fixed
+
+* kubectl alpine for knative-sink. ([41f0377](https://github.com/developmentseed/eoapi-k8s/commit/41f0377c5bbdf756670f614e7a6b41fab6523ebd))
+
+
+### Maintenance
+
+* **deps:** updated crunchy postgres-operator to 5.8.6. ([fc5c731](https://github.com/developmentseed/eoapi-k8s/commit/fc5c731f1a400a1cab5dc03638df1af072818bf4))
+
+
+### Other
+
+* improved postrgesql chart release. ([fa222be](https://github.com/developmentseed/eoapi-k8s/commit/fa222be202329555ac5a4fa9e20d657e18776779))
+
+## [0.11.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.2...v0.11.0) (2026-02-10)
+
+
+### Added
+
+* Ensure non-root container images. ([#382](https://github.com/developmentseed/eoapi-k8s/issues/382)) ([0832309](https://github.com/developmentseed/eoapi-k8s/commit/0832309fcbe800a52501c1851f0e149da1c13a94))
+
+
+### Maintenance
+
+* **deps:** updated crunchy postgres-operator to 5.7.10. ([#441](https://github.com/developmentseed/eoapi-k8s/issues/441)) ([22df25f](https://github.com/developmentseed/eoapi-k8s/commit/22df25f0a2ea449bc7d863c54363c0f88f150fb0))
+
+## [0.10.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.1...v0.10.2) (2026-02-09)
+
+
+### Fixed
+
+* argocd hook issues ([#437](https://github.com/developmentseed/eoapi-k8s/issues/437)) ([fff96a1](https://github.com/developmentseed/eoapi-k8s/commit/fff96a141c3f36687591094f14ee79b492d026a9))
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/stac-utils/pgstac-pypgstac docker tag to v0.9.9 ([#426](https://github.com/developmentseed/eoapi-k8s/issues/426)) ([d1116ff](https://github.com/developmentseed/eoapi-k8s/commit/d1116ff1af4f34ce53e8cde016f8c6ac22772544))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.2.1 ([#430](https://github.com/developmentseed/eoapi-k8s/issues/430)) ([667dd7c](https://github.com/developmentseed/eoapi-k8s/commit/667dd7ced4ba2268d31d36a39ee6d89b81fce66d))
+* **deps:** updated helm release grafana to 10.5.12. ([#427](https://github.com/developmentseed/eoapi-k8s/issues/427)) ([d96a86e](https://github.com/developmentseed/eoapi-k8s/commit/d96a86efc9c5fe5f20df2f71e9897ebc4730e48a))
+* **deps:** updated helm release grafana to 10.5.15. ([#431](https://github.com/developmentseed/eoapi-k8s/issues/431)) ([bf3ce9b](https://github.com/developmentseed/eoapi-k8s/commit/bf3ce9b5e2b3071d392f7646d6738b52751c20d2))
+* **deps:** updated helm release knative-operator to v1.20.1. ([#435](https://github.com/developmentseed/eoapi-k8s/issues/435)) ([73218a2](https://github.com/developmentseed/eoapi-k8s/commit/73218a2680047930024558f716dd240012072385))
+* **deps:** updated helm release prometheus to 28.6.0. ([#425](https://github.com/developmentseed/eoapi-k8s/issues/425)) ([c13eb3f](https://github.com/developmentseed/eoapi-k8s/commit/c13eb3f422a20ef60458f00894887c881f5eb01a))
+* **deps:** updated helm release prometheus to 28.6.1. ([#432](https://github.com/developmentseed/eoapi-k8s/issues/432)) ([4916fde](https://github.com/developmentseed/eoapi-k8s/commit/4916fde39125ecfd254f2478c53be9166ec8a9cb))
+* **deps:** updated helm release prometheus to 28.8.0. ([#434](https://github.com/developmentseed/eoapi-k8s/issues/434)) ([dd8779c](https://github.com/developmentseed/eoapi-k8s/commit/dd8779c64c9e5a6b2489149214c65fa784daa5a9))
+* **deps:** updated helm release prometheus to 28.8.1. ([#438](https://github.com/developmentseed/eoapi-k8s/issues/438)) ([f5c4fef](https://github.com/developmentseed/eoapi-k8s/commit/f5c4fef10daffbc56f5a8f570123a6079e483e03))
+* **deps:** updated helm release prometheus to 28.9.0. ([#439](https://github.com/developmentseed/eoapi-k8s/issues/439)) ([e518c74](https://github.com/developmentseed/eoapi-k8s/commit/e518c748d76c918020ada10f001e887eb14b0818))
+* **deps:** updated registry.k8s.io/ingress-nginx/kube-webhook-certgen docker tag to v1.6.6 ([#428](https://github.com/developmentseed/eoapi-k8s/issues/428)) ([0a0bae1](https://github.com/developmentseed/eoapi-k8s/commit/0a0bae12d6511cbda5d1c9b4419a0f06ad82736f))
+* **deps:** updated registry.k8s.io/ingress-nginx/kube-webhook-certgen docker tag to v1.6.7 ([#433](https://github.com/developmentseed/eoapi-k8s/issues/433)) ([a18aaac](https://github.com/developmentseed/eoapi-k8s/commit/a18aaacc628cff238be416cf1e014cac990010fa))
+
+
+### Other
+
+* relaxed condition to run integrationm tests. ([910bcfb](https://github.com/developmentseed/eoapi-k8s/commit/910bcfb133cf1aa9c3d148f35132a22229f42ec5))
+
 ## [0.10.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.10.0...v0.10.1) (2026-01-20)
 
 

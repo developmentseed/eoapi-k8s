@@ -1,0 +1,53 @@
+suite: argo hooks are correctly applied
+set:
+  pgstacBootstrap:
+    enabled: true
+    settings:
+      queryables:
+        - name: "common-queryables.json"
+          file: "data/initdb/queryables/test-queryables.json"
+  eoapi-notifier:
+    enabled: true
+    outputs:
+      - type: cloudevents
+  knative:
+    enabled: true
+    cloudEventsSink:
+      enabled: true
+values:
+  - ../values/argocd.yaml
+tests:
+  - it: Knative
+    templates:
+      - templates/core/cloudevents-sink.yaml
+      - templates/core/sink-binding.yaml
+      - templates/core/knative-init.yaml
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            argocd.argoproj.io/hook: "PreSync"
+
+  - it: Pgstacbootstrap - configmap
+    template: templates/database/pgstacbootstrap/configmap.yaml
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            argocd.argoproj.io/hook: "PreSync"
+            argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
+      - documentIndex: 4  # initdb
+        isSubset:
+          path: metadata.annotations
+          content:
+            argocd.argoproj.io/sync-wave: "-7"
+
+  - it: Pgstacbootstrap - job
+    templates:
+      - templates/database/pgstacbootstrap/eoap-superuser-initdb.yaml
+      - templates/database/pgstacbootstrap/job.yaml
+    asserts:
+      - isSubset:
+          path: metadata.annotations
+          content:
+            argocd.argoproj.io/hook: "PreSync"
