@@ -227,23 +227,15 @@ tests:
     asserts:
       - isKind:
           of: Deployment
-      - contains:
+      - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
-          content:
-            name: cpu
-            value: "250m"
-      - contains:
+          value: "250m"
+      - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
-          content:
-            name: memory
-            value: "200Mi"
-      - contains:
+          value: "200Mi"
+      - equal:
           path: spec.template.spec.containers[0].resources.requests.cpu
-          content:
-            name: cpu
-            value: "64m"
-      - contains:
+          value: "64m"
+      - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
-          content:
-            name: memory
-            value: "100Mi"
+          value: "100Mi"

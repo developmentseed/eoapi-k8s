@@ -49,15 +49,7 @@ spec:
         {{- if .Values.docServer.settings }}
         {{- with .Values.docServer.settings.resources }}
         resources:
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.docServer.settings.affinity }}
-        affinity:
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.docServer.settings.tolerations }}
-        tolerations:
-          {{- toYaml . | nindent 8 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
       volumes:
@@ -71,10 +63,6 @@ spec:
       {{- end }}
       {{- with .Values.docServer.settings.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.docServer.settings.resources }}
-      resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
