@@ -542,6 +542,8 @@ browser:
 
 docServer:
   enabled: true
+  settings:
+    resources: {}
 
 ######################
 # NOTIFICATIONS
