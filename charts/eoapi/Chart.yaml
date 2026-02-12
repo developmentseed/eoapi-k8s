@@ -45,7 +45,7 @@ dependencies:
     repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: monitoring.metricsServer.enabled
   - name: prometheus
-    version: 28.9.0
+    version: 28.9.1
     repository: https://prometheus-community.github.io/helm-charts
     condition: monitoring.prometheus.enabled
   - name: prometheus-adapter
