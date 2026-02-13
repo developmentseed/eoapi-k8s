@@ -38,19 +38,20 @@ The jobs use Helm hook weights to ensure proper ordering:
 
 ### Sync Phases
 
-Use **PreSync** for database initialization jobs to ensure they complete before application deployment:
+Use **Sync** for database initialization jobs to ensure they complete before application deployment:
 
 ```yaml
 annotations:
-  argocd.argoproj.io/hook: "PreSync"
+  argocd.argoproj.io/hook: "Sync"
 ```
 
-#### Why use PreSync?
+#### Why use Sync?
 
 - **Database First**: Schema must exist before application services start
 - **Prevents Race Conditions**: Services won't start until database is ready
 - **Follows Best Practices**: Standard pattern for database migrations
 - **Dependency Management**: Explicit ordering prevents startup failures
+- **Hook deletion**: With **PreSync**, the database cluster is removed before every sync
 
 ### Sync Waves
 
@@ -70,7 +71,7 @@ annotations:
 | `0` | Applications (default) | Main services |
 | `1` | Ingress, monitoring | Post-deployment |
 
-### PreSync executions
+### `Sync` executions
 
 ### Phase `-7`
 
@@ -117,8 +118,12 @@ Queryables are loaded:
         - Job: `-pgstac-migrate`
         - Job: `-pgstac-load-samples` (Optional)
 
+### Phase `>=0`
+
+All other resources are created
+
 > NOTE:
-> Queryables are user-defined. Make sure their ConfigMap uses a PreSync hook and runs before phase `-3`.
+> Queryables are user-defined. Make sure their ConfigMap uses a Sync hook and runs before phase `-3`.
 >
 > Example:
 >
@@ -128,7 +133,7 @@ Queryables are loaded:
 > metadata:
 >   name: montandon-eoapi-stac-queryables
 >   annotations:
->     argocd.argoproj.io/hook: "PreSync"
+>     argocd.argoproj.io/hook: "Sync"
 >     argocd.argoproj.io/sync-wave: "-7"
 >     argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
 > data:
