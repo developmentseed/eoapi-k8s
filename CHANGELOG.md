@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.11.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.1...v0.11.2) (2026-02-13)
+
+
+### Fixed
+
+* **argocd:** use sync to avoid DB deletion before every sync ([#452](https://github.com/developmentseed/eoapi-k8s/issues/452)) ([6bf0bb2](https://github.com/developmentseed/eoapi-k8s/commit/6bf0bb264cda62e9a7e259fbbeba6cdfee1a8656))
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.2.2 ([#443](https://github.com/developmentseed/eoapi-k8s/issues/443)) ([5747ea4](https://github.com/developmentseed/eoapi-k8s/commit/5747ea45e3bb9fe6f9bb09f2aa5fedb713087376))
+* **deps:** updated helm release knative-operator to v1.21.0. ([#436](https://github.com/developmentseed/eoapi-k8s/issues/436)) ([50c02b5](https://github.com/developmentseed/eoapi-k8s/commit/50c02b587e7265ba474ff339a741a82d2ea1ae06))
+* **deps:** updated helm release prometheus to 28.9.1. ([#450](https://github.com/developmentseed/eoapi-k8s/issues/450)) ([02b1fb6](https://github.com/developmentseed/eoapi-k8s/commit/02b1fb6ef6304d30b30141fa7ff9817501ddd231))
+* **deps:** updated helm release prometheus-adapter to 5.2.1. ([#451](https://github.com/developmentseed/eoapi-k8s/issues/451)) ([1b50f87](https://github.com/developmentseed/eoapi-k8s/commit/1b50f87ef4d74295e6a408e4fbd4796b3fad0fa1))
+* **deps:** updated stac-browser to v4.0.1. ([#447](https://github.com/developmentseed/eoapi-k8s/issues/447)) ([619ba31](https://github.com/developmentseed/eoapi-k8s/commit/619ba31b30251e66bcc3ce876cc8da174e29826e))
+
 ## [0.11.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.0...v0.11.1) (2026-02-10)
 
 
