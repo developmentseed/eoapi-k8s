@@ -61,7 +61,7 @@ tests:
   - it: should use custom file path when customFiltersFile is specified
     set:
       stac-auth-proxy.enabled: true
-      stac-auth-proxy.customFiltersFile: "data/eoepca_filters.py"
+      stac-auth-proxy.customFiltersFile: "data/custom_filters.py"
       stac-auth-proxy.extraVolumes:
         - name: filters
           configMap:

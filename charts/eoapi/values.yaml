@@ -582,6 +582,18 @@ browser:
   # If not set, will be constructed from ingress.host and stac.ingress.path
   # Useful when using custom ingress solutions with ingress.enabled=false
   catalogUrl: ""
+  # Custom catalog title
+  catalogTitle: ""
+  # Custom catalog image/logo URL
+  catalogImage: ""
+  # Custom footer links
+  footerLinks: []
+  # Example:
+  # footerLinks:
+  #   - label: "Terms of use"
+  #     url: "https://example.com/terms"
+  #   - label: "Privacy"
+  #     url: "https://example.com/privacy"
 
 docServer:
   enabled: true

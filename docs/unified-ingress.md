@@ -110,7 +110,7 @@ ingress:
 
 browser:
   enabled: true
-  catalogUrl: "https://eoapi.develop.eoepca.org/stac"  # Explicit catalog URL
+  catalogUrl: "https://earth-search.aws.element84.com/v1"  # Explicit catalog URL
   ingress:
     enabled: false  # Disable browser's built-in ingress
 ```
