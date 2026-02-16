@@ -198,7 +198,7 @@ tests:
       stac.ingress.path: "/stac"
       browser.authConfig:
         type: "openIdConnect"
-        openIdConnectUrl: "https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration"
+        openIdConnectUrl: "https://auth.example.com/realms/demo/.well-known/openid-configuration"
         oidcConfig:
           client_id: "eoapi"
       gitSha: "ABC123"
@@ -210,7 +210,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_authConfig
-            value: '{"oidcConfig":{"client_id":"eoapi"},"openIdConnectUrl":"https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration","type":"openIdConnect"}'
+            value: '{"oidcConfig":{"client_id":"eoapi"},"openIdConnectUrl":"https://auth.example.com/realms/demo/.well-known/openid-configuration","type":"openIdConnect"}'
   - it: "stac browser deployment with catalogTitle"
     set:
       raster.enabled: false
@@ -218,7 +218,7 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: true
-      browser.catalogTitle: "EOEPCA Data Catalog"
+      browser.catalogTitle: "Example Data Catalog"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
       gitSha: "ABC123"
@@ -230,7 +230,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_catalogTitle
-            value: "EOEPCA Data Catalog"
+            value: "Example Data Catalog"
   - it: "stac browser deployment with catalogImage"
     set:
       raster.enabled: false
@@ -238,7 +238,7 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: true
-      browser.catalogImage: "https://eoepca.org/media_portal/images/eoepca_logo_no_bg.original.png"
+      browser.catalogImage: "https://example.com/images/catalog_logo.png"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
       gitSha: "ABC123"
@@ -250,7 +250,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_catalogImage
-            value: "https://eoepca.org/media_portal/images/eoepca_logo_no_bg.original.png"
+            value: "https://example.com/images/catalog_logo.png"
   - it: "stac browser deployment with footerLinks"
     set:
       raster.enabled: false
@@ -259,10 +259,10 @@ tests:
       multidim.enabled: false
       browser.enabled: true
       browser.footerLinks:
-        - label: "EOEPCA"
-          url: "https://eoepca.org/"
+        - label: "Project Home"
+          url: "https://example.com/"
         - label: "Documentation"
-          url: "https://docs.eoepca.org/"
+          url: "https://docs.example.com/"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
       gitSha: "ABC123"
@@ -274,7 +274,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_footerLinks
-            value: '{"label":"EOEPCA","url":"https://eoepca.org/"},{"label":"Documentation","url":"https://docs.eoepca.org/"}'
+            value: '{"label":"Project Home","url":"https://example.com/"},{"label":"Documentation","url":"https://docs.example.com/"}'
   - it: "stac browser deployment with all custom options"
     set:
       raster.enabled: false
@@ -282,13 +282,13 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: true
-      browser.catalogTitle: "EOEPCA Data Catalog"
-      browser.catalogImage: "https://eoepca.org/media_portal/images/eoepca_logo_no_bg.original.png"
+      browser.catalogTitle: "Example Data Catalog"
+      browser.catalogImage: "https://example.com/images/catalog_logo.png"
       browser.footerLinks:
-        - label: "EOEPCA"
-          url: "https://eoepca.org/"
+        - label: "Project Home"
+          url: "https://example.com/"
         - label: "Documentation"
-          url: "https://docs.eoepca.org/"
+          url: "https://docs.example.com/"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
       gitSha: "ABC123"
@@ -300,14 +300,14 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_catalogTitle
-            value: "EOEPCA Data Catalog"
+            value: "Example Data Catalog"
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_catalogImage
-            value: "https://eoepca.org/media_portal/images/eoepca_logo_no_bg.original.png"
+            value: "https://example.com/images/catalog_logo.png"
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_footerLinks
-            value: '{"label":"EOEPCA","url":"https://eoepca.org/"},{"label":"Documentation","url":"https://docs.eoepca.org/"}'
+            value: '{"label":"Project Home","url":"https://example.com/"},{"label":"Documentation","url":"https://docs.example.com/"}'
