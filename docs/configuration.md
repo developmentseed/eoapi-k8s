@@ -309,6 +309,22 @@ raster:
 | `browser.replicaCount` | Number of replicas | 1 | integer > 0 |
 | `browser.ingress.enabled` | Enable browser ingress | true | true/false |
 | `browser.catalogUrl` | Override STAC catalog URL for browser. Useful when using custom ingress solutions (e.g., APISIX) with `ingress.enabled=false` | "" (auto-constructed from `ingress.host` and `stac.ingress.path`) | Valid URL string |
+| `browser.catalogTitle` | Custom catalog title | "" | string |
+| `browser.catalogImage` | Custom catalog logo/image URL | "" | URL string |
+| `browser.footerLinks` | Custom footer links | `[]` | Array of `{label, url}` objects |
+
+Example:
+
+```yaml
+browser:
+  catalogTitle: "My Data Catalog"
+  catalogImage: "https://example.com/logo.png"
+  footerLinks:
+    - label: "Home"
+      url: "https://example.com/"
+    - label: "Docs"
+      url: "https://docs.example.com/"
+```
 
 ## Deployment Architecture
 
