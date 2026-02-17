@@ -15,6 +15,9 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-browser
+        {{- with .Values.browser.settings.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
         - name: browser

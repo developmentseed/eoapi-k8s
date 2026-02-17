@@ -595,6 +595,7 @@ browser:
   #   - label: "Privacy"
   #     url: "https://example.com/privacy"
   settings:
+    labels: {}
     resources: {}
 
 docServer:
