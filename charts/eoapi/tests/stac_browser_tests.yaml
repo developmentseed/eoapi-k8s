@@ -79,7 +79,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_authConfig
-            value: |
+            value: |-
               {
                 "type": "openIdConnect",
                 "openIdConnectUrl": "http://localhost/mock-oidc/.well-known/openid-configuration",
@@ -110,7 +110,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_authConfig
-            value: |
+            value: |-
               {
                 "type": "openIdConnect",
                 "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
@@ -198,7 +198,7 @@ tests:
       stac.ingress.path: "/stac"
       browser.authConfig:
         type: "openIdConnect"
-        openIdConnectUrl: "https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration"
+        openIdConnectUrl: "https://auth.example.com/realms/demo/.well-known/openid-configuration"
         oidcConfig:
           client_id: "eoapi"
       gitSha: "ABC123"
@@ -210,7 +210,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: SB_authConfig
-            value: '{"oidcConfig":{"client_id":"eoapi"},"openIdConnectUrl":"https://iam-auth.develop.eoepca.org/realms/eoepca/.well-known/openid-configuration","type":"openIdConnect"}'
+            value: '{"oidcConfig":{"client_id":"eoapi"},"openIdConnectUrl":"https://auth.example.com/realms/demo/.well-known/openid-configuration","type":"openIdConnect"}'
   - it: "stac browser deployment with custom resources set"
     set:
       raster.enabled: false
@@ -239,3 +239,103 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
           value: "100Mi"
+  - it: "stac browser deployment with catalogTitle"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.catalogTitle: "Example Data Catalog"
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogTitle
+            value: "Example Data Catalog"
+  - it: "stac browser deployment with catalogImage"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.catalogImage: "https://example.com/images/catalog_logo.png"
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogImage
+            value: "https://example.com/images/catalog_logo.png"
+  - it: "stac browser deployment with footerLinks"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.footerLinks:
+        - label: "Project Home"
+          url: "https://example.com/"
+        - label: "Documentation"
+          url: "https://docs.example.com/"
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_footerLinks
+            value: '{"label":"Project Home","url":"https://example.com/"},{"label":"Documentation","url":"https://docs.example.com/"}'
+  - it: "stac browser deployment with all custom options"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.catalogTitle: "Example Data Catalog"
+      browser.catalogImage: "https://example.com/images/catalog_logo.png"
+      browser.footerLinks:
+        - label: "Project Home"
+          url: "https://example.com/"
+        - label: "Documentation"
+          url: "https://docs.example.com/"
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogTitle
+            value: "Example Data Catalog"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogImage
+            value: "https://example.com/images/catalog_logo.png"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_footerLinks
+            value: '{"label":"Project Home","url":"https://example.com/"},{"label":"Documentation","url":"https://docs.example.com/"}'

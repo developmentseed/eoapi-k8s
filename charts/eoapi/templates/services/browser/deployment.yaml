@@ -7,7 +7,7 @@ metadata:
     app: {{ .Release.Name }}-browser
     gitsha: {{ .Values.gitSha }}
 spec:
-  replicas: {{ .Values.browser.replicaCount }}
+  replicas: {{ .Values.browser.replicaCount | default 1 }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-browser
@@ -24,12 +24,20 @@ spec:
           env:
             - name: SB_catalogUrl
               value: {{ .Values.browser.catalogUrl | default (printf "%s://%s%s" (ternary "https" "http" .Values.ingress.tls.enabled) .Values.ingress.host .Values.stac.ingress.path) | quote }}
+            {{- if .Values.browser.catalogTitle }}
+            - name: SB_catalogTitle
+              value: {{ .Values.browser.catalogTitle | quote }}
+            {{- end }}
+            {{- if .Values.browser.catalogImage }}
+            - name: SB_catalogImage
+              value: {{ .Values.browser.catalogImage | quote }}
+            {{- end }}
             {{- if index .Values "stac-auth-proxy" "enabled" }}
             - name: SB_authConfig
               {{- if .Values.browser.authConfig }}
               value: {{ .Values.browser.authConfig | toJson | quote }}
               {{- else }}
-              value: |
+              value: |-
                 {
                   "type": "openIdConnect",
                   "openIdConnectUrl": "{{ .Values.browser.oidcDiscoveryUrl }}",
@@ -39,6 +47,10 @@ spec:
                   }
                 }
               {{- end }}
+            {{- end }}
+            {{- if .Values.browser.footerLinks }}
+            - name: SB_footerLinks
+              value: {{ .Values.browser.footerLinks | toJson | trimPrefix "[" | trimSuffix "]" | quote }}
             {{- end }}
           resources:
           {{- toYaml .Values.browser.settings.resources | nindent 12 }}

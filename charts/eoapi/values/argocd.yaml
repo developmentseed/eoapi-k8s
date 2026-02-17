@@ -1,54 +1,53 @@
 postgrescluster:
   postgresClusterAnnotations:
-    argocd.argoproj.io/hook: "PreSync"
     argocd.argoproj.io/sync-wave: "-7"
 
 knative:
   cloudEventsSink:
     service:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
     sinkBinding:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
   jobs:
     init:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
 
 pgstacBootstrap:
   configMaps:
     pgstacSettings:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
         argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     initdbSql:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
         argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     initdbJson:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
         argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     pgstacQueryables:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
         argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     initdb:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
         argocd.argoproj.io/sync-wave: "-7"
         argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
   jobs:
     pgstacSuperuserInitDb:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
     pgstacMigrate:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
     pgstacLoadSamples:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
     pgstacLoadQueryables:
       annotations:
-        argocd.argoproj.io/hook: "PreSync"
+        argocd.argoproj.io/hook: "Sync"
