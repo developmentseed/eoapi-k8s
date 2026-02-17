@@ -594,9 +594,13 @@ browser:
   #     url: "https://example.com/terms"
   #   - label: "Privacy"
   #     url: "https://example.com/privacy"
+  settings:
+    resources: {}
 
 docServer:
   enabled: true
+  settings:
+    resources: {}
 
 ######################
 # NOTIFICATIONS
