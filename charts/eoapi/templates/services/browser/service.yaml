@@ -16,6 +16,6 @@ spec:
     app: {{ .Release.Name }}-browser
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: {{ .Values.browser.service.port | default 8080 }}
+      targetPort: {{ .Values.browser.service.port | default 8080 }}
 {{- end }}

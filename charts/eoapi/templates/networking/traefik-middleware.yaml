@@ -7,19 +7,19 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      {{- if .Values.raster.enabled }}
+      {{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
       - {{ .Values.raster.ingress.path }}
       {{- end }}
-      {{- if .Values.stac.enabled }}
-      - {{ .Values.stac.ingress.path }}
-      {{- end }}
-      {{- if .Values.vector.enabled }}
+      {{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
       - {{ .Values.vector.ingress.path }}
       {{- end }}
-      {{- if .Values.multidim.enabled }}
+      {{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
       - {{ .Values.multidim.ingress.path }}
       {{- end }}
       {{- if and .Values.mockOidcServer.enabled .Values.mockOidcServer.ingress.enabled }}
       - {{ .Values.mockOidcServer.ingress.path }}
+      {{- end }}
+      {{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
+      - {{ .Values.browser.ingress.path | default "/browser" }}
       {{- end }}
 {{- end }}

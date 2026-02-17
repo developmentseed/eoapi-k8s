@@ -78,6 +78,7 @@ start_cluster() {
             -p "80:80@loadbalancer" \
             -p "443:443@loadbalancer" \
             --agents 1 \
+            --image rancher/k3s:v1.33.0-k3s1 \
             --k3s-arg "--disable=metrics-server@server:0" \
             --wait || {
             log_error "Failed to create cluster"
