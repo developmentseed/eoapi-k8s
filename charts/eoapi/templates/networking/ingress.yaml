@@ -2,74 +2,45 @@
 Helper template for generating ingress paths
 */}}
 {{- define "eoapi.ingressPaths" -}}
-{{- $stacPath := "" -}}
-{{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) -}}
-{{- $stacPath = .Values.stac.ingress.path -}}
-{{- end -}}
 {{- $isNginx := eq .Values.ingress.className "nginx" -}}
+{{- $root := . -}}
 
-{{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
-- pathType: {{ if and $isNginx (ne $stacPath "/") }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ $stacPath }}{{ if and $isNginx (ne $stacPath "/") }}(/|$)(.*){{ end }}
+{{/* Service list with metadata for special cases - preserves order */}}
+{{- $services := list
+  (dict "key" "stac" "usesAuthProxy" true)
+  (dict "key" "raster")
+  (dict "key" "vector")
+  (dict "key" "multidim")
+  (dict "key" "browser" "defaultPath" "/browser" "hasOwnPort" true)
+  (dict "key" "mockOidcServer" "actualName" "mock-oidc-server" "hasOwnPort" true "config" .Values.testing.mockOidcServer)
+-}}
+
+{{- range $services }}
+  {{- $service := .config | default (index $root.Values .key) }}
+  {{- if and $service $service.enabled (or (not $service.ingress) $service.ingress.enabled) }}
+    {{- $path := $service.ingress.path | default .defaultPath }}
+    {{- $useAuthProxy := and .usesAuthProxy (index $root.Values "stac-auth-proxy" "enabled") }}
+    {{- $serviceName := .actualName | default .key }}
+    {{- $port := $root.Values.service.port }}
+    {{- if .hasOwnPort }}
+      {{- if $service.service }}
+        {{- $port = $service.service.port | default 8080 }}
+      {{- else }}
+        {{- $port = 8080 }}
+      {{- end }}
+    {{- end }}
+- pathType: Prefix
+  path: {{ $path }}
   backend:
     service:
-      {{- if index .Values "stac-auth-proxy" "enabled" }}
-      name: {{ .Release.Name }}-stac-auth-proxy
+      {{- if $useAuthProxy }}
+      name: {{ $root.Release.Name }}-stac-auth-proxy
       {{- else }}
-      name: {{ .Release.Name }}-stac
+      name: {{ $root.Release.Name }}-{{ $serviceName }}
       {{- end }}
       port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.raster.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-raster
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.vector.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-vector
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.multidim.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-multidim
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.testing.mockOidcServer.enabled .Values.testing.mockOidcServer.ingress.enabled }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.testing.mockOidcServer.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-mock-oidc-server
-      port:
-        number: {{ .Values.testing.mockOidcServer.service.port | default 8080 }}
-{{- end }}
-
-{{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.browser.ingress.path | default "/browser" }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-browser
-      port:
-        number: {{ .Values.browser.service.port | default 8080 }}
+        number: {{ $port }}
+  {{- end }}
 {{- end }}
 
 {{- if .Values.docServer.enabled }}
@@ -83,16 +54,22 @@ Helper template for generating ingress paths
 {{- end }}
 {{- end }}
 
-{{- $hasEnabledService := or
-  (and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled))
-  (and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled))
-  (and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled))
-  (and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled))
-  (and .Values.testing.mockOidcServer.enabled .Values.testing.mockOidcServer.ingress.enabled)
-  (and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled))
-  .Values.docServer.enabled
-}}
-{{- if and .Values.ingress.enabled $hasEnabledService }}
+{{- define "eoapi.hasEnabledService" -}}
+{{- $keys := list "stac" "raster" "vector" "multidim" "browser" -}}
+{{- $hasService := false -}}
+{{- range $keys }}
+  {{- $s := index $.Values . }}
+  {{- if and $s $s.enabled (or (not $s.ingress) $s.ingress.enabled) }}
+    {{- $hasService = true -}}
+  {{- end }}
+{{- end }}
+{{- if and $.Values.testing.mockOidcServer $.Values.testing.mockOidcServer.enabled (or (not $.Values.testing.mockOidcServer.ingress) $.Values.testing.mockOidcServer.ingress.enabled) }}
+  {{- $hasService = true -}}
+{{- end }}
+{{- or $hasService .Values.docServer.enabled -}}
+{{- end }}
+
+{{- if and .Values.ingress.enabled (include "eoapi.hasEnabledService" . | trim | eq "true") }}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion }}
@@ -106,14 +83,6 @@ metadata:
   labels:
     app: {{ .Release.Name }}-ingress
   annotations:
-    {{- if eq .Values.ingress.className "nginx" }}
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    {{- end }}
-    {{- if eq .Values.ingress.className "traefik" }}
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd
-    {{- end }}
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

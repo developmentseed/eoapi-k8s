@@ -20,6 +20,17 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 eoAPI includes a single streamlined ingress configuration with smart defaults that routes to all enabled services. Services handle their own path routing via `--root-path` configuration, working with any ingress controller.
 
+**Why one ingress?**
+- One TLS certificate to manage
+- One DNS entry
+- Simple operations
+- Works for 99% of deployments
+
+**Why per-service paths?**
+- Services can opt out: `stac.ingress.enabled: false`
+- Custom paths: `raster.ingress.path: "/tiles"`
+- Internal-only services stay off ingress
+
 **Note:** Ingress is only created when at least one service is enabled.
 
 ## Configuration
@@ -61,21 +72,34 @@ browser:
     path: "/browser"
 ```
 
+**Result:** Single Ingress → `https://api.example.com/stac`, `https://api.example.com/raster`
+
+**Limitations:**
+- Cannot use different ingress classes per service
+- Cannot use different domains per service
+- Cannot use different TLS certificates per service
+
+For these cases, deploy multiple helm releases with different configurations.
+
 ## How It Works
 
 ### Path Routing
 
-All services use `pathType: Prefix` and handle their own path prefixes internally via the `--root-path` flag:
+All services handle their own path routing internally:
 
 - **STAC**: `--root-path=/stac` (or `/` for root)
+  - Can be overridden with `stac.overrideRootPath` for custom deployments
 - **Raster**: `--root-path=/raster`
 - **Vector**: `--root-path=/vector`
 - **Multidim**: `--root-path=/multidim`
-- **Browser**: Configured via environment variable
+- **Browser**: Built with `pathPrefix=/browser/`, nginx configured to serve at that path
+  - ⚠️ **Important**: Browser path is fixed at build time. Do not change `browser.ingress.path` unless using a custom browser image built with matching `pathPrefix`
 
 ### Ingress Controller Support
 
-The unified ingress works with **any** Kubernetes ingress controller:
+The unified ingress works with **any** Kubernetes ingress controller.
+
+All services use the same simple routing pattern:
 
 #### NGINX Ingress Controller
 
@@ -98,6 +122,46 @@ ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 ```
+
+### Path Handling Details
+
+All services receive full paths and handle routing internally:
+
+**Backend APIs:**
+```
+Client: GET /raster/tiles/123
+  ↓
+Ingress routes with Prefix pathType
+  ↓
+Service receives: GET /raster/tiles/123
+Service configured: --root-path=/raster
+```
+
+**Frontend SPA (browser):**
+```
+Client: GET /browser/catalog/xyz
+  ↓
+Ingress routes with Prefix pathType
+  ↓
+Container receives: GET /browser/catalog/xyz
+Nginx in container: location /browser { ... }
+Vue Router: base /browser/
+```
+
+**Browser Path Constraint:**
+
+The browser container is built with a fixed `pathPrefix` that must match `browser.ingress.path`. The default is `/browser`. If you need a different path:
+
+1. Build a custom browser image with your desired `pathPrefix`
+2. Configure Helm to use your custom image and matching path:
+```yaml
+browser:
+  image: your-registry/custom-browser:tag
+  ingress:
+    path: "/your-custom-path"
+```
+
+See [Path Handling](path-handling.md) for detailed architecture.
 
 ## STAC Browser Configuration
 
@@ -201,18 +265,20 @@ ingress:
 If you're upgrading from version 0.7.0:
 
 1. Remove any `pathType` and `pathSuffix` configurations from your values
-2. The system will automatically use the appropriate settings for your chosen controller
-3. For NGINX users, regex path matching is now enabled by default
-4. For Traefik users, strip-prefix middleware is automatically configured
+2. All services now use simple `Prefix` pathType routing
+3. No path stripping or rewriting at ingress level
+4. Each service handles its own path routing internally
+5. If using custom browser paths, ensure browser image is built with matching `pathPrefix`
 
 ## Path Structure
 
 Default service paths are:
+
 - `/stac` - STAC API
 - `/raster` - Raster API
 - `/vector` - Vector API
 - `/multidim` - Multi-dimensional API
-- `/browser` - STAC Browser (separate ingress)
+- `/browser` - STAC Browser
 - `/` - Documentation server (when enabled)
 
-These paths are automatically configured with the appropriate rewrites for each controller.
+All paths are configurable via `service.ingress.path` in values.yaml.

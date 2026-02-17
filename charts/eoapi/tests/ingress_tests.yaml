@@ -86,17 +86,15 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/vector(/|$)(.*)"
+          value: "/vector"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
-          value: "ImplementationSpecific"
+          value: "Prefix"
       - equal:
           path: metadata.annotations
           value:
             nginx.ingress.kubernetes.io/enable-access-log: "true"
             nginx.ingress.kubernetes.io/enable-cors: "true"
-            nginx.ingress.kubernetes.io/rewrite-target: /$2
-            nginx.ingress.kubernetes.io/use-regex: "true"
       - equal:
           path: spec.ingressClassName
           value: "nginx"
@@ -119,11 +117,6 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: "Prefix"
-      - equal:
-          path: metadata.annotations
-          value:
-            traefik.ingress.kubernetes.io/router.entrypoints: web
-            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
       - equal:
           path: spec.ingressClassName
           value: "traefik"
@@ -148,19 +141,28 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[1].path
-          value: "/titiler(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[2].path
-          value: "/features(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[3].path
-          value: "/browser(/|$)(.*)"
+          value: "/stac"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
-          value: "ImplementationSpecific"
+          value: "Prefix"
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: "/titiler"
+      - equal:
+          path: spec.rules[0].http.paths[1].pathType
+          value: "Prefix"
+      - equal:
+          path: spec.rules[0].http.paths[2].path
+          value: "/features"
+      - equal:
+          path: spec.rules[0].http.paths[2].pathType
+          value: "Prefix"
+      - equal:
+          path: spec.rules[0].http.paths[3].path
+          value: "/browser"
+      - equal:
+          path: spec.rules[0].http.paths[3].pathType
+          value: "Prefix"
 
   - it: "multiple hosts with services"
     set:
@@ -184,13 +186,22 @@ tests:
           value: "backup.eoapi.dev"
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac(/|$)(.*)"
+          value: "/stac"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Prefix"
       - equal:
           path: spec.rules[0].http.paths[1].path
-          value: "/raster(/|$)(.*)"
+          value: "/raster"
+      - equal:
+          path: spec.rules[0].http.paths[1].pathType
+          value: "Prefix"
       - equal:
           path: spec.rules[0].http.paths[2].path
-          value: "/vector(/|$)(.*)"
+          value: "/vector"
+      - equal:
+          path: spec.rules[0].http.paths[2].pathType
+          value: "Prefix"
 
   - it: "tls enabled with multiple hosts"
     set:
@@ -276,7 +287,10 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/browser(/|$)(.*)"
+          value: "/browser"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Prefix"
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-browser
@@ -319,7 +333,10 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/auth(/|$)(.*)"
+          value: "/auth"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Prefix"
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-mock-oidc-server
@@ -342,7 +359,5 @@ tests:
       - equal:
           path: metadata.annotations
           value:
-            nginx.ingress.kubernetes.io/rewrite-target: /$2
-            nginx.ingress.kubernetes.io/use-regex: "true"
             cert-manager.io/cluster-issuer: "letsencrypt-prod"
             nginx.ingress.kubernetes.io/rate-limit: "100"

@@ -96,3 +96,37 @@ tests:
       - equal:
           path: metadata.annotations.annotation2
           value: world
+
+  - it: "stac deployment uses overrideRootPath when set"
+    set:
+      stac.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      ingress.enabled: true
+      ingress.className: "nginx"
+      stac.ingress.path: "/stac"
+      stac.overrideRootPath: "/custom/path"
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "--root-path=/custom/path"
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: "--root-path=/stac"
+
+  - it: "stac deployment uses ingress.path when overrideRootPath is not set"
+    set:
+      stac.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      ingress.enabled: true
+      ingress.className: "nginx"
+      stac.ingress.path: "/stac"
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "--root-path=/stac"

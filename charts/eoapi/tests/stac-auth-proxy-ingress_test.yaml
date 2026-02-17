@@ -16,8 +16,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
@@ -37,8 +37,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac
@@ -68,15 +68,15 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
 
-  - it: should route ingress to browser
+  - it: should route ingress to browser with Prefix pathType
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -89,8 +89,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /browser(/|$)(.*)
+            pathType: Prefix
+            path: /browser
             backend:
               service:
                 name: RELEASE-NAME-browser
@@ -111,8 +111,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
@@ -121,10 +121,72 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /browser(/|$)(.*)
+            pathType: Prefix
+            path: /browser
             backend:
               service:
                 name: RELEASE-NAME-browser
+                port:
+                  number: 8080
+
+  - it: should use Prefix pathType for backend raster API
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      raster.enabled: true
+      raster.ingress.enabled: true
+      raster.ingress.path: "/raster"
+      service.port: 8080
+    asserts:
+      - contains:
+          path: spec.rules[0].http.paths
+          content:
+            pathType: Prefix
+            path: /raster
+            backend:
+              service:
+                name: RELEASE-NAME-raster
+                port:
+                  number: 8080
+
+  - it: should use Prefix pathType for backend vector API
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      vector.enabled: true
+      vector.ingress.enabled: true
+      vector.ingress.path: "/vector"
+      service.port: 8080
+    asserts:
+      - contains:
+          path: spec.rules[0].http.paths
+          content:
+            pathType: Prefix
+            path: /vector
+            backend:
+              service:
+                name: RELEASE-NAME-vector
+                port:
+                  number: 8080
+
+  - it: should route to stac-auth-proxy when stac has overrideRootPath
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/stac"
+      stac.overrideRootPath: "/custom"
+      stac-auth-proxy.enabled: true
+      service.port: 8080
+    asserts:
+      - contains:
+          path: spec.rules[0].http.paths
+          content:
+            pathType: Prefix
+            path: /stac
+            backend:
+              service:
+                name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
