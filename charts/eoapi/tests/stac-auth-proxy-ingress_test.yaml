@@ -16,8 +16,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
@@ -68,8 +68,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
@@ -111,8 +111,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
