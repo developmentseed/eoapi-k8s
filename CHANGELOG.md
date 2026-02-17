@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.2...v0.12.0) (2026-02-17)
+
+
+### Added
+
+* add resources configuration of browser and doc-server ([#424](https://github.com/developmentseed/eoapi-k8s/issues/424)) ([66e1b7c](https://github.com/developmentseed/eoapi-k8s/commit/66e1b7c33147fd0c38139367e21da60b6a688c29))
+* Added STAC Browser labels. ([fb0b946](https://github.com/developmentseed/eoapi-k8s/commit/fb0b9469c47c4532526ef273520295611fd125fd))
+* Added STAC Browser visual configuration. ([#454](https://github.com/developmentseed/eoapi-k8s/issues/454)) ([49d7c4f](https://github.com/developmentseed/eoapi-k8s/commit/49d7c4f5d479c8d09840fe2524144739aede869b))
+
+
+### Other
+
+* fixed build stac browser routine. ([#453](https://github.com/developmentseed/eoapi-k8s/issues/453)) ([9141c5b](https://github.com/developmentseed/eoapi-k8s/commit/9141c5b1f2dae3b648054595ad6d1d72292d5be7))
+
 ## [0.11.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.1...v0.11.2) (2026-02-13)
 
 
