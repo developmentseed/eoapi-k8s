@@ -2,74 +2,35 @@
 Helper template for generating ingress paths
 */}}
 {{- define "eoapi.ingressPaths" -}}
-{{- $stacPath := "" -}}
-{{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) -}}
-{{- $stacPath = .Values.stac.ingress.path -}}
-{{- end -}}
 {{- $isNginx := eq .Values.ingress.className "nginx" -}}
-
-{{- if and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled) }}
-- pathType: {{ if and $isNginx (ne $stacPath "/") }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ $stacPath }}{{ if and $isNginx (ne $stacPath "/") }}(/|$)(.*){{ end }}
+{{- $services := list
+  (dict "name" "stac" "config" .Values.stac "serviceName" "stac" "useAuthProxy" (index .Values "stac-auth-proxy" "enabled") "stripPath" (not (index .Values "stac-auth-proxy" "enabled")))
+  (dict "name" "raster" "config" .Values.raster "serviceName" "raster" "stripPath" true)
+  (dict "name" "vector" "config" .Values.vector "serviceName" "vector" "stripPath" true)
+  (dict "name" "multidim" "config" .Values.multidim "serviceName" "multidim" "stripPath" true)
+  (dict "name" "mockOidcServer" "config" .Values.testing.mockOidcServer "serviceName" "mock-oidc-server" "useServicePort" true "stripPath" true)
+  (dict "name" "browser" "config" .Values.browser "serviceName" "browser" "useServicePort" true "defaultPath" "/browser" "stripPath" true)
+-}}
+{{- range $services }}
+  {{- $enabled := and .config.enabled (or (not (hasKey .config "ingress")) .config.ingress.enabled) }}
+  {{- if $enabled }}
+    {{- $path := .config.ingress.path | default .defaultPath }}
+- pathType: {{ if and $isNginx .stripPath }}ImplementationSpecific{{ else }}Prefix{{ end }}
+  path: {{ $path }}{{ if and $isNginx .stripPath }}(/|$)(.*){{ end }}
   backend:
     service:
-      {{- if index .Values "stac-auth-proxy" "enabled" }}
-      name: {{ .Release.Name }}-stac-auth-proxy
+      {{- if .useAuthProxy }}
+      name: {{ $.Release.Name }}-stac-auth-proxy
       {{- else }}
-      name: {{ .Release.Name }}-stac
+      name: {{ $.Release.Name }}-{{ .serviceName }}
       {{- end }}
       port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.raster.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-raster
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.vector.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-vector
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.multidim.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-multidim
-      port:
-        number: {{ .Values.service.port }}
-{{- end }}
-
-{{- if and .Values.testing.mockOidcServer.enabled .Values.testing.mockOidcServer.ingress.enabled }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.testing.mockOidcServer.ingress.path }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-mock-oidc-server
-      port:
-        number: {{ .Values.testing.mockOidcServer.service.port | default 8080 }}
-{{- end }}
-
-{{- if and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled) }}
-- pathType: {{ if $isNginx }}ImplementationSpecific{{ else }}Prefix{{ end }}
-  path: {{ .Values.browser.ingress.path | default "/browser" }}{{ if $isNginx }}(/|$)(.*){{ end }}
-  backend:
-    service:
-      name: {{ .Release.Name }}-browser
-      port:
-        number: {{ .Values.browser.service.port | default 8080 }}
+        {{- if .useServicePort }}
+        number: {{ if .config.service }}{{ .config.service.port | default 8080 }}{{ else }}8080{{ end }}
+        {{- else }}
+        number: {{ $.Values.service.port }}
+        {{- end }}
+  {{- end }}
 {{- end }}
 
 {{- if .Values.docServer.enabled }}
@@ -83,16 +44,18 @@ Helper template for generating ingress paths
 {{- end }}
 {{- end }}
 
-{{- $hasEnabledService := or
-  (and .Values.stac.enabled (or (not (hasKey .Values.stac "ingress")) .Values.stac.ingress.enabled))
-  (and .Values.raster.enabled (or (not (hasKey .Values.raster "ingress")) .Values.raster.ingress.enabled))
-  (and .Values.vector.enabled (or (not (hasKey .Values.vector "ingress")) .Values.vector.ingress.enabled))
-  (and .Values.multidim.enabled (or (not (hasKey .Values.multidim "ingress")) .Values.multidim.ingress.enabled))
-  (and .Values.testing.mockOidcServer.enabled .Values.testing.mockOidcServer.ingress.enabled)
-  (and .Values.browser.enabled (or (not (hasKey .Values.browser "ingress")) .Values.browser.ingress.enabled))
-  .Values.docServer.enabled
-}}
-{{- if and .Values.ingress.enabled $hasEnabledService }}
+{{- define "eoapi.hasEnabledService" -}}
+{{- $services := list .Values.stac .Values.raster .Values.vector .Values.multidim .Values.testing.mockOidcServer .Values.browser -}}
+{{- $hasService := false -}}
+{{- range $services }}
+  {{- if and .enabled (or (not (hasKey . "ingress")) .ingress.enabled) }}
+    {{- $hasService = true -}}
+  {{- end }}
+{{- end }}
+{{- or $hasService .Values.docServer.enabled -}}
+{{- end }}
+
+{{- if and .Values.ingress.enabled (include "eoapi.hasEnabledService" . | trim | eq "true") }}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion }}
