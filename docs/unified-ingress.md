@@ -20,6 +20,17 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 eoAPI includes a single streamlined ingress configuration with smart defaults that routes to all enabled services. Services handle their own path routing via `--root-path` configuration, working with any ingress controller.
 
+**Why one ingress?**
+- One TLS certificate to manage
+- One DNS entry
+- Simple operations
+- Works for 99% of deployments
+
+**Why per-service paths?**
+- Services can opt out: `stac.ingress.enabled: false`
+- Custom paths: `raster.ingress.path: "/tiles"`
+- Internal-only services stay off ingress
+
 **Note:** Ingress is only created when at least one service is enabled.
 
 ## Configuration
@@ -61,6 +72,15 @@ browser:
     path: "/browser"
 ```
 
+**Result:** Single Ingress → `https://api.example.com/stac`, `https://api.example.com/raster`
+
+**Limitations:**
+- Cannot use different ingress classes per service
+- Cannot use different domains per service
+- Cannot use different TLS certificates per service
+
+For these cases, deploy multiple helm releases with different configurations.
+
 ## How It Works
 
 ### Path Routing
@@ -98,6 +118,20 @@ ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 ```
+
+### Path Handling Details
+
+Services run at root internally, ingress strips prefixes:
+
+```
+Client: GET /raster/tiles/123
+  ↓
+Ingress strips /raster
+  ↓
+Service receives: GET /tiles/123
+```
+
+**Exception:** STAC with `stac-auth-proxy.enabled: true` receives full path `/stac/...`
 
 ## STAC Browser Configuration
 
@@ -208,11 +242,12 @@ If you're upgrading from version 0.7.0:
 ## Path Structure
 
 Default service paths are:
+
 - `/stac` - STAC API
 - `/raster` - Raster API
 - `/vector` - Vector API
 - `/multidim` - Multi-dimensional API
-- `/browser` - STAC Browser (separate ingress)
+- `/browser` - STAC Browser
 - `/` - Documentation server (when enabled)
 
-These paths are automatically configured with the appropriate rewrites for each controller.
+All paths are configurable via `service.ingress.path` in values.yaml.
