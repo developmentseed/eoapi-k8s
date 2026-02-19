@@ -66,14 +66,14 @@ spec:
                   number: {{ $.Values.service.port }}
           {{- end }}
 
-          {{- if and $.Values.mockOidcServer.enabled $.Values.mockOidcServer.ingress.enabled }}
+          {{- if and $.Values.testing.mockOidcServer.enabled $.Values.testing.mockOidcServer.ingress.enabled }}
           - pathType: {{ if eq $.Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ $.Values.mockOidcServer.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            path: {{ $.Values.testing.mockOidcServer.ingress.path }}{{ if eq $.Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ $.Release.Name }}-mock-oidc-server
                 port:
-                  number: {{ $.Values.mockOidcServer.service.port | default 8080 }}
+                  number: {{ $.Values.testing.mockOidcServer.service.port | default 8080 }}
           {{- end }}
 
           {{- if $.Values.docServer.enabled }}
@@ -124,14 +124,14 @@ spec:
                   number: {{ .Values.service.port }}
           {{- end }}
 
-          {{- if and .Values.mockOidcServer.enabled .Values.mockOidcServer.ingress.enabled }}
+          {{- if and .Values.testing.mockOidcServer.enabled .Values.testing.mockOidcServer.ingress.enabled }}
           - pathType: {{ if eq .Values.ingress.className "nginx" }}ImplementationSpecific{{ else }}Prefix{{ end }}
-            path: {{ .Values.mockOidcServer.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
+            path: {{ .Values.testing.mockOidcServer.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}(/|$)(.*){{ end }}
             backend:
               service:
                 name: {{ .Release.Name }}-mock-oidc-server
                 port:
-                  number: {{ .Values.mockOidcServer.service.port | default 8080 }}
+                  number: {{ .Values.testing.mockOidcServer.service.port | default 8080 }}
           {{- end }}
 
           {{- if .Values.docServer.enabled }}

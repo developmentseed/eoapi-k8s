@@ -390,40 +390,40 @@ stac-auth-proxy:
       readOnly: true
 
 ######################
-# MOCK OIDC SERVER
+# TESTING INFRASTRUCTURE
 ######################
-# Mock OIDC server for testing authentication
-# WARNING: Only for development/testing, never use in production!
-mockOidcServer:
-  enabled: true
-  replicaCount: 1
-  image:
-    repository: ghcr.io/alukach/mock-oidc-server
-    tag: latest
-    pullPolicy: IfNotPresent
-  port: 8888
-  clientId: "test-client"
-  clientSecret: "test-secret"
-  extraEnv:
-    - name: ISSUER
-      value: "http://localhost/mock-oidc"
-  service:
-    type: ClusterIP
-    port: 8080
-  ingress:
+# Components for testing only - DO NOT USE IN PRODUCTION
+testing:
+  mockOidcServer:
     enabled: true
-    path: "/mock-oidc"
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  imagePullSecrets: []
+    replicaCount: 1
+    image:
+      repository: ghcr.io/alukach/mock-oidc-server
+      tag: latest
+      pullPolicy: IfNotPresent
+    port: 8888
+    clientId: "test-client"
+    clientSecret: "test-secret"
+    extraEnv:
+      - name: ISSUER
+        value: "http://localhost/mock-oidc"
+    service:
+      type: ClusterIP
+      port: 8080
+    ingress:
+      enabled: true
+      path: "/mock-oidc"
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    imagePullSecrets: []
 
 ######################
 # SERVICE

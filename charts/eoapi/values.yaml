@@ -647,11 +647,18 @@ eoapi-notifier:
             # For HTTP endpoints, use: endpoint: https://webhook.example.com
 
 ######################
-# MOCK OIDC SERVER
+# TESTING INFRASTRUCTURE
 ######################
-# Mock OIDC server for testing authentication (experimental profile only)
-mockOidcServer:
-  enabled: false
+# Components for testing only - DO NOT USE IN PRODUCTION
+
+# Mock OIDC server for testing stac-auth-proxy integration
+testing:
+  mockOidcServer:
+    enabled: false  # Only enabled in experimental profile
+
+######################
+# KNATIVE
+######################
 
 ######################
 # KNATIVE

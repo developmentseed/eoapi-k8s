@@ -62,7 +62,7 @@ tests:
       stac-auth-proxy.env.OIDC_DISCOVERY_URL: "http://localhost/mock-oidc/.well-known/openid-configuration"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
-      mockOidcServer.ingress.path: "/mock-oidc"
+      testing.mockOidcServer.ingress.path: "/mock-oidc"
       browser.oidcClientId: "test-client"
       browser.oidcDiscoveryUrl: "http://localhost/mock-oidc/.well-known/openid-configuration"
       gitSha: "ABC123"
