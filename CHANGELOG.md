@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.0...v0.12.1) (2026-02-19)
+
+
+### Other
+
+* moved mockoidcserver to clearly testing only. ([#457](https://github.com/developmentseed/eoapi-k8s/issues/457)) ([bb3c0fb](https://github.com/developmentseed/eoapi-k8s/commit/bb3c0fb2ff7c6882e4f9441f1f022b497029002b))
+
 ## [0.12.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.2...v0.12.0) (2026-02-17)
 
 
