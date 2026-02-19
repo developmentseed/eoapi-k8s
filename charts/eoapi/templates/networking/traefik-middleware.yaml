@@ -1,19 +1,30 @@
 {{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
 {{- $services := list
-  (dict "name" "stac" "config" .Values.stac "stripPath" (not (index .Values "stac-auth-proxy" "enabled")))
-  (dict "name" "raster" "config" .Values.raster "stripPath" true)
-  (dict "name" "vector" "config" .Values.vector "stripPath" true)
-  (dict "name" "multidim" "config" .Values.multidim "stripPath" true)
-  (dict "name" "mockOidcServer" "config" .Values.mockOidcServer "stripPath" true)
-  (dict "name" "browser" "config" .Values.browser "stripPath" true "defaultPath" "/browser")
+  (dict "key" "stac" "usesAuthProxy" true)
+  (dict "key" "raster")
+  (dict "key" "vector")
+  (dict "key" "multidim")
+  (dict "key" "browser" "defaultPath" "/browser")
+  (dict "key" "mockOidcServer")
 -}}
 {{- $prefixes := list -}}
+
 {{- range $services }}
-  {{- if and .config.enabled (or (not (hasKey .config "ingress")) .config.ingress.enabled) .stripPath }}
-    {{- $path := .config.ingress.path | default .defaultPath }}
-    {{- $prefixes = append $prefixes $path }}
+  {{- $service := index $.Values .key }}
+  {{- if and $service $service.enabled (or (not $service.ingress) $service.ingress.enabled) }}
+    {{- $stripPath := true }}
+    {{- if and .usesAuthProxy (index $.Values "stac-auth-proxy" "enabled") }}
+      {{- $stripPath = false }}
+    {{- end }}
+    {{- if $stripPath }}
+      {{- $path := $service.ingress.path | default .defaultPath }}
+      {{- if $path }}
+        {{- $prefixes = append $prefixes $path }}
+      {{- end }}
+    {{- end }}
   {{- end }}
 {{- end }}
+
 {{- if $prefixes }}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
