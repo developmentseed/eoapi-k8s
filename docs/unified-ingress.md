@@ -18,63 +18,97 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 ## Overview
 
-eoAPI includes a streamlined ingress configuration with smart defaults for different controllers. This approach:
+eoAPI includes a single streamlined ingress configuration with smart defaults that routes to all enabled services. Services handle their own path routing via `--root-path` configuration, working with any ingress controller.
 
-- Eliminates manual pathType and suffix configurations
-- Uses controller-specific optimizations for NGINX and Traefik
-- Provides separate configuration for STAC browser
-- Maintains backward compatibility while improving usability
+**Why one ingress?**
+- One TLS certificate to manage
+- One DNS entry
+- Simple operations
+- Works for 99% of deployments
+
+**Why per-service paths?**
+- Services can opt out: `stac.ingress.enabled: false`
+- Custom paths: `raster.ingress.path: "/tiles"`
+- Internal-only services stay off ingress
+
+**Note:** Ingress is only created when at least one service is enabled.
 
 ## Configuration
 
-The ingress configuration has been simplified in the `values.yaml` file:
+The ingress configuration in `values.yaml`:
 
 ```yaml
 ingress:
-  # Unified ingress configuration for both nginx and traefik
   enabled: true
-  # ingressClassName: "nginx" or "traefik"
-  className: "nginx"
-  # Root path for doc server
-  rootPath: ""
-  # Host configuration
-  host: ""
-  # Custom annotations to add to the ingress
-  annotations: {}
-  # TLS configuration
+  className: "nginx"  # or "traefik", or any ingress controller
+  rootPath: ""        # Root path for doc server
+  host: ""            # Single host (or use hosts array)
+  hosts: []           # Multiple hosts (takes precedence over host)
+  annotations: {}     # Custom annotations
   tls:
     enabled: false
     secretName: eoapi-tls
 ```
 
-## Controller-Specific Behavior
+Each service can configure its ingress path:
 
-### NGINX Ingress Controller
+```yaml
+stac:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/stac"  # or "/" for root path
 
-For NGINX, the system automatically:
-- Uses `ImplementationSpecific` pathType
-- Adds regex-based path matching
-- Sets up proper rewrite rules
+raster:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/raster"
 
-Basic NGINX configuration:
+browser:
+  enabled: true
+  ingress:
+    enabled: true
+    path: "/browser"
+```
+
+**Result:** Single Ingress → `https://api.example.com/stac`, `https://api.example.com/raster`
+
+**Limitations:**
+- Cannot use different ingress classes per service
+- Cannot use different domains per service
+- Cannot use different TLS certificates per service
+
+For these cases, deploy multiple helm releases with different configurations.
+
+## How It Works
+
+### Path Routing
+
+All services use `pathType: Prefix` and handle their own path prefixes internally via the `--root-path` flag:
+
+- **STAC**: `--root-path=/stac` (or `/` for root)
+- **Raster**: `--root-path=/raster`
+- **Vector**: `--root-path=/vector`
+- **Multidim**: `--root-path=/multidim`
+- **Browser**: Configured via environment variable
+
+### Ingress Controller Support
+
+The unified ingress works with **any** Kubernetes ingress controller:
+
+#### NGINX Ingress Controller
+
 ```yaml
 ingress:
   enabled: true
   className: "nginx"
   annotations:
-    # Additional custom annotations if needed
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/enable-access-log: "true"
 ```
 
-### Traefik Ingress Controller
+#### Traefik Ingress Controller
 
-For Traefik, the system:
-- Uses `Prefix` pathType by default
-- Automatically configures strip-prefix middleware
-- Handles path-based routing appropriately
-
-Basic Traefik configuration:
 ```yaml
 ingress:
   enabled: true
@@ -84,6 +118,20 @@ ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 ```
+
+### Path Handling Details
+
+Services run at root internally, ingress strips prefixes:
+
+```
+Client: GET /raster/tiles/123
+  ↓
+Ingress strips /raster
+  ↓
+Service receives: GET /tiles/123
+```
+
+**Exception:** STAC with `stac-auth-proxy.enabled: true` receives full path `/stac/...`
 
 ## STAC Browser Configuration
 
@@ -194,11 +242,12 @@ If you're upgrading from version 0.7.0:
 ## Path Structure
 
 Default service paths are:
+
 - `/stac` - STAC API
 - `/raster` - Raster API
 - `/vector` - Vector API
 - `/multidim` - Multi-dimensional API
-- `/browser` - STAC Browser (separate ingress)
+- `/browser` - STAC Browser
 - `/` - Documentation server (when enabled)
 
-These paths are automatically configured with the appropriate rewrites for each controller.
+All paths are configurable via `service.ingress.path` in values.yaml.

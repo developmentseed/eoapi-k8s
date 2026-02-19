@@ -1,25 +1,40 @@
 {{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
+{{- $services := list
+  (dict "key" "stac" "usesAuthProxy" true)
+  (dict "key" "raster")
+  (dict "key" "vector")
+  (dict "key" "multidim")
+  (dict "key" "browser" "defaultPath" "/browser" "skipStripPrefix" true)
+  (dict "key" "mockOidcServer" "config" .Values.testing.mockOidcServer)
+-}}
+{{- $prefixes := list -}}
+
+{{- range $services }}
+  {{- $service := .config | default (index $.Values .key) }}
+  {{- if and $service $service.enabled (or (not $service.ingress) $service.ingress.enabled) }}
+    {{- $stripPath := not (or .skipStripPrefix (and .usesAuthProxy (index $.Values "stac-auth-proxy" "enabled"))) }}
+    {{- if $stripPath }}
+      {{- $path := $service.ingress.path | default .defaultPath }}
+      {{- if $path }}
+        {{- $prefixes = append $prefixes $path }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- if $prefixes }}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: {{ .Release.Name }}-strip-prefix-middleware
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-ingress
 spec:
   stripPrefix:
     prefixes:
-      {{- if .Values.raster.enabled }}
-      - {{ .Values.raster.ingress.path }}
+      {{- range $prefixes }}
+      - {{ . }}
       {{- end }}
-      {{- if .Values.stac.enabled }}
-      - {{ .Values.stac.ingress.path }}
-      {{- end }}
-      {{- if .Values.vector.enabled }}
-      - {{ .Values.vector.ingress.path }}
-      {{- end }}
-      {{- if .Values.multidim.enabled }}
-      - {{ .Values.multidim.ingress.path }}
-      {{- end }}
-      {{- if and .Values.testing.mockOidcServer.enabled .Values.testing.mockOidcServer.ingress.enabled }}
-      - {{ .Values.testing.mockOidcServer.ingress.path }}
-      {{- end }}
+{{- end }}
 {{- end }}
