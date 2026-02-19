@@ -10,11 +10,6 @@
       "type": "string",
       "description": "Git SHA of the deployment"
     },
-    "testing": {
-      "type": "boolean",
-      "description": "Only used in CI for running parallel helm installs",
-      "default": false
-    },
     "serviceAccount": {
       "type": "object",
       "properties": {
@@ -44,7 +39,9 @@
     },
     "service": {
       "type": "object",
-      "required": ["port"],
+      "required": [
+        "port"
+      ],
       "properties": {
         "port": {
           "type": "integer",
@@ -62,7 +59,10 @@
         },
         "className": {
           "type": "string",
-          "enum": ["nginx", "traefik"],
+          "enum": [
+            "nginx",
+            "traefik"
+          ],
           "description": "Ingress controller class name"
         },
         "rootPath": {
@@ -116,7 +116,11 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["postgrescluster", "external-plaintext", "external-secret"],
+          "enum": [
+            "postgrescluster",
+            "external-plaintext",
+            "external-secret"
+          ],
           "description": "PostgreSQL deployment type",
           "default": "postgrescluster"
         },
@@ -257,44 +261,44 @@
           "type": "object",
           "properties": {
             "pgstacSettings": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "initdbSql": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "initdbJson": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "pgstacQueryables": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "initdb": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             }
           }
         },
@@ -302,36 +306,36 @@
           "type": "object",
           "properties": {
             "pgstacSuperuserInitDb": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "pgstacMigrate": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "pgstacLoadSamples": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             },
             "pgstacLoadQueryables": {
-                "type": "object",
-                "properties": {
-                    "annotations": {
-                        "type": "object"
-                    }
-                 }
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              }
             }
           }
         },
@@ -365,19 +369,29 @@
                 },
                 "use_queue": {
                   "type": "string",
-                  "enum": ["true", "false"],
+                  "enum": [
+                    "true",
+                    "false"
+                  ],
                   "default": "false",
                   "description": "Enable/disable query queue mechanism"
                 },
                 "update_collection_extent": {
                   "type": "string",
-                  "enum": ["true", "false"],
+                  "enum": [
+                    "true",
+                    "false"
+                  ],
                   "default": "true",
                   "description": "Auto-update collection extents when items are added/modified"
                 },
                 "context": {
                   "type": "string",
-                  "enum": ["on", "off", "auto"],
+                  "enum": [
+                    "on",
+                    "off",
+                    "auto"
+                  ],
                   "default": "auto",
                   "description": "Context mode for search results"
                 },
@@ -425,7 +439,9 @@
               "description": "List of queryables configurations to load using pypgstac load-queryables",
               "items": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -448,7 +464,10 @@
                         "description": "Key within the ConfigMap containing the queryables data"
                       }
                     },
-                    "required": ["name", "key"]
+                    "required": [
+                      "name",
+                      "key"
+                    ]
                   },
                   "indexFields": {
                     "type": "array",
@@ -471,15 +490,23 @@
                 },
                 "oneOf": [
                   {
-                    "required": ["file"],
+                    "required": [
+                      "file"
+                    ],
                     "not": {
-                      "required": ["configMapRef"]
+                      "required": [
+                        "configMapRef"
+                      ]
                     }
                   },
                   {
-                    "required": ["configMapRef"],
+                    "required": [
+                      "configMapRef"
+                    ],
                     "not": {
-                      "required": ["file"]
+                      "required": [
+                        "file"
+                      ]
                     }
                   }
                 ]
@@ -493,7 +520,12 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["raster", "multidim", "stac", "vector"]
+        "enum": [
+          "raster",
+          "multidim",
+          "stac",
+          "vector"
+        ]
       },
       "description": "List of API services to enable"
     },
@@ -620,7 +652,12 @@
           "properties": {
             "logLevel": {
               "type": "string",
-              "enum": ["DEBUG", "INFO", "WARNING", "ERROR"],
+              "enum": [
+                "DEBUG",
+                "INFO",
+                "WARNING",
+                "ERROR"
+              ],
               "default": "INFO",
               "description": "Log level for eoapi-notifier"
             }
@@ -651,6 +688,22 @@
         "resources": {
           "type": "object",
           "description": "Resource requirements for eoapi-notifier"
+        }
+      }
+    },
+    "testing": {
+      "type": "object",
+      "description": "Test infrastructure components - DO NOT USE IN PRODUCTION",
+      "properties": {
+        "mockOidcServer": {
+          "type": "object",
+          "description": "Mock OIDC server for testing stac-auth-proxy integration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable mock OIDC server"
+            }
+          }
         }
       }
     }
@@ -689,7 +742,11 @@
             },
             "type": {
               "type": "string",
-              "enum": ["cpu", "requestRate", "both"],
+              "enum": [
+                "cpu",
+                "requestRate",
+                "both"
+              ],
               "description": "Autoscaling metric type"
             },
             "behavior": {

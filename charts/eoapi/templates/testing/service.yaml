@@ -1,0 +1,24 @@
+{{/*
+TEST INFRASTRUCTURE - DO NOT USE IN PRODUCTION
+This mock OIDC server is for testing stac-auth-proxy integration only.
+*/}}
+{{- if .Values.testing.mockOidcServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "eoapi.fullname" . }}-mock-oidc-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mock-oidc-server
+spec:
+  type: {{ if .Values.testing.mockOidcServer.service }}{{ .Values.testing.mockOidcServer.service.type | default "ClusterIP" }}{{ else }}ClusterIP{{ end }}
+  ports:
+  - port: {{ if .Values.testing.mockOidcServer.service }}{{ .Values.testing.mockOidcServer.service.port | default 8080 }}{{ else }}8080{{ end }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "eoapi.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mock-oidc-server
+{{- end }}
