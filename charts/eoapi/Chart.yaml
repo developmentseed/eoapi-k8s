@@ -37,7 +37,7 @@ dependencies:
     repository: oci://ghcr.io/developmentseed/charts
     condition: eoapi-notifier.enabled
   - name: knative-operator
-    version: v1.21.0
+    version: v1.21.1
     repository: https://knative.github.io/operator
     condition: knative.enabled
   - name: metrics-server
