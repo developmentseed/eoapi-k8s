@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.12.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.0...v0.12.1) (2026-03-03)
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/stac-utils/pgstac-pypgstac docker tag to v0.10.0 ([#463](https://github.com/developmentseed/eoapi-k8s/issues/463)) ([74981ab](https://github.com/developmentseed/eoapi-k8s/commit/74981ab659fd7083250907e1485afc9e39c7c2c4))
+* **deps:** updated helm release knative-operator to v1.21.1. ([#461](https://github.com/developmentseed/eoapi-k8s/issues/461)) ([8f097b4](https://github.com/developmentseed/eoapi-k8s/commit/8f097b439bab9c23d3cb2b40493c5d22131453fd))
+* **deps:** updated helm release prometheus to 28.13.0. ([#462](https://github.com/developmentseed/eoapi-k8s/issues/462)) ([bd4fc72](https://github.com/developmentseed/eoapi-k8s/commit/bd4fc724225e6855ec413fa6818cc1d563fe8d37))
+* **deps:** updated helm release prometheus-adapter to 5.3.0. ([#459](https://github.com/developmentseed/eoapi-k8s/issues/459)) ([64d1f20](https://github.com/developmentseed/eoapi-k8s/commit/64d1f20492c139f1491a2990cf94c6693b94c164))
+* **deps:** updated stac-auth-proxy to v1.0.1. ([73e2af3](https://github.com/developmentseed/eoapi-k8s/commit/73e2af348f872443b057d625e3ae24a09397b5da))
+
+
+### Other
+
+* moved mockoidcserver to clearly testing only. ([#457](https://github.com/developmentseed/eoapi-k8s/issues/457)) ([bb3c0fb](https://github.com/developmentseed/eoapi-k8s/commit/bb3c0fb2ff7c6882e4f9441f1f022b497029002b))
+
 ## [0.12.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.11.2...v0.12.0) (2026-02-17)
 
 
