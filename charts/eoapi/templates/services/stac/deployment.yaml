@@ -48,10 +48,8 @@ spec:
           {{- if (and (.Values.ingress.className) (or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik"))) }}
           - "--proxy-headers"
           - "--forwarded-allow-ips=*"
-          {{- if hasKey .Values.stac "overrideRootPath" }}
-          {{- if ne .Values.stac.overrideRootPath "" }}
+          {{- if and (hasKey .Values.stac "overrideRootPath") (ne .Values.stac.overrideRootPath "") }}
           - "--root-path={{ .Values.stac.overrideRootPath }}"
-          {{- end }}
           {{- else }}
           - "--root-path={{ .Values.stac.ingress.path }}"
           {{- end }}

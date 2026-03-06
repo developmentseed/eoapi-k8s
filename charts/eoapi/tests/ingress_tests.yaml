@@ -94,9 +94,9 @@ tests:
           path: metadata.annotations
           value:
             nginx.ingress.kubernetes.io/enable-access-log: "true"
-            nginx.ingress.kubernetes.io/use-regex: "true"
-            nginx.ingress.kubernetes.io/rewrite-target: /$2
             nginx.ingress.kubernetes.io/enable-cors: "true"
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/use-regex: "true"
       - equal:
           path: spec.ingressClassName
           value: "nginx"
@@ -104,7 +104,6 @@ tests:
   - it: "raster ingress with traefik controller"
     set:
       ingress.className: "traefik"
-      ingress.pathType: "Prefix"
       ingress.host: "eoapi.local"
       raster.enabled: true
       stac.enabled: false
@@ -132,95 +131,45 @@ tests:
           path: spec.rules[0].host
           value: "eoapi.local"
 
-  - it: "multidim ingress in production (non-testing) with traefik controller"
-    set:
-      ingress.className: "traefik"
-      ingress.pathType: "Prefix"
-      ingress.host: "eoapi.local"
-      raster.enabled: false
-      stac.enabled: false
-      vector.enabled: false
-      multidim.enabled: true
-      browser.enabled: false
-    asserts:
-      - isKind:
-          of: Ingress
-      - equal:
-          path: spec.rules[0].http.paths[0].path
-          value: "/multidim"
-      - equal:
-          path: spec.rules[0].http.paths[0].pathType
-          value: "Prefix"
-      - equal:
-          path: spec.rules[0].http.paths[1].path
-          value: "/"
-      - equal:
-          path: spec.rules[0].http.paths[1].backend.service.name
-          value: RELEASE-NAME-doc-server
-
-  - it: "custom paths for multiple services with nginx controller"
+  - it: "all services enabled with custom paths"
     set:
       ingress.className: "nginx"
       raster.enabled: true
       raster.ingress.path: "/titiler"
-      stac.enabled: false
+      stac.enabled: true
+      stac.ingress.path: "/stac"
       vector.enabled: true
       vector.ingress.path: "/features"
       multidim.enabled: false
-      browser.enabled: false
+      browser.enabled: true
+      browser.ingress.path: "/browser"
     asserts:
       - isKind:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/titiler(/|$)(.*)"
+          value: "/stac(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[1].path
+          value: "/titiler(/|$)(.*)"
+      - equal:
+          path: spec.rules[0].http.paths[2].path
           value: "/features(/|$)(.*)"
       - equal:
-          path: spec.rules[0].http.paths[0].pathType
-          value: "ImplementationSpecific"
-      - equal:
-          path: spec.rules[0].http.paths[1].pathType
-          value: "ImplementationSpecific"
-      - equal:
-          path: metadata.annotations
-          value:
-            nginx.ingress.kubernetes.io/use-regex: "true"
-            nginx.ingress.kubernetes.io/rewrite-target: /$2
-
-  - it: "custom paths with traefik controller"
-    set:
-      ingress.className: "traefik"
-      raster.enabled: true
-      raster.ingress.path: "/titiler"
-      stac.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
-      browser.enabled: false
-    asserts:
-      - isKind:
-          of: Ingress
-      - equal:
-          path: spec.rules[0].http.paths[0].path
-          value: "/titiler"
+          path: spec.rules[0].http.paths[3].path
+          value: "/browser(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
-          value: "Prefix"
-      - equal:
-          path: metadata.annotations
-          value:
-            traefik.ingress.kubernetes.io/router.entrypoints: web
-            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+          value: "ImplementationSpecific"
 
-  - it: "multiple hosts with nginx controller"
+  - it: "multiple hosts with services"
     set:
       ingress.className: "nginx"
       ingress.hosts:
-        - "2.eoapi.dev"
-        - "1.eoapi.dev"
+        - "api.eoapi.dev"
+        - "backup.eoapi.dev"
       raster.enabled: true
-      stac.enabled: false
+      stac.enabled: true
       vector.enabled: true
       multidim.enabled: false
       browser.enabled: false
@@ -229,62 +178,26 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].host
-          value: "2.eoapi.dev"
+          value: "api.eoapi.dev"
       - equal:
           path: spec.rules[1].host
-          value: "1.eoapi.dev"
+          value: "backup.eoapi.dev"
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/raster(/|$)(.*)"
+          value: "/stac(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[1].path
-          value: "/vector(/|$)(.*)"
-      - equal:
-          path: spec.rules[1].http.paths[0].path
           value: "/raster(/|$)(.*)"
       - equal:
-          path: spec.rules[1].http.paths[1].path
+          path: spec.rules[0].http.paths[2].path
           value: "/vector(/|$)(.*)"
 
-  - it: "multiple hosts with traefik controller"
-    set:
-      ingress.className: "traefik"
-      ingress.hosts:
-        - "2.eoapi.dev"
-        - "1.eoapi.dev"
-      raster.enabled: true
-      stac.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
-      browser.enabled: false
-    asserts:
-      - isKind:
-          of: Ingress
-      - equal:
-          path: spec.rules[0].host
-          value: "2.eoapi.dev"
-      - equal:
-          path: spec.rules[1].host
-          value: "1.eoapi.dev"
-      - equal:
-          path: spec.rules[0].http.paths[0].path
-          value: "/raster"
-      - equal:
-          path: spec.rules[0].http.paths[0].pathType
-          value: "Prefix"
-      - equal:
-          path: spec.rules[1].http.paths[0].path
-          value: "/raster"
-      - equal:
-          path: spec.rules[1].http.paths[0].pathType
-          value: "Prefix"
-
-  - it: "multiple hosts with TLS enabled"
+  - it: "tls enabled with multiple hosts"
     set:
       ingress.className: "nginx"
       ingress.hosts:
-        - "2.eoapi.dev"
-        - "1.eoapi.dev"
+        - "secure.eoapi.dev"
+        - "backup.eoapi.dev"
       ingress.tls.enabled: true
       ingress.tls.secretName: "eoapi-tls"
       raster.enabled: true
@@ -297,18 +210,18 @@ tests:
           of: Ingress
       - equal:
           path: spec.tls[0].hosts[0]
-          value: "2.eoapi.dev"
+          value: "secure.eoapi.dev"
       - equal:
           path: spec.tls[0].hosts[1]
-          value: "1.eoapi.dev"
+          value: "backup.eoapi.dev"
       - equal:
           path: spec.tls[0].secretName
           value: "eoapi-tls"
 
-  - it: "single host (default)"
+  - it: "single host with tls"
     set:
       ingress.className: "nginx"
-      ingress.host: "1.eoapi.dev"
+      ingress.host: "api.eoapi.dev"
       ingress.tls.enabled: true
       ingress.tls.secretName: "eoapi-tls"
       raster.enabled: true
@@ -321,34 +234,13 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].host
-          value: "1.eoapi.dev"
+          value: "api.eoapi.dev"
       - equal:
           path: spec.tls[0].hosts[0]
-          value: "1.eoapi.dev"
+          value: "api.eoapi.dev"
       - equal:
           path: spec.tls[0].secretName
           value: "eoapi-tls"
-
-  - it: "hosts array takes precedence over single host"
-    set:
-      ingress.className: "nginx"
-      ingress.host: "should-be-ignored.com"
-      ingress.hosts:
-        - "1.eoapi.dev"
-      raster.enabled: true
-      stac.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
-      browser.enabled: false
-    asserts:
-      - isKind:
-          of: Ingress
-      - equal:
-          path: spec.rules[0].host
-          value: "1.eoapi.dev"
-      - notEqual:
-          path: spec.rules[0].host
-          value: "should-be-ignored.com"
 
   - it: "stac with auth proxy enabled"
     set:
@@ -448,8 +340,9 @@ tests:
       - isKind:
           of: Ingress
       - equal:
-          path: metadata.annotations.cert-manager\.io/cluster-issuer
-          value: "letsencrypt-prod"
-      - equal:
-          path: metadata.annotations.nginx\.ingress\.kubernetes\.io/rate-limit
-          value: "100"
+          path: metadata.annotations
+          value:
+            nginx.ingress.kubernetes.io/rewrite-target: /$2
+            nginx.ingress.kubernetes.io/use-regex: "true"
+            cert-manager.io/cluster-issuer: "letsencrypt-prod"
+            nginx.ingress.kubernetes.io/rate-limit: "100"

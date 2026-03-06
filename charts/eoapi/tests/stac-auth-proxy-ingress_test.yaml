@@ -1,6 +1,6 @@
 suite: test ingress routing without stripPrefix middleware
 templates:
-  - networking/ingress-no-prefix.yaml
+  - templates/networking/ingress.yaml
 
 tests:
   - it: should route ingress to stac-auth-proxy when enabled
@@ -16,14 +16,13 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
-        template: networking/ingress-no-prefix.yaml
 
   - it: should route ingress directly to stac when auth-proxy is disabled
     set:
@@ -45,7 +44,6 @@ tests:
                 name: RELEASE-NAME-stac
                 port:
                   number: 8080
-        template: networking/ingress-no-prefix.yaml
 
   - it: should not create ingress when both stac and browser are disabled
     set:
@@ -53,10 +51,13 @@ tests:
       stac.enabled: false
       browser.enabled: false
       stac-auth-proxy.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      docServer.enabled: false
     asserts:
       - hasDocuments:
           count: 0
-        template: networking/ingress-no-prefix.yaml
 
   - it: should route correctly with experimental profile
     values:
@@ -67,14 +68,13 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
-        template: networking/ingress-no-prefix.yaml
 
   - it: should route ingress to browser
     set:
@@ -82,6 +82,9 @@ tests:
       ingress.className: nginx
       browser.enabled: true
       stac.enabled: false
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
     asserts:
       - contains:
           path: spec.rules[0].http.paths
@@ -93,7 +96,6 @@ tests:
                 name: RELEASE-NAME-browser
                 port:
                   number: 8080
-        template: networking/ingress-no-prefix.yaml
 
   - it: should include both stac and browser when both enabled
     set:
@@ -109,14 +111,13 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /stac(/|$)(.*)
+            pathType: Prefix
+            path: /stac
             backend:
               service:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
-        template: networking/ingress-no-prefix.yaml
       - contains:
           path: spec.rules[0].http.paths
           content:
@@ -127,4 +128,3 @@ tests:
                 name: RELEASE-NAME-browser
                 port:
                   number: 8080
-        template: networking/ingress-no-prefix.yaml
