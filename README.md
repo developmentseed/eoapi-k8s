@@ -33,11 +33,9 @@
 
 ## Contributing
 
-* **We would :heart: to hear from you!** Please [join the discussion](https://github.com/developmentseed/eoAPI/discussions/209) and let us know how you're using eoAPI! This helps us improve the project for you and others. If you prefer to remain anonymous, you can email us at eoapi@developmentseed.org, and we'll be happy to post a summary on your behalf.
+We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development workflow, testing, and PR guidelines.
 
-* **We welcome contributions** from the community! Feel free to open an issue or submit a pull request.
-
-* **Please ensure:** that pull requests make an update to `CHANGELOG.md` and that your pull request **title** adheres to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+**We'd :heart: to hear from you!** Please [join the discussion](https://github.com/developmentseed/eoAPI/discussions/209) to share how you're using eoAPI, or email eoapi@developmentseed.org.
 
 ## License
 
