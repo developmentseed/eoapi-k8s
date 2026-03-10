@@ -41,25 +41,20 @@ def get_mock_token(mock_oidc_endpoint: Optional[str] = None) -> str:
         data={
             "username": "test-user",
             "scopes": "openid profile stac:read stac:write",
+            "claims": json.dumps({"email": "test@example.com"}),
         },
+        headers={"Accept": "application/json"},
         timeout=5,
     )
 
     if response.status_code == 200:
-        html = response.text
-        # Extract token from textarea element
-        if "<textarea" in html and ">" in html:
-            # Find the textarea content between > and </textarea>
-            start_marker = html.find("<textarea")
-            if start_marker != -1:
-                content_start = html.find(">", start_marker) + 1
-                content_end = html.find("</textarea>", content_start)
-                if content_start != -1 and content_end != -1:
-                    token = html[content_start:content_end].strip()
-                    return f"Bearer {token}"
+        token_data = response.json()
+        if "token" in token_data:
+            return f"Bearer {token_data['token']}"
 
     raise Exception(
-        f"Could not get token from mock OIDC server at {mock_oidc_endpoint}"
+        f"Could not get token from mock OIDC server at {mock_oidc_endpoint}. "
+        f"Status: {response.status_code}, Response: {response.text[:200]}"
     )
 
 
