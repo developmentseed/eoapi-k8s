@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.12.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.1...v0.12.2) (2026-03-10)
+
+
+### Fixed
+
+* mockoidcserver integration test. ([#472](https://github.com/developmentseed/eoapi-k8s/issues/472)) ([e3b606d](https://github.com/developmentseed/eoapi-k8s/commit/e3b606d08654907e6d47365884433fdb8a2eb756))
+
+
+### Changed
+
+* consolidate dual ingress resources into unified configuration. ([#456](https://github.com/developmentseed/eoapi-k8s/issues/456)) ([5e35610](https://github.com/developmentseed/eoapi-k8s/commit/5e35610c26578308dda72f8081ae5727b4a3728b))
+
+
+### Maintenance
+
+* add AGENTS.md and CONTRIBUTING.md with vibe coding considerations. ([#469](https://github.com/developmentseed/eoapi-k8s/issues/469)) ([58e5198](https://github.com/developmentseed/eoapi-k8s/commit/58e5198b8302245e15d153c02e7ebea63ca96a07))
+* **deps:** updated docker/build-push-action action to v7. ([#467](https://github.com/developmentseed/eoapi-k8s/issues/467)) ([a4153a7](https://github.com/developmentseed/eoapi-k8s/commit/a4153a7a08f9d08bc4302030022ad1218c5d9c13))
+* **deps:** updated docker/login-action action to v4. ([#465](https://github.com/developmentseed/eoapi-k8s/issues/465)) ([4c31c03](https://github.com/developmentseed/eoapi-k8s/commit/4c31c03e380d91b9d4953568657248f6762cef35))
+* **deps:** updated docker/setup-buildx-action action to v4. ([#468](https://github.com/developmentseed/eoapi-k8s/issues/468)) ([c0f5e11](https://github.com/developmentseed/eoapi-k8s/commit/c0f5e1181757c893a0ec6c89936efeeb02ba02b3))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v2.1.0 ([#466](https://github.com/developmentseed/eoapi-k8s/issues/466)) ([286b8fb](https://github.com/developmentseed/eoapi-k8s/commit/286b8fb3f3d1e341e760cea2ea2cfdb686b847e6))
+* **deps:** updated registry.k8s.io/ingress-nginx/kube-webhook-certgen docker tag to v1.6.8 ([#471](https://github.com/developmentseed/eoapi-k8s/issues/471)) ([85f1bbf](https://github.com/developmentseed/eoapi-k8s/commit/85f1bbf0f74612a89dd0ff58f47ba452220222d5))
+* **deps:** updated stac-auth-proxy docker tag to v1.0.2 ([#464](https://github.com/developmentseed/eoapi-k8s/issues/464)) ([fbe7260](https://github.com/developmentseed/eoapi-k8s/commit/fbe726097e1c639120807af6cbdb6b7fd93ad2ee))
+
 ## [0.12.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.0...v0.12.1) (2026-03-03)
 
 
