@@ -57,6 +57,6 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     condition: observability.grafana.enabled
   - name: stac-auth-proxy
-    version: 1.0.2
+    version: 1.0.3
     repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
     condition: stac-auth-proxy.enabled
