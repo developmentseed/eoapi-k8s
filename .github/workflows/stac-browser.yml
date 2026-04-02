@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Extract and normalize version
         id: version
@@ -43,7 +43,7 @@ jobs:
         run: echo "IMAGE_NAME=${{ env.REGISTRY }}/${GITHUB_REPOSITORY,,}/stac-browser" >> "$GITHUB_ENV"
 
       - name: Log in to the GitHub container registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}
@@ -61,18 +61,18 @@ jobs:
 
       - name: Checkout STAC Browser repository
         if: steps.check.outputs.skip == 'false'
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: radiantearth/stac-browser
           ref: ${{ steps.version.outputs.stac_version }}
 
       - name: Set up Docker Buildx
         if: steps.check.outputs.skip == 'false'
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
 
       - name: Build and push Docker image
         if: steps.check.outputs.skip == 'false'
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7
         with:
           context: .
           push: true
