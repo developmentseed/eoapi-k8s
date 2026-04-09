@@ -461,7 +461,7 @@ stac:
 stac-auth-proxy:
   enabled: false
   image:
-    tag: "v0.11.1"
+    tag: "v1.0.3"
   ingress:
     enabled: false  # Handled by main eoapi ingress
   service:

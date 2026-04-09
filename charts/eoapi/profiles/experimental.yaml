@@ -368,6 +368,8 @@ ingress:
 
 stac-auth-proxy:
   enabled: true
+  image:
+    tag: "v1.0.3"
   # For testing this will be set dynamically; for production, point to your OIDC server
   env:
     # OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"
@@ -388,6 +390,28 @@ stac-auth-proxy:
       mountPath: /app/src/stac_auth_proxy/custom_filters.py
       subPath: custom_filters.py
       readOnly: true
+
+  # Override health check paths to include ROOT_PATH
+  startupProbe:
+    httpGet:
+      path: /stac/healthz
+      port: http
+    periodSeconds: 2
+    failureThreshold: 30
+
+  livenessProbe:
+    httpGet:
+      path: /stac/healthz
+      port: http
+    periodSeconds: 60
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /stac/healthz
+      port: http
+    periodSeconds: 5
+    failureThreshold: 3
 
 ######################
 # TESTING INFRASTRUCTURE
