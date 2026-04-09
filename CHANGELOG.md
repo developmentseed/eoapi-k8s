@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.12.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.2...v0.12.3) (2026-04-09)
+
+
+### Maintenance
+
+* **deps:** bump docker/login-action from 4.0.0 to 4.1.0 in the minor-and-patch group ([#485](https://github.com/developmentseed/eoapi-k8s/issues/485)) ([049bc90](https://github.com/developmentseed/eoapi-k8s/commit/049bc907919ab027cb61d5d24adf071db16aca8d))
+* **deps:** updated actions/create-github-app-token action to v2.2.2. ([#473](https://github.com/developmentseed/eoapi-k8s/issues/473)) ([2256582](https://github.com/developmentseed/eoapi-k8s/commit/225658255de2fed67faf65e7858ec505441ae9ae))
+* **deps:** updated actions/create-github-app-token action to v3.0.0. ([#474](https://github.com/developmentseed/eoapi-k8s/issues/474)) ([5571551](https://github.com/developmentseed/eoapi-k8s/commit/5571551e7ed7b0ceba2bb06dde75a27d6b68d841))
+* **deps:** updated azure/setup-helm action to v5. ([#477](https://github.com/developmentseed/eoapi-k8s/issues/477)) ([1e9123c](https://github.com/developmentseed/eoapi-k8s/commit/1e9123cd595b2c90ba7272cfbcf72ea2f4ef9928))
+* **deps:** updated helm release prometheus to 28.14.1. ([#476](https://github.com/developmentseed/eoapi-k8s/issues/476)) ([0120785](https://github.com/developmentseed/eoapi-k8s/commit/0120785af2349a62c1efa6ae2aa636b2b26b83a3))
+* **deps:** updated helm release prometheus to 28.16.0. ([#483](https://github.com/developmentseed/eoapi-k8s/issues/483)) ([976d3fc](https://github.com/developmentseed/eoapi-k8s/commit/976d3fcd159801bdbc678b31977f3b14d353c825))
+* **deps:** updated helm release prometheus to 29.2.0. ([#484](https://github.com/developmentseed/eoapi-k8s/issues/484)) ([77bb262](https://github.com/developmentseed/eoapi-k8s/commit/77bb262f68fe2fef0ae0f221a098d6c0ee6c37b4))
+* **deps:** updated registry.k8s.io/ingress-nginx/kube-webhook-certgen docker tag to v1.6.9 ([#475](https://github.com/developmentseed/eoapi-k8s/issues/475)) ([b9dd040](https://github.com/developmentseed/eoapi-k8s/commit/b9dd0404cbc20d2c38328fff7f5db3f072ad20e9))
+* upgraded stac-manager to version 1.0.3. ([6434407](https://github.com/developmentseed/eoapi-k8s/commit/6434407101cc42da527643ac149b5cf21ceec8aa))
+
+
+### Other
+
+* add Dependabot for GitHub Actions version updates ([#482](https://github.com/developmentseed/eoapi-k8s/issues/482)) ([e443c59](https://github.com/developmentseed/eoapi-k8s/commit/e443c594bde6abe15eb539a241bc7598754a3d51))
+* pin GitHub Actions to SHA digests (fix zizmor unpinned-uses) ([#481](https://github.com/developmentseed/eoapi-k8s/issues/481)) ([40b9c0c](https://github.com/developmentseed/eoapi-k8s/commit/40b9c0c45d2eb6759b2cec5ef3d73ad3cc1983ff))
+
 ## [0.12.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.1...v0.12.2) (2026-03-10)
 
 
