@@ -41,9 +41,9 @@ jobs:
           fi
 
       - name: Run Helm unit tests
-        uses: d3adb5/helm-unittest-action@850bc76597579183998069830d5fa8c3ef0ea34a # v2
-        with:
-          charts: charts/eoapi
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
+          helm unittest charts/eoapi --color
 
       - name: Check container images for root user
         run: ./eoapi-cli test images
