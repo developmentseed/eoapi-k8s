@@ -18,6 +18,24 @@ from conftest import (
 )
 
 
+def get_hpa_items(namespace: str | None = None) -> list[dict[str, Any]]:
+    """Return HPA items in namespace or fail if none are configured."""
+    ns = namespace or get_namespace()
+    result = kubectl_get("hpa", namespace=ns)
+
+    if result.returncode != 0:
+        pytest.skip("No HPA resources found - autoscaling not enabled")
+
+    hpas = json.loads(result.stdout)
+    items = hpas.get("items", [])
+    if not items:
+        pytest.fail(
+            f"No HPA resources configured in namespace {ns} "
+            f"(release {get_release_name()})"
+        )
+    return items
+
+
 def generate_load(
     base_url: str,
     endpoints: List[str],
@@ -91,16 +109,7 @@ def generate_load(
 
 class TestHPAConfiguration:
     def test_hpa_resources_properly_configured(self) -> None:
-        namespace = get_namespace()
-        result = kubectl_get("hpa", namespace=namespace)
-
-        if result.returncode != 0:
-            pytest.skip("No HPA resources found - autoscaling not enabled")
-
-        hpas = json.loads(result.stdout)
-        assert len(hpas["items"]) > 0, "No HPA resources configured"
-
-        for hpa in hpas["items"]:
+        for hpa in get_hpa_items():
             spec = hpa["spec"]
             hpa_name = hpa["metadata"]["name"]
 
@@ -135,14 +144,8 @@ class TestHPAConfiguration:
 
     def test_target_deployments_exist(self) -> None:
         namespace = get_namespace()
-        result = kubectl_get("hpa", namespace=namespace)
 
-        if result.returncode != 0:
-            pytest.skip("No HPA resources found")
-
-        hpas = json.loads(result.stdout)
-
-        for hpa in hpas["items"]:
+        for hpa in get_hpa_items(namespace):
             target_ref = hpa["spec"]["scaleTargetRef"]
             target_name = target_ref["name"]
             hpa_name = hpa["metadata"]["name"]
@@ -203,15 +206,7 @@ class TestCPUScaling:
 
     def test_hpa_cpu_utilization_calculation(self) -> None:
         """Verify HPA calculates CPU utilization correctly."""
-        namespace = get_namespace()
-        result = kubectl_get("hpa", namespace=namespace)
-
-        if result.returncode != 0:
-            pytest.skip("No HPA resources found")
-
-        hpas = json.loads(result.stdout)
-
-        for hpa in hpas["items"]:
+        for hpa in get_hpa_items():
             hpa_name = hpa["metadata"]["name"]
             status = hpa.get("status", {})
 
@@ -424,15 +419,7 @@ class TestScalingBehavior:
 
     def test_scaling_stabilization_windows(self) -> None:
         """Verify HPA respects stabilization windows in configuration."""
-        namespace = get_namespace()
-        result = kubectl_get("hpa", namespace=namespace)
-
-        if result.returncode != 0:
-            pytest.skip("No HPA resources found")
-
-        hpas = json.loads(result.stdout)
-
-        for hpa in hpas["items"]:
+        for hpa in get_hpa_items():
             hpa_name = hpa["metadata"]["name"]
             spec = hpa["spec"]
 
@@ -497,15 +484,7 @@ class TestRequestRateScaling:
 
     def test_hpa_request_rate_metrics(self) -> None:
         """Verify HPA can access request rate metrics (when configured)."""
-        namespace = get_namespace()
-        result = kubectl_get("hpa", namespace=namespace)
-
-        if result.returncode != 0:
-            pytest.skip("No HPA resources found")
-
-        hpas = json.loads(result.stdout)
-
-        for hpa in hpas["items"]:
+        for hpa in get_hpa_items():
             hpa_name = hpa["metadata"]["name"]
             status = hpa.get("status", {})
             current_metrics = status.get("currentMetrics", [])

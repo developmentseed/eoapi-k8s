@@ -152,6 +152,13 @@ def make_request(url: str, timeout: int = 10) -> bool:
 
 
 def get_base_url() -> str:
+    stac_endpoint = os.environ.get("STAC_ENDPOINT")
+    if stac_endpoint:
+        endpoint = stac_endpoint.rstrip("/")
+        if endpoint.endswith("/stac"):
+            return endpoint[: -len("/stac")]
+        return endpoint
+
     namespace = get_namespace()
 
     # Check if we have an ingress

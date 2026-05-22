@@ -249,17 +249,27 @@ kubectl logs -l app.kubernetes.io/name=prometheus-adapter -n eoapi
 
 ## Load Testing
 
-For load testing your autoscaling setup:
+Run autoscaling validation against a live cluster (requires HPAs and metrics-server):
 
-```yaml
-ingress:
-  host: your-test-domain.com
+```bash
+# Default namespace/release (eoapi)
+./eoapi-cli load autoscaling --release eoapi
+
+# Custom namespace — NAMESPACE/RELEASE_NAME are exported for pytest automatically
+./eoapi-cli load -n data-access autoscaling --release eoapi
+
+# No Kubernetes Ingress (e.g. APISIX ApisixRoute): set endpoints or pass --base-url
+export STAC_ENDPOINT="https://stac-k8s.example.de/stac"
+export RASTER_ENDPOINT="https://stac-k8s.example.de/raster"
+export VECTOR_ENDPOINT="https://stac-k8s.example.de/vector"
+./eoapi-cli load -n data-access autoscaling --release eoapi
+
+# Or derive endpoints from a single base URL
+./eoapi-cli load -n data-access autoscaling --release eoapi \
+  --base-url https://stac-k8s.example.de
 ```
 
-3. Check ingress configuration:
-   ```bash
-   kubectl get ingress -n eoapi
-   ```
+With Ingress, endpoints come from `kubectl get ingress`. Without Ingress, pass `--base-url` or set all three `STAC_ENDPOINT` / `RASTER_ENDPOINT` / `VECTOR_ENDPOINT`.
 
 ## Troubleshooting
 

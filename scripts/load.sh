@@ -11,6 +11,7 @@ source "${SCRIPT_DIR}/lib/common.sh"
 
 NAMESPACE="${NAMESPACE:-eoapi}"
 RELEASE_NAME="${RELEASE_NAME:-eoapi}"
+BASE_URL=""
 
 show_help() {
     cat <<EOF
@@ -30,15 +31,28 @@ COMMANDS:
 OPTIONS:
     -h, --help              Show this help message
     -d, --debug             Enable debug mode
-    -n, --namespace         Set Kubernetes namespace
+    -n, --namespace         Kubernetes namespace (kubectl and pytest; default: ${NAMESPACE})
     --release NAME          Helm release name (default: ${RELEASE_NAME})
+    --base-url URL          Base URL for autoscaling HTTP tests when Ingress is absent
+                            (e.g. https://stac.example.de). Sets STAC/RASTER/VECTOR endpoints
+                            unless those env vars are already set.
     --report-json FILE      Export metrics to JSON file
     --prometheus-url URL    Prometheus URL for infrastructure metrics
     --collect-infra-metrics Collect infrastructure metrics from Prometheus
 
+ENVIRONMENT (autoscaling command):
+    NAMESPACE, RELEASE_NAME   Exported for pytest; match -n/--release (no manual export needed)
+    STAC_ENDPOINT             Override STAC URL (all three required if any is set)
+    RASTER_ENDPOINT           Override raster URL
+    VECTOR_ENDPOINT           Override vector URL
+
 EXAMPLES:
     # Run baseline load test
     $(basename "$0") baseline
+
+    # Test autoscaling in a non-default namespace (no Ingress)
+    $(basename "$0") -n data-access autoscaling --release eoapi \\
+        --base-url https://stac-k8s.example.de
 
     # Test autoscaling behavior
     $(basename "$0") autoscaling --debug
@@ -157,6 +171,34 @@ load_services() {
     return 0
 }
 
+set_autoscaling_test_endpoints() {
+    if [[ -n "${STAC_ENDPOINT:-}" && -n "${RASTER_ENDPOINT:-}" && -n "${VECTOR_ENDPOINT:-}" ]]; then
+        log_info "Using STAC/RASTER/VECTOR endpoints from environment"
+        return 0
+    fi
+
+    if [[ -n "${STAC_ENDPOINT:-}" || -n "${RASTER_ENDPOINT:-}" || -n "${VECTOR_ENDPOINT:-}" ]]; then
+        log_error "Set STAC_ENDPOINT, RASTER_ENDPOINT, and VECTOR_ENDPOINT together, or use --base-url"
+        return 1
+    fi
+
+    if [[ -n "${BASE_URL:-}" ]]; then
+        local base="${BASE_URL%/}"
+        export STAC_ENDPOINT="${base}/stac"
+        export RASTER_ENDPOINT="${base}/raster"
+        export VECTOR_ENDPOINT="${base}/vector"
+        log_info "Using --base-url for HTTP endpoints: $base"
+        return 0
+    fi
+
+    local ingress_host
+    ingress_host=$(kubectl get ingress -n "$NAMESPACE" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "localhost")
+
+    export STAC_ENDPOINT="http://$ingress_host/stac"
+    export RASTER_ENDPOINT="http://$ingress_host/raster"
+    export VECTOR_ENDPOINT="http://$ingress_host/vector"
+}
+
 load_autoscaling() {
     log_info "Running autoscaling tests..."
 
@@ -169,14 +211,11 @@ load_autoscaling() {
         kubectl wait --for=condition=Available deployment/"${RELEASE_NAME}-${service}" -n "$NAMESPACE" --timeout=90s || return 1
     done
 
-    # Get ingress host
-    local ingress_host
-    ingress_host=$(kubectl get ingress -n "$NAMESPACE" -o jsonpath='{.items[0].spec.rules[0].host}' 2>/dev/null || echo "localhost")
+    export NAMESPACE
+    export RELEASE_NAME
+    log_info "Autoscaling tests: namespace=$NAMESPACE release=$RELEASE_NAME"
 
-    # Set environment for Python tests
-    export STAC_ENDPOINT="http://$ingress_host/stac"
-    export RASTER_ENDPOINT="http://$ingress_host/raster"
-    export VECTOR_ENDPOINT="http://$ingress_host/vector"
+    set_autoscaling_test_endpoints || return 1
 
     log_info "Running Python autoscaling tests..."
     cd "${SCRIPT_DIR}/.."
@@ -312,6 +351,10 @@ main() {
                 ;;
             --release)
                 RELEASE_NAME="$2"
+                shift 2
+                ;;
+            --base-url)
+                BASE_URL="$2"
                 shift 2
                 ;;
             --report-json)
