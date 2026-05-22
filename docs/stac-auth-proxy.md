@@ -46,6 +46,8 @@ stac-auth-proxy:
   env:
     UPSTREAM_URL: "http://eoapi-stac:8080"  # Replace 'eoapi' with your release name
     OIDC_DISCOVERY_URL: "https://your-auth-provider.com/.well-known/openid-configuration"
+    # URL the proxy uses for in-pod OIDC health checks at startup (defaults to localhost:8081 for an oauth2-proxy sidecar)
+    OIDC_DISCOVERY_INTERNAL_URL: "https://your-auth-provider.com/.well-known/openid-configuration"
     ALLOWED_JWT_AUDIENCES: "https://your-api-audience.com"  # Recommended: should match the audience configured in your identity provider for this API.
     ROOT_PATH: "/stac"
 ```

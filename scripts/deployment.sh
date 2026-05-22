@@ -114,6 +114,8 @@ stac-auth-proxy:
   env:
     UPSTREAM_URL: "http://${RELEASE_NAME}-stac:8080"
     OIDC_DISCOVERY_URL: "http://${RELEASE_NAME}-mock-oidc-server.${NAMESPACE}.svc.cluster.local:8080/.well-known/openid-configuration"
+    # Subchart default points at localhost:8081 (oauth2-proxy sidecar); override for mock OIDC service.
+    OIDC_DISCOVERY_INTERNAL_URL: "http://${RELEASE_NAME}-mock-oidc-server.${NAMESPACE}.svc.cluster.local:8080/.well-known/openid-configuration"
   initContainers:
     - name: wait-for-mock-oidc
       image: busybox:1.35

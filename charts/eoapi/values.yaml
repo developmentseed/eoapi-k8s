@@ -469,6 +469,8 @@ stac-auth-proxy:
   resources: {}
   env:
     # OIDC_DISCOVERY_URL must be configured when enabling auth (required)
+    # OIDC_DISCOVERY_INTERNAL_URL: in-cluster URL for startup health checks (subchart defaults to
+    # http://localhost:8081/... for an oauth2-proxy sidecar; set to your OIDC service when testing)
     # UPSTREAM_URL must be set to "http://<release-name>-stac:8080" (required)
     ROOT_PATH: "/stac"
     OVERRIDE_HOST: "false"

@@ -45,6 +45,7 @@ helm template test-release "$CHART_PATH" \
   --set gitSha=test \
   -f "$PROFILE_PATH" \
   --set stac-auth-proxy.env.OIDC_DISCOVERY_URL=https://dummy.example.com/.well-known/openid-configuration \
+  --set stac-auth-proxy.env.OIDC_DISCOVERY_INTERNAL_URL=https://dummy.example.com/.well-known/openid-configuration \
   2>&1)
 
 if [[ -z "$rendered_yaml" ]] || echo "$rendered_yaml" | grep -q "Error:"; then
