@@ -54,6 +54,21 @@ stac-auth-proxy:
 
 For complete configuration options, see the [stac-auth-proxy configuration documentation](https://developmentseed.org/stac-auth-proxy/user-guide/configuration).
 
+### Autoscaling and resources
+
+The eoapi chart depends on stac-auth-proxy Helm, which includes an optional CPU-based HPA. Under production load, scale the proxy when it sits in front of STAC—STAC autoscaling alone may not help. See [Autoscaling — STAC Auth Proxy](./autoscaling.md#stac-auth-proxy).
+
+```yaml
+stac-auth-proxy:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+```
+
+When autoscaling is enabled, `replicaCount` is ignored.
+
 ### 3. Authentication Policy
 
 Control which endpoints require authentication:
