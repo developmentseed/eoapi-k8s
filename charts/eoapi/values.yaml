@@ -457,16 +457,35 @@ stac:
       DB_MIN_CONN_SIZE: "1"
       DB_MAX_CONN_SIZE: "5" # Quite intensive (queries, transactions, searches)
 
-# STAC Auth Proxy - authentication layer for STAC API
+# STAC Auth Proxy - authentication layer for STAC API (subchart: stac-auth-proxy 1.1.0+)
 stac-auth-proxy:
   enabled: false
   image:
-    tag: "v1.0.3"
+    tag: "v1.1.0"
   ingress:
     enabled: false  # Handled by main eoapi ingress
   service:
     port: 8080
-  resources: {}
+  # Production-oriented defaults; override per cluster. Low CPU limits cause throttling under load.
+  resources:
+    requests:
+      cpu: 500m
+      memory: 256Mi
+    limits:
+      cpu: 2000m
+      memory: 512Mi
+  # CPU-based HPA from the stac-auth-proxy subchart (requires metrics-server).
+  # When enabled, replicaCount is ignored. Request-rate metrics are nginx-ingress-specific on main services only.
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
   env:
     # OIDC_DISCOVERY_URL must be configured when enabling auth (required)
     # OIDC_DISCOVERY_INTERNAL_URL: in-cluster URL for startup health checks (subchart defaults to

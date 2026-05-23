@@ -207,6 +207,35 @@ vector:
       requestRate: 75000m
 ```
 
+## STAC Auth Proxy
+
+When [STAC Auth Proxy](./stac-auth-proxy.md) is enabled, ingress routes STAC traffic through the proxy. Under load, the proxy can become the bottleneck while `stac` CPU utilization stays low—enable proxy autoscaling in addition to (or instead of) relying on STAC HPA alone.
+
+Autoscaling is provided by the **stac-auth-proxy subchart**. Configure it under `stac-auth-proxy.autoscaling` (CPU only; request-rate/`both` types apply to main eoAPI services with nginx ingress metrics).
+
+```yaml
+stac-auth-proxy:
+  enabled: true
+  resources:
+    requests:
+      cpu: 500m
+    limits:
+      cpu: 2000m
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+```
+
+When `autoscaling.enabled` is true, `replicaCount` is ignored and the HPA manages replica count. Requires [metrics-server](#prerequisites) (or your cluster's equivalent) for CPU metrics.
+
+The HPA resource name is `{{ .Release.Name }}-stac-auth-proxy` (subchart fullname). Check status with:
+
+```bash
+kubectl get hpa -n <namespace> | grep stac-auth-proxy
+```
+
 ## Configuration Examples
 
 For complete configuration examples, see the [production profile](../charts/eoapi/profiles/production.yaml).

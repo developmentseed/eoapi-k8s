@@ -369,7 +369,7 @@ ingress:
 stac-auth-proxy:
   enabled: true
   image:
-    tag: "v1.0.3"
+    tag: "v1.1.0"
   # For testing this will be set dynamically; for production, point to your OIDC server
   env:
     # OIDC_DISCOVERY_URL: "http://eoapi-mock-oidc-server.eoapi.svc.cluster.local:8080/.well-known/openid-configuration"

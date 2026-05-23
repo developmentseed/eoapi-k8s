@@ -52,9 +52,14 @@ stac-auth-proxy:
   enabled: true
   env:
     OIDC_DISCOVERY_URL: "https://your-auth-server/.well-known/openid-configuration"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
 ```
 
-When enabled, the ingress will automatically route STAC API requests through the auth proxy instead of directly to the STAC service.
+When enabled, the ingress will automatically route STAC API requests through the auth proxy instead of directly to the STAC service. Enable `stac-auth-proxy.autoscaling` when the proxy is the bottleneck; scaling STAC alone is not sufficient if traffic goes through the proxy. See [autoscaling documentation](../../docs/autoscaling.md#stac-auth-proxy).
 
 ## Quick Start with Profiles
 

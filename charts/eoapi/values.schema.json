@@ -691,6 +691,50 @@
         }
       }
     },
+    "stac-auth-proxy": {
+      "type": "object",
+      "description": "STAC Auth Proxy subchart (authentication layer for STAC API)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable the stac-auth-proxy subchart"
+        },
+        "autoscaling": {
+          "type": "object",
+          "description": "CPU-based HPA (rendered by stac-auth-proxy subchart)",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable Horizontal Pod Autoscaler for the auth proxy"
+            },
+            "minReplicas": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Minimum number of proxy replicas"
+            },
+            "maxReplicas": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum number of proxy replicas"
+            },
+            "targetCPUUtilizationPercentage": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Target CPU utilization percentage for autoscaling"
+            },
+            "behavior": {
+              "type": "object",
+              "description": "HPA scaling behavior configuration"
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requests and limits for the auth proxy"
+        }
+      }
+    },
     "testing": {
       "type": "object",
       "description": "Test infrastructure components - DO NOT USE IN PRODUCTION",
