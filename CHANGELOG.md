@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.3...v0.12.4) (2026-05-23)
+
+
+### Fixed
+
+* **ci:** helm unittests. ([#502](https://github.com/developmentseed/eoapi-k8s/issues/502)) ([63ede13](https://github.com/developmentseed/eoapi-k8s/commit/63ede133ab0461d8a76cbb06844888dfe5dff22c))
+* **ci:** OIDC_DISCOVERY_INTERNAL_URL health checks.  ([#504](https://github.com/developmentseed/eoapi-k8s/issues/504)) ([bf1e54c](https://github.com/developmentseed/eoapi-k8s/commit/bf1e54c83c237a200f4b0da5c4be519fafe3194b))
+* stac-auth-proxy autoscaling. ([#505](https://github.com/developmentseed/eoapi-k8s/issues/505)) ([ab53e9c](https://github.com/developmentseed/eoapi-k8s/commit/ab53e9c99fbac78fba7f7aa01615f91d4e90cd48))
+
+
+### Maintenance
+
+* **deps:** updated actions/create-github-app-token action to v3.2.0. ([#487](https://github.com/developmentseed/eoapi-k8s/issues/487)) ([f4ab41f](https://github.com/developmentseed/eoapi-k8s/commit/f4ab41ff2c3f61cef953322a47441fc6c5a3e728))
+* **deps:** updated actions/setup-node digest to 48b55a0 ([#493](https://github.com/developmentseed/eoapi-k8s/issues/493)) ([7ec77e3](https://github.com/developmentseed/eoapi-k8s/commit/7ec77e347ed902bf8b5bca74170171253b165a4b))
+* **deps:** updated docker/build-push-action digest to bcafcac ([#486](https://github.com/developmentseed/eoapi-k8s/issues/486)) ([bfdb0e8](https://github.com/developmentseed/eoapi-k8s/commit/bfdb0e846c625e7b7449f9b30d68de2fe9d634de))
+* **deps:** updated docker/build-push-action digest to f9f3042 ([#503](https://github.com/developmentseed/eoapi-k8s/issues/503)) ([898d624](https://github.com/developmentseed/eoapi-k8s/commit/898d624d3929a74c8a2c22a8db74baae9346deeb))
+* **deps:** updated googleapis/release-please-action action to v5.0.0. ([#494](https://github.com/developmentseed/eoapi-k8s/issues/494)) ([994a103](https://github.com/developmentseed/eoapi-k8s/commit/994a1032f901b7ce06f7872581fbf12d08914b6c))
+* **deps:** updated googleapis/release-please-action digest to 5c625bf ([#489](https://github.com/developmentseed/eoapi-k8s/issues/489)) ([0274957](https://github.com/developmentseed/eoapi-k8s/commit/0274957c0eacaef2530a4f2e20af1336efcf26b7))
+* **deps:** updated helm release knative-operator to v1.22.1. ([#498](https://github.com/developmentseed/eoapi-k8s/issues/498)) ([a26dd7e](https://github.com/developmentseed/eoapi-k8s/commit/a26dd7e4cc8d4d0d520ec56a92315f3b54fea622))
+* **deps:** updated helm release prometheus to 29.2.1. ([#490](https://github.com/developmentseed/eoapi-k8s/issues/490)) ([12d1a4f](https://github.com/developmentseed/eoapi-k8s/commit/12d1a4f0652a40b422ab012a91187aabb18d49f8))
+* **deps:** updated helm release prometheus to 29.7.0. ([#497](https://github.com/developmentseed/eoapi-k8s/issues/497)) ([6c74e0e](https://github.com/developmentseed/eoapi-k8s/commit/6c74e0e16cff787a59e79b6d1f396adac5da1743))
+
 ## [0.12.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.2...v0.12.3) (2026-04-09)
 
 
