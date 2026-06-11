@@ -457,7 +457,7 @@ stac:
       DB_MIN_CONN_SIZE: "1"
       DB_MAX_CONN_SIZE: "5" # Quite intensive (queries, transactions, searches)
 
-# STAC Auth Proxy - authentication layer for STAC API (subchart: stac-auth-proxy 1.1.0+)
+# STAC Auth Proxy - authentication layer for STAC API
 stac-auth-proxy:
   enabled: false
   image:
@@ -623,6 +623,7 @@ browser:
 
 docServer:
   enabled: true
+  redirectTo: ""  # When set, root path redirects here instead of showing the landing page (e.g. "/browser/")
   settings:
     resources: {}
 

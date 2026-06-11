@@ -1,0 +1,57 @@
+suite: doc-server tests
+templates:
+  - templates/services/doc-server.yaml
+tests:
+  - it: "renders landing page by default"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: true
+    template: templates/services/doc-server.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["index.html"]
+          pattern: "This is the root path"
+
+  - it: "renders redirect page when redirectTo is set"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: true
+      docServer.redirectTo: "/browser/"
+    template: templates/services/doc-server.yaml
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["index.html"]
+          pattern: "meta http-equiv=\"refresh\""
+      - matchRegex:
+          path: data["index.html"]
+          pattern: "url=/browser/"
+      - notMatchRegex:
+          path: data["index.html"]
+          pattern: "This is the root path"
+
+  - it: "renders no resources when docServer is disabled"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
+    template: templates/services/doc-server.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
