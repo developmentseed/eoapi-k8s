@@ -272,6 +272,7 @@ Unified ingress configuration supporting both NGINX and Traefik:
 | `ingress.className` | Ingress controller | "nginx" | "nginx", "traefik" |
 | `ingress.host` | Ingress hostname | "" | valid hostname |
 | `ingress.rootPath` | Doc server root path | "" | valid path |
+| `docServer.redirectTo` | Redirect root `/` to this path instead of showing the landing page | "" | e.g. `/browser/` |
 
 See [Unified Ingress Configuration](unified-ingress.md) for detailed setup.
 

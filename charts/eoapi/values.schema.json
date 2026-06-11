@@ -594,6 +594,11 @@
           "default": true,
           "description": "Enable documentation server"
         },
+        "redirectTo": {
+          "type": "string",
+          "default": "",
+          "description": "When set, root path / redirects to this URL instead of showing the landing page (e.g. /browser/)"
+        },
         "settings": {
           "type": "object",
           "properties": {

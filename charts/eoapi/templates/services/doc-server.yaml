@@ -5,6 +5,16 @@ metadata:
   name: {{ .Release.Name }}-doc-server-html
 data:
   index.html: |
+    {{- if .Values.docServer.redirectTo }}
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="0; url={{ .Values.docServer.redirectTo }}" />
+    </head>
+    <body>
+        <p>Redirecting to <a href="{{ .Values.docServer.redirectTo }}">{{ .Values.docServer.redirectTo }}</a></p>
+    </body>
+    </html>
+    {{- else }}
     <html>
     <head>
         <title>eoAPI</title>
@@ -23,6 +33,7 @@ data:
         </ul>
     </body>
     </html>
+    {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
