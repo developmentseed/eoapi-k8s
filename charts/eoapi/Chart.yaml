@@ -41,7 +41,7 @@ dependencies:
     repository: https://knative.github.io/operator
     condition: knative.enabled
   - name: metrics-server
-    version: 3.13.0
+    version: 3.13.1
     repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: monitoring.metricsServer.enabled
   - name: prometheus
