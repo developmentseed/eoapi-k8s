@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.5](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.4...v0.12.5) (2026-06-12)
+
+
+### Fixed
+
+* **docserver:** allow redirect. ([#516](https://github.com/developmentseed/eoapi-k8s/issues/516)) ([dc5f08c](https://github.com/developmentseed/eoapi-k8s/commit/dc5f08cc6b5660598978be2139fd800ea59ba270))
+
+
+### Maintenance
+
+* **deps:** bump the minor-and-patch group with 2 updates ([#509](https://github.com/developmentseed/eoapi-k8s/issues/509)) ([dbd8f55](https://github.com/developmentseed/eoapi-k8s/commit/dbd8f55a8ebe770af2c8aae9671684f02f4e6dad))
+* **deps:** updated actions/checkout digest to df4cb1c ([#512](https://github.com/developmentseed/eoapi-k8s/issues/512)) ([bc59800](https://github.com/developmentseed/eoapi-k8s/commit/bc598001bdd386d659c78cc04caf81b21aa03f67))
+* **deps:** updated docker/login-action digest to 650006c ([#506](https://github.com/developmentseed/eoapi-k8s/issues/506)) ([8c8feaa](https://github.com/developmentseed/eoapi-k8s/commit/8c8feaa411380dfca7e9f3e643a2bd0889438d34))
+* **deps:** updated docker/setup-buildx-action digest to d7f5e7f ([#507](https://github.com/developmentseed/eoapi-k8s/issues/507)) ([a56fcca](https://github.com/developmentseed/eoapi-k8s/commit/a56fcca2091f1dc0237602728b2dcd2373b7774d))
+* **deps:** updated ghcr.io/developmentseed/tipg docker tag to v1.4.0 ([#518](https://github.com/developmentseed/eoapi-k8s/issues/518)) ([1ee06b5](https://github.com/developmentseed/eoapi-k8s/commit/1ee06b59e5eb0dda89394feba1f680c3926eaf3c))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v3 ([#511](https://github.com/developmentseed/eoapi-k8s/issues/511)) ([66ca4e6](https://github.com/developmentseed/eoapi-k8s/commit/66ca4e68914e16a469f3630b8cfaee5cbe6660ec))
+* **deps:** updated helm release knative-operator to v1.22.2. ([#515](https://github.com/developmentseed/eoapi-k8s/issues/515)) ([f46077e](https://github.com/developmentseed/eoapi-k8s/commit/f46077e91dc2dec090ed2bfeffce419e79f80723))
+* **deps:** updated helm release metrics-server to 3.13.1. ([#517](https://github.com/developmentseed/eoapi-k8s/issues/517)) ([f4c4a6c](https://github.com/developmentseed/eoapi-k8s/commit/f4c4a6cf690dc19779db8ce13f8e9129db019e77))
+* **deps:** updated helm release prometheus to 29.10.1. ([#514](https://github.com/developmentseed/eoapi-k8s/issues/514)) ([61fe6c9](https://github.com/developmentseed/eoapi-k8s/commit/61fe6c954a7b9e447f3bbaf96f28551d5d5c84d1))
+* **deps:** updated helm release prometheus to 29.9.0. ([#508](https://github.com/developmentseed/eoapi-k8s/issues/508)) ([4106ad6](https://github.com/developmentseed/eoapi-k8s/commit/4106ad6acfd9978764243cd0082a48d9a57e140d))
+* **deps:** updated stac-auth-proxy docker tag to v1.1.1 ([#510](https://github.com/developmentseed/eoapi-k8s/issues/510)) ([5717af5](https://github.com/developmentseed/eoapi-k8s/commit/5717af526d8f3aefdaa22bfb5a16c9c42507d75d))
+
 ## [0.12.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.3...v0.12.4) (2026-05-23)
 
 
