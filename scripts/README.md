@@ -125,6 +125,14 @@ Test options:
 - `test all` - Run all test suites
 - `test integration --pytest-args="-v"` - Pass pytest arguments
 
+## Operational Runbooks
+
+The `runbooks/` directory contains standalone diagnostic scripts for client infrastructure.
+They do not depend on the CLI or this repo — see [`runbooks/README.md`](runbooks/README.md).
+
+- **`runbooks/loadtest.sh`** — Phased load test with HPA validation
+- **`runbooks/debug-collection.sh`** — Collection performance debugging (large collections, 500s, timeouts)
+
 ## Environment variables
 
 - `NAMESPACE` - Kubernetes namespace (default: eoapi)
