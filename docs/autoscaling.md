@@ -104,6 +104,9 @@ steady-state replica count, so a traffic spike can scale every service to its ce
 > `WEB_CONCURRENCY` and `DB_MAX_CONN_SIZE` caps for every autoscaled service. The chart defaults are
 > tuned for a dedicated, chart-managed database and can open hundreds of connections at the ceiling.
 
+The chart defaults to `context: "off"` (matching pgSTAC). If you set `auto` or `on`, consider the
+extra database load under autoscaling — see [Context Settings](configuration.md#context-settings).
+
 ### Connection arithmetic
 
 Each service runs `WEB_CONCURRENCY` uvicorn workers per pod, and each worker opens a pool of up to
