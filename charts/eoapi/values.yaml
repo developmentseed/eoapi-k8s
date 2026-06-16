@@ -240,7 +240,7 @@ pgstacBootstrap:
       update_collection_extent: "true"   # Auto-update collection extents when items are added/modified
 
       # Context configuration for search results
-      context: "auto"                    # Context mode: "on", "off", or "auto"
+      context: "off"                     # Context mode: "on", "off", or "auto" (pgSTAC default: off)
       context_estimated_count: "100000"  # Row threshold for using estimates instead of exact counts
       context_estimated_cost: "100000"   # Query cost threshold for using estimates
       context_stats_ttl: "1 day"         # Cache duration for context statistics

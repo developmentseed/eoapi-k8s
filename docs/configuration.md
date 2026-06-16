@@ -104,10 +104,15 @@ Control search result count calculations:
 
 | **Values Key** | **Description** | **Default** | **Format** |
 |:--------------|:----------------|:------------|:-----------|
-| `context` | Context mode | "auto" | "on", "off", "auto" |
+| `context` | Context mode | "off" | "on", "off", "auto" |
 | `context_estimated_count` | Row threshold for estimates | "100000" | integer string |
 | `context_estimated_cost` | Cost threshold for estimates | "100000" | integer string |
 | `context_stats_ttl` | Stats cache duration | "1 day" | PostgreSQL interval |
+
+STAC search can optionally return a `context` block with the total number of matching items.
+Computing exact counts can be very expensive on large catalogs — pgSTAC defaults to `off`, and this
+chart matches that. Use `auto` or `on` only if clients need match counts; `auto` may still run full
+counts when estimates fall below the thresholds above.
 
 ### Automatic Maintenance Jobs
 
@@ -136,7 +141,7 @@ pgstacBootstrap:
       use_queue: "true"
       update_collection_extent: "false"
 
-      # Optimize context for performance
+      # Opt in to match counts if clients need them (adds DB load)
       context: "auto"
       context_estimated_count: "50000"
       context_estimated_cost: "75000"

@@ -75,10 +75,6 @@ pgstacBootstrap:
       queue_timeout: "10 minutes"
       use_queue: "false"
       update_collection_extent: "true"
-      context: "auto"
-      context_estimated_count: "100000"
-      context_estimated_cost: "100000"
-      context_stats_ttl: "1 day"
 
     resources: {}
 
