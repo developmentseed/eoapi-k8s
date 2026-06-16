@@ -78,6 +78,12 @@ postgresql:
     database: "eoapi"  # can also be in secret
 ```
 
+> **Shared external databases + autoscaling:** Setting `postgrescluster.enabled: false` removes the
+> chart's implicit per-deployment database sizing. If the external database is shared by multiple
+> eoAPI services and other services that use the same PostgreSQL, and you enable HPA, you **must**
+> set explicit `WEB_CONCURRENCY` and `DB_MAX_CONN_SIZE` caps or risk exhausting `max_connections`.
+> See [Autoscaling — External / shared PostgreSQL](autoscaling.md#external--shared-postgresql).
+
 ## PgSTAC Configuration
 
 Control PgSTAC database behavior and performance tuning:
