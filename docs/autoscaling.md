@@ -84,6 +84,141 @@ stac:
 | Raster  | 4                                | 2-3                                 | CPU intensive image operations |
 | Vector  | 8                                | 4-5                                 | Complex spatial queries |
 
+> These numbers assume each eoAPI deployment owns its database (the default
+> `postgrescluster.enabled: true` mode). They are **not** safe defaults when several services share a
+> single external PostgreSQL — read [External / shared PostgreSQL](#external--shared-postgresql)
+> before enabling autoscaling against a shared database.
+
+## External / shared PostgreSQL
+
+With `postgrescluster.enabled: false` and an external database (`postgresql.type: external-plaintext`
+or `external-secret`), the chart no longer provisions or sizes the database. That database is often
+shared — by several eoAPI services and by other services that use the same PostgreSQL — and they all
+compete for one fixed `max_connections`.
+
+Autoscaling sharpens this: with HPA the connection count is bounded by `maxReplicas`, not by your
+steady-state replica count, so a traffic spike can scale every service to its ceiling and exhaust
+`max_connections` at once.
+
+> **Warning:** On a shared external database with HPA enabled you **must** set explicit
+> `WEB_CONCURRENCY` and `DB_MAX_CONN_SIZE` caps for every autoscaled service. The chart defaults are
+> tuned for a dedicated, chart-managed database and can open hundreds of connections at the ceiling.
+
+### Connection arithmetic
+
+Each service runs `WEB_CONCURRENCY` uvicorn workers per pod, and each worker opens a pool of up to
+`DB_MAX_CONN_SIZE` connections. The worst-case connections one service can open is:
+
+```
+max_connections(service) = maxReplicas × WEB_CONCURRENCY × pools × DB_MAX_CONN_SIZE
+```
+
+- `pools` is `1` for `raster`, `vector`, and `multidim`.
+- `pools` is `2` for STAC when `ENABLE_TRANSACTIONS_EXTENSIONS: "true"`: `stac-fastapi-pgstac` opens a
+  separate read pool (`POSTGRES_HOST_READER`) and write pool (`POSTGRES_HOST_WRITER`). This is easy to
+  miss and a common cause of connection exhaustion. With transactions disabled STAC uses one pool.
+
+**Example** — `maxReplicas: 5`, STAC transactions enabled (`pools = 2`):
+
+| Settings | STAC ceiling |
+|----------|--------------|
+| `WEB_CONCURRENCY=4`, `DB_MAX_CONN_SIZE=3` | `5 × 4 × 2 × 3` = **120 connections** |
+| `WEB_CONCURRENCY=2`, `DB_MAX_CONN_SIZE=1` | `5 × 2 × 2 × 1` = **20 connections** |
+
+A default PostgreSQL allows `max_connections = 100`. The first row exhausts it from STAC alone, before
+`raster`, `vector`, or anything else gets a connection.
+
+### Budgeting connections
+
+1. Start from the database's `max_connections`, minus reserved superuser slots.
+2. Subtract everything else that uses the database — other services sharing it, ingest tooling,
+   ad-hoc clients — and the chart's own clients (below).
+3. Divide the remainder across the autoscaled services with the formula above (`pools = 2` for STAC
+   with transactions). Leave headroom; never budget to 100%.
+
+If a connection pooler (e.g. PgBouncer in transaction mode) fronts the database, size against the
+pooler's server-side pool instead of the per-client numbers.
+
+The chart opens connections beyond the API services. Allow for these too — they fire during deploys
+and on schedules, often when the APIs are also busy:
+
+| Component | When it connects | Demand |
+|-----------|------------------|--------|
+| pgSTAC bootstrap + migrate jobs (`pgstacBootstrap`) | Every install/upgrade | A few, short-lived |
+| pgSTAC post-install/upgrade hooks | Every install/upgrade | A few, short-lived |
+| `queueProcessor` CronJob | When `pgstacSettings.use_queue: "true"` | A few, on schedule |
+| `extentUpdater` CronJob | When `pgstacSettings.update_collection_extent: "false"` | A few, on schedule |
+| `eoapi-notifier` | When enabled | 1+ persistent (`LISTEN`) |
+
+Also reserve rolling-update headroom: during a Deployment rollout Kubernetes starts new pods before
+terminating old ones, so a service can briefly run at roughly `2 × replicas`.
+
+### Reduce demand or raise `max_connections`?
+
+Bring the total within budget by either **reducing demand** (lower `DB_MAX_CONN_SIZE`,
+`WEB_CONCURRENCY`, or `maxReplicas`) or **raising supply** (`max_connections` on the database). Prefer
+capping client pools when the database is shared or its hardware is fixed — it keeps demand
+predictable. Raising `max_connections` is only safe if you control the database and can back each
+connection with memory (`shared_buffers` + `work_mem × concurrency` + per-connection overhead must fit
+RAM), otherwise you trade connection errors for OOM kills. `max_connections` and `work_mem` live on
+the database, not in this chart.
+
+### Example configuration
+
+External database plus autoscaling with conservative pool caps (recompute against your
+`max_connections` before production):
+
+```yaml
+postgrescluster:
+  enabled: false
+
+postgresql:
+  type: "external-secret"
+  external:
+    host: "your-host"
+    port: "5432"
+    database: "eoapi"
+    existingSecret:
+      name: "your-db-secret"
+      keys:
+        username: "username"
+        password: "password"
+
+stac:
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    type: "requestRate"
+    targets:
+      requestRate: 50000m
+  settings:
+    envVars:
+      WEB_CONCURRENCY: "4"
+      DB_MIN_CONN_SIZE: "1"
+      DB_MAX_CONN_SIZE: "1"  # pools=2 if ENABLE_TRANSACTIONS_EXTENSIONS=true
+
+raster:
+  autoscaling:
+    enabled: true
+    maxReplicas: 5
+  settings:
+    envVars:
+      WEB_CONCURRENCY: "2"
+      DB_MAX_CONN_SIZE: "1"
+
+vector:
+  autoscaling:
+    enabled: true
+    maxReplicas: 5
+  settings:
+    envVars:
+      WEB_CONCURRENCY: "2"
+      DB_MAX_CONN_SIZE: "1"
+```
+
+See [Configuration — External Database](configuration.md#external-database) for credential options.
+
 ### Scaling Policies
 
 1. Go to the [releases section](https://github.com/developmentseed/eoapi-k8s/releases) of this repository and find the latest

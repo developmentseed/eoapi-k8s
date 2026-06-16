@@ -48,6 +48,30 @@ You have disabled the ingress. To access the services, you need to:
 {{- end }}
 {{- end }}
 
+{{- if not .Values.postgrescluster.enabled }}
+{{- $autoscaled := list }}
+{{- range $svc := (list "stac" "raster" "vector" "multidim") }}
+  {{- $cfg := index $.Values $svc }}
+  {{- if and $cfg $cfg.autoscaling $cfg.autoscaling.enabled }}
+    {{- $autoscaled = append $autoscaled $svc }}
+  {{- end }}
+{{- end }}
+{{- if $autoscaled }}
+
+WARNING: external/shared PostgreSQL + autoscaling
+  postgrescluster.enabled=false (the chart is NOT sizing this database) and autoscaling is
+  enabled on: {{ join ", " $autoscaled }}.
+
+  On a shared database the chart's default pool sizes can open hundreds of connections at the
+  HPA ceiling and exhaust max_connections. Confirm explicit WEB_CONCURRENCY and DB_MAX_CONN_SIZE
+  caps for each autoscaled service and budget them against your max_connections:
+    maxReplicas x WEB_CONCURRENCY x pools x DB_MAX_CONN_SIZE
+  STAC opens TWO pools (reader + writer) when ENABLE_TRANSACTIONS_EXTENSIONS=true.
+
+  See docs/autoscaling.md#external--shared-postgresql.
+{{- end }}
+{{- end }}
+
 To verify the deployment status:
   $ kubectl get pods -n {{ .Release.Namespace }}
 
