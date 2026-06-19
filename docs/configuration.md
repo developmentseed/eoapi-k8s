@@ -324,6 +324,7 @@ raster:
 | `browser.catalogTitle` | Custom catalog title | "" | string |
 | `browser.catalogImage` | Custom catalog logo/image URL | "" | URL string |
 | `browser.footerLinks` | Custom footer links | `[]` | Array of `{label, url}` objects |
+| `browser.extraEnv` | Extra environment variables for the browser container, e.g. stac-browser `SB_*` config options not covered above (such as `SB_itemsPerPage`) | `[]` | Array of `{name, value}` objects |
 
 Example:
 

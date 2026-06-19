@@ -339,3 +339,44 @@ tests:
           content:
             name: SB_footerLinks
             value: '{"label":"Project Home","url":"https://example.com/"},{"label":"Documentation","url":"https://docs.example.com/"}'
+  - it: "stac browser deployment appends browser.extraEnv after the built-in env"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.extraEnv:
+        - name: SB_itemsPerPage
+          value: "60"
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      # the built-in env renders first; extraEnv is appended after it (additive, not a replacement)
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: SB_catalogUrl
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: SB_itemsPerPage
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: "60"
+  - it: "stac browser deployment renders no extra env when browser.extraEnv is unset"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      gitSha: "ABC123"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      # default extraEnv ([]) adds nothing — only the built-in SB_catalogUrl remains
+      - lengthEqual:
+          path: spec.template.spec.containers[0].env
+          count: 1
