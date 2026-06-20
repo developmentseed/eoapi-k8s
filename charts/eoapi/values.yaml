@@ -625,6 +625,13 @@ browser:
   #     url: "https://example.com/terms"
   #   - label: "Privacy"
   #     url: "https://example.com/privacy"
+  # Extra environment variables for the browser container. Use this to set any stac-browser
+  # SB_<option> config not covered by the values above (https://github.com/radiantearth/stac-browser).
+  extraEnv: []
+  # Example:
+  # extraEnv:
+  #   - name: SB_itemsPerPage
+  #     value: "60"
   settings:
     labels: {}
     resources: {}
