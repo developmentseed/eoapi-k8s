@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.13.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.5...v0.13.0) (2026-06-22)
+
+
+### Added
+
+* add browser.extraEnv passthrough for stac-browser SB_* config ([#525](https://github.com/developmentseed/eoapi-k8s/issues/525)) ([6049462](https://github.com/developmentseed/eoapi-k8s/commit/604946217e0bcae98ba1053a823ca36ea8281c88))
+
+
+### Fixed
+
+* completed autoscaling instructions. ([#521](https://github.com/developmentseed/eoapi-k8s/issues/521)) ([a6ed773](https://github.com/developmentseed/eoapi-k8s/commit/a6ed7732a3c33eac2245b74eeb659d24f89cdd8a))
+* rely on pgstac default for context=off. ([#522](https://github.com/developmentseed/eoapi-k8s/issues/522)) ([2248057](https://github.com/developmentseed/eoapi-k8s/commit/224805788abd1bf3a719ba1bcf89fbc6f851d72e))
+
+
+### Maintenance
+
+* **deps:** updated actions/checkout action to v7.0.0. ([#523](https://github.com/developmentseed/eoapi-k8s/issues/523)) ([d46de3f](https://github.com/developmentseed/eoapi-k8s/commit/d46de3f670d7ae40eb5520d19bc987de94cc4917))
+* **deps:** updated helm release prometheus to 29.12.0. ([#519](https://github.com/developmentseed/eoapi-k8s/issues/519)) ([4593584](https://github.com/developmentseed/eoapi-k8s/commit/45935843656fe0b0a0e17fa52528b8b8892a119d))
+* **deps:** updated helm release prometheus to 29.13.0. ([#526](https://github.com/developmentseed/eoapi-k8s/issues/526)) ([c1ce934](https://github.com/developmentseed/eoapi-k8s/commit/c1ce934a7e710fa46964489b90c89a300125b086))
+
 ## [0.12.5](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.4...v0.12.5) (2026-06-12)
 
 
