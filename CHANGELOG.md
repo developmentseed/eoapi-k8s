@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.0...v0.13.1) (2026-06-23)
+
+
+### Maintenance
+
+* **deps:** upgrade eoapi-notifier to 0.1.0. ([#527](https://github.com/developmentseed/eoapi-k8s/issues/527)) ([786e6f1](https://github.com/developmentseed/eoapi-k8s/commit/786e6f1e9cd750f5c6ca78fe21b9825c2cae1afe))
+
 ## [0.13.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.12.5...v0.13.0) (2026-06-22)
 
 
