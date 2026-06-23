@@ -668,7 +668,7 @@ eoapi-notifier:
     - type: cloudevents
       config:
         source: /eoapi/pgstac
-        event_type: org.eoapi.stac.item
+        # Event type is derived from operation (org.ogc.api.collection.item.create/replace/delete)
         # For KNative SinkBinding:
         destination:
           ref:

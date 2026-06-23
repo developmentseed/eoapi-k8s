@@ -665,6 +665,43 @@
               ],
               "default": "INFO",
               "description": "Log level for eoapi-notifier"
+            },
+            "filters": {
+              "type": "array",
+              "description": "Optional event filters applied before output fan-out (OR between blocks, AND within each block)",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "collections": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Restrict forwarding to these collection IDs"
+                  },
+                  "operations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "create",
+                        "replace",
+                        "delete"
+                      ]
+                    },
+                    "description": "Restrict forwarding to these operations"
+                  },
+                  "bbox": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "description": "Restrict forwarding to items overlapping this bounding box [west, south, east, north]"
+                  }
+                }
+              }
             }
           }
         },
