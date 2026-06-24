@@ -438,7 +438,7 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 6.2.2
+    tag: 6.3.1
   command:
     - "uvicorn"
     - "stac_fastapi.pgstac.app:app"
