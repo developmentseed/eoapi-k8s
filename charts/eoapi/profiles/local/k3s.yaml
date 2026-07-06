@@ -14,8 +14,8 @@
 # k3s uses Traefik as the default ingress controller
 ingress:
   className: "traefik"
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+  # Local k3s serves HTTP on port 80 only; pin to the web entrypoint.
+  entrypoints: "web"
 
 ######################
 # POSTGRESQL RESOURCES

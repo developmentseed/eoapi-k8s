@@ -35,6 +35,11 @@ ingress:
   enabled: true
   # ingressClassName: "nginx" or "traefik"
   className: "nginx"
+  # Traefik only: value for the router's `entrypoints` annotation, e.g. "websecure"
+  # or "web,websecure". Empty → the annotation is omitted and the router attaches to
+  # all Traefik entrypoints (Traefik's default). Note "web" is conventionally the
+  # HTTP entrypoint, so pinning to it alone will not serve HTTPS.
+  entrypoints: ""
   rootPath: ""        # Root path for doc server
   # Single host domain configuration (default)
   host: ""

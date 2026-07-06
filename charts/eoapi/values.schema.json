@@ -65,6 +65,10 @@
           ],
           "description": "Ingress controller class name"
         },
+        "entrypoints": {
+          "type": "string",
+          "description": "Traefik only: value for the router entrypoints annotation (e.g. \"websecure\" or \"web,websecure\"). Empty attaches to all entrypoints."
+        },
         "rootPath": {
           "type": "string",
           "description": "Root path for doc server"

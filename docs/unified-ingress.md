@@ -115,9 +115,15 @@ ingress:
   className: "traefik"
   # When using TLS, setting host is required
   host: "example.domain.com"
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+  # Optional: pin the Traefik router to specific entrypoints. Omit (default) to
+  # attach to all entrypoints, which is Traefik's own default. Note that "web" is
+  # conventionally the HTTP entrypoint, so set "websecure" (or "web,websecure")
+  # to serve HTTPS.
+  entrypoints: "websecure"
 ```
+
+If you set the same annotation via `ingress.annotations`, it overrides `ingress.entrypoints`
+because user annotations are rendered after the chart defaults.
 
 ### Path Handling Details
 
