@@ -71,6 +71,7 @@ Helper template for generating ingress paths
 {{- end }}
 
 {{- if and .Values.ingress.enabled (include "eoapi.hasEnabledService" . | trim | eq "true") }}
+{{- $ingressAnnotations := .Values.ingress.annotations | default dict }}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion }}
@@ -89,12 +90,12 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
     {{- end }}
     {{- if eq .Values.ingress.className "traefik" }}
-    {{- with .Values.ingress.entrypoints }}
-    traefik.ingress.kubernetes.io/router.entrypoints: {{ . }}
+    {{- if and .Values.ingress.entrypoints (not (hasKey $ingressAnnotations "traefik.ingress.kubernetes.io/router.entrypoints")) }}
+    traefik.ingress.kubernetes.io/router.entrypoints: {{ .Values.ingress.entrypoints | quote }}
     {{- end }}
     traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd
     {{- end }}
-    {{- with .Values.ingress.annotations }}
+    {{- with $ingressAnnotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:

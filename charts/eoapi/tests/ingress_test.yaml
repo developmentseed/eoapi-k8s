@@ -149,6 +149,46 @@ tests:
             traefik.ingress.kubernetes.io/router.entrypoints: websecure
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
+  - it: "traefik ingress quotes entrypoints annotation values"
+    set:
+      ingress.className: "traefik"
+      ingress.entrypoints: "true"
+      ingress.host: "eoapi.local"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations
+          value:
+            traefik.ingress.kubernetes.io/router.entrypoints: "true"
+            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+
+  - it: "traefik ingress annotations override configured entrypoints"
+    set:
+      ingress.className: "traefik"
+      ingress.entrypoints: "websecure"
+      ingress.annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: web
+      ingress.host: "eoapi.local"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations
+          value:
+            traefik.ingress.kubernetes.io/router.entrypoints: web
+            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+
   - it: "all services enabled with custom paths"
     set:
       ingress.className: "nginx"
