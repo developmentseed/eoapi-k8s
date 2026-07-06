@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.13.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.1...v0.13.2) (2026-07-06)
+
+
+### Fixed
+
+* make Traefik router entrypoints configurable (fixes HTTPS-by-default) ([#540](https://github.com/developmentseed/eoapi-k8s/issues/540)) ([87912ca](https://github.com/developmentseed/eoapi-k8s/commit/87912ca03dcdab38b65f6404c0cd0e719fe46871))
+* **stac-fastapi-pgstac:** Added required collections field. ([1c266ca](https://github.com/developmentseed/eoapi-k8s/commit/1c266caf86fbb6c6e0856e13e9d820d93bdea135))
+
+
+### Maintenance
+
+* **deps:** updated actions/setup-python digest to ece7cb0 ([#532](https://github.com/developmentseed/eoapi-k8s/issues/532)) ([7bbb42c](https://github.com/developmentseed/eoapi-k8s/commit/7bbb42c60f41bef7e2af8b3445de11e0415249a2))
+* **deps:** updated azure/setup-helm digest to 9bc31f4 ([#529](https://github.com/developmentseed/eoapi-k8s/issues/529)) ([536cdb0](https://github.com/developmentseed/eoapi-k8s/commit/536cdb0b2a9dbd4b8359f8317bae4a41a7adc9e3))
+* **deps:** updated docker/build-push-action digest to 53b7df9 ([#534](https://github.com/developmentseed/eoapi-k8s/issues/534)) ([b016524](https://github.com/developmentseed/eoapi-k8s/commit/b016524fd251d10871cf9895ef098034bf05b3b2))
+* **deps:** updated docker/login-action digest to af1e73f ([#538](https://github.com/developmentseed/eoapi-k8s/issues/538)) ([52c2ef6](https://github.com/developmentseed/eoapi-k8s/commit/52c2ef6f66fdd5dbb46d567ab04fb6f5124126b3))
+* **deps:** updated docker/login-action digest to c99871d ([#536](https://github.com/developmentseed/eoapi-k8s/issues/536)) ([6f84797](https://github.com/developmentseed/eoapi-k8s/commit/6f847979262116de5bdfdb8ff626ff51df60c383))
+* **deps:** updated docker/setup-buildx-action digest to bb05f3f ([#537](https://github.com/developmentseed/eoapi-k8s/issues/537)) ([244de36](https://github.com/developmentseed/eoapi-k8s/commit/244de36d71eebff8e34f1dc8df5686506b4fc04c))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.3.1 ([#530](https://github.com/developmentseed/eoapi-k8s/issues/530)) ([3b84434](https://github.com/developmentseed/eoapi-k8s/commit/3b844346451480abc4c38b7a2aac80f8729b4319))
+* **deps:** updated helm release prometheus to 29.14.0. ([#535](https://github.com/developmentseed/eoapi-k8s/issues/535)) ([8cb36b7](https://github.com/developmentseed/eoapi-k8s/commit/8cb36b7e2a4455b09997c0314f472624d623e480))
+
 ## [0.13.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.0...v0.13.1) (2026-06-23)
 
 
