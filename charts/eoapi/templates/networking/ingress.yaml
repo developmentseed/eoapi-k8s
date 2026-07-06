@@ -89,7 +89,9 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
     {{- end }}
     {{- if eq .Values.ingress.className "traefik" }}
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    {{- with .Values.ingress.entrypoints }}
+    traefik.ingress.kubernetes.io/router.entrypoints: {{ . }}
+    {{- end }}
     traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd
     {{- end }}
     {{- with .Values.ingress.annotations }}
