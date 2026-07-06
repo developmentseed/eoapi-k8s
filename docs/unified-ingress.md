@@ -122,6 +122,9 @@ ingress:
   entrypoints: "websecure"
 ```
 
+If you set the same annotation via `ingress.annotations`, it overrides `ingress.entrypoints`
+because user annotations are rendered after the chart defaults.
+
 ### Path Handling Details
 
 Services run at root internally, ingress strips prefixes:

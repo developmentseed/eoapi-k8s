@@ -281,6 +281,7 @@ Unified ingress configuration supporting both NGINX and Traefik:
 |:--------------|:----------------|:------------|:------------|
 | `ingress.enabled` | Enable ingress | true | true/false |
 | `ingress.className` | Ingress controller | "nginx" | "nginx", "traefik" |
+| `ingress.entrypoints` | Traefik router entrypoints (Traefik only) | "" (all entrypoints) | e.g. `"websecure"`, `"web,websecure"`, `"web"` |
 | `ingress.host` | Ingress hostname | "" | valid hostname |
 | `ingress.rootPath` | Doc server root path | "" | valid path |
 | `docServer.redirectTo` | Redirect root `/` to this path instead of showing the landing page | "" | e.g. `/browser/` |
