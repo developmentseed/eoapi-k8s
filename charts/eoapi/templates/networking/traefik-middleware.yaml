@@ -37,4 +37,27 @@ spec:
       - {{ . }}
       {{- end }}
 {{- end }}
+
+{{/*
+Browser served under a sub-path (pathPrefix baked into the image) only answers on the
+trailing-slash form, so the bare path 404s and the prefix is intentionally not stripped.
+Traefik has no built-in append-slash, so redirect the exact bare path to its slash form.
+*/}}
+{{- $browser := .Values.browser }}
+{{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) }}
+{{- $browserPath := trimSuffix "/" ($browser.ingress.path | default "/browser") }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .Release.Name }}-browser-redirect-middleware
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-ingress
+spec:
+  redirectRegex:
+    regex: "^(https?://[^/]+){{ $browserPath }}$"
+    replacement: "${1}{{ $browserPath }}/"
+    permanent: true
+{{- end }}
 {{- end }}

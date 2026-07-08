@@ -93,7 +93,8 @@ metadata:
     {{- if and .Values.ingress.entrypoints (not (hasKey $ingressAnnotations "traefik.ingress.kubernetes.io/router.entrypoints")) }}
     traefik.ingress.kubernetes.io/router.entrypoints: {{ .Values.ingress.entrypoints | quote }}
     {{- end }}
-    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd
+    {{- $browserRedirect := and .Values.browser .Values.browser.enabled (or (not .Values.browser.ingress) .Values.browser.ingress.enabled) }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd{{ if $browserRedirect }},{{ .Release.Namespace }}-{{ .Release.Name }}-browser-redirect-middleware@kubernetescrd{{ end }}
     {{- end }}
     {{- with $ingressAnnotations }}
     {{- toYaml . | nindent 4 }}
