@@ -29,6 +29,11 @@ def mock_oidc_endpoint() -> str:
     return os.getenv("MOCK_OIDC_ENDPOINT", "http://localhost/mock-oidc")
 
 
+@pytest.fixture(scope="session")
+def browser_endpoint() -> str:
+    return os.getenv("BROWSER_ENDPOINT", "http://localhost/browser")
+
+
 def get_mock_token(mock_oidc_endpoint: Optional[str] = None) -> str:
     """Get valid JWT token from mock OIDC server."""
     if mock_oidc_endpoint is None:
