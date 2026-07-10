@@ -33,7 +33,7 @@
 
 ## Contributing
 
-We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development workflow, testing, and PR guidelines.
+We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development workflow, testing, PR guidelines, and AI Use Policy.
 
 **We'd :heart: to hear from you!** Please [join the discussion](https://github.com/developmentseed/eoAPI/discussions/209) to share how you're using eoAPI, or email eoapi@developmentseed.org.
 
