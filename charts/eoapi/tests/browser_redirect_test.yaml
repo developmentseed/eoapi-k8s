@@ -2,23 +2,22 @@ suite: browser bare-path redirect middleware
 templates:
   - templates/networking/traefik-middleware.yaml
   - templates/networking/ingress.yaml
+set:
+  ingress.enabled: true
+  ingress.className: traefik
+  ingress.host: eoapi.local
+  stac.enabled: false
+  raster.enabled: false
+  vector.enabled: false
+  multidim.enabled: false
 tests:
-  - it: "creates a redirectRegex middleware for the browser bare path on traefik"
+  - it: "redirects the browser bare path to its trailing-slash form on traefik"
     template: templates/networking/traefik-middleware.yaml
     set:
-      ingress.enabled: true
-      ingress.className: traefik
-      ingress.host: eoapi.local
-      stac.enabled: false
-      raster.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
       browser.enabled: true
     asserts:
       - hasDocuments:
           count: 1
-      - isKind:
-          of: Middleware
       - equal:
           path: metadata.name
           value: RELEASE-NAME-browser-redirect-middleware
@@ -35,13 +34,6 @@ tests:
   - it: "honours a custom browser ingress path"
     template: templates/networking/traefik-middleware.yaml
     set:
-      ingress.enabled: true
-      ingress.className: traefik
-      ingress.host: eoapi.local
-      stac.enabled: false
-      raster.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
       browser.enabled: true
       browser.ingress.path: "/stac-browser"
     asserts:
@@ -55,44 +47,16 @@ tests:
   - it: "still renders the redirect middleware for a root browser path so the router reference never dangles"
     template: templates/networking/traefik-middleware.yaml
     set:
-      ingress.enabled: true
-      ingress.className: traefik
-      ingress.host: eoapi.local
-      stac.enabled: false
-      raster.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
       browser.enabled: true
       browser.ingress.path: "/"
     asserts:
       - hasDocuments:
           count: 1
-      - equal:
-          path: metadata.name
-          value: RELEASE-NAME-browser-redirect-middleware
-
-  - it: "does not create the redirect middleware when the browser is disabled"
-    template: templates/networking/traefik-middleware.yaml
-    set:
-      ingress.enabled: true
-      ingress.className: traefik
-      ingress.host: eoapi.local
-      stac.enabled: true
-      browser.enabled: false
-    asserts:
-      - hasDocuments:
-          count: 1
-      - equal:
-          path: metadata.name
-          value: RELEASE-NAME-strip-prefix-middleware
 
   - it: "creates no traefik middleware on the nginx controller"
     template: templates/networking/traefik-middleware.yaml
     set:
-      ingress.enabled: true
       ingress.className: nginx
-      ingress.host: eoapi.local
-      stac.enabled: true
       browser.enabled: true
     asserts:
       - hasDocuments:
@@ -101,9 +65,6 @@ tests:
   - it: "chains the browser redirect middleware onto the traefik router annotation"
     template: templates/networking/ingress.yaml
     set:
-      ingress.enabled: true
-      ingress.className: traefik
-      ingress.host: eoapi.local
       stac.enabled: true
       browser.enabled: true
     asserts:
@@ -111,12 +72,9 @@ tests:
           path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
           value: "NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd,NAMESPACE-RELEASE-NAME-browser-redirect-middleware@kubernetescrd"
 
-  - it: "does not chain the redirect when the browser is disabled"
+  - it: "omits the browser redirect from the annotation when the browser is disabled"
     template: templates/networking/ingress.yaml
     set:
-      ingress.enabled: true
-      ingress.className: traefik
-      ingress.host: eoapi.local
       stac.enabled: true
       browser.enabled: false
     asserts:

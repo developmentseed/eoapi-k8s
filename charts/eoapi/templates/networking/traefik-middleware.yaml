@@ -38,11 +38,9 @@ spec:
       {{- end }}
 {{- end }}
 
-{{/*
-Browser served under a sub-path (pathPrefix baked into the image) only answers on the
-trailing-slash form, so the bare path 404s and the prefix is intentionally not stripped.
-Traefik has no built-in append-slash, so redirect the exact bare path to its slash form.
-*/}}
+{{- /* Bare browser path 404s (pathPrefix is baked into the image) and Traefik has no
+       append-slash, so redirect the exact bare path to its trailing-slash form.
+       Keep this condition in sync with the router annotation in ingress.yaml. */}}
 {{- $browser := .Values.browser }}
 {{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) }}
 {{- $browserPath := trimSuffix "/" ($browser.ingress.path | default "/browser") }}
