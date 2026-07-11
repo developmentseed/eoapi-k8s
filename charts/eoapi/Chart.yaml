@@ -2,7 +2,7 @@ apiVersion: v2
 name: eoapi
 description: Create a full Earth Observation API with Metadata, Raster and Vector services
 type: application
-kubeVersion: '>=1.23.0-0'
+kubeVersion: '>=1.34.0-0'
 icon: https://eoapi.dev/img/eoAPI.png
 annotations:
   artifacthub.io/changes: |
