@@ -1,5 +1,6 @@
 suite: helm hooks are correctly applied
 set:
+  browser.catalogUrl: "http://localhost/stac"
   pgstacBootstrap:
     enabled: true
     settings:

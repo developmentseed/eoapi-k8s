@@ -1,5 +1,5 @@
 {{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
-{{- $prefixes := include "eoapi.traefikStripPrefixes" . | fromJsonArray -}}
+{{- $prefixes := include "eoapi.stripPrefixes" . | fromJsonArray -}}
 {{- if $prefixes }}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -15,9 +15,8 @@ spec:
       - {{ . }}
       {{- end }}
 {{- end }}
-{{- $browser := .Values.browser }}
-{{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) }}
-{{- $browserPath := trimSuffix "/" ($browser.ingress.path | default "/browser") }}
+{{- $browserPath := include "eoapi.browserIngressPath" . | trim }}
+{{- if $browserPath }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

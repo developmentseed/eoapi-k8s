@@ -28,6 +28,25 @@ Helper function for common environment variables
 {{- end -}}
 
 {{/*
+Proxy header and root-path command args for API services behind ingress.
+Uses the same effective path as unified ingress routing (eoapi.serviceIngressPath).
+When overrideRootPath is explicitly set to "", --root-path is omitted (stac-auth-proxy mode).
+*/}}
+{{- define "eoapi.serviceProxyArgs" -}}
+{{- $root := .root -}}
+{{- $serviceKey := .service -}}
+{{- if include "eoapi.ingressUsesProxyHeaders" $root | trim }}
+{{- $service := index $root.Values $serviceKey -}}
+- "--proxy-headers"
+- "--forwarded-allow-ips=*"
+{{- if not (and (hasKey $service "overrideRootPath") (eq $service.overrideRootPath "")) }}
+{{- $rootPath := include "eoapi.serviceIngressPath" (dict "service" $service) | trim }}
+- "--root-path={{ $rootPath }}"
+{{- end }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return prometheus-adapter custom metric name for request-rate HPA per service.
 Canonical source for name.as in prometheus-adapter.rules.custom (values.yaml).
 Validated at render time by eoapi.validateHpaAdapterMetricAlignment.

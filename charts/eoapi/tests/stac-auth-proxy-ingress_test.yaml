@@ -2,10 +2,12 @@ suite: test ingress routing without stripPrefix middleware
 templates:
   - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
+  - templates/networking/browser-ingress.yaml
+  - templates/networking/stac-auth-ingress.yaml
 
 tests:
   - it: should route ingress to stac-auth-proxy when enabled
-    template: templates/networking/ingress.yaml
+    template: templates/networking/stac-auth-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -64,7 +66,7 @@ tests:
           count: 0
 
   - it: should route correctly with experimental profile
-    template: templates/networking/ingress.yaml
+    template: templates/networking/stac-auth-ingress.yaml
     values:
       - ../profiles/experimental.yaml
     set:
@@ -82,7 +84,10 @@ tests:
                   number: 8080
 
   - it: should route ingress to browser
-    template: templates/networking/ingress.yaml
+    template: templates/networking/browser-ingress.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-ingress
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -96,7 +101,7 @@ tests:
           path: spec.rules[0].http.paths
           content:
             pathType: Prefix
-            path: /browser
+            path: /browser/
             backend:
               service:
                 name: RELEASE-NAME-browser
@@ -105,6 +110,28 @@ tests:
 
   - it: should include both stac and browser when both enabled
     template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/stac"
+      stac-auth-proxy.enabled: true
+      browser.enabled: true
+      docServer.enabled: false
+      service.port: 8080
+    asserts:
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /stac
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /browser/
+
+  - it: should route stac auth proxy on separate ingress when both stac and browser enabled
+    template: templates/networking/stac-auth-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -125,11 +152,27 @@ tests:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
+
+  - it: should route browser on separate ingress when both stac and browser enabled
+    template: templates/networking/browser-ingress.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-ingress
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/stac"
+      stac-auth-proxy.enabled: true
+      browser.enabled: true
+      service.port: 8080
+    asserts:
       - contains:
           path: spec.rules[0].http.paths
           content:
             pathType: Prefix
-            path: /browser
+            path: /browser/
             backend:
               service:
                 name: RELEASE-NAME-browser

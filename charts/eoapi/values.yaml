@@ -43,6 +43,12 @@ ingress:
   # hosts: []
   # Custom annotations to add to the ingress
   annotations: {}
+  # NGINX only: annotations for preserve-prefix ingress (merged over filtered ingress.annotations)
+  preservePrefixAnnotations: {}
+  # NGINX only: annotations for browser ingress resources (merged over filtered ingress.annotations)
+  browserAnnotations: {}
+  # NGINX only: annotations for stac-auth ingress (merged over filtered ingress.annotations)
+  stacAuthAnnotations: {}
   # TLS configuration
   tls:
     enabled: false
@@ -604,6 +610,7 @@ browser:
     port: 8080
   ingress:
     enabled: true  # Control ingress specifically for browser service
+    # Fixed by the pathPrefix baked into the bundled browser image.
     path: "/browser"
   # OAuth2 client ID for browser (frontend app)
   oidcClientId: "stac-browser"

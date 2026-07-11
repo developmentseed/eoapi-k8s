@@ -44,7 +44,10 @@ ingress:
   rootPath: ""        # Root path for doc server
   host: ""            # Single host (or use hosts array)
   hosts: []           # Multiple hosts (takes precedence over host)
-  annotations: {}     # Custom annotations
+  annotations: {}     # Custom annotations for the main ingress
+  preservePrefixAnnotations: {}  # NGINX: preserve-prefix ingress
+  browserAnnotations: {}       # NGINX: browser ingress resources
+  stacAuthAnnotations: {}      # NGINX: stac-auth ingress
   tls:
     enabled: false
     secretName: eoapi-tls
@@ -87,9 +90,9 @@ For these cases, deploy multiple helm releases with different configurations.
 
 API services run at root internally while ingress strips configured prefixes. Path matching differs by controller:
 
-- **NGINX** uses regex paths with `ImplementationSpecific` path type and rewrite annotations
+- **NGINX** uses regex paths with `ImplementationSpecific` path type and rewrite annotations for prefixed API routes
 - **Traefik** uses `Prefix` paths with strip-prefix middleware
-- **Root paths** (`stac.ingress.path: "/"`) keep `Prefix` path type on both controllers
+- **Root paths** (`stac.ingress.path: "/"`) keep `Prefix` path type and do not use rewrite or strip-prefix middleware. On **Traefik**, they stay on the main ingress. On **NGINX**, root-path API services and the doc server always render on `{release}-preserve-prefix-ingress` so `rewrite-target` never applies to `/`
 
 Services configure their expected external prefix via the `--root-path` flag:
 
@@ -97,7 +100,7 @@ Services configure their expected external prefix via the `--root-path` flag:
 - **Raster**: `--root-path=/raster`
 - **Vector**: `--root-path=/vector`
 - **Multidim**: `--root-path=/multidim`
-- **Browser**: Served from the unified ingress at `/browser` (or a custom `browser.ingress.path`). Unlike API services, the browser path prefix is preserved at the pod because the image is built with `pathPrefix=/browser/`. Both controllers redirect bare `/browser` to `/browser/`.
+- **Browser**: Served at `/browser`. Unlike API services, the browser path prefix is preserved at the pod because the bundled image is built with `pathPrefix=/browser/`. Both controllers redirect bare `/browser` to `/browser/` (NGINX: 301, Traefik: 308). On **NGINX**, browser routes live on separate `{release}-browser-ingress` and `{release}-browser-redirect` resources without `rewrite-target`; API paths stay on `{release}-ingress`.
 
 ### Ingress Controller Support
 
@@ -112,6 +115,16 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/enable-cors: "true"
 ```
+
+NGINX renders up to five ingress resources depending on which services are enabled:
+
+- `{release}-ingress` — prefixed API services, with regex rewrite when any strip-prefix route is present
+- `{release}-preserve-prefix-ingress` — root-path API services and the doc server (`Prefix` paths, no rewrite)
+- `{release}-stac-auth-ingress` — STAC auth proxy when enabled (`Prefix` path, no rewrite)
+- `{release}-browser-ingress` — browser (`Prefix` path `/browser/`, no rewrite)
+- `{release}-browser-redirect` — bare `/browser` path (`Exact` path with `permanent-redirect`)
+
+`ingress.annotations` apply to the main ingress. For separate NGINX ingress resources, use the dedicated annotation maps (`preservePrefixAnnotations`, `browserAnnotations`, `stacAuthAnnotations`). Each map is merged over a compatibility-filtered subset of `ingress.annotations` that omits rewrite, redirect, and snippet annotations unsafe on prefix-preserving routes.
 
 #### Traefik Ingress Controller
 
@@ -147,7 +160,7 @@ Service receives: GET /tiles/123
 
 ## STAC Browser Configuration
 
-The STAC browser is routed through the same unified ingress as the API services. Unlike API services, the browser keeps its path prefix at the pod because the image is built with `pathPrefix=/browser/`. Both NGINX and Traefik add a bare-path redirect so `/browser` resolves to `/browser/`.
+The STAC browser is routed through the unified ingress on Traefik, and via dedicated `{release}-browser-ingress` and `{release}-browser-redirect` resources on NGINX. Unlike API services, the browser keeps its path prefix at the pod because the bundled image is built with `pathPrefix=/browser/`. Both controllers add a bare-path redirect so `/browser` resolves to `/browser/`. The bundled image therefore supports only `/browser` (with an optional trailing slash) as `browser.ingress.path`.
 
 ```yaml
 browser:

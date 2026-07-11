@@ -6,3 +6,6 @@ It doesn't create any resources but ensures configuration consistency.
 {{- include "eoapi.validateStacAuthProxy" . }}
 {{- include "eoapi.validateAutoscaleRules" . }}
 {{- include "eoapi.validateHpaAdapterMetricAlignment" . }}
+{{- include "eoapi.validateBrowserIngress" . }}
+{{- include "eoapi.validateIngressPaths" . }}
+{{- include "eoapi.validateBrowserIngressHost" . }}

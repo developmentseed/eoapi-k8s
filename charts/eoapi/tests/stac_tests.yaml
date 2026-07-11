@@ -2,6 +2,7 @@ suite: stac service tests
 templates:
   - templates/_helpers/core.tpl
   - templates/_helpers/database.tpl
+  - templates/_helpers/networking.tpl
   - templates/_helpers/services.tpl
   - templates/services/stac/deployment.yaml
   - templates/services/stac/configmap.yaml

@@ -1,0 +1,19 @@
+{{- $paths := include "eoapi.stacAuthIngressPaths" . | trim }}
+{{- if and .Values.ingress.enabled (eq .Values.ingress.className "nginx") $paths }}
+{{- $stacAnnotations := include "eoapi.stacAuthIngressAnnotations" . | trim -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-stac-auth-ingress
+  labels:
+    app: {{ .Release.Name }}-ingress
+  {{- if $stacAnnotations }}
+  annotations:
+    {{- $stacAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- include "eoapi.ingressRules" (dict "root" . "pathsTpl" "eoapi.stacAuthIngressPaths") | nindent 4 }}
+  {{- include "eoapi.ingressTLS" . | nindent 2 }}
+{{- end }}

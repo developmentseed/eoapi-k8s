@@ -1,12 +1,13 @@
-"""Integration test for the STAC Browser bare-path redirect on Traefik.
+"""Integration test for the STAC Browser bare-path redirect.
 
 The browser image bakes in a ``pathPrefix``, so it only answers on the
-trailing-slash form and the bare path used to 404. The chart adds a Traefik
-``redirectRegex`` middleware so ``GET /browser`` 301-redirects to ``/browser/``.
+trailing-slash form and the bare path used to 404. The chart redirects
+``GET /browser`` to ``/browser/`` on both NGINX and Traefik.
 See PR #544 / issue #545.
 """
 
 import os
+from urllib.parse import urlparse
 
 import httpx
 
@@ -20,14 +21,16 @@ else:
 
 
 def test_browser_bare_path_redirects_to_slash(browser_endpoint: str) -> None:
-    """GET /browser 301-redirects to /browser/ (Traefik redirect middleware).
+    """GET /browser redirects to /browser/ (ingress redirect rule).
 
-    The redirect is handled by Traefik, so it holds even before the browser
-    pod is ready.
+    NGINX returns 301; Traefik returns 308. The redirect is handled at ingress,
+    so it holds even before the browser pod is ready.
     """
     resp = client.get(browser_endpoint)
-    assert resp.status_code == 301
-    assert resp.headers["location"] == f"{browser_endpoint}/"
+    assert resp.status_code in (301, 308)
+    location = urlparse(resp.headers["location"])
+    endpoint = urlparse(browser_endpoint)
+    assert location.path == endpoint.path.rstrip("/") + "/"
 
 
 def test_browser_trailing_slash_serves(browser_endpoint: str) -> None:

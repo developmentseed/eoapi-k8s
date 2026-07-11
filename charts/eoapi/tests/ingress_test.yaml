@@ -2,6 +2,9 @@ suite: unified ingress tests
 templates:
   - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
+  - templates/networking/browser-ingress.yaml
+  - templates/networking/preserve-prefix-ingress.yaml
+  - templates/networking/stac-auth-ingress.yaml
   - templates/networking/traefik-middleware.yaml
 tests:
   - it: "should not create ingress when all services disabled"
@@ -21,7 +24,7 @@ tests:
           count: 0
 
   - it: "stac-only deployment at root path with nginx"
-    template: templates/networking/ingress.yaml
+    template: templates/networking/preserve-prefix-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -39,7 +42,7 @@ tests:
           of: Ingress
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-ingress
+          value: RELEASE-NAME-preserve-prefix-ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
           value: "/"
@@ -49,6 +52,134 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-stac
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+
+  - it: "nginx root-only stac does not create main ingress"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: false
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/"
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "nginx splits root-path stac from prefixed paths when rewrite is required"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/"
+      raster.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/raster(/|$)(.*)"
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+          value: "/$2"
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: "/"
+
+  - it: "nginx routes root-path stac on preserve-prefix ingress when rewrite is required"
+    template: templates/networking/preserve-prefix-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/"
+      raster.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-preserve-prefix-ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Prefix"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-stac
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+
+  - it: "nginx splits docServer from prefixed paths when rewrite is required"
+    template: templates/networking/preserve-prefix-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-doc-server
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+
+  - it: "nginx docServer with prefixed raster stays off main ingress rewrite paths"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/raster(/|$)(.*)"
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: "/"
+            backend:
+              service:
+                name: RELEASE-NAME-doc-server
 
   - it: "stac-only deployment at root path with traefik"
     template: templates/networking/ingress.yaml
@@ -74,6 +205,8 @@ tests:
       - equal:
           path: spec.ingressClassName
           value: "traefik"
+      - notExists:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
 
   - it: "vector ingress with nginx controller"
     template: templates/networking/ingress.yaml
@@ -203,6 +336,7 @@ tests:
     template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
+      docServer.enabled: false
       raster.enabled: true
       raster.ingress.path: "/titiler"
       stac.enabled: true
@@ -217,18 +351,32 @@ tests:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac(/|$)(.*)"
+          value: "/titiler(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[1].path
-          value: "/titiler(/|$)(.*)"
+          value: "/stac(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[2].path
           value: "/features(/|$)(.*)"
+      - lengthEqual:
+          path: spec.rules[0].http.paths
+          count: 3
+
+  - it: "browser fixed path on nginx browser ingress"
+    template: templates/networking/browser-ingress.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-ingress
+    set:
+      ingress.className: "nginx"
+      browser.enabled: true
+      browser.ingress.path: "/browser"
+    asserts:
       - equal:
-          path: spec.rules[0].http.paths[3].path
-          value: "/browser"
+          path: spec.rules[0].http.paths[0].path
+          value: "/browser/"
       - equal:
-          path: spec.rules[0].http.paths[3].pathType
+          path: spec.rules[0].http.paths[0].pathType
           value: "Prefix"
 
   - it: "multiple hosts with services"
@@ -254,10 +402,10 @@ tests:
           value: "backup.eoapi.dev"
       - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/stac(/|$)(.*)"
+          value: "/raster(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[1].path
-          value: "/raster(/|$)(.*)"
+          value: "/stac(/|$)(.*)"
       - equal:
           path: spec.rules[0].http.paths[2].path
           value: "/vector(/|$)(.*)"
@@ -315,7 +463,7 @@ tests:
           value: "eoapi-tls"
 
   - it: "stac with auth proxy enabled"
-    template: templates/networking/ingress.yaml
+    template: templates/networking/stac-auth-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -327,15 +475,21 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: false
+      docServer.enabled: false
     asserts:
       - isKind:
           of: Ingress
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-stac-auth-proxy
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
 
   - it: "browser with default path"
-    template: templates/networking/ingress.yaml
+    template: templates/networking/browser-ingress.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-ingress
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -349,20 +503,67 @@ tests:
       - isKind:
           of: Ingress
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-browser-ingress
+      - equal:
           path: spec.rules[0].http.paths[0].path
-          value: "/browser"
+          value: "/browser/"
       - equal:
           path: spec.rules[0].http.paths[0].pathType
           value: "Prefix"
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-browser
-      - matchRegex:
+      - notExists:
           path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
-          pattern: 'location = /browser \{\n  return 301 /browser/;\n\}'
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
 
-  - it: "docServer creates root path entry"
+  - it: "browser-only nginx does not create main ingress"
     template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      docServer.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "stac and browser on nginx split across main and browser ingresses"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      stac.enabled: true
+      browser.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      docServer.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/stac(/|$)(.*)"
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: "/browser"
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+          value: "/$2"
+
+  - it: "nginx docServer-only uses preserve-prefix ingress"
+    template: templates/networking/preserve-prefix-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -381,6 +582,23 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-doc-server
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+
+  - it: "prefixed-only nginx does not create preserve-prefix ingress"
+    template: templates/networking/preserve-prefix-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
 
   - it: "mockOidcServer with custom path"
     template: templates/networking/ingress.yaml
@@ -429,6 +647,89 @@ tests:
             nginx.ingress.kubernetes.io/use-regex: "true"
             cert-manager.io/cluster-issuer: "letsencrypt-prod"
             nginx.ingress.kubernetes.io/rate-limit: "100"
+
+  - it: "preservePrefixAnnotations apply to preserve-prefix ingress"
+    template: templates/networking/preserve-prefix-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+      ingress.preservePrefixAnnotations:
+        nginx.ingress.kubernetes.io/enable-access-log: "true"
+      docServer.enabled: true
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations
+          value:
+            nginx.ingress.kubernetes.io/enable-cors: "true"
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+
+  - it: "browserAnnotations apply to browser ingress"
+    template: templates/networking/browser-ingress.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-ingress
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+      ingress.browserAnnotations:
+        nginx.ingress.kubernetes.io/enable-access-log: "true"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      docServer.enabled: false
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            nginx.ingress.kubernetes.io/enable-cors: "true"
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+
+  - it: "stacAuthAnnotations apply to stac-auth ingress"
+    template: templates/networking/stac-auth-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+      ingress.stacAuthAnnotations:
+        nginx.ingress.kubernetes.io/enable-access-log: "true"
+      stac.enabled: true
+      stac-auth-proxy.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations
+          value:
+            nginx.ingress.kubernetes.io/enable-cors: "true"
+            nginx.ingress.kubernetes.io/enable-access-log: "true"
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
 
   - it: "should not create ingress when ingress is disabled"
     template: templates/networking/ingress.yaml
@@ -505,6 +806,20 @@ tests:
       - equal:
           path: spec.stripPrefix.prefixes
           value:
-            - /stac
             - /raster
             - /multidim
+            - /stac
+
+  - it: "traefik omits strip-prefix middleware for root-only API routing"
+    template: templates/networking/traefik-middleware.yaml
+    set:
+      ingress.className: "traefik"
+      stac.enabled: true
+      stac.ingress.path: "/"
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

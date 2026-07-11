@@ -45,15 +45,7 @@ spec:
         name: stac
         command:
           {{- toYaml .Values.stac.command | nindent 10 }}
-          {{- if (and (.Values.ingress.className) (or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik"))) }}
-          - "--proxy-headers"
-          - "--forwarded-allow-ips=*"
-          {{- if and (hasKey .Values.stac "overrideRootPath") (ne .Values.stac.overrideRootPath "") }}
-          - "--root-path={{ .Values.stac.overrideRootPath }}"
-          {{- else }}
-          - "--root-path={{ .Values.stac.ingress.path }}"
-          {{- end }}
-          {{- end }}{{/* needed for proxies and path rewrites on NLB */}}
+          {{- include "eoapi.serviceProxyArgs" (dict "root" . "service" "stac") | nindent 10 }}
         livenessProbe:
           tcpSocket:
             port: {{ .Values.service.port }}

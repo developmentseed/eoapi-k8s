@@ -87,6 +87,18 @@
           "type": "object",
           "description": "Additional annotations for ingress"
         },
+        "preservePrefixAnnotations": {
+          "type": "object",
+          "description": "NGINX only: annotations for preserve-prefix ingress (merged over filtered ingress.annotations)"
+        },
+        "browserAnnotations": {
+          "type": "object",
+          "description": "NGINX only: annotations for browser ingress resources (merged over filtered ingress.annotations)"
+        },
+        "stacAuthAnnotations": {
+          "type": "object",
+          "description": "NGINX only: annotations for stac-auth ingress (merged over filtered ingress.annotations)"
+        },
         "tls": {
           "type": "object",
           "properties": {
@@ -566,7 +578,11 @@
             },
             "path": {
               "type": "string",
-              "description": "Ingress path prefix for the browser service"
+              "enum": [
+                "/browser",
+                "/browser/"
+              ],
+              "description": "Browser ingress path. The bundled browser image is built with the fixed /browser/ path prefix."
             }
           }
         },

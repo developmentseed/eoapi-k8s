@@ -1,0 +1,39 @@
+{{- $paths := include "eoapi.browserIngressPaths" . | trim }}
+{{- if and .Values.ingress.enabled (eq .Values.ingress.className "nginx") $paths }}
+{{- $browserAnnotations := include "eoapi.browserIngressAnnotations" . | trim -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-browser-ingress
+  labels:
+    app: {{ .Release.Name }}-ingress
+  {{- if $browserAnnotations }}
+  annotations:
+    {{- $browserAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- include "eoapi.ingressRules" (dict "root" . "pathsTpl" "eoapi.browserIngressPaths") | nindent 4 }}
+  {{- include "eoapi.ingressTLS" . | nindent 2 }}
+{{- if include "eoapi.browserRedirectTarget" . | trim }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-browser-redirect
+  labels:
+    app: {{ .Release.Name }}-ingress
+  annotations:
+    {{- if $browserAnnotations }}
+    {{- $browserAnnotations | nindent 4 }}
+    {{- end }}
+    nginx.ingress.kubernetes.io/permanent-redirect: {{ include "eoapi.browserRedirectTarget" . | quote }}
+    nginx.ingress.kubernetes.io/permanent-redirect-code: "301"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- include "eoapi.ingressRules" (dict "root" . "pathsTpl" "eoapi.browserRedirectIngressPaths") | nindent 4 }}
+  {{- include "eoapi.ingressTLS" . | nindent 2 }}
+{{- end }}
+{{- end }}

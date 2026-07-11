@@ -2,6 +2,7 @@ suite: browser bare-path redirect middleware
 templates:
   - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
+  - templates/networking/browser-ingress.yaml
   - templates/networking/traefik-middleware.yaml
 set:
   ingress.enabled: true
@@ -32,20 +33,6 @@ tests:
           path: spec.redirectRegex.permanent
           value: true
 
-  - it: "honours a custom browser ingress path"
-    template: templates/networking/traefik-middleware.yaml
-    set:
-      ingress.className: traefik
-      browser.enabled: true
-      browser.ingress.path: "/stac.browser"
-    asserts:
-      - equal:
-          path: spec.redirectRegex.regex
-          value: '^(https?://[^/]+)/stac\.browser$'
-      - equal:
-          path: spec.redirectRegex.replacement
-          value: "${1}/stac.browser/"
-
   - it: "creates no traefik middleware on the nginx controller"
     template: templates/networking/traefik-middleware.yaml
     set:
@@ -55,36 +42,89 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: "adds an nginx server-snippet redirect for the browser bare path"
-    template: templates/networking/ingress.yaml
+  - it: "adds an nginx exact-path redirect ingress for the browser bare path"
+    template: templates/networking/browser-ingress.yaml
     set:
       ingress.className: nginx
       browser.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-redirect
     asserts:
-      - matchRegex:
-          path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
-          pattern: 'location = /browser \{\n  return 301 /browser/;\n\}'
-
-  - it: "honours a custom browser ingress path on nginx"
-    template: templates/networking/ingress.yaml
-    set:
-      ingress.className: nginx
-      browser.enabled: true
-      browser.ingress.path: "/stac-browser"
-    asserts:
-      - matchRegex:
-          path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
-          pattern: 'location = /stac-browser \{\n  return 301 /stac-browser/;\n\}'
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/permanent-redirect"]
+          value: "/browser/"
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/permanent-redirect-code"]
+          value: "301"
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/browser"
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: "Exact"
 
   - it: "omits the nginx browser redirect when browser is disabled"
-    template: templates/networking/ingress.yaml
+    template: templates/networking/browser-ingress.yaml
     set:
       ingress.className: nginx
       browser.enabled: false
       stac.enabled: true
     asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "does not add rewrite-target to nginx browser ingress resources"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: nginx
+      browser.enabled: true
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        nginx.ingress.kubernetes.io/permanent-redirect: /elsewhere
+        nginx.ingress.kubernetes.io/permanent-redirect-code: "308"
+        nginx.ingress.kubernetes.io/server-snippet: return 302 /elsewhere;
+        nginx.ingress.kubernetes.io/configuration-snippet: return 302 /elsewhere;
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-ingress
+    asserts:
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/use-regex"]
       - notExists:
           path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/configuration-snippet"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/permanent-redirect"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/permanent-redirect-code"]
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/enable-cors"]
+          value: "true"
+
+  - it: "does not let user annotations override the nginx browser redirect"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: nginx
+      browser.enabled: true
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/permanent-redirect: /elsewhere
+        nginx.ingress.kubernetes.io/permanent-redirect-code: "308"
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-browser-redirect
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/permanent-redirect"]
+          value: "/browser/"
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/permanent-redirect-code"]
+          value: "301"
 
   - it: "chains the browser redirect middleware onto the traefik router annotation"
     template: templates/networking/ingress.yaml

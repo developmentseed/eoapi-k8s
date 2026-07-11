@@ -1,0 +1,19 @@
+{{- $paths := include "eoapi.preservePrefixIngressPaths" . | trim }}
+{{- if and .Values.ingress.enabled $paths }}
+{{- $preserveAnnotations := include "eoapi.preservePrefixIngressAnnotations" . | trim -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-preserve-prefix-ingress
+  labels:
+    app: {{ .Release.Name }}-ingress
+  {{- if $preserveAnnotations }}
+  annotations:
+    {{- $preserveAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- include "eoapi.ingressRules" (dict "root" . "pathsTpl" "eoapi.preservePrefixIngressPaths") | nindent 4 }}
+  {{- include "eoapi.ingressTLS" . | nindent 2 }}
+{{- end }}

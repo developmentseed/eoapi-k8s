@@ -1,6 +1,7 @@
 suite: stac browser service tests
 templates:
   - templates/_helpers/core.tpl
+  - templates/_helpers/networking.tpl
   - templates/services/browser/deployment.yaml
   - templates/services/browser/service.yaml
 tests:
@@ -363,3 +364,71 @@ tests:
       - lengthEqual:
           path: spec.template.spec.containers[0].env
           count: 1
+  - it: "stac browser deployment uses first ingress.hosts when ingress.host is empty"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      ingress.host: ""
+      ingress.hosts:
+        - "api.eoapi.dev"
+        - "backup.eoapi.dev"
+      stac.ingress.path: "/stac"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogUrl
+            value: "http://api.eoapi.dev/stac"
+  - it: "stac browser deployment prefers ingress.hosts over ingress.host"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      ingress.host: "primary.eoapi.dev"
+      ingress.hosts:
+        - "api.eoapi.dev"
+        - "backup.eoapi.dev"
+      stac.ingress.path: "/stac"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_catalogUrl
+            value: "http://api.eoapi.dev/stac"
+  - it: "stac browser deployment auth redirect uses first ingress.hosts when ingress.host is empty"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.env.OIDC_DISCOVERY_URL: "https://auth.example.com/.well-known/openid-configuration"
+      ingress.host: ""
+      ingress.hosts:
+        - "api.eoapi.dev"
+      stac.ingress.path: "/stac"
+      browser.oidcClientId: "test-client"
+      browser.oidcDiscoveryUrl: "https://auth.example.com/.well-known/openid-configuration"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_authConfig
+            value: |-
+              {
+                "type": "openIdConnect",
+                "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
+                "oidcConfig": {
+                  "client_id": "test-client",
+                  "redirect_uri": "http://api.eoapi.dev/browser/auth"
+                }
+              }

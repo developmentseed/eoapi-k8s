@@ -2,6 +2,7 @@ suite: multidim service tests
 templates:
   - templates/_helpers/core.tpl
   - templates/_helpers/database.tpl
+  - templates/_helpers/networking.tpl
   - templates/_helpers/services.tpl
   - templates/services/multidim/deployment.yaml
   - templates/services/multidim/configmap.yaml

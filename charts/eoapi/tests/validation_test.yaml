@@ -2,13 +2,17 @@ suite: validation tests
 templates:
   - templates/core/validation.yaml
   - templates/_helpers/services.tpl
+  - templates/_helpers/networking.tpl
   - templates/_helpers/validation.tpl
   - templates/_helpers/database.tpl
+set:
+  browser.catalogUrl: "http://localhost/stac"
 tests:
   - it: passes when prometheus adapter is enabled but no request-rate autoscaling is active
     set:
       monitoring.prometheusAdapter.enabled: true
       gitSha: ABC123
+      browser.catalogUrl: "http://localhost/stac"
     template: templates/core/validation.yaml
     asserts:
       - hasDocuments:
@@ -18,6 +22,7 @@ tests:
     set:
       monitoring.prometheusAdapter.enabled: true
       gitSha: ABC123
+      browser.catalogUrl: "http://localhost/stac"
       stac.autoscaling.enabled: true
       stac.autoscaling.type: requestRate
     template: templates/core/validation.yaml
@@ -29,6 +34,7 @@ tests:
     set:
       monitoring.prometheusAdapter.enabled: true
       gitSha: ABC123
+      browser.catalogUrl: "http://localhost/stac"
       stac.autoscaling.enabled: true
       stac.autoscaling.type: cpu
       raster.autoscaling.enabled: true
@@ -74,6 +80,7 @@ tests:
       monitoring.prometheusAdapter.enabled: false
       prometheus-adapter.rules.custom: []
       gitSha: ABC123
+      browser.catalogUrl: "http://localhost/stac"
     template: templates/core/validation.yaml
     asserts:
       - hasDocuments:

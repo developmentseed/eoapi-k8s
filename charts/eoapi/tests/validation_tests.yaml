@@ -1,8 +1,11 @@
 suite: validation tests
 templates:
   - templates/_helpers/database.tpl
+  - templates/_helpers/networking.tpl
   - templates/_helpers/validation.tpl
   - templates/core/validation.yaml
+set:
+  browser.catalogUrl: "http://localhost/stac"
 tests:
   - it: rejects postgrescluster type when cluster disabled
     set:
@@ -141,3 +144,65 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: When postgresql.type is 'external-secret' and existingSecret.keys.host is not set, postgresql.external.host must be set
+
+  - it: rejects API ingress path without leading slash
+    set:
+      raster.enabled: true
+      raster.ingress.path: "raster"
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: raster.ingress.path must start with "/" (got "raster")
+
+  - it: rejects API ingress path with trailing slash
+    set:
+      raster.enabled: true
+      raster.ingress.path: "/raster/"
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: raster.ingress.path must not have a trailing slash except "/" (got "/raster/")
+
+  - it: allows root API ingress path
+    set:
+      stac.enabled: true
+      stac.ingress.path: "/"
+      browser.enabled: false
+      browser.catalogUrl: "http://localhost/stac"
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: rejects browser without ingress host when default catalog URL is used
+    set:
+      browser.enabled: true
+      browser.catalogUrl: ""
+      ingress.host: ""
+      ingress.hosts: []
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: browser requires ingress.host or ingress.hosts[0] when browser.catalogUrl and browser.authConfig are unset and default URLs are used
+
+  - it: passes browser without ingress host when catalogUrl is set
+    set:
+      browser.enabled: true
+      browser.catalogUrl: "https://custom.example.com/stac"
+      ingress.host: ""
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: passes browser without ingress host when ingress.hosts provides primary host
+    set:
+      browser.enabled: true
+      browser.catalogUrl: ""
+      ingress.host: ""
+      ingress.hosts:
+        - "api.eoapi.dev"
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
