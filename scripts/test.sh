@@ -102,13 +102,18 @@ test_unit() {
 
     check_requirements helm || return 1
 
+    log_debug "Updating Helm chart dependencies..."
+    if ! helm dependency update "$CHART_PATH" &>/dev/null; then
+        log_warn "Helm dependency update failed, continuing anyway..."
+    fi
+
     if ! helm plugin list 2>/dev/null | grep -q unittest; then
         log_error "Helm unittest plugin not installed"
         log_info "Install it with: curl -fsSL https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/install-binary.sh | bash"
         return 1
     fi
 
-    if helm unittest "$CHART_PATH"; then
+    if helm unittest "$CHART_PATH" -f 'tests/*_test.yaml' -f 'tests/*_tests.yaml' --color; then
         log_success "Unit tests passed"
     else
         log_error "Unit tests failed"

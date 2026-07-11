@@ -1,5 +1,6 @@
 suite: stac browser service tests
 templates:
+  - templates/_helpers/core.tpl
   - templates/services/browser/deployment.yaml
   - templates/services/browser/service.yaml
 tests:

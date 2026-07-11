@@ -1,6 +1,6 @@
 suite: pgstac notification triggers tests
 templates:
-  - templates/pgstacbootstrap/configmap.yaml
+  - templates/database/pgstacbootstrap/configmap.yaml
 tests:
   - it: "pgstac settings should include notification function when enabled"
     set:

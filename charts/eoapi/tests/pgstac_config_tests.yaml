@@ -1,8 +1,10 @@
 suite: pgstac configuration tests
 templates:
-  - templates/pgstacbootstrap/configmap.yaml
-  - templates/pgstacbootstrap/queue-processor.yaml
-  - templates/pgstacbootstrap/extent-updater.yaml
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/database/pgstacbootstrap/configmap.yaml
+  - templates/database/pgstacbootstrap/queue-processor.yaml
+  - templates/database/pgstacbootstrap/extent-updater.yaml
 tests:
   # PgSTAC Settings Tests
   - it: should apply custom pgstac settings
@@ -16,7 +18,7 @@ tests:
             update_collection_extent: "true"
             context: "on"
             context_estimated_count: "50000"
-    template: templates/pgstacbootstrap/configmap.yaml
+    template: templates/database/pgstacbootstrap/configmap.yaml
     documentIndex: 0
     asserts:
       - matchRegex:
@@ -36,7 +38,7 @@ tests:
     set:
       pgstacBootstrap:
         enabled: true
-    template: templates/pgstacbootstrap/configmap.yaml
+    template: templates/database/pgstacbootstrap/configmap.yaml
     documentIndex: 0
     asserts:
       - matchRegex:
@@ -57,7 +59,7 @@ tests:
         settings:
           pgstacSettings:
             use_queue: "true"
-    template: templates/pgstacbootstrap/queue-processor.yaml
+    template: templates/database/pgstacbootstrap/queue-processor.yaml
     asserts:
       - hasDocuments:
           count: 1
@@ -77,7 +79,7 @@ tests:
         settings:
           pgstacSettings:
             use_queue: "false"
-    template: templates/pgstacbootstrap/queue-processor.yaml
+    template: templates/database/pgstacbootstrap/queue-processor.yaml
     asserts:
       - hasDocuments:
           count: 0
@@ -91,7 +93,7 @@ tests:
             use_queue: "true"
           queueProcessor:
             schedule: "*/15 * * * *"
-    template: templates/pgstacbootstrap/queue-processor.yaml
+    template: templates/database/pgstacbootstrap/queue-processor.yaml
     asserts:
       - equal:
           path: spec.schedule
@@ -108,7 +110,7 @@ tests:
         settings:
           pgstacSettings:
             update_collection_extent: "false"
-    template: templates/pgstacbootstrap/extent-updater.yaml
+    template: templates/database/pgstacbootstrap/extent-updater.yaml
     asserts:
       - hasDocuments:
           count: 1
@@ -128,7 +130,7 @@ tests:
         settings:
           pgstacSettings:
             update_collection_extent: "true"
-    template: templates/pgstacbootstrap/extent-updater.yaml
+    template: templates/database/pgstacbootstrap/extent-updater.yaml
     asserts:
       - hasDocuments:
           count: 0
@@ -142,7 +144,7 @@ tests:
             update_collection_extent: "false"
           extentUpdater:
             schedule: "0 */6 * * *"
-    template: templates/pgstacbootstrap/extent-updater.yaml
+    template: templates/database/pgstacbootstrap/extent-updater.yaml
     asserts:
       - equal:
           path: spec.schedule
@@ -161,8 +163,8 @@ tests:
             use_queue: "true"
             update_collection_extent: "false"
     templates:
-      - templates/pgstacbootstrap/queue-processor.yaml
-      - templates/pgstacbootstrap/extent-updater.yaml
+      - templates/database/pgstacbootstrap/queue-processor.yaml
+      - templates/database/pgstacbootstrap/extent-updater.yaml
     asserts:
       - hasDocuments:
           count: 1
@@ -174,8 +176,8 @@ tests:
       pgstacBootstrap:
         enabled: false
     templates:
-      - templates/pgstacbootstrap/queue-processor.yaml
-      - templates/pgstacbootstrap/extent-updater.yaml
+      - templates/database/pgstacbootstrap/queue-processor.yaml
+      - templates/database/pgstacbootstrap/extent-updater.yaml
     asserts:
       - hasDocuments:
           count: 0
@@ -188,7 +190,7 @@ tests:
         settings:
           pgstacSettings:
             use_queue: "true"
-    template: templates/pgstacbootstrap/queue-processor.yaml
+    template: templates/database/pgstacbootstrap/queue-processor.yaml
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.cpu
@@ -204,7 +206,7 @@ tests:
         settings:
           pgstacSettings:
             update_collection_extent: "false"
-    template: templates/pgstacbootstrap/extent-updater.yaml
+    template: templates/database/pgstacbootstrap/extent-updater.yaml
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.cpu

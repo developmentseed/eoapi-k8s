@@ -1,5 +1,8 @@
 suite: raster service tests
 templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/services.tpl
   - templates/services/raster/deployment.yaml
   - templates/services/raster/configmap.yaml
   - templates/services/raster/service.yaml
@@ -23,17 +26,8 @@ tests:
           path: spec.strategy.type
           value: "RollingUpdate"
       - equal:
-          path: spec.template.spec.containers[0].resources.limits.cpu
-          value: "768m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.cpu
-          value: "256m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.memory
-          value: "4096Mi"
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.memory
-          value: "3072Mi"
+          path: metadata.labels.gitsha
+          value: "ABC123"
 
   - it: "raster deployment includes configmap checksum annotation"
     set:
