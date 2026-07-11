@@ -26,6 +26,7 @@ COMMANDS:
     lint            Run Helm lint on chart
     unit            Run Helm unit tests
     images          Check container images for root user
+    gitsha          Test gitSha injection script
     integration     Run integration tests with pytest
     notification    Run notification tests with database access
     all             Run all tests
@@ -129,6 +130,14 @@ test_images() {
     "${SCRIPT_DIR}/test/images.sh"
 }
 
+test_gitsha() {
+    log_info "Testing gitSha injection..."
+
+    check_requirements git || return 1
+
+    "${SCRIPT_DIR}/test/gitsha.sh"
+}
+
 test_integration() {
     local pytest_args="${1:-}"
     export NAMESPACE="$NAMESPACE"
@@ -155,6 +164,7 @@ test_all() {
     test_schema || ((failed++))
     test_lint || ((failed++))
     test_unit || ((failed++))
+    test_gitsha || ((failed++))
     test_images || ((failed++))
 
     if validate_cluster 2>/dev/null; then
@@ -200,7 +210,7 @@ main() {
                 pytest_args="$2"
                 shift 2
                 ;;
-            schema|lint|unit|images|notification|integration|all)
+            schema|lint|unit|images|gitsha|notification|integration|all)
                 command="$1"
                 shift
                 ;;
@@ -226,6 +236,9 @@ main() {
             ;;
         images)
             test_images
+            ;;
+        gitsha)
+            test_gitsha
             ;;
         integration)
             test_integration "$pytest_args"

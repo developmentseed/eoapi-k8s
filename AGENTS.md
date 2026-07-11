@@ -74,11 +74,13 @@ If any answer is "I don't know," stop. Ask a clarifying question. Do not guess.
 
 `gitSha` is resolved automatically by the `eoapi.gitSha` template helper:
 
-1. Explicit `--set gitSha=...` (or values file override)
+1. Explicit `gitSha` in values (or `--set` override)
 2. `gitSha` in packaged chart values (injected at release publish time)
 3. Chart version as fallback
 
-Local installs via `./eoapi-cli deployment run` still pass the current git commit for accuracy. Do not add `--set gitSha` to user-facing Helm examples unless documenting an explicit override.
+CI integration deploys run `scripts/inject-chart-git-sha.sh` before `deployment run` so cluster labels carry the commit under test. Local installs use chart-version fallback unless you override `gitSha` manually.
+
+Do not add `--set gitSha` to user-facing Helm examples unless documenting an explicit override.
 
 ---
 

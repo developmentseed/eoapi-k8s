@@ -14,7 +14,6 @@ tests:
       stac.enabled: false
       vector.enabled: false
       multidim.enabled: true
-      gitSha: "ABC123"
     template: templates/services/multidim/deployment.yaml
     asserts:
       - isKind:
@@ -25,9 +24,6 @@ tests:
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
-      - equal:
-          path: metadata.labels.gitsha
-          value: "ABC123"
 
   - it: "multidim deployment includes configmap checksum annotation"
     set:
@@ -70,7 +66,6 @@ tests:
       multidim.annotations:
         annotation1: hello
         annotation2: world
-      gitSha: "ABC123"
     template: templates/services/multidim/service.yaml
     asserts:
       - isKind:

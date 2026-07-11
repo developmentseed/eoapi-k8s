@@ -46,6 +46,9 @@ jobs:
           helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
           helm unittest charts/eoapi -f 'tests/*_test.yaml' -f 'tests/*_tests.yaml' --color
 
+      - name: Test gitSha injection script
+        run: ./eoapi-cli test gitsha
+
       - name: Check container images for root user
         run: ./eoapi-cli test images
 
@@ -88,6 +91,9 @@ jobs:
 
       - name: Wait until cluster is ready
         run: ./eoapi-cli cluster wait-ready
+
+      - name: Inject git SHA for deployment tracking
+        run: bash scripts/inject-chart-git-sha.sh charts/eoapi/values.yaml
 
       - name: Deploy eoAPI
         run: ./eoapi-cli deployment run --profile k3d

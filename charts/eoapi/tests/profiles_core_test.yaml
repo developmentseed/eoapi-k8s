@@ -10,8 +10,6 @@ tests:
   - it: core profile renders stac deployment
     values:
       - ../profiles/core.yaml
-    set:
-      gitSha: ABC123
     template: templates/services/stac/deployment.yaml
     asserts:
       - isKind:
@@ -20,8 +18,6 @@ tests:
   - it: core profile keeps testing infrastructure disabled
     values:
       - ../profiles/core.yaml
-    set:
-      gitSha: ABC123
     template: templates/testing/deployment.yaml
     asserts:
       - hasDocuments:
