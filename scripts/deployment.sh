@@ -154,13 +154,6 @@ run_deployment() {
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].type=pgstac"
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
 
-    local git_sha
-    if git_sha=$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null | cut -c1-10) && [[ -n "$git_sha" ]]; then
-        helm_cmd="$helm_cmd --set gitSha=$git_sha"
-    else
-        log_warn "Could not determine git SHA; chart will fall back to chart version"
-    fi
-
     # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when testing mode is enabled
     # Testing mode enables stac-auth-proxy, so we need to set the correct service names
     # Also configure STAC service to run without root path when behind auth proxy

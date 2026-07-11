@@ -11,7 +11,6 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: true
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -22,9 +21,6 @@ tests:
       - matchRegex:
           path: metadata.labels.app
           pattern: ^RELEASE-NAME-browser$
-      - equal:
-          path: metadata.labels.gitsha
-          value: "ABC123"
   - it: "stac browser service"
     set:
       raster.enabled: false
@@ -35,7 +31,6 @@ tests:
       browser.annotations:
         annotation1: hello
         annotation2: world
-      gitSha: "ABC123"
     template: templates/services/browser/service.yaml
     asserts:
       - isKind:
@@ -66,7 +61,6 @@ tests:
       testing.mockOidcServer.ingress.path: "/mock-oidc"
       browser.oidcClientId: "test-client"
       browser.oidcDiscoveryUrl: "http://localhost/mock-oidc/.well-known/openid-configuration"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -102,7 +96,6 @@ tests:
       stac.ingress.path: "/stac"
       browser.oidcClientId: "test-client"
       browser.oidcDiscoveryUrl: "https://auth.example.com/.well-known/openid-configuration"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -130,7 +123,6 @@ tests:
       stac-auth-proxy.enabled: false
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -155,7 +147,6 @@ tests:
       ingress.host: "localhost"
       ingress.tls.enabled: false
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -175,7 +166,6 @@ tests:
       ingress.host: "secure.example.com"
       ingress.tls.enabled: true
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -202,7 +192,6 @@ tests:
         openIdConnectUrl: "https://auth.example.com/realms/demo/.well-known/openid-configuration"
         oidcConfig:
           client_id: "eoapi"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -223,7 +212,6 @@ tests:
       browser.settings.resources.limits.memory: "200Mi"
       browser.settings.resources.requests.cpu: "64m"
       browser.settings.resources.requests.memory: "100Mi"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -250,7 +238,6 @@ tests:
       browser.catalogTitle: "Example Data Catalog"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -270,7 +257,6 @@ tests:
       browser.catalogImage: "https://example.com/images/catalog_logo.png"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -294,7 +280,6 @@ tests:
           url: "https://docs.example.com/"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -320,7 +305,6 @@ tests:
           url: "https://docs.example.com/"
       ingress.host: "localhost"
       stac.ingress.path: "/stac"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -350,7 +334,6 @@ tests:
       browser.extraEnv:
         - name: SB_itemsPerPage
           value: "60"
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:
@@ -372,7 +355,6 @@ tests:
       vector.enabled: false
       multidim.enabled: false
       browser.enabled: true
-      gitSha: "ABC123"
     template: templates/services/browser/deployment.yaml
     asserts:
       - isKind:

@@ -37,12 +37,10 @@ if ! helm dependency update "$CHART_PATH" &>/dev/null; then
 fi
 
 rendered_yaml=$(helm template test-release "$CHART_PATH" \
-  --set gitSha=test \
   -f "$PROFILE_PATH" \
   --set stac-auth-proxy.enabled=false \
   2>&1 || \
 helm template test-release "$CHART_PATH" \
-  --set gitSha=test \
   -f "$PROFILE_PATH" \
   --set stac-auth-proxy.env.OIDC_DISCOVERY_URL=https://dummy.example.com/.well-known/openid-configuration \
   --set stac-auth-proxy.env.OIDC_DISCOVERY_INTERNAL_URL=https://dummy.example.com/.well-known/openid-configuration \
