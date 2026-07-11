@@ -1,6 +1,12 @@
 suite: postgresql tests
 templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/services.tpl
+  - templates/_helpers/validation.tpl
+  - templates/core/validation.yaml
   - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
 tests:
   - it: should use custom cluster name for secret references when specified
     set:
@@ -14,6 +20,7 @@ tests:
             databases: ["postgres"]
           - name: my-user
             databases: ["my-db"]
+      gitSha: ABC123
       stac:
         enabled: true
       raster:
@@ -39,6 +46,7 @@ tests:
     release:
       name: test-release
     set:
+      gitSha: ABC123
       postgresql:
         type: postgrescluster
       postgrescluster:
@@ -71,8 +79,6 @@ tests:
 
   - it: should fail when external-plaintext is used with postgrescluster enabled
     set:
-      stac:
-        enabled: true
       postgresql:
         type: external-plaintext
         external:
@@ -82,15 +88,13 @@ tests:
             password: test
       postgrescluster:
         enabled: true
-    template: templates/services/stac/deployment.yaml
+    template: templates/core/validation.yaml
     asserts:
       - failedTemplate:
           errorMessage: When postgresql.type is 'external-plaintext', postgrescluster.enabled must be set to false
 
   - it: should fail when external-secret is used with postgrescluster enabled
     set:
-      stac:
-        enabled: true
       postgresql:
         type: external-secret
         external:
@@ -102,7 +106,7 @@ tests:
               password: pass
       postgrescluster:
         enabled: true
-    template: templates/services/stac/deployment.yaml
+    template: templates/core/validation.yaml
     asserts:
       - failedTemplate:
           errorMessage: When postgresql.type is 'external-secret', postgrescluster.enabled must be set to false

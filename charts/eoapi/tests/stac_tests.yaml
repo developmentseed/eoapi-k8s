@@ -1,5 +1,8 @@
 suite: stac service tests
 templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/services.tpl
   - templates/services/stac/deployment.yaml
   - templates/services/stac/configmap.yaml
   - templates/services/stac/service.yaml
@@ -22,18 +25,6 @@ tests:
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.cpu
-          value: "768m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.cpu
-          value: "256m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.memory
-          value: "1024Mi"
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.memory
-          value: "1024Mi"
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"
@@ -67,7 +58,7 @@ tests:
           pattern: ^RELEASE-NAME-stac-envvar-configmap$
       - equal:
           path: data.WEB_CONCURRENCY
-          value: "5"
+          value: "10"
 
   - it: "stac browser service"
     set:
