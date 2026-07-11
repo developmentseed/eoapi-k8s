@@ -50,23 +50,19 @@ external_links:
    ```bash
    # Replace VERSION with latest from `helm search repo eoapi`
    $ export CHART_VERSION=$(helm search repo eoapi/eoapi --versions | head -2 | tail -1 | awk '{print $2}')
-   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi --version $CHART_VERSION -f config.yaml
+   $ helm install -n eoapi --create-namespace eoapi eoapi/eoapi \
+       --version $CHART_VERSION \
+       -f config.yaml
    ```
 
 5. or check out this repo and `helm install` from this repo's `charts/` folder:
 
     ```bash
-      ######################################################
-      # create os environment variables for required secrets
-      ######################################################
-      $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-
       $ cd ./charts
 
       $ helm install \
           --namespace eoapi \
           --create-namespace \
-          --set gitSha=$GITSHA \
           eoapi \
           ./eoapi
     ```

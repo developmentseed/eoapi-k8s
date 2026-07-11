@@ -17,18 +17,17 @@ The required values to pass to `helm install` or `helm template` commands can be
 ```bash
 {
   "required": [
-    "service",
-    "gitSha"
+    "service"
   ]
 }
 ```
 
-Most fields have sensible defaults. Here are the core configuration options:
+Most fields have sensible defaults. Deployment git SHA is injected at chart publish time, or falls back to chart version; override with `gitSha` if needed.
 
 | **Values Key** | **Description** | **Default** | **Choices** |
 |:--------------|:----------------|:------------|:------------|
 | `service.port` | Port for all services (vector/raster/stac) | 8080 | any valid port |
-| `gitSha` | SHA for deployment tracking | gitshaABC123 | any valid SHA |
+| `gitSha` | Optional SHA override for deployment tracking | (auto) | any valid SHA |
 
 ## Database Configuration
 

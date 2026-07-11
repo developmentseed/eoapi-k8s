@@ -69,6 +69,9 @@ Use pre-configured profiles for common deployment scenarios:
 # Production deployment with stable services only
 helm install eoapi eoapi/eoapi -f profiles/core.yaml
 
+# Full production with autoscaling and observability
+helm install eoapi eoapi/eoapi -f profiles/production.yaml
+
 # Development with all features enabled
 helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
 
@@ -122,6 +125,7 @@ pgstacBootstrap:
 | Profile | Use Case | Services | Features |
 |---------|----------|----------|----------|
 | `profiles/core.yaml` | Production | STAC, Raster, Vector | Stable, optimized resources |
+| `profiles/production.yaml` | Production | STAC, Raster, Vector, Browser | HA, autoscaling, observability |
 | `profiles/experimental.yaml` | Development/Testing | All services | Includes experimental features, monitoring |
 | `profiles/local/k3s.yaml` | Local k3s | Inherits from experimental | k3s-specific settings |
 | `profiles/local/minikube.yaml` | Local minikube | Inherits from experimental | Minikube-specific settings |
@@ -175,6 +179,8 @@ postgresql:
 
 2. External Database:
 ```yaml
+postgrescluster:
+  enabled: false
 postgresql:
   type: "external-plaintext"
   external:
@@ -188,6 +194,8 @@ postgresql:
 
 3. External Database with Secrets:
 ```yaml
+postgrescluster:
+  enabled: false
 postgresql:
   type: "external-secret"
   external:

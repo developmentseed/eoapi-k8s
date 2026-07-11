@@ -1,0 +1,39 @@
+suite: gitSha resolution
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/services.tpl
+  - templates/_helpers/database.tpl
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+tests:
+  - it: uses explicit gitSha when set
+    set:
+      stac.enabled: true
+      gitSha: "custom1234"
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels.gitsha
+          value: custom1234
+
+  - it: uses packaged gitSha when set in values
+    set:
+      stac.enabled: true
+      gitSha: "release1234"
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.labels.gitsha
+          value: release1234
+
+  - it: falls back to chart version when value is placeholder
+    set:
+      stac.enabled: true
+      gitSha: "gitshaABC123"
+    template: templates/services/stac/deployment.yaml
+    chart:
+      version: 0.13.2
+    asserts:
+      - equal:
+          path: metadata.labels.gitsha
+          value: 0.13.2

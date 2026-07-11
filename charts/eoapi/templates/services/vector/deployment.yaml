@@ -6,7 +6,7 @@ metadata:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: vector
     app: {{ .Release.Name }}-vector
-    gitsha: {{ .Values.gitSha }}
+    gitsha: {{ include "eoapi.gitSha" . }}
   name: {{ .Release.Name }}-vector
   {{- if .Values.vector.annotations }}
   annotations:
