@@ -1,0 +1,143 @@
+suite: validation tests
+templates:
+  - templates/_helpers/database.tpl
+  - templates/_helpers/validation.tpl
+  - templates/core/validation.yaml
+tests:
+  - it: rejects postgrescluster type when cluster disabled
+    set:
+      postgresql.type: postgrescluster
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'postgrescluster', postgrescluster.enabled must be true
+
+  - it: rejects postgrescluster with more than two users
+    set:
+      postgresql.type: postgrescluster
+      postgrescluster.enabled: true
+      postgrescluster.users:
+        - name: postgres
+          databases: [postgres]
+        - name: user1
+          databases: [db]
+        - name: user2
+          databases: [db]
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: The users array in postgrescluster should not have more than two users declared b/c the last user declared will override all secrets generated in eoapi.pgstacSecrets
+
+  - it: rejects postgrescluster without postgres user
+    set:
+      postgresql.type: postgrescluster
+      postgrescluster.enabled: true
+      postgrescluster.users:
+        - name: eoapi
+          databases: [db]
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: The users array in postgrescluster must contain at least one user named 'postgres'.
+
+  - it: rejects external-plaintext with postgrescluster enabled
+    set:
+      postgresql.type: external-plaintext
+      postgresql.external.host: test-db
+      postgresql.external.credentials.username: test
+      postgresql.external.credentials.password: test
+      postgrescluster.enabled: true
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-plaintext', postgrescluster.enabled must be set to false
+
+  - it: rejects external-plaintext without host
+    set:
+      postgresql.type: external-plaintext
+      postgresql.external.credentials.username: test
+      postgresql.external.credentials.password: test
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-plaintext', postgresql.external.host must be set
+
+  - it: rejects external-plaintext without username
+    set:
+      postgresql.type: external-plaintext
+      postgresql.external.host: test-db
+      postgresql.external.credentials.password: test
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-plaintext', postgresql.external.credentials.username must be set
+
+  - it: rejects external-plaintext without password
+    set:
+      postgresql.type: external-plaintext
+      postgresql.external.host: test-db
+      postgresql.external.credentials.username: test
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-plaintext', postgresql.external.credentials.password must be set
+
+  - it: rejects external-secret with postgrescluster enabled
+    set:
+      postgresql.type: external-secret
+      postgresql.external.host: test-db
+      postgresql.external.existingSecret.name: my-secret
+      postgrescluster.enabled: true
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-secret', postgrescluster.enabled must be set to false
+
+  - it: rejects external-secret without secret name
+    set:
+      postgresql.type: external-secret
+      postgresql.external.host: test-db
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-secret', postgresql.external.existingSecret.name must be set
+
+  - it: rejects external-secret without username key
+    set:
+      postgresql.type: external-secret
+      postgresql.external.host: test-db
+      postgresql.external.existingSecret.name: my-secret
+      postgresql.external.existingSecret.keys.username: ""
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-secret', postgresql.external.existingSecret.keys.username must be set
+
+  - it: rejects external-secret without password key
+    set:
+      postgresql.type: external-secret
+      postgresql.external.host: test-db
+      postgresql.external.existingSecret.name: my-secret
+      postgresql.external.existingSecret.keys.password: ""
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-secret', postgresql.external.existingSecret.keys.password must be set
+
+  - it: rejects external-secret without host when host key unset
+    set:
+      postgresql.type: external-secret
+      postgresql.external.existingSecret.name: my-secret
+      postgresql.external.existingSecret.keys.host: ""
+      postgrescluster.enabled: false
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: When postgresql.type is 'external-secret' and existingSecret.keys.host is not set, postgresql.external.host must be set
