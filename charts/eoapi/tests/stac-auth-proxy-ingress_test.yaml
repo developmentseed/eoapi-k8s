@@ -1,9 +1,11 @@
 suite: test ingress routing without stripPrefix middleware
 templates:
+  - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
 
 tests:
   - it: should route ingress to stac-auth-proxy when enabled
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -25,6 +27,7 @@ tests:
                   number: 8080
 
   - it: should route ingress directly to stac when auth-proxy is disabled
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -46,6 +49,7 @@ tests:
                   number: 8080
 
   - it: should not create ingress when both stac and browser are disabled
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       stac.enabled: false
@@ -60,6 +64,7 @@ tests:
           count: 0
 
   - it: should route correctly with experimental profile
+    template: templates/networking/ingress.yaml
     values:
       - ../profiles/experimental.yaml
     set:
@@ -77,6 +82,7 @@ tests:
                   number: 8080
 
   - it: should route ingress to browser
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -89,8 +95,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /browser(/|$)(.*)
+            pathType: Prefix
+            path: /browser
             backend:
               service:
                 name: RELEASE-NAME-browser
@@ -98,6 +104,7 @@ tests:
                   number: 8080
 
   - it: should include both stac and browser when both enabled
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -121,8 +128,8 @@ tests:
       - contains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /browser(/|$)(.*)
+            pathType: Prefix
+            path: /browser
             backend:
               service:
                 name: RELEASE-NAME-browser

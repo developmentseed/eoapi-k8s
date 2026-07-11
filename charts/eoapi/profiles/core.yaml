@@ -166,7 +166,6 @@ observability:
 ingress:
   enabled: true
   className: "nginx"
-  pathType: "Prefix"
   host: ""
   tls:
     enabled: false
