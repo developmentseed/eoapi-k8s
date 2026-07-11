@@ -74,7 +74,7 @@ helm upgrade --install \
   --namespace eoapi \
   --create-namespace \
   --set gitSha=$GITSHA \
-  eoapi devseed/eoapi
+  eoapi eoapi/eoapi
 ```
 
 ### Post-Installation

@@ -90,42 +90,58 @@ Profiles are pre-configured values files that override the default `values.yaml`
 
 Deploy with a single profile:
 ```bash
+export GITSHA=$(git rev-parse HEAD | cut -c1-10)
+
 # Minimal production deployment
-helm install eoapi ./charts/eoapi -f profiles/core.yaml
+helm install eoapi ./charts/eoapi \
+  -f profiles/core.yaml \
+  --set gitSha=$GITSHA
 
 # Full production with autoscaling and observability
-helm install eoapi ./charts/eoapi -f profiles/production.yaml
+helm install eoapi ./charts/eoapi \
+  -f profiles/production.yaml \
+  --set gitSha=$GITSHA
 
 # Development deployment with all experimental features
-helm install eoapi ./charts/eoapi -f profiles/experimental.yaml
+helm install eoapi ./charts/eoapi \
+  -f profiles/experimental.yaml \
+  --set gitSha=$GITSHA
 ```
 
 ### Layered Profiles
 
 Combine profiles for specific environments:
 ```bash
+export GITSHA=$(git rev-parse HEAD | cut -c1-10)
+
 # k3s local development
 helm install eoapi ./charts/eoapi \
   -f profiles/experimental.yaml \
-  -f profiles/local/k3s.yaml
+  -f profiles/local/k3s.yaml \
+  --set gitSha=$GITSHA
 
 # Minikube local development
 helm install eoapi ./charts/eoapi \
   -f profiles/experimental.yaml \
-  -f profiles/local/minikube.yaml
+  -f profiles/local/minikube.yaml \
+  --set gitSha=$GITSHA
 ```
 
 ### Custom Overrides
 
 Add your own overrides on top of profiles:
 ```bash
+export GITSHA=$(git rev-parse HEAD | cut -c1-10)
+
 # Use core profile with custom domain
 helm install eoapi ./charts/eoapi \
   -f profiles/core.yaml \
+  --set gitSha=$GITSHA \
   --set ingress.host=api.example.com
 
 # Use experimental profile with external database
 helm install eoapi ./charts/eoapi \
   -f profiles/experimental.yaml \
-  -f my-custom-values.yaml
+  -f my-custom-values.yaml \
+  --set gitSha=$GITSHA
 ```
