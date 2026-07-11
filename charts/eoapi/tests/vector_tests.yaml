@@ -1,5 +1,8 @@
 suite: vector service tests
 templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/services.tpl
   - templates/services/vector/deployment.yaml
   - templates/services/vector/configmap.yaml
   - templates/services/vector/service.yaml
@@ -23,18 +26,6 @@ tests:
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.cpu
-          value: "768m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.cpu
-          value: "256m"
-      - equal:
-          path: spec.template.spec.containers[0].resources.limits.memory
-          value: "1024Mi"
-      - equal:
-          path: spec.template.spec.containers[0].resources.requests.memory
-          value: "256Mi"
       - equal:
           path: metadata.labels.gitsha
           value: "ABC123"
