@@ -31,7 +31,7 @@ spec:
     - type: Pods
       pods:
         metric:
-          name: nginx_ingress_controller_requests
+          name: {{ include "eoapi.hpaRequestRateMetricName" (dict "service" "multidim") }}
         target:
           type: AverageValue
           averageValue: {{ .Values.multidim.autoscaling.targets.requestRate }}
@@ -45,7 +45,7 @@ spec:
     - type: Pods
       pods:
         metric:
-          name: nginx_ingress_controller_requests
+          name: {{ include "eoapi.hpaRequestRateMetricName" (dict "service" "multidim") }}
         target:
           type: AverageValue
           averageValue: {{ .Values.multidim.autoscaling.targets.requestRate }}

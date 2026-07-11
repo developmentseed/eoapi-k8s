@@ -28,6 +28,35 @@ so we use this helper function to check autoscaling rules
 {{- end -}}
 
 {{/*
+Ensure prometheus-adapter custom metric names match HPA request-rate metrics.
+*/}}
+{{- define "eoapi.validateHpaAdapterMetricAlignment" -}}
+{{- if .Values.monitoring.prometheusAdapter.enabled }}
+{{- $adapter := index .Values "prometheus-adapter" | default dict }}
+{{- $rules := list }}
+{{- if and $adapter.rules $adapter.rules.custom }}
+{{- $rules = $adapter.rules.custom }}
+{{- end }}
+{{- range .Values.apiServices }}
+{{- $service := . }}
+{{- $autoscaling := index $.Values $service "autoscaling" | default dict }}
+{{- if and $autoscaling.enabled (or (eq $autoscaling.type "requestRate") (eq $autoscaling.type "both")) }}
+{{- $expected := include "eoapi.hpaRequestRateMetricName" (dict "service" $service) | trim }}
+{{- $found := false }}
+{{- range $rules }}
+{{- if and .name .name.as (eq .name.as $expected) }}
+{{- $found = true }}
+{{- end }}
+{{- end }}
+{{- if not $found }}
+{{- fail (printf "prometheus-adapter.rules.custom must define name.as %q for request-rate HPA (service %q). See eoapi.hpaRequestRateMetricName in _helpers/services.tpl" $expected $service) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Validate stac-auth-proxy configuration
 Ensures OIDC_DISCOVERY_URL is set when stac-auth-proxy is enabled
 Ensures stac-auth-proxy cannot be enabled when stac is disabled

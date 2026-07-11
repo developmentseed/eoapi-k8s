@@ -183,7 +183,7 @@ EOF
 
     if is_ci; then
         log_info "Applying CI-specific configurations..."
-        helm_cmd="$helm_cmd --set monitoring.prometheusAdapter.prometheus.url=http://$RELEASE_NAME-prometheus-server.eoapi.svc.cluster.local"
+        helm_cmd="$helm_cmd --set prometheus-adapter.prometheus.url=http://$RELEASE_NAME-prometheus-server.$NAMESPACE.svc.cluster.local"
         testing_mode=true
     fi
 
