@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-browser
   labels:
     app: {{ .Release.Name }}-browser
-    gitsha: {{ .Values.gitSha }}
+    gitsha: {{ include "eoapi.gitSha" . }}
 spec:
   replicas: {{ .Values.browser.replicaCount | default 1 }}
   selector:

@@ -2,13 +2,12 @@
   "$schema": "http://json-schema.org/schema#",
   "type": "object",
   "required": [
-    "service",
-    "gitSha"
+    "service"
   ],
   "properties": {
     "gitSha": {
       "type": "string",
-      "description": "Git SHA of the deployment"
+      "description": "Optional git SHA override for deployment tracking. Published charts inject the release commit at package time; otherwise falls back to chart version."
     },
     "serviceAccount": {
       "type": "object",

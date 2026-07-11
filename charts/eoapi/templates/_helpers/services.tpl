@@ -24,7 +24,7 @@ Helper function for common environment variables
 - name: RELEASE_NAME
   value: {{ $root.Release.Name | quote }}
 - name: GIT_SHA
-  value: {{ $root.Values.gitSha | quote }}
+  value: {{ include "eoapi.gitSha" $root | quote }}
 {{- end -}}
 
 {{/*

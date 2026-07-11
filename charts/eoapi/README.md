@@ -27,17 +27,11 @@ helm install --set disable_check_for_upgrades=true pgo \
   oci://registry.developers.crunchydata.com/crunchydata/pgo \
   --version 5.8.6
 
-export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-
 # Install eoAPI with core profile (stable services only)
-helm install eoapi eoapi/eoapi \
-  -f profiles/core.yaml \
-  --set gitSha=$GITSHA
+helm install eoapi eoapi/eoapi -f profiles/core.yaml
 
 # Or install with all features for development
-helm install eoapi eoapi/eoapi \
-  -f profiles/experimental.yaml \
-  --set gitSha=$GITSHA
+helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
 ```
 
 ## Prerequisites
@@ -72,34 +66,24 @@ When enabled, the ingress will automatically route STAC API requests through the
 Use pre-configured profiles for common deployment scenarios:
 
 ```bash
-export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-
 # Production deployment with stable services only
-helm install eoapi eoapi/eoapi \
-  -f profiles/core.yaml \
-  --set gitSha=$GITSHA
+helm install eoapi eoapi/eoapi -f profiles/core.yaml
 
 # Full production with autoscaling and observability
-helm install eoapi eoapi/eoapi \
-  -f profiles/production.yaml \
-  --set gitSha=$GITSHA
+helm install eoapi eoapi/eoapi -f profiles/production.yaml
 
 # Development with all features enabled
-helm install eoapi eoapi/eoapi \
-  -f profiles/experimental.yaml \
-  --set gitSha=$GITSHA
+helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
 
 # Local k3s development
 helm install eoapi eoapi/eoapi \
   -f profiles/experimental.yaml \
-  -f profiles/local/k3s.yaml \
-  --set gitSha=$GITSHA
+  -f profiles/local/k3s.yaml
 
 # Local minikube development
 helm install eoapi eoapi/eoapi \
   -f profiles/experimental.yaml \
-  -f profiles/local/minikube.yaml \
-  --set gitSha=$GITSHA
+  -f profiles/local/minikube.yaml
 ```
 
 See [profiles/README.md](./profiles/README.md) for detailed profile documentation.

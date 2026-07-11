@@ -31,6 +31,19 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Resolve deployment git SHA: explicit value or chart version fallback.
+Published charts inject gitSha into values at release time.
+*/}}
+{{- define "eoapi.gitSha" -}}
+{{- $sha := .Values.gitSha -}}
+{{- if or (not $sha) (eq $sha "gitshaABC123") -}}
+{{- .Chart.Version -}}
+{{- else -}}
+{{- $sha -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "eoapi.labels" -}}

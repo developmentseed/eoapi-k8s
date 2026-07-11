@@ -70,15 +70,15 @@ If any answer is "I don't know," stop. Ask a clarifying question. Do not guess.
 
 ---
 
-## 4. Required Value on Every Install/Upgrade
+## 4. Deployment Git SHA
 
-`gitSha` is required on every `helm install` or `helm upgrade`:
+`gitSha` is resolved automatically by the `eoapi.gitSha` template helper:
 
-```bash
---set gitSha=$(git rev-parse HEAD | cut -c1-10)
-```
+1. Explicit `--set gitSha=...` (or values file override)
+2. `gitSha` in packaged chart values (injected at release publish time)
+3. Chart version as fallback
 
-If you are generating Helm commands for the user, always include this flag. Omitting it will cause the install to fail.
+Local installs via `./eoapi-cli deployment run` still pass the current git commit for accuracy. Do not add `--set gitSha` to user-facing Helm examples unless documenting an explicit override.
 
 ---
 
@@ -192,7 +192,6 @@ Do not submit until every item is checked. Each must be concretely true, not sel
 - [ ] The correct test suite ran and passed (see Section 5 table)
 - [ ] Snapshots were regenerated if any template changed, and the diff is fully explained
 - [ ] `values.schema.json` updated if any new value was added
-- [ ] Helm commands in docs or scripts include `--set gitSha=...`
 - [ ] Commit message follows Conventional Commits and explains intent
 - [ ] ArgoCD annotations are not mixed with Helm hook annotations
 - [ ] External DB config sets both `postgrescluster.enabled: false` AND `postgresql.type: external-*`

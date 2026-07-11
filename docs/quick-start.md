@@ -63,17 +63,11 @@ helm upgrade --install \
 helm repo add eoapi https://devseed.com/eoapi-k8s/
 ```
 
-3. Get your current git SHA:
-```bash
-export GITSHA=$(git rev-parse HEAD | cut -c1-10)
-```
-
-4. Install eoAPI:
+3. Install eoAPI:
 ```bash
 helm upgrade --install \
   --namespace eoapi \
   --create-namespace \
-  --set gitSha=$GITSHA \
   eoapi eoapi/eoapi
 ```
 

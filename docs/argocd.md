@@ -163,8 +163,8 @@ spec:
       valueFiles:
         - values/argocd.yaml
       values: |
-        # Required values
-        gitSha: "abc123def456"
+        # Optional: override deployment SHA (published charts inject gitSha at release time)
+        # gitSha: "$ARGOCD_APP_REVISION"
 
         # Database initialization with ArgoCD integration
         pgstacBootstrap:

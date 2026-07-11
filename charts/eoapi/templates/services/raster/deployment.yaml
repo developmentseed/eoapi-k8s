@@ -6,7 +6,7 @@ metadata:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: raster
     app: {{ .Release.Name }}-raster
-    gitsha: {{ .Values.gitSha }}
+    gitsha: {{ include "eoapi.gitSha" . }}
   name: {{ .Release.Name }}-raster
   {{- if .Values.raster.annotations }}
   annotations:
