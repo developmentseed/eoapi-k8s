@@ -37,3 +37,15 @@ tests:
       - equal:
           path: metadata.labels.gitsha
           value: 0.13.2
+
+  - it: sets GIT_SHA env from explicit gitSha
+    set:
+      stac.enabled: true
+      gitSha: "custom1234"
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GIT_SHA
+            value: custom1234

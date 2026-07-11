@@ -18,7 +18,6 @@ tests:
             databases: ["postgres"]
           - name: my-user
             databases: ["my-db"]
-      gitSha: ABC123
       stac:
         enabled: true
       raster:
@@ -44,7 +43,6 @@ tests:
     release:
       name: test-release
     set:
-      gitSha: ABC123
       postgresql:
         type: postgrescluster
       postgrescluster:

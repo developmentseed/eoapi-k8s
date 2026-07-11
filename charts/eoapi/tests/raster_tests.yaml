@@ -14,7 +14,6 @@ tests:
       stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
-      gitSha: "ABC123"
     template: templates/services/raster/deployment.yaml
     asserts:
       - isKind:
@@ -25,9 +24,6 @@ tests:
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
-      - equal:
-          path: metadata.labels.gitsha
-          value: "ABC123"
 
   - it: "raster deployment includes configmap checksum annotation"
     set:
@@ -35,7 +31,6 @@ tests:
       stac.enabled: false
       vector.enabled: false
       multidim.enabled: false
-      gitSha: "ABC123"
     template: templates/services/raster/deployment.yaml
     asserts:
       - exists:
@@ -43,9 +38,6 @@ tests:
       - matchRegex:
           path: spec.template.metadata.annotations["checksum/config"]
           pattern: ^[a-f0-9]{64}$
-      - equal:
-          path: metadata.labels.gitsha
-          value: "ABC123"
 
   - it: "raster configmap defaults"
     set:
@@ -74,7 +66,6 @@ tests:
       raster.annotations:
         annotation1: hello
         annotation2: world
-      gitSha: "ABC123"
     template: templates/services/raster/service.yaml
     asserts:
       - isKind:

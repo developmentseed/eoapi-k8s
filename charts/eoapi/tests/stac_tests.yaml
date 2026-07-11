@@ -14,7 +14,6 @@ tests:
       stac.enabled: true
       vector.enabled: false
       multidim.enabled: false
-      gitSha: "ABC123"
     template: templates/services/stac/deployment.yaml
     asserts:
       - isKind:
@@ -25,9 +24,6 @@ tests:
       - equal:
           path: spec.strategy.type
           value: "RollingUpdate"
-      - equal:
-          path: metadata.labels.gitsha
-          value: "ABC123"
 
   - it: "stac deployment includes configmap checksum annotation"
     set:
@@ -70,7 +66,6 @@ tests:
       stac.annotations:
         annotation1: hello
         annotation2: world
-      gitSha: "ABC123"
     template: templates/services/stac/service.yaml
     asserts:
       - isKind:
