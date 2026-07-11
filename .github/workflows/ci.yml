@@ -42,6 +42,7 @@ jobs:
 
       - name: Run Helm unit tests
         run: |
+          helm dependency update charts/eoapi
           helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
           helm unittest charts/eoapi -f 'tests/*_test.yaml' -f 'tests/*_tests.yaml' --color
 
