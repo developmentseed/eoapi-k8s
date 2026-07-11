@@ -284,24 +284,30 @@ targets:
 
 ## Custom Metrics Configuration
 
-When using request rate scaling, the prometheus-adapter needs to be configured to expose custom metrics. This is handled automatically when you enable monitoring in the main chart:
+When using request rate scaling, the prometheus-adapter needs to be configured to expose custom metrics. Enable the adapter under `monitoring.prometheusAdapter`; configure the subchart under top-level `prometheus-adapter`:
 
 ```yaml
 # In your main eoapi values file
 ingress:
   host: your-domain.com
 
+# Install prometheus-adapter (Helm dependency condition)
 monitoring:
   prometheusAdapter:
     enabled: true
-    resources:
-      limits:
-        cpu: 250m
-        memory: 256Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
+
+# Values passed to the prometheus-adapter subchart
+prometheus-adapter:
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 ```
+
+Per-service request-rate metric names are derived from `eoapi.hpaRequestRateMetricName` and must match `prometheus-adapter.rules.custom[].name.as` (for example `nginx_ingress_controller_requests_rate_stac_eoapi`).
 
 ## Service-Specific Examples
 
@@ -403,8 +409,9 @@ kubectl describe hpa eoapi-stac -n eoapi
 # Check if custom metrics API is available
 kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" | jq .
 
-# Check specific request rate metrics
-kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/eoapi/ingresses/*/requests_per_second" | jq .
+# Check per-service request rate metrics exposed by prometheus-adapter
+# Replace <namespace> and metric suffix (stac, raster, vector, multidim) as needed
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/<namespace>/pods/*/nginx_ingress_controller_requests_rate_stac_eoapi" | jq .
 ```
 
 ### Check Prometheus Adapter

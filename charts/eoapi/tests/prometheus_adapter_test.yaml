@@ -1,0 +1,63 @@
+suite: prometheus adapter subchart tests
+templates:
+  - charts/prometheus-adapter/templates/configmap.yaml
+  - charts/prometheus-adapter/templates/deployment.yaml
+tests:
+  - it: default values expose per-service request rate rules
+    set:
+      monitoring.prometheusAdapter.enabled: true
+      gitSha: ABC123
+    template: charts/prometheus-adapter/templates/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_stac_eoapi
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_raster_eoapi
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_vector_eoapi
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_multidim_eoapi
+      - notMatchRegex:
+          path: data['config.yaml']
+          pattern: container_.*_seconds_total
+
+  - it: production profile points adapter at release prometheus
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: charts/prometheus-adapter/templates/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--prometheus-url=http://eoapi-prometheus-server.eoapi.svc.cluster.local:80"
+
+  - it: production profile inherits request rate rules aligned with HPA metric names
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: charts/prometheus-adapter/templates/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_stac_eoapi
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_raster_eoapi
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_vector_eoapi
+      - matchRegex:
+          path: data['config.yaml']
+          pattern: nginx_ingress_controller_requests_rate_multidim_eoapi

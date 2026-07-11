@@ -1,5 +1,6 @@
 suite: autoscaling tests
 templates:
+  - templates/_helpers/services.tpl
   - templates/services/stac/hpa.yaml
   - templates/services/raster/hpa.yaml
   - templates/services/vector/hpa.yaml
@@ -72,7 +73,7 @@ tests:
           value: "Pods"
       - equal:
           path: spec.metrics[0].pods.metric.name
-          value: "nginx_ingress_controller_requests"
+          value: "nginx_ingress_controller_requests_rate_stac_eoapi"
       - equal:
           path: spec.metrics[0].pods.target.averageValue
           value: "50000m"
@@ -99,7 +100,7 @@ tests:
           value: "Pods"
       - equal:
           path: spec.metrics[1].pods.metric.name
-          value: "nginx_ingress_controller_requests"
+          value: "nginx_ingress_controller_requests_rate_stac_eoapi"
 
   - it: "raster hpa created with request rate autoscaling"
     set:
@@ -113,7 +114,7 @@ tests:
           of: HorizontalPodAutoscaler
       - equal:
           path: spec.metrics[0].pods.metric.name
-          value: "nginx_ingress_controller_requests"
+          value: "nginx_ingress_controller_requests_rate_raster_eoapi"
       - equal:
           path: spec.metrics[0].pods.target.averageValue
           value: "30000m"
@@ -130,7 +131,7 @@ tests:
           of: HorizontalPodAutoscaler
       - equal:
           path: spec.metrics[0].pods.metric.name
-          value: "nginx_ingress_controller_requests"
+          value: "nginx_ingress_controller_requests_rate_vector_eoapi"
       - equal:
           path: spec.metrics[0].pods.target.averageValue
           value: "40000m"
@@ -157,6 +158,23 @@ tests:
       - equal:
           path: spec.metrics[0].resource.target.averageUtilization
           value: 80
+
+  - it: "multidim hpa created with request rate autoscaling"
+    set:
+      multidim.enabled: true
+      multidim.autoscaling.enabled: true
+      multidim.autoscaling.type: "requestRate"
+      multidim.autoscaling.targets.requestRate: "100000m"
+    template: templates/services/multidim/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.metrics[0].pods.metric.name
+          value: "nginx_ingress_controller_requests_rate_multidim_eoapi"
+      - equal:
+          path: spec.metrics[0].pods.target.averageValue
+          value: "100000m"
 
   - it: "hpa scaleTargetRef points to correct deployment"
     set:

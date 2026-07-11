@@ -746,66 +746,13 @@ monitoring:
     apiService:
       create: true
 
-  # Prometheus - core metrics collection for autoscaling
+  # Prometheus - core metrics collection for autoscaling (subchart config: prometheus)
   prometheus:
     enabled: false
-    alertmanager:
-      enabled: false
-    prometheus-pushgateway:
-      enabled: false
-    kube-state-metrics:
-      enabled: true
-    prometheus-node-exporter:
-      enabled: true
-      resources: {}
-    server:
-      service:
-        type: ClusterIP  # Internal service, no external exposure by default
 
-  # Prometheus adapter - enables custom HPA metrics
+  # Prometheus adapter - enables custom HPA metrics (subchart config: prometheus-adapter)
   prometheusAdapter:
     enabled: false
-    prometheus:
-      # URL to Prometheus server - will be auto-configured for same-release Prometheus
-      # If using external Prometheus, set this to your Prometheus URL
-      # Example: http://my-prometheus-server.monitoring.svc.cluster.local
-      url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
-      port: 80
-      path: ""
-    rules:
-      default: false
-      # Custom metrics for eoapi service autoscaling
-      # Each service gets its own request rate metric for HPA scaling
-      custom:
-        # Vector service request rate metric
-        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
-          seriesFilters: []
-          resources:
-            template: <<.Resource>>
-          name:
-            matches: ""
-            as: "nginx_ingress_controller_requests_rate_vector_eoapi"
-          metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
-
-        # Raster service request rate metric
-        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
-          seriesFilters: []
-          resources:
-            template: <<.Resource>>
-          name:
-            matches: ""
-            as: "nginx_ingress_controller_requests_rate_raster_eoapi"
-          metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
-
-        # STAC service request rate metric
-        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
-          seriesFilters: []
-          resources:
-            template: <<.Resource>>
-          name:
-            matches: ""
-            as: "nginx_ingress_controller_requests_rate_stac_eoapi"
-          metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
 
 ######################
 # OBSERVABILITY
@@ -839,3 +786,75 @@ observability:
 metrics-server:
   apiService:
     create: true
+
+# Prometheus sub-chart configuration
+# These values are passed directly to the prometheus sub-chart
+prometheus:
+  alertmanager:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+    resources: {}
+  server:
+    service:
+      type: ClusterIP  # Internal service, no external exposure by default
+
+# Prometheus Adapter sub-chart configuration
+# These values are passed directly to the prometheus-adapter sub-chart.
+# rules.custom[].name.as must match eoapi.hpaRequestRateMetricName per apiServices entry.
+prometheus-adapter:
+  prometheus:
+    # URL to Prometheus server - will be auto-configured for same-release Prometheus
+    # If using external Prometheus, set this to your Prometheus URL
+    # Example: http://my-prometheus-server.monitoring.svc.cluster.local
+    url: http://eoapi-prometheus-server.eoapi.svc.cluster.local
+    port: 80
+    path: ""
+  rules:
+    default: false
+    # Custom metrics for eoapi service autoscaling
+    # Each service gets its own request rate metric for HPA scaling
+    custom:
+      # Vector service request rate metric
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_vector_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+      # Raster service request rate metric
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_raster_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="raster",path=~"/raster.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+      # STAC service request rate metric
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_stac_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="stac",path=~"/stac.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+
+      # Multidim service request rate metric
+      - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+        seriesFilters: []
+        resources:
+          template: <<.Resource>>
+        name:
+          matches: ""
+          as: "nginx_ingress_controller_requests_rate_multidim_eoapi"
+        metricsQuery: round(sum(rate(<<.Series>>{service="multidim",path=~"/multidim.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)

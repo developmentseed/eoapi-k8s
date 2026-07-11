@@ -1,0 +1,80 @@
+suite: validation tests
+templates:
+  - templates/core/validation.yaml
+  - templates/_helpers/services.tpl
+  - templates/_helpers/validation.tpl
+  - templates/_helpers/database.tpl
+tests:
+  - it: passes when prometheus adapter is enabled but no request-rate autoscaling is active
+    set:
+      monitoring.prometheusAdapter.enabled: true
+      gitSha: ABC123
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: passes when request-rate autoscaling is enabled and adapter rules match
+    set:
+      monitoring.prometheusAdapter.enabled: true
+      gitSha: ABC123
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: requestRate
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: passes when prometheus adapter is enabled and all autoscaling is cpu-only
+    set:
+      monitoring.prometheusAdapter.enabled: true
+      gitSha: ABC123
+      stac.autoscaling.enabled: true
+      stac.autoscaling.type: cpu
+      raster.autoscaling.enabled: true
+      raster.autoscaling.type: cpu
+      prometheus-adapter.rules.custom: []
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: fails when adapter rules omit a request-rate service metric name
+    set:
+      monitoring.prometheusAdapter.enabled: true
+      gitSha: ABC123
+      raster.autoscaling.enabled: true
+      raster.autoscaling.type: requestRate
+      prometheus-adapter.rules.custom:
+        - seriesQuery: '{__name__=~"^nginx_ingress_controller_requests$",namespace!=""}'
+          seriesFilters: []
+          resources:
+            template: <<.Resource>>
+          name:
+            matches: ""
+            as: "nginx_ingress_controller_requests_rate_vector_eoapi"
+          metricsQuery: round(sum(rate(<<.Series>>{service="vector",path=~"/vector.*",<<.LabelMatchers>>}[5m])) by (<<.GroupBy>>), 0.001)
+    template: templates/core/validation.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: prometheus-adapter.rules.custom must define name.as "nginx_ingress_controller_requests_rate_raster_eoapi" for request-rate HPA (service "raster"). See eoapi.hpaRequestRateMetricName in _helpers/services.tpl
+
+  - it: passes production profile with request-rate autoscaling and default adapter rules
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: skips adapter metric alignment when prometheus adapter is disabled
+    set:
+      monitoring.prometheusAdapter.enabled: false
+      prometheus-adapter.rules.custom: []
+      gitSha: ABC123
+    template: templates/core/validation.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
