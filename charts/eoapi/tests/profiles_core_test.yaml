@@ -1,0 +1,28 @@
+suite: core profile release tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/services.tpl
+  - templates/_helpers/database.tpl
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+  - templates/testing/deployment.yaml
+tests:
+  - it: core profile renders stac deployment
+    values:
+      - ../profiles/core.yaml
+    set:
+      gitSha: ABC123
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: core profile keeps testing infrastructure disabled
+    values:
+      - ../profiles/core.yaml
+    set:
+      gitSha: ABC123
+    template: templates/testing/deployment.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
