@@ -105,7 +105,7 @@ test_unit() {
         return 1
     fi
 
-    if helm unittest "$CHART_PATH"; then
+    if helm unittest "$CHART_PATH" -f 'tests/*_test.yaml' -f 'tests/*_tests.yaml' --color; then
         log_success "Unit tests passed"
     else
         log_error "Unit tests failed"
