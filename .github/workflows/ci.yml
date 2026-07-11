@@ -89,7 +89,7 @@ jobs:
         run: ./eoapi-cli cluster wait-ready
 
       - name: Deploy eoAPI
-        run: ./eoapi-cli deployment run
+        run: ./eoapi-cli deployment run --profile k3d
 
       - name: Run integration tests
         run: ./eoapi-cli test integration
