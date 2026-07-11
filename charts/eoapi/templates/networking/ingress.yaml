@@ -93,7 +93,15 @@ metadata:
     {{- if and .Values.ingress.entrypoints (not (hasKey $ingressAnnotations "traefik.ingress.kubernetes.io/router.entrypoints")) }}
     traefik.ingress.kubernetes.io/router.entrypoints: {{ .Values.ingress.entrypoints | quote }}
     {{- end }}
-    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-strip-prefix-middleware@kubernetescrd
+    {{- /* strip-prefix always; also chain the browser bare-path redirect when the browser ingress is on.
+           Keep this condition in sync with the redirect Middleware in traefik-middleware.yaml. */}}
+    {{- $mwPrefix := printf "%s-%s" .Release.Namespace .Release.Name }}
+    {{- $middlewares := list (printf "%s-strip-prefix-middleware@kubernetescrd" $mwPrefix) }}
+    {{- $browser := .Values.browser }}
+    {{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) }}
+    {{- $middlewares = append $middlewares (printf "%s-browser-redirect-middleware@kubernetescrd" $mwPrefix) }}
+    {{- end }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ join "," $middlewares }}
     {{- end }}
     {{- with $ingressAnnotations }}
     {{- toYaml . | nindent 4 }}

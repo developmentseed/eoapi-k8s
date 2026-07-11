@@ -81,7 +81,7 @@ run_integration_tests() {
     fi
 
     log_info "Ensuring all pods are ready..."
-    for service in stac raster vector; do
+    for service in stac raster vector browser; do
         local deployment="${RELEASE_NAME}-${service}"
         kubectl wait --for=condition=available deployment/"${deployment}" -n "$NAMESPACE" --timeout=60s 2>/dev/null || \
             log_warn "Deployment ${deployment} may not be fully ready"
@@ -94,12 +94,14 @@ run_integration_tests() {
     export RASTER_ENDPOINT="${RASTER_ENDPOINT:-http://$actual_host/raster}"
     export VECTOR_ENDPOINT="${VECTOR_ENDPOINT:-http://$actual_host/vector}"
     export MOCK_OIDC_ENDPOINT="${MOCK_OIDC_ENDPOINT:-http://$actual_host/mock-oidc}"
+    export BROWSER_ENDPOINT="${BROWSER_ENDPOINT:-http://$actual_host/browser}"
 
     log_info "Test endpoints configured:"
     log_info "  STAC: $STAC_ENDPOINT"
     log_info "  Raster: $RASTER_ENDPOINT"
     log_info "  Vector: $VECTOR_ENDPOINT"
     log_info "  Mock OIDC: $MOCK_OIDC_ENDPOINT"
+    log_info "  Browser: $BROWSER_ENDPOINT"
 
     log_info "Running service warmup..."
     for endpoint in "$STAC_ENDPOINT" "$RASTER_ENDPOINT/healthz" "$VECTOR_ENDPOINT/healthz"; do
