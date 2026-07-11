@@ -158,7 +158,7 @@ run_deployment() {
     if git_sha=$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null | cut -c1-10) && [[ -n "$git_sha" ]]; then
         helm_cmd="$helm_cmd --set gitSha=$git_sha"
     else
-        log_warn "Could not determine git SHA; chart will use default gitSha value"
+        log_warn "Could not determine git SHA; chart will fall back to chart version"
     fi
 
     # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when testing mode is enabled

@@ -1,17 +1,13 @@
 comment_install: >
-  `service` and `gitSha` are required and defaulted value keys.
-  a manual installation looks like this:
+  A manual installation looks like this:
 
-  $ export GITSHA=$(git rev-parse HEAD | cut -c1-10)
   $ helm install \
       --namespace eoapi \
       --create-namespace \
-      --set gitSha=$GITSHA \
       eoapi \
       ./eoapi
 
-# the chart on the gh-pages branch will provide
-# the correct updated value otherwise it's defaulted
+# Replaced at chart publish time; falls back to chart version when unset.
 gitSha: "gitshaABC123"
 
 #######################

@@ -57,6 +57,9 @@ jobs:
           helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
           helm repo list
 
+      - name: Inject git SHA into eoapi chart
+        run: bash scripts/inject-chart-git-sha.sh charts/eoapi/values.yaml
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
         with:

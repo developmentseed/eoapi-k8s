@@ -6,7 +6,7 @@ metadata:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: multidim
     app: {{ .Release.Name }}-multidim
-    gitsha: {{ .Values.gitSha }}
+    gitsha: {{ include "eoapi.gitSha" . }}
   name: {{ .Release.Name }}-multidim
   {{- if .Values.multidim.annotations }}
   annotations:

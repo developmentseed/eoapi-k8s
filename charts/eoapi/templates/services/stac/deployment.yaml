@@ -6,7 +6,7 @@ metadata:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: stac
     app: {{ .Release.Name }}-stac
-    gitsha: {{ .Values.gitSha }}
+    gitsha: {{ include "eoapi.gitSha" . }}
   name: {{ .Release.Name }}-stac
   {{- if .Values.stac.annotations }}
   annotations:
