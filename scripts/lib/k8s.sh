@@ -214,6 +214,24 @@ create_namespace() {
     fi
 }
 
+wait_for_metrics_api() {
+    local timeout="${1:-120}"
+    local elapsed=0
+
+    log_info "Waiting for metrics API to become available..."
+    while [[ $elapsed -lt $timeout ]]; do
+        if kubectl top nodes --no-headers &>/dev/null; then
+            log_success "Metrics API is available"
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+    done
+
+    log_warn "Metrics API not available after ${timeout}s"
+    return 1
+}
+
 get_secret_value() {
     local namespace="$1"
     local secret_name="$2"
@@ -273,4 +291,4 @@ export -f exec_in_pod get_pod_logs scale_deployment
 export -f get_ingress_url apply_manifest delete_by_label
 export -f wait_for_rollout get_resource_usage create_namespace
 export -f get_secret_value upsert_secret get_configmap_value
-export -f patch_resource
+export -f patch_resource wait_for_metrics_api

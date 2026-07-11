@@ -50,6 +50,9 @@ EXAMPLES:
     # Run integration tests with debug
     $(basename "$0") integration --debug
 
+    # Run integration tests with pytest filter (flags after subcommand)
+    $(basename "$0") integration --pytest-args "-v -k test_browser"
+
     # Run all tests
     $(basename "$0") all
 EOF
@@ -195,7 +198,6 @@ main() {
             schema|lint|unit|images|notification|integration|all)
                 command="$1"
                 shift
-                break
                 ;;
             *)
                 log_error "Unknown option: $1"

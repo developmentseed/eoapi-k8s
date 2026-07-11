@@ -55,8 +55,14 @@ The eoAPI CLI provides a unified interface for all operations:
 
 ### Deployment Operations
 ```bash
-# Deploy eoAPI
-./eoapi-cli deployment run
+# Deploy eoAPI on k3d (Traefik ingress)
+./eoapi-cli deployment run --profile k3d
+
+# Deploy eoAPI on minikube (NGINX ingress)
+./eoapi-cli deployment run --profile minikube
+
+# Deploy with custom values (alternative to --profile)
+./eoapi-cli deployment run -f charts/eoapi/profiles/local/minikube.yaml
 
 # Debug deployment
 ./eoapi-cli deployment debug
@@ -108,10 +114,17 @@ The eoAPI CLI provides a unified interface for all operations:
 ### With k3d (recommended)
 ```bash
 # Complete workflow with k3d-managed cluster
-./eoapi-cli cluster start           # Creates k3d cluster
-./eoapi-cli deployment run          # Deploy eoAPI
-./eoapi-cli test integration        # Run integration tests
-./eoapi-cli cluster clean           # Cleanup
+./eoapi-cli cluster start
+./eoapi-cli deployment run --profile k3d
+./eoapi-cli test integration
+./eoapi-cli cluster clean
+```
+
+### With minikube
+```bash
+kubectl config use-context minikube
+./eoapi-cli deployment run --profile minikube
+./eoapi-cli test integration
 ```
 
 ### With existing k3s/k8s cluster
@@ -123,12 +136,14 @@ The eoAPI CLI provides a unified interface for all operations:
 
 Test options:
 - `test all` - Run all test suites
-- `test integration --pytest-args="-v"` - Pass pytest arguments
+- `test integration --pytest-args="-v"` - Pass pytest arguments (flags may appear before or after the subcommand)
+- `test integration --pytest-args "-v -k test_browser"` - Run a filtered subset of integration tests
 
 ## Environment variables
 
 - `NAMESPACE` - Kubernetes namespace (default: eoapi)
 - `RELEASE_NAME` - Helm release name (default: eoapi)
+- `LOCAL_PROFILE` - Local cluster profile for deployment (`k3d` or `minikube`; same as `--profile`)
 - `DEBUG_MODE` - Enable debug output (set to true)
 - `CLUSTER_NAME` - K3s cluster name (default: eoapi-local)
 

@@ -5,6 +5,7 @@
 # Usage:
 #   helm install eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/k3s.yaml
 #   helm upgrade eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/k3s.yaml
+#   eoapi-cli deployment run --profile k3d
 #
 # Note: This profile inherits all settings from experimental.yaml and only overrides k3s-specific values
 

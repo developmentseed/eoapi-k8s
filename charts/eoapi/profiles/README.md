@@ -82,7 +82,7 @@ Profiles are pre-configured values files that override the default `values.yaml`
 **Overrides:**
 - Nginx ingress configuration with regex support
 - Reduced PostgreSQL resources (1Gi storage, minimal CPU/memory)
-- Enabled metrics-server
+- Enabled metrics-server with `--kubelet-insecure-tls` for minikube kubelet certificates
 
 ## Usage
 

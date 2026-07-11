@@ -12,12 +12,40 @@ source "${SCRIPT_DIR}/lib/common.sh"
 source "${SCRIPT_DIR}/lib/k8s.sh"
 
 # Defaults
-readonly RELEASE_NAME="${RELEASE_NAME:-eoapi}"
-readonly NAMESPACE="${NAMESPACE:-eoapi}"
+RELEASE_NAME="${RELEASE_NAME:-eoapi}"
+NAMESPACE="${NAMESPACE:-eoapi}"
 readonly PGO_VERSION="${PGO_VERSION:-5.8.6}"
-readonly TIMEOUT="${TIMEOUT:-6m}"
+TIMEOUT="${TIMEOUT:-6m}"
+LOCAL_PROFILE="${LOCAL_PROFILE:-}"
 # Global array for custom values files
 declare -a VALUES_FILES=()
+
+resolve_local_profile_file() {
+    local profile="$1"
+
+    case "$profile" in
+        k3d|k3s)
+            echo "charts/eoapi/profiles/local/k3s.yaml"
+            ;;
+        minikube)
+            echo "charts/eoapi/profiles/local/minikube.yaml"
+            ;;
+        *)
+            log_error "Unknown local profile: $profile (expected k3d or minikube)"
+            return 1
+            ;;
+    esac
+}
+
+values_include_local_profile() {
+    local values_file
+    for values_file in "${VALUES_FILES[@]}"; do
+        if [[ "$values_file" == *profiles/local/* ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
 
 show_help() {
     cat <<EOF
@@ -35,15 +63,19 @@ OPTIONS:
     -d, --debug     Enable debug mode
     -n, --namespace Set Kubernetes namespace
     -f, --values    Additional Helm values file(s) (can be specified multiple times)
+    --profile TYPE  Local cluster profile: k3d (Traefik) or minikube (NGINX)
     --release NAME  Helm release name (default: ${RELEASE_NAME})
     --timeout TIME  Deployment timeout (default: ${TIMEOUT})
 
 EXAMPLES:
-    # Deploy eoAPI
-    $(basename "$0") run
+    # Deploy eoAPI on k3d
+    $(basename "$0") run --profile k3d
+
+    # Deploy eoAPI on minikube
+    $(basename "$0") run --profile minikube
 
     # Deploy with custom values
-    $(basename "$0") run -f examples/browser-customization.yaml
+    $(basename "$0") run --profile k3d -f examples/browser-customization.yaml
 
     # Debug deployment
     $(basename "$0") debug
@@ -51,6 +83,16 @@ EOF
 }
 
 run_deployment() {
+    local deploy_timeout="${1:-$TIMEOUT}"
+
+    if [[ -n "$LOCAL_PROFILE" ]]; then
+        resolve_local_profile_file "$LOCAL_PROFILE" >/dev/null || return 1
+        if values_include_local_profile; then
+            log_error "Cannot combine --profile with -f profiles/local/*"
+            return 1
+        fi
+    fi
+
     log_info "Deploying eoAPI (release: ${RELEASE_NAME}, namespace: ${NAMESPACE})"
 
     check_requirements kubectl helm || return 1
@@ -82,9 +124,18 @@ run_deployment() {
         helm_cmd="$helm_cmd -f charts/eoapi/profiles/experimental.yaml"
         testing_mode=true
     fi
-    if [[ -f "charts/eoapi/profiles/local/k3s.yaml" ]]; then
-        log_info "Applying k3s local profile..."
-        helm_cmd="$helm_cmd -f charts/eoapi/profiles/local/k3s.yaml"
+
+    # Apply explicit local profile when requested
+    if [[ -n "$LOCAL_PROFILE" ]]; then
+        local profile_file
+        profile_file=$(resolve_local_profile_file "$LOCAL_PROFILE") || return 1
+        if [[ -f "$profile_file" ]]; then
+            log_info "Applying local profile: $LOCAL_PROFILE ($profile_file)"
+            helm_cmd="$helm_cmd -f $profile_file"
+        else
+            log_error "Local profile file not found: $profile_file"
+            return 1
+        fi
     fi
 
     # Add custom values files
@@ -102,6 +153,13 @@ run_deployment() {
 
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].type=pgstac"
     helm_cmd="$helm_cmd --set eoapi-notifier.config.sources[0].config.connection.existingSecret.name=$RELEASE_NAME-pguser-eoapi"
+
+    local git_sha
+    if git_sha=$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null | cut -c1-10) && [[ -n "$git_sha" ]]; then
+        helm_cmd="$helm_cmd --set gitSha=$git_sha"
+    else
+        log_warn "Could not determine git SHA; chart will use default gitSha value"
+    fi
 
     # Set UPSTREAM_URL and OIDC_DISCOVERY_URL dynamically for stac-auth-proxy when testing mode is enabled
     # Testing mode enables stac-auth-proxy, so we need to set the correct service names
@@ -136,7 +194,7 @@ EOF
         testing_mode=true
     fi
 
-    helm_cmd="$helm_cmd --timeout $TIMEOUT"
+    helm_cmd="$helm_cmd --timeout $deploy_timeout"
 
     log_info "Deploying eoAPI..."
     local deploy_result=0
@@ -164,7 +222,7 @@ EOF
         fi
 
         log_info "Waiting for deployments to be ready..."
-        kubectl wait --for=condition=Available deployment --all -n "$NAMESPACE" --timeout="$TIMEOUT" || {
+        kubectl wait --for=condition=Available deployment --all -n "$NAMESPACE" --timeout="$deploy_timeout" || {
             log_warn "Some deployments may not be ready yet"
         }
 
@@ -184,6 +242,15 @@ EOF
             wait # Wait for all background jobs
             log_success "Monitoring stack ready"
             kubectl get hpa -n "$NAMESPACE" 2>/dev/null || true
+        fi
+
+        # Wait for chart metrics-server (enabled on minikube profile)
+        if kubectl get deployment -l app.kubernetes.io/name=metrics-server -n "$NAMESPACE" &>/dev/null; then
+            log_info "Waiting for metrics-server..."
+            kubectl wait --for=condition=Available deployment -l app.kubernetes.io/name=metrics-server -n "$NAMESPACE" --timeout=180s || {
+                log_warn "metrics-server deployment may not be ready yet"
+            }
+            wait_for_metrics_api 120 || true
         fi
     else
         log_error "Deployment failed"
@@ -294,10 +361,13 @@ main() {
                 TIMEOUT="$timeout"
                 shift 2
                 ;;
+            --profile)
+                LOCAL_PROFILE="$2"
+                shift 2
+                ;;
             run|debug)
                 command="$1"
                 shift
-                # Continue parsing remaining arguments
                 ;;
             *)
                 log_error "Unknown option: $1"
@@ -315,7 +385,7 @@ main() {
 
     case "$command" in
         run)
-            run_deployment
+            run_deployment "$timeout"
             ;;
         debug)
             debug_deployment

@@ -5,6 +5,7 @@
 # Usage:
 #   helm install eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/minikube.yaml
 #   helm upgrade eoapi ./charts/eoapi -f profiles/experimental.yaml -f profiles/local/minikube.yaml
+#   eoapi-cli deployment run --profile minikube
 #
 # Note: This profile inherits all settings from experimental.yaml and only overrides minikube-specific values
 
@@ -47,3 +48,8 @@ postgrescluster:
 monitoring:
   metricsServer:
     enabled: true
+
+# Minikube kubelet certs use the node IP without matching SANs; skip TLS verify.
+metrics-server:
+  args:
+    - --kubelet-insecure-tls

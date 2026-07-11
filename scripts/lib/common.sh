@@ -331,10 +331,27 @@ install_python_requirements() {
 
     [[ ! -f "$full_path" ]] && { log_error "Requirements file not found: $full_path"; return 1; }
 
+    ensure_venv_pip() {
+        if python3 -m pip --version &>/dev/null; then
+            return 0
+        fi
+        log_debug "Bootstrapping pip in virtual environment..."
+        python3 -m ensurepip --upgrade &>/dev/null || return 1
+    }
+
+    install_with_pip() {
+        if command_exists uv && [[ -n "${VIRTUAL_ENV:-}" ]]; then
+            uv pip install -q -r "$full_path"
+        else
+            python3 -m pip install -q -r "$full_path"
+        fi
+    }
+
     # Already in a venv? Just install
     if [[ -n "${VIRTUAL_ENV:-}" ]]; then
         log_debug "Using existing virtual environment: $VIRTUAL_ENV"
-        if python3 -m pip install -q -r "$full_path"; then
+        ensure_venv_pip || { log_error "Failed to bootstrap pip in existing venv"; return 1; }
+        if install_with_pip; then
             return 0
         else
             log_error "Failed to install requirements in existing venv"
@@ -348,7 +365,7 @@ install_python_requirements() {
         log_debug "Activating existing venv: $venv_dir"
         # shellcheck source=/dev/null
         if source "$venv_dir/bin/activate"; then
-            if python3 -m pip install -q -r "$full_path"; then
+            if ensure_venv_pip && install_with_pip; then
                 return 0
             else
                 log_warn "Failed to install in existing venv, will recreate"
@@ -377,10 +394,11 @@ install_python_requirements() {
         log_warn "uv venv creation failed, falling back to python3 -m venv"
     fi
 
-    if python3 -m venv "$venv_dir" 2>&1; then
+    if python3 -m venv --upgrade-deps "$venv_dir" 2>/dev/null || python3 -m venv "$venv_dir" 2>&1; then
         # shellcheck source=/dev/null
         source "$venv_dir/bin/activate" || { log_error "Failed to activate venv"; return 1; }
-        if python3 -m pip install -q -r "$full_path"; then
+        ensure_venv_pip || { log_error "Failed to bootstrap pip in new venv"; return 1; }
+        if install_with_pip; then
             return 0
         else
             log_error "pip install failed"
