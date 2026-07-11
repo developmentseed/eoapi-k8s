@@ -27,9 +27,9 @@ service:
   port: 8080
 
 ingress:
-  # Unified ingress configuration for both nginx and traefik
+  # Unified ingress configuration for NGINX and Traefik controllers
   enabled: true
-  # ingressClassName: "nginx" or "traefik"
+  # Supported ingressClassName values: "nginx" (default) or "traefik"
   className: "nginx"
   # Traefik only: value for the router's `entrypoints` annotation, e.g. "websecure"
   # or "web,websecure". Empty → the annotation is omitted and the router attaches to

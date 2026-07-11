@@ -1,10 +1,10 @@
 suite: browser bare-path redirect middleware
 templates:
-  - templates/networking/traefik-middleware.yaml
+  - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
+  - templates/networking/traefik-middleware.yaml
 set:
   ingress.enabled: true
-  ingress.className: traefik
   ingress.host: eoapi.local
   stac.enabled: false
   raster.enabled: false
@@ -14,6 +14,7 @@ tests:
   - it: "redirects the browser bare path to its trailing-slash form on traefik"
     template: templates/networking/traefik-middleware.yaml
     set:
+      ingress.className: traefik
       browser.enabled: true
     asserts:
       - hasDocuments:
@@ -34,24 +35,16 @@ tests:
   - it: "honours a custom browser ingress path"
     template: templates/networking/traefik-middleware.yaml
     set:
+      ingress.className: traefik
       browser.enabled: true
-      browser.ingress.path: "/stac-browser"
+      browser.ingress.path: "/stac.browser"
     asserts:
       - equal:
           path: spec.redirectRegex.regex
-          value: "^(https?://[^/]+)/stac-browser$"
+          value: '^(https?://[^/]+)/stac\.browser$'
       - equal:
           path: spec.redirectRegex.replacement
-          value: "${1}/stac-browser/"
-
-  - it: "still renders the redirect middleware for a root browser path so the router reference never dangles"
-    template: templates/networking/traefik-middleware.yaml
-    set:
-      browser.enabled: true
-      browser.ingress.path: "/"
-    asserts:
-      - hasDocuments:
-          count: 1
+          value: "${1}/stac.browser/"
 
   - it: "creates no traefik middleware on the nginx controller"
     template: templates/networking/traefik-middleware.yaml
@@ -62,9 +55,41 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: "adds an nginx server-snippet redirect for the browser bare path"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: nginx
+      browser.enabled: true
+    asserts:
+      - matchRegex:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
+          pattern: 'location = /browser \{\n  return 301 /browser/;\n\}'
+
+  - it: "honours a custom browser ingress path on nginx"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: nginx
+      browser.enabled: true
+      browser.ingress.path: "/stac-browser"
+    asserts:
+      - matchRegex:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
+          pattern: 'location = /stac-browser \{\n  return 301 /stac-browser/;\n\}'
+
+  - it: "omits the nginx browser redirect when browser is disabled"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: nginx
+      browser.enabled: false
+      stac.enabled: true
+    asserts:
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
+
   - it: "chains the browser redirect middleware onto the traefik router annotation"
     template: templates/networking/ingress.yaml
     set:
+      ingress.className: traefik
       stac.enabled: true
       browser.enabled: true
     asserts:
@@ -72,9 +97,20 @@ tests:
           path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
           value: "NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd,NAMESPACE-RELEASE-NAME-browser-redirect-middleware@kubernetescrd"
 
+  - it: "omits strip-prefix from the annotation when browser is the only enabled service"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: traefik
+      browser.enabled: true
+    asserts:
+      - equal:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
+          value: "NAMESPACE-RELEASE-NAME-browser-redirect-middleware@kubernetescrd"
+
   - it: "omits the browser redirect from the annotation when the browser is disabled"
     template: templates/networking/ingress.yaml
     set:
+      ingress.className: traefik
       stac.enabled: true
       browser.enabled: false
     asserts:

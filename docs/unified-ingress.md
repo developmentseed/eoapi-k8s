@@ -18,7 +18,7 @@ This document describes the unified ingress approach implemented in the eoAPI He
 
 ## Overview
 
-eoAPI includes a single streamlined ingress configuration with smart defaults that routes to all enabled services. Services handle their own path routing via `--root-path` configuration, working with any ingress controller.
+eoAPI includes a single streamlined ingress configuration with smart defaults that routes to all enabled services. Services handle their own path routing via `--root-path` configuration behind NGINX or Traefik path rewriting.
 
 **Why one ingress?**
 - One TLS certificate to manage
@@ -40,7 +40,7 @@ The ingress configuration in `values.yaml`:
 ```yaml
 ingress:
   enabled: true
-  className: "nginx"  # or "traefik", or any ingress controller
+  className: "nginx"  # or "traefik"
   rootPath: ""        # Root path for doc server
   host: ""            # Single host (or use hosts array)
   hosts: []           # Multiple hosts (takes precedence over host)
@@ -85,17 +85,23 @@ For these cases, deploy multiple helm releases with different configurations.
 
 ### Path Routing
 
-All services use `pathType: Prefix` and handle their own path prefixes internally via the `--root-path` flag:
+API services run at root internally while ingress strips configured prefixes. Path matching differs by controller:
+
+- **NGINX** uses regex paths with `ImplementationSpecific` path type and rewrite annotations
+- **Traefik** uses `Prefix` paths with strip-prefix middleware
+- **Root paths** (`stac.ingress.path: "/"`) keep `Prefix` path type on both controllers
+
+Services configure their expected external prefix via the `--root-path` flag:
 
 - **STAC**: `--root-path=/stac` (or `/` for root)
 - **Raster**: `--root-path=/raster`
 - **Vector**: `--root-path=/vector`
 - **Multidim**: `--root-path=/multidim`
-- **Browser**: Configured via environment variable
+- **Browser**: Served from the unified ingress at `/browser` (or a custom `browser.ingress.path`). Unlike API services, the browser path prefix is preserved at the pod because the image is built with `pathPrefix=/browser/`. Both controllers redirect bare `/browser` to `/browser/`.
 
 ### Ingress Controller Support
 
-The unified ingress works with **any** Kubernetes ingress controller:
+The unified ingress supports **NGINX** and **Traefik** ingress controllers. Other controllers are not supported because the chart relies on controller-specific path rewrite behavior.
 
 #### NGINX Ingress Controller
 
@@ -141,17 +147,14 @@ Service receives: GET /tiles/123
 
 ## STAC Browser Configuration
 
-The STAC browser now uses a separate ingress configuration to handle its unique requirements:
-- Fixed `/browser` path prefix
-- Special rewrite rules for browser-specific routes
-- Maintains compatibility with both NGINX and Traefik
+The STAC browser is routed through the same unified ingress as the API services. Unlike API services, the browser keeps its path prefix at the pod because the image is built with `pathPrefix=/browser/`. Both NGINX and Traefik add a bare-path redirect so `/browser` resolves to `/browser/`.
 
-The browser-specific ingress is automatically configured when browser is enabled:
 ```yaml
 browser:
   enabled: true
   ingress:
     enabled: true  # Can be disabled independently
+    path: "/browser"
 ```
 
 ### Custom Ingress Solutions
