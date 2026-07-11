@@ -795,6 +795,80 @@
           }
         }
       }
+    },
+    "prometheus": {
+      "type": "object",
+      "description": "Values passed to the prometheus Helm sub-chart",
+      "properties": {
+        "alertmanager": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "kube-state-metrics": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "prometheus-node-exporter": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "prometheus-pushgateway": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "server": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "prometheus-adapter": {
+      "type": "object",
+      "description": "Values passed to the prometheus-adapter Helm sub-chart",
+      "properties": {
+        "prometheus": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Prometheus server URL for custom metrics queries"
+            },
+            "port": {
+              "type": "integer",
+              "description": "Prometheus server port"
+            },
+            "path": {
+              "type": "string",
+              "description": "Prometheus server path prefix"
+            }
+          },
+          "additionalProperties": true
+        },
+        "rules": {
+          "type": "object",
+          "properties": {
+            "default": {
+              "type": "boolean",
+              "description": "Enable default prometheus-adapter resource rules"
+            },
+            "custom": {
+              "type": "array",
+              "description": "Custom metrics rules. name.as must match eoapi.hpaRequestRateMetricName per apiServices entry.",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requests and limits for prometheus-adapter"
+        }
+      },
+      "additionalProperties": true
     }
   },
   "definitions": {

@@ -88,39 +88,43 @@ monitoring:
 
   prometheus:
     enabled: true
-    alertmanager:
-      enabled: false  # Use Grafana alerting instead
-    prometheus-pushgateway:
-      enabled: false
-    kube-state-metrics:
-      enabled: true
-    prometheus-node-exporter:
-      enabled: true
-      resources:
-        limits:
-          cpu: "50m"
-          memory: "64Mi"
-        requests:
-          cpu: "50m"
-          memory: "64Mi"
-    server:
-      persistentVolume:
-        enabled: true
-        size: 30Gi
-      retention: "15d"
-      resources:
-        limits:
-          cpu: "1000m"
-          memory: "2048Mi"
-        requests:
-          cpu: "500m"
-          memory: "1024Mi"
-      service:
-        type: ClusterIP
 
-# Custom metrics for request-rate based autoscaling
-prometheusAdapter:
-  enabled: true
+  prometheusAdapter:
+    enabled: true
+
+prometheus:
+  alertmanager:
+    enabled: false  # Use Grafana alerting instead
+  prometheus-pushgateway:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+    resources:
+      limits:
+        cpu: "50m"
+        memory: "64Mi"
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+  server:
+    persistentVolume:
+      enabled: true
+      size: 30Gi
+    retention: "15d"
+    resources:
+      limits:
+        cpu: "1000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "500m"
+        memory: "1024Mi"
+    service:
+      type: ClusterIP
+
+# Request-rate adapter rules: inherited from values.yaml prometheus-adapter.rules.custom
+prometheus-adapter:
   resources:
     limits:
       cpu: "200m"
@@ -362,13 +366,3 @@ serviceAccount:
 ######################
 service:
   port: 8080
-
-# Enable autoscaling globally
-autoscaling:
-  enabled: true
-
-# Connection pooling for better performance
-database:
-  enabled: true
-  connectionPooling:
-    enabled: true

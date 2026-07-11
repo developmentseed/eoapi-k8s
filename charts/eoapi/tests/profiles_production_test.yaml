@@ -1,0 +1,34 @@
+suite: production profile release tests
+templates:
+  - templates/_helpers/services.tpl
+  - templates/services/stac/hpa.yaml
+  - templates/services/raster/hpa.yaml
+tests:
+  - it: production profile enables stac HPA with adapter metric names
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: templates/services/stac/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.metrics[1].pods.metric.name
+          value: nginx_ingress_controller_requests_rate_stac_eoapi
+
+  - it: production profile enables raster HPA with adapter metric names
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: templates/services/raster/hpa.yaml
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.metrics[1].pods.metric.name
+          value: nginx_ingress_controller_requests_rate_raster_eoapi

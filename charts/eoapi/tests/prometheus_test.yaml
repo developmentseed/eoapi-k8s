@@ -1,0 +1,45 @@
+suite: prometheus subchart tests
+templates:
+  - charts/prometheus/templates/deploy.yaml
+  - charts/prometheus/templates/pvc.yaml
+tests:
+  - it: default values configure prometheus server service type
+    set:
+      monitoring.prometheus.enabled: true
+      gitSha: ABC123
+    template: charts/prometheus/templates/deploy.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--storage.tsdb.retention.time=15d"
+
+  - it: production profile applies retention and resource limits
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: charts/prometheus/templates/deploy.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[1].args
+          content: "--storage.tsdb.retention.time=15d"
+      - equal:
+          path: spec.template.spec.containers[1].resources.limits.memory
+          value: 2048Mi
+
+  - it: production profile enables prometheus persistent volume
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: charts/prometheus/templates/pvc.yaml
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: spec.resources.requests.storage
+          value: 30Gi

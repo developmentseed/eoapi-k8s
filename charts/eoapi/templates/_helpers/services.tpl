@@ -28,6 +28,15 @@ Helper function for common environment variables
 {{- end -}}
 
 {{/*
+Return prometheus-adapter custom metric name for request-rate HPA per service.
+Canonical source for name.as in prometheus-adapter.rules.custom (values.yaml).
+Validated at render time by eoapi.validateHpaAdapterMetricAlignment.
+*/}}
+{{- define "eoapi.hpaRequestRateMetricName" -}}
+{{- printf "nginx_ingress_controller_requests_rate_%s_eoapi" .service -}}
+{{- end -}}
+
+{{/*
 Helper function for common init containers to wait for pgstac jobs
 */}}
 {{- define "eoapi.pgstacInitContainers" -}}

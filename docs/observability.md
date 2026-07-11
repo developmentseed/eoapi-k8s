@@ -73,15 +73,17 @@ monitoring:
     enabled: true
   prometheus:
     enabled: true
-    server:
-      persistentVolume:
-        enabled: true
-        size: 50Gi
-      retention: "30d"
-    kube-state-metrics:
+
+prometheus:
+  server:
+    persistentVolume:
       enabled: true
-    prometheus-node-exporter:
-      enabled: true
+      size: 50Gi
+    retention: "30d"
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
 ```
 
 #### Observability Chart Configuration
@@ -170,25 +172,28 @@ The `eoapi-observability` chart provides ready-to-use dashboards:
 ```yaml
 monitoring:
   prometheus:
-    server:
-      # Persistent storage
-      persistentVolume:
-        enabled: true
-        size: 100Gi
-        storageClass: "gp3"
-      # Retention policy
-      retention: "30d"
-      # Resource allocation
-      resources:
-        limits:
-          cpu: "2000m"
-          memory: "4096Mi"
-        requests:
-          cpu: "1000m"
-          memory: "2048Mi"
-      # Security - internal access only
-      service:
-        type: ClusterIP
+    enabled: true
+
+prometheus:
+  server:
+    # Persistent storage
+    persistentVolume:
+      enabled: true
+      size: 100Gi
+      storageClass: "gp3"
+    # Retention policy
+    retention: "30d"
+    # Resource allocation
+    resources:
+      limits:
+        cpu: "2000m"
+        memory: "4096Mi"
+      requests:
+        cpu: "1000m"
+        memory: "2048Mi"
+    # Security - internal access only
+    service:
+      type: ClusterIP
 ```
 
 ### Resource Requirements
@@ -265,8 +270,11 @@ kubectl exec -it deployment/eoapi-obs-grafana -n eoapi -- \
 Enable alertmanager for alert management:
 
 ```yaml
+monitoring:
+  prometheus:
+    enabled: true
+
 prometheus:
-  enabled: true
   alertmanager:
     enabled: true
     config:
@@ -289,8 +297,11 @@ prometheus:
 Enable pushgateway for batch job metrics:
 
 ```yaml
+monitoring:
+  prometheus:
+    enabled: true
+
 prometheus:
-  enabled: true
   prometheus-pushgateway:
     enabled: true  # For batch job metrics collection
 ```
