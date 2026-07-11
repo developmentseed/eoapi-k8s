@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.13.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.2...v0.13.3) (2026-07-11)
+
+
+### Fixed
+
+* disable mock OIDC server in core profile ([#549](https://github.com/developmentseed/eoapi-k8s/issues/549)) ([7468934](https://github.com/developmentseed/eoapi-k8s/commit/7468934a2f22cbcf46bcbe2a2c3f237b704a0386))
+* local run of integration tests. ([913091c](https://github.com/developmentseed/eoapi-k8s/commit/913091ca974e36df79e371e993fed862f3bf2e04))
+* redirect bare /browser to /browser/ on traefik ([#544](https://github.com/developmentseed/eoapi-k8s/issues/544)) ([e6e92fc](https://github.com/developmentseed/eoapi-k8s/commit/e6e92fc2958ef50ad138dfce60e0548876e372fc))
+
+
+### Maintenance
+
+* bumped version of kubernetes to 1.34+ ([0c11b27](https://github.com/developmentseed/eoapi-k8s/commit/0c11b27012d5675da60e8ca29716662721235968))
+* **deps:** updated helm release knative-operator to v1.22.3. ([#542](https://github.com/developmentseed/eoapi-k8s/issues/542)) ([6aa703d](https://github.com/developmentseed/eoapi-k8s/commit/6aa703de48c8be6e5ea2a0a7476a4869fa133817))
+* **docs:** adjusted AI Guidelines. ([120f976](https://github.com/developmentseed/eoapi-k8s/commit/120f9765d8168b0caf07d02e3442170e84d12c42))
+
 ## [0.13.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.1...v0.13.2) (2026-07-06)
 
 
