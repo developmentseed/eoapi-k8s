@@ -1,6 +1,7 @@
 suite: stac browser service tests
 templates:
   - templates/_helpers/core.tpl
+  - templates/_helpers/networking.tpl
   - templates/services/browser/deployment.yaml
   - templates/services/browser/service.yaml
 tests:
@@ -21,6 +22,42 @@ tests:
       - matchRegex:
           path: metadata.labels.app
           pattern: ^RELEASE-NAME-browser$
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_pathPrefix
+            value: "/browser/"
+  - it: "stac browser deployment with custom ingress path"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.ingress.path: "/stac-browser"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_pathPrefix
+            value: "/stac-browser/"
+  - it: "stac browser deployment with root ingress path"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.ingress.path: "/"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_pathPrefix
+            value: "/"
+
   - it: "stac browser service"
     set:
       raster.enabled: false
@@ -341,12 +378,15 @@ tests:
       # the built-in env renders first; extraEnv is appended after it (additive, not a replacement)
       - equal:
           path: spec.template.spec.containers[0].env[0].name
-          value: SB_catalogUrl
+          value: SB_pathPrefix
       - equal:
           path: spec.template.spec.containers[0].env[1].name
+          value: SB_catalogUrl
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
           value: SB_itemsPerPage
       - equal:
-          path: spec.template.spec.containers[0].env[1].value
+          path: spec.template.spec.containers[0].env[2].value
           value: "60"
   - it: "stac browser deployment renders no extra env when browser.extraEnv is unset"
     set:
@@ -359,7 +399,7 @@ tests:
     asserts:
       - isKind:
           of: Deployment
-      # default extraEnv ([]) adds nothing — only the built-in SB_catalogUrl remains
+      # default extraEnv ([]) adds nothing — built-in SB_pathPrefix and SB_catalogUrl remain
       - lengthEqual:
           path: spec.template.spec.containers[0].env
-          count: 1
+          count: 2

@@ -1,6 +1,7 @@
 suite: test ingress routing without stripPrefix middleware
 templates:
   - templates/_helpers/networking.tpl
+  - templates/networking/browser-ingress.yaml
   - templates/networking/ingress.yaml
 
 tests:
@@ -48,7 +49,7 @@ tests:
                 port:
                   number: 8080
 
-  - it: should not create ingress when both stac and browser are disabled
+  - it: should not create main ingress when both stac and browser are disabled
     template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
@@ -81,8 +82,8 @@ tests:
                 port:
                   number: 8080
 
-  - it: should route ingress to browser
-    template: templates/networking/ingress.yaml
+  - it: should route browser via its own ingress
+    template: templates/networking/browser-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -103,7 +104,7 @@ tests:
                 port:
                   number: 8080
 
-  - it: should include both stac and browser when both enabled
+  - it: should include stac on main ingress and browser on its own ingress when both enabled
     template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
@@ -125,6 +126,19 @@ tests:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /browser
+
+  - it: should include browser path on browser ingress when both stac and browser are enabled
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      browser.enabled: true
+    asserts:
       - contains:
           path: spec.rules[0].http.paths
           content:

@@ -348,7 +348,6 @@ ingress:
   tls:
     enabled: true
     secretName: eoapi-tls
-    # certManager: true  # Uncomment if using cert-manager
 
 ######################
 # SECURITY & RBAC

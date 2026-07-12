@@ -1,6 +1,7 @@
 suite: unified ingress tests
 templates:
   - templates/_helpers/networking.tpl
+  - templates/networking/browser-ingress.yaml
   - templates/networking/ingress.yaml
   - templates/networking/traefik-middleware.yaml
 tests:
@@ -224,12 +225,10 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[2].path
           value: "/features(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[3].path
-          value: "/browser"
-      - equal:
-          path: spec.rules[0].http.paths[3].pathType
-          value: "Prefix"
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: "/browser"
 
   - it: "multiple hosts with services"
     template: templates/networking/ingress.yaml
@@ -335,7 +334,7 @@ tests:
           value: RELEASE-NAME-stac-auth-proxy
 
   - it: "browser with default path"
-    template: templates/networking/ingress.yaml
+    template: templates/networking/browser-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -349,6 +348,9 @@ tests:
       - isKind:
           of: Ingress
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-browser-ingress
+      - equal:
           path: spec.rules[0].http.paths[0].path
           value: "/browser"
       - equal:
@@ -357,9 +359,10 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-browser
-      - matchRegex:
+      - notExists:
           path: metadata.annotations["nginx.ingress.kubernetes.io/server-snippet"]
-          pattern: 'location = /browser \{\n  return 301 /browser/;\n\}'
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
 
   - it: "docServer creates root path entry"
     template: templates/networking/ingress.yaml
@@ -405,6 +408,30 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-mock-oidc-server
+
+  - it: "mockOidcServer without ingress block falls back to default path"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      testing.mockOidcServer.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/mock-oidc(/|$)(.*)"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-mock-oidc-server
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
 
   - it: "custom annotations preserved"
     template: templates/networking/ingress.yaml

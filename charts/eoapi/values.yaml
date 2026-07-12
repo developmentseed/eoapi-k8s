@@ -41,7 +41,8 @@ ingress:
   host: ""
   # Multiple host domains array - if specified, takes precedence over single host
   # hosts: []
-  # Custom annotations to add to the ingress
+  # Custom annotations to add to the ingress (applied to both the main and browser ingresses;
+  # avoid rewrite-target or strip-prefix annotations here — they break the browser ingress)
   annotations: {}
   # TLS configuration
   tls:

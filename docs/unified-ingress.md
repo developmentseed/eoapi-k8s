@@ -1,6 +1,6 @@
 ---
 title: "Unified Ingress Configuration"
-description: "NGINX and Traefik ingress setup with TLS and cert-manager integration"
+description: "NGINX and Traefik ingress setup with TLS"
 external_links:
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
@@ -31,7 +31,7 @@ eoAPI includes a single streamlined ingress configuration with smart defaults th
 - Custom paths: `raster.ingress.path: "/tiles"`
 - Internal-only services stay off ingress
 
-**Note:** Ingress is only created when at least one service is enabled.
+**Note:** The main ingress is created when at least one API service or doc server is enabled. The browser has its own ingress when `browser.ingress.enabled` is true.
 
 ## Configuration
 
@@ -97,7 +97,7 @@ Services configure their expected external prefix via the `--root-path` flag:
 - **Raster**: `--root-path=/raster`
 - **Vector**: `--root-path=/vector`
 - **Multidim**: `--root-path=/multidim`
-- **Browser**: Served from the unified ingress at `/browser` (or a custom `browser.ingress.path`). Unlike API services, the browser path prefix is preserved at the pod because the image is built with `pathPrefix=/browser/`. Both controllers redirect bare `/browser` to `/browser/`.
+- **Browser**: Served from a separate rewrite-free ingress at `/browser` (or a custom `browser.ingress.path`). The pod receives `SB_pathPrefix` at runtime and redirects bare `/browser` to `/browser/` internally. Traefik also applies a redirect middleware so the 301 holds before the pod is ready.
 
 ### Ingress Controller Support
 
@@ -147,7 +147,7 @@ Service receives: GET /tiles/123
 
 ## STAC Browser Configuration
 
-The STAC browser is routed through the same unified ingress as the API services. Unlike API services, the browser keeps its path prefix at the pod because the image is built with `pathPrefix=/browser/`. Both NGINX and Traefik add a bare-path redirect so `/browser` resolves to `/browser/`.
+The STAC browser uses its own ingress resource so path rewriting does not strip the browser prefix. The pod receives `SB_pathPrefix` from `browser.ingress.path` and redirects bare paths to their trailing-slash form internally. On Traefik, a redirect middleware provides the same 301 before the pod is ready.
 
 ```yaml
 browser:
@@ -156,6 +156,10 @@ browser:
     enabled: true  # Can be disabled independently
     path: "/browser"
 ```
+
+On NGINX, no snippet annotations are required — bare `/browser` reaches the pod and the in-container redirect handles the trailing slash.
+
+`ingress.annotations` is shared by both the main and browser ingresses. Do not add rewrite or strip-prefix annotations there; they break the browser ingress which must receive the full path prefix.
 
 ### Custom Ingress Solutions
 
@@ -238,15 +242,6 @@ ingress:
     enabled: true
     secretName: eoapi-tls  # cert-manager will create this secret
 ```
-
-## Migration from 0.7.0
-
-If you're upgrading from version 0.7.0:
-
-1. Remove any `pathType` and `pathSuffix` configurations from your values
-2. The system will automatically use the appropriate settings for your chosen controller
-3. For NGINX users, regex path matching is now enabled by default
-4. For Traefik users, strip-prefix middleware is automatically configured
 
 ## Path Structure
 
