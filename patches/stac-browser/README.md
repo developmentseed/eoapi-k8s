@@ -4,4 +4,6 @@ Vendored from [pantierra/stac-browser@f4347c24a](https://github.com/pantierra/st
 
 Adds runtime `SB_pathPrefix` support in the Docker image so eoapi can serve the browser under `/browser/` without baking the prefix at build time.
 
+Published as `4.0.1-eoapi.N` in `browser.image.tag`; bump the `-eoapi.N` suffix when changing this patch or the build workflow.
+
 **Remove when upstream merges this:** delete `patches/stac-browser/` and the "Apply dynamic pathPrefix patch" step in `.github/workflows/stac-browser.yml`.

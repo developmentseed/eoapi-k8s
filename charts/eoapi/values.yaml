@@ -597,9 +597,9 @@ vector:
 browser:
   enabled: true
   image:
-    # we use a custom image with pathPrefix built into it
+    # Patched eoapi image (runtime SB_pathPrefix); built from upstream v4.0.1 + patches/stac-browser/
     name: ghcr.io/developmentseed/eoapi-k8s/stac-browser
-    tag: 4.0.1
+    tag: 4.0.1-eoapi.1
   service:
     port: 8080
   ingress:

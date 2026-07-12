@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       STAC_BROWSER_VERSION:
-        description: "STAC Browser version to build"
+        description: "Published image tag to build (e.g. 4.0.1-eoapi.1)"
         required: true
-        default: "v4.0.1"
+        default: "4.0.1-eoapi.1"
 
 permissions:
   contents: read
@@ -35,13 +35,15 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            RAW_VERSION="${{ github.event.inputs.STAC_BROWSER_VERSION }}"
+            RAW_TAG="${{ github.event.inputs.STAC_BROWSER_VERSION }}"
           else
-            RAW_VERSION=$(yq '.browser.image.tag' eoapi-k8s/charts/eoapi/values.yaml)
+            RAW_TAG=$(yq '.browser.image.tag' eoapi-k8s/charts/eoapi/values.yaml)
           fi
-          VERSION="${RAW_VERSION#v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "stac_version=v$VERSION" >> "$GITHUB_OUTPUT"
+          IMAGE_TAG="${RAW_TAG#v}"
+          UPSTREAM_VERSION="${IMAGE_TAG%%-eoapi.*}"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "upstream_version=$UPSTREAM_VERSION" >> "$GITHUB_OUTPUT"
+          echo "upstream_ref=v$UPSTREAM_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Set IMAGE_NAME
         run: echo "IMAGE_NAME=${{ env.REGISTRY }}/${GITHUB_REPOSITORY,,}/stac-browser" >> "$GITHUB_ENV"
@@ -56,7 +58,7 @@ jobs:
       - name: Check if image exists
         id: check
         run: |
-          if docker manifest inspect "${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}" > /dev/null 2>&1; then
+          if docker manifest inspect "${{ env.IMAGE_NAME }}:${{ steps.version.outputs.image_tag }}" > /dev/null 2>&1; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "Image already exists, skipping build"
           else
@@ -68,7 +70,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           repository: radiantearth/stac-browser
-          ref: ${{ steps.version.outputs.stac_version }}
+          ref: ${{ steps.version.outputs.upstream_ref }}
           path: stac-browser
 
       - name: Apply dynamic pathPrefix patch
@@ -86,13 +88,13 @@ jobs:
           context: stac-browser
           push: true
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
+            VERSION=${{ steps.version.outputs.upstream_version }}
             pathPrefix=/browser/
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.image_tag }}
             ${{ env.IMAGE_NAME }}:latest
           labels: |
-            org.opencontainers.image.version=${{ steps.version.outputs.stac_version }}
+            org.opencontainers.image.version=${{ steps.version.outputs.upstream_ref }}
             org.opencontainers.image.source=https://github.com/radiantearth/stac-browser
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline
