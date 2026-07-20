@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.3...v0.13.4) (2026-07-20)
+
+
+### Fixed
+
+* bumped Kubernetes version down to 1.30.0 ([#561](https://github.com/developmentseed/eoapi-k8s/issues/561)). ([60e1af9](https://github.com/developmentseed/eoapi-k8s/commit/60e1af9f246d46dec1c8414f65c8e5a56f58eaea))
+
 ## [0.13.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.2...v0.13.3) (2026-07-11)
 
 
