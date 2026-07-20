@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.14.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.4...v0.14.0) (2026-07-20)
+
+
+### Added
+
+* inject gitSha instead of setting manually. ([#550](https://github.com/developmentseed/eoapi-k8s/issues/550)) ([0fcdc44](https://github.com/developmentseed/eoapi-k8s/commit/0fcdc442f10f7b330a5cd56331315cc71eec37f4))
+
+
+### Fixed
+
+* align HPA request-rate metrics with prometheus-adapter rules ([#547](https://github.com/developmentseed/eoapi-k8s/issues/547)) ([e4a5c96](https://github.com/developmentseed/eoapi-k8s/commit/e4a5c961bfb7073e4c239e2c8a66e3e07967fac2))
+* continue gitSha injection simplification. ([#554](https://github.com/developmentseed/eoapi-k8s/issues/554)) ([7bbbf03](https://github.com/developmentseed/eoapi-k8s/commit/7bbbf03f36a23cbc62791251dff6ed6f553d5326))
+* patched stac-browser to support dynamic pathPrefix with trailing slash redirect. ([#555](https://github.com/developmentseed/eoapi-k8s/issues/555)) ([fd6a9a3](https://github.com/developmentseed/eoapi-k8s/commit/fd6a9a3dbcc66f2c4ed32be663cb44fa529f4af0))
+* repair legacy helm unittest suites for current template paths ([#548](https://github.com/developmentseed/eoapi-k8s/issues/548)) ([5dfb6f5](https://github.com/developmentseed/eoapi-k8s/commit/5dfb6f594d5a04163cfd07992aa387959c35d0a8))
+* **tests:** add validation suite for PostgreSQL config rules. ([#553](https://github.com/developmentseed/eoapi-k8s/issues/553)) ([6d6cff9](https://github.com/developmentseed/eoapi-k8s/commit/6d6cff9e0fb509a4c06170e802d96181caf8996c))
+
+
+### Maintenance
+
+* **deps:** bump actions/setup-python from 6.3.0 to 7.0.0 ([#560](https://github.com/developmentseed/eoapi-k8s/issues/560)) ([4dadd8f](https://github.com/developmentseed/eoapi-k8s/commit/4dadd8f9360937e2317272b91c2487bece134bfc))
+* **deps:** updated actions/setup-node action to v7.0.0. ([#559](https://github.com/developmentseed/eoapi-k8s/issues/559)) ([837def6](https://github.com/developmentseed/eoapi-k8s/commit/837def6e99a33d5ab06fb2f6698f1627f6c7f5b9))
+* **deps:** updated helm release knative-operator to v1.22.3. ([#556](https://github.com/developmentseed/eoapi-k8s/issues/556)) ([94d64f7](https://github.com/developmentseed/eoapi-k8s/commit/94d64f7b45363af8271223732b5c1a3921369636))
+* **deps:** updated helm release prometheus to 29.17.0. ([#557](https://github.com/developmentseed/eoapi-k8s/issues/557)) ([89bf271](https://github.com/developmentseed/eoapi-k8s/commit/89bf271358eb2901d4db24c51f2b754b5ec356cd))
+
 ## [0.13.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.3...v0.13.4) (2026-07-20)
 
 
