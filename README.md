@@ -20,7 +20,7 @@
 
 ## Prerequisites
 
-- Kubernetes cluster (1.30+)
+- Kubernetes cluster (1.34+)
 - Helm 3.x
 - `kubectl` configured for cluster access
 

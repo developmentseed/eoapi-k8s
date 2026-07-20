@@ -6,6 +6,8 @@ external_links:
     url: "https://github.com/developmentseed/eoapi-k8s"
   - name: "Helm Documentation"
     url: "https://helm.sh/docs/"
+  - name: "Kubernetes Releases"
+    url: "https://kubernetes.io/releases/"
 ---
 
 # Quick Start
@@ -13,7 +15,7 @@ external_links:
 ## Prerequisites
 
 - [helm](https://helm.sh/docs/intro/install/)
-- A Kubernetes cluster (local or cloud-based)
+- A Kubernetes cluster on a version in the [official Kubernetes release cycle](https://kubernetes.io/releases/) (1.34+)
 - `kubectl` configured for your cluster (ensure `KUBECONFIG` environment variable is set to point to your cluster configuration file, or use `kubectl config use-context <your-context>` to set the active cluster)
 - [helm unittest](https://github.com/helm-unittest/helm-unittest?tab=readme-ov-file#install) if contributing to the repository and running `./eoapi-cli test unit`
 
