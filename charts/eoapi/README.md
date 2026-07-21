@@ -36,7 +36,7 @@ helm install eoapi eoapi/eoapi -f profiles/experimental.yaml
 
 ## Prerequisites
 
-- Kubernetes 1.30+
+- Kubernetes 1.32+
 - Helm 3.0+
 - PV provisioner support
 - PostgreSQL operator
