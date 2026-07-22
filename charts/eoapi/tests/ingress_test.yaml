@@ -75,6 +75,8 @@ tests:
       - equal:
           path: spec.ingressClassName
           value: "traefik"
+      - notExists:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
 
   - it: "vector ingress with nginx controller"
     template: templates/networking/ingress.yaml
@@ -431,6 +433,26 @@ tests:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-doc-server
 
+  - it: "docServer honors ingress.rootPath"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      ingress.rootPath: "docs"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: true
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/docs"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-doc-server
+
   - it: "mockOidcServer with custom path"
     template: templates/networking/ingress.yaml
     set:
@@ -581,3 +603,35 @@ tests:
             - /stac
             - /raster
             - /multidim
+
+  - it: "renders no strip-prefix middleware when no path needs stripping"
+    template: templates/networking/traefik-middleware.yaml
+    set:
+      ingress.className: "traefik"
+      stac.enabled: true
+      stac.ingress.path: "/"
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "excludes auth-proxied stac from strip-prefix prefixes"
+    template: templates/networking/traefik-middleware.yaml
+    set:
+      ingress.className: "traefik"
+      stac.enabled: true
+      stac-auth-proxy.enabled: true
+      raster.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Middleware
+      - equal:
+          path: spec.stripPrefix.prefixes
+          value:
+            - /raster
