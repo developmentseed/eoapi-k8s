@@ -200,6 +200,52 @@ tests:
             traefik.ingress.kubernetes.io/router.entrypoints: web
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
+  - it: "traefik entrypoints coexist with custom annotations"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: "traefik"
+      ingress.entrypoints: "websecure"
+      ingress.annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      ingress.host: "eoapi.local"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations
+          value:
+            traefik.ingress.kubernetes.io/router.entrypoints: websecure
+            cert-manager.io/cluster-issuer: "letsencrypt-prod"
+            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+
+  - it: "browser ingress combines entrypoints with custom annotations"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: "traefik"
+      ingress.entrypoints: "websecure"
+      ingress.annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      ingress.host: "eoapi.local"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.entrypoints"]
+          value: websecure
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod
+
   - it: "all services enabled with custom paths"
     template: templates/networking/ingress.yaml
     set:

@@ -42,6 +42,21 @@ tests:
           content:
             name: SB_pathPrefix
             value: "/stac-browser/"
+  - it: "stac browser deployment tolerates null browser ingress block"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.ingress: null
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_pathPrefix
+            value: "/browser/"
   - it: "stac browser deployment with root ingress path"
     set:
       raster.enabled: false

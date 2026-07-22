@@ -56,14 +56,13 @@ Shared Traefik entrypoints and user annotations for ingress resources.
 */}}
 {{- define "eoapi.ingressCommonAnnotations" -}}
 {{- $root := . -}}
-{{- $ingressAnnotations := $root.Values.ingress.annotations | default dict -}}
-{{- if eq $root.Values.ingress.className "traefik" -}}
-{{- if and $root.Values.ingress.entrypoints (not (hasKey $ingressAnnotations "traefik.ingress.kubernetes.io/router.entrypoints")) -}}
-traefik.ingress.kubernetes.io/router.entrypoints: {{ $root.Values.ingress.entrypoints | quote }}
+{{- $annotations := dict -}}
+{{- if and (eq $root.Values.ingress.className "traefik") $root.Values.ingress.entrypoints -}}
+{{- $_ := set $annotations "traefik.ingress.kubernetes.io/router.entrypoints" ($root.Values.ingress.entrypoints | toString) -}}
 {{- end -}}
-{{- end -}}
-{{- if not (empty $ingressAnnotations) -}}
-{{- toYaml $ingressAnnotations -}}
+{{- $annotations = mergeOverwrite $annotations (deepCopy ($root.Values.ingress.annotations | default dict)) -}}
+{{- if not (empty $annotations) -}}
+{{- toYaml $annotations -}}
 {{- end -}}
 {{- end -}}
 
@@ -166,7 +165,7 @@ Return true when the browser should be exposed via its own ingress.
 Return the configured browser ingress path without trailing slash ("/" for a root path).
 */}}
 {{- define "eoapi.browserIngressPath" -}}
-{{- trimSuffix "/" (.Values.browser.ingress.path | default "/browser") | default "/" -}}
+{{- trimSuffix "/" ((((.Values.browser).ingress).path) | default "/browser") | default "/" -}}
 {{- end -}}
 
 {{/*
