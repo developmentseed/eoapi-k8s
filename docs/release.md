@@ -24,6 +24,18 @@ Verify with:
 helm repo update && helm search repo eoapi --versions
 ```
 
+## Chart dependencies
+
+`charts/eoapi/Chart.lock` is committed so installs and CI resolve the same subchart versions. Exact versions stay pinned in `Chart.yaml`.
+
+To bump a dependency:
+
+1. Edit the version in `charts/eoapi/Chart.yaml`
+2. Run `helm dependency update charts/eoapi` (regenerates `Chart.lock` and downloads charts)
+3. Review and commit both `Chart.yaml` and `Chart.lock`
+
+Day-to-day local/CI workflows use `helm dependency build` against the lockfile. HTTPS chart repos must be added first (`helm repo add`); OCI dependencies do not need that. Prefer Helm 3.18.x for dependency updates; CI and release workflows pin `v3.18.3`.
+
 ## Postgrescluster
 
 When `charts/postgrescluster/Chart.yaml` version changes on `main`, a separate workflow packages and publishes that chart automatically. No release PR is required.

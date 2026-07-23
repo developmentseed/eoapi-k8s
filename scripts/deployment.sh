@@ -113,8 +113,11 @@ run_deployment() {
     kubectl wait --for=condition=Available deployment/pgo --timeout=300s
 
     cd "$PROJECT_ROOT"
-    log_info "Updating Helm dependencies..."
-    helm dependency update charts/eoapi
+    log_info "Building Helm dependencies from Chart.lock..."
+    if ! ensure_chart_dependencies charts/eoapi; then
+        log_error "Failed to build Helm chart dependencies"
+        return 1
+    fi
 
     local helm_cmd="helm upgrade --install $RELEASE_NAME charts/eoapi -n $NAMESPACE --create-namespace"
     local testing_mode=false
