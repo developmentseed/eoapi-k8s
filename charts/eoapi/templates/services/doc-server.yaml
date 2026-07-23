@@ -51,7 +51,8 @@ spec:
     spec:
       containers:
       - name: doc-server
-        image: nginxinc/nginx-unprivileged:alpine
+        image: {{ include "eoapi.containerImage" .Values.docServer.image }}
+        imagePullPolicy: {{ .Values.docServer.image.pullPolicy | default "IfNotPresent" }}
         volumeMounts:
         - name: {{ .Release.Name }}-doc-html
           mountPath: /usr/share/nginx/html

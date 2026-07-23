@@ -41,7 +41,8 @@ spec:
     spec:
       {{- include "eoapi.pgstacInitContainers" . | nindent 6 }}
       containers:
-      - image: {{ .Values.vector.image.name }}:{{ .Values.vector.image.tag }}
+      - image: {{ include "eoapi.containerImage" .Values.vector.image }}
+        imagePullPolicy: {{ .Values.vector.image.pullPolicy | default "IfNotPresent" }}
         name: vector
         command:
           {{- toYaml .Values.vector.command | nindent 10 }}

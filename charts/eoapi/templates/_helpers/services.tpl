@@ -43,7 +43,8 @@ Helper function for common init containers to wait for pgstac jobs
 {{- if .Values.pgstacBootstrap.enabled }}
 initContainers:
 - name: wait-for-pgstac-jobs
-  image: alpine/kubectl:1.34.1
+  image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.waitImage }}
+  imagePullPolicy: {{ .Values.pgstacBootstrap.waitImage.pullPolicy | default "IfNotPresent" }}
   securityContext:
     runAsNonRoot: true
     runAsUser: 65534

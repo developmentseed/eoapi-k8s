@@ -41,7 +41,8 @@ spec:
     spec:
       {{- include "eoapi.pgstacInitContainers" . | nindent 6 }}
       containers:
-      - image: {{ .Values.stac.image.name }}:{{ .Values.stac.image.tag }}
+      - image: {{ include "eoapi.containerImage" .Values.stac.image }}
+        imagePullPolicy: {{ .Values.stac.image.pullPolicy | default "IfNotPresent" }}
         name: stac
         command:
           {{- toYaml .Values.stac.command | nindent 10 }}

@@ -28,8 +28,8 @@ spec:
       {{- end }}
       containers:
       - name: mock-oidc
-        image: "{{ if .Values.testing.mockOidcServer.image }}{{ .Values.testing.mockOidcServer.image.repository | default "ghcr.io/alukach/mock-oidc-server" }}:{{ .Values.testing.mockOidcServer.image.tag | default "latest" }}{{ else }}ghcr.io/alukach/mock-oidc-server:latest{{ end }}"
-        imagePullPolicy: {{ if .Values.testing.mockOidcServer.image }}{{ .Values.testing.mockOidcServer.image.pullPolicy | default "IfNotPresent" }}{{ else }}IfNotPresent{{ end }}
+        image: {{ include "eoapi.containerImage" .Values.testing.mockOidcServer.image }}
+        imagePullPolicy: {{ .Values.testing.mockOidcServer.image.pullPolicy | default "IfNotPresent" }}
         env:
         - name: MOCK_OIDC_PORT
           value: "{{ .Values.testing.mockOidcServer.port | default 8888 }}"

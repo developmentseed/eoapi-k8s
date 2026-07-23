@@ -1,5 +1,6 @@
 suite: doc-server tests
 templates:
+  - templates/_helpers/core.tpl
   - templates/services/doc-server.yaml
 tests:
   - it: "renders landing page by default"

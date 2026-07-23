@@ -41,7 +41,8 @@ spec:
     spec:
       {{- include "eoapi.pgstacInitContainers" . | nindent 6 }}
       containers:
-      - image: {{ .Values.raster.image.name }}:{{ .Values.raster.image.tag }}
+      - image: {{ include "eoapi.containerImage" .Values.raster.image }}
+        imagePullPolicy: {{ .Values.raster.image.pullPolicy | default "IfNotPresent" }}
         name: raster
         command:
           {{- toYaml .Values.raster.command | nindent 10 }}

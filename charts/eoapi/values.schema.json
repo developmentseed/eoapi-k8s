@@ -259,17 +259,10 @@
           "description": "Enable PgSTAC bootstrap"
         },
         "image": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "PgSTAC bootstrap image name"
-            },
-            "tag": {
-              "type": "string",
-              "description": "PgSTAC bootstrap image tag"
-            }
-          }
+          "$ref": "#/definitions/containerImage"
+        },
+        "waitImage": {
+          "$ref": "#/definitions/containerImage"
         },
         "configMaps": {
           "type": "object",
@@ -568,17 +561,7 @@
           "description": "Number of replicas"
         },
         "image": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Image name"
-            },
-            "tag": {
-              "type": "string",
-              "description": "Image tag"
-            }
-          }
+          "$ref": "#/definitions/containerImage"
         },
         "ingress": {
           "type": "object",
@@ -612,6 +595,9 @@
           "type": "string",
           "default": "",
           "description": "When set, root path / redirects to this URL instead of showing the landing page (e.g. /browser/)"
+        },
+        "image": {
+          "$ref": "#/definitions/containerImage"
         },
         "settings": {
           "type": "object",
@@ -802,6 +788,44 @@
             "enabled": {
               "type": "boolean",
               "description": "Enable mock OIDC server"
+            },
+            "image": {
+              "$ref": "#/definitions/containerImage"
+            }
+          }
+        }
+      }
+    },
+    "knative": {
+      "type": "object",
+      "description": "Optional Knative components for CloudEvents and serverless workloads",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Knative components"
+        },
+        "cloudEventsSink": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable CloudEvents sink"
+            },
+            "image": {
+              "$ref": "#/definitions/containerImage"
+            }
+          }
+        },
+        "jobs": {
+          "type": "object",
+          "properties": {
+            "init": {
+              "type": "object",
+              "properties": {
+                "image": {
+                  "$ref": "#/definitions/containerImage"
+                }
+              }
             }
           }
         }
@@ -943,17 +967,7 @@
           }
         },
         "image": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "Image name"
-            },
-            "tag": {
-              "type": "string",
-              "description": "Image tag"
-            }
-          }
+          "$ref": "#/definitions/containerImage"
         },
         "command": {
           "type": "array",
@@ -994,6 +1008,34 @@
               "description": "Environment variables"
             }
           }
+        }
+      }
+    },
+    "containerImage": {
+      "type": "object",
+      "description": "Container image reference. Prefer digest over tag when pinning immutable images.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Image name (registry/repository)"
+        },
+        "tag": {
+          "type": "string",
+          "description": "Image tag (ignored when digest is set)"
+        },
+        "digest": {
+          "type": "string",
+          "description": "Optional image digest (sha256:...). When set, overrides tag. Refresh when upgrading."
+        },
+        "pullPolicy": {
+          "type": "string",
+          "description": "Container image pull policy",
+          "default": "IfNotPresent",
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
         }
       }
     }

@@ -21,7 +21,8 @@ spec:
     spec:
       containers:
         - name: browser
-          image: {{ .Values.browser.image.name }}:{{ .Values.browser.image.tag }}
+          image: {{ include "eoapi.containerImage" .Values.browser.image }}
+          imagePullPolicy: {{ .Values.browser.image.pullPolicy | default "IfNotPresent" }}
           ports:
           - containerPort: 8080
           env:

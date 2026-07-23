@@ -29,7 +29,8 @@ spec:
     spec:
       containers:
       - name: cloudevents-sink
-        image: gcr.io/knative-samples/helloworld-go:latest
+        image: {{ include "eoapi.containerImage" .Values.knative.cloudEventsSink.image }}
+        imagePullPolicy: {{ .Values.knative.cloudEventsSink.image.pullPolicy | default "IfNotPresent" }}
         ports:
         - containerPort: 8080
         env:

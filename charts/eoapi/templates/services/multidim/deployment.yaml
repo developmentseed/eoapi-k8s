@@ -41,7 +41,8 @@ spec:
     spec:
       {{- include "eoapi.pgstacInitContainers" . | nindent 6 }}
       containers:
-      - image: {{ .Values.multidim.image.name }}:{{ .Values.multidim.image.tag }}
+      - image: {{ include "eoapi.containerImage" .Values.multidim.image }}
+        imagePullPolicy: {{ .Values.multidim.image.pullPolicy | default "IfNotPresent" }}
         name: multidim
         command:
           {{- toYaml .Values.multidim.command | nindent 10 }}

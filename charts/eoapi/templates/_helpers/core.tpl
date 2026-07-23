@@ -73,3 +73,15 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Resolve a container image reference from an image values map.
+Uses name + tag, or name@digest when digest is set.
+*/}}
+{{- define "eoapi.containerImage" -}}
+{{- if .digest -}}
+{{- printf "%s@%s" .name .digest -}}
+{{- else -}}
+{{- printf "%s:%s" .name (required "image.tag is required when digest is unset" .tag) -}}
+{{- end -}}
+{{- end -}}
