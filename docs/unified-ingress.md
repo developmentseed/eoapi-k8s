@@ -44,7 +44,7 @@ ingress:
   rootPath: ""        # Root path for doc server
   host: ""            # Single host (or use hosts array)
   hosts: []           # Multiple hosts (takes precedence over host)
-  annotations: {}     # Custom annotations
+  annotations: {}     # Custom annotations (chart owns rewrite-target/use-regex/router.middlewares)
   tls:
     enabled: false
     secretName: eoapi-tls
@@ -123,7 +123,11 @@ ingress:
 ```
 
 If you set the same annotation via `ingress.annotations`, it overrides `ingress.entrypoints`
-because user annotations are rendered after the chart defaults.
+because user annotations are rendered after the chart defaults. Only path-rewrite annotations
+are chart-owned and always win over `ingress.annotations`:
+`nginx.ingress.kubernetes.io/rewrite-target`, `nginx.ingress.kubernetes.io/use-regex`, and
+`traefik.ingress.kubernetes.io/router.middlewares`. Setting those keys in `ingress.annotations`
+has no effect.
 
 ### Path Handling Details
 

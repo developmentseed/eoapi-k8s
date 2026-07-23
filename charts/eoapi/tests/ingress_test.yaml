@@ -428,6 +428,42 @@ tests:
             cert-manager.io/cluster-issuer: "letsencrypt-prod"
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
+  - it: "traefik chart middlewares win over user router.middlewares annotation"
+    set:
+      ingress.className: "traefik"
+      ingress.annotations:
+        traefik.ingress.kubernetes.io/router.middlewares: custom-auth@kubernetescrd
+      ingress.host: "eoapi.local"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - equal:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
+          value: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+
+  - it: "nginx chart rewrite annotations win over user rewrite-target/use-regex"
+    set:
+      ingress.className: "nginx"
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /custom
+        nginx.ingress.kubernetes.io/use-regex: "false"
+      ingress.host: "eoapi.local"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+          value: /$2
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/use-regex"]
+          value: "true"
+
   - it: "docServer honors ingress.rootPath"
     template: templates/networking/ingress.yaml
     set:

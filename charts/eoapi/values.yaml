@@ -49,7 +49,7 @@ ingress:
   host: ""
   # Multiple host domains array - if specified, takes precedence over single host
   # hosts: []
-  # Custom annotations to add to the ingress
+  # Custom annotations (chart owns rewrite-target/use-regex/router.middlewares)
   annotations: {}
   # TLS configuration
   tls:
