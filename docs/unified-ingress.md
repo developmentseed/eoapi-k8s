@@ -31,7 +31,7 @@ eoAPI includes a single streamlined ingress configuration with smart defaults th
 - Custom paths: `raster.ingress.path: "/tiles"`
 - Internal-only services stay off ingress
 
-**Note:** Ingress is only created when at least one service is enabled.
+**Note:** The main ingress is created when at least one API service or doc server is enabled. The browser has its own rewrite-free ingress when `ingress.enabled` is true, browser is enabled, and `browser.ingress` is not disabled (omitting `browser.ingress` still enables it).
 
 ## Configuration
 
@@ -91,7 +91,7 @@ All services use `pathType: Prefix` and handle their own path prefixes internall
 - **Raster**: `--root-path=/raster`
 - **Vector**: `--root-path=/vector`
 - **Multidim**: `--root-path=/multidim`
-- **Browser**: Configured via environment variable
+- **Browser**: Served from a separate rewrite-free ingress; the pod receives `SB_pathPrefix` from `browser.ingress.path`
 
 ### Ingress Controller Support
 
@@ -141,21 +141,18 @@ Ingress strips /raster
 Service receives: GET /tiles/123
 ```
 
-**Exception:** STAC with `stac-auth-proxy.enabled: true` receives full path `/stac/...`
+**Exception:** STAC with `stac-auth-proxy.enabled: true` receives full path `/stac/...`. On NGINX this is served from a separate rewrite-free ingress; Traefik keeps auth-proxy on the main ingress and omits `/stac` from strip-prefix.
 
 ## STAC Browser Configuration
 
-The STAC browser now uses a separate ingress configuration to handle its unique requirements:
-- Fixed `/browser` path prefix
-- Special rewrite rules for browser-specific routes
-- Maintains compatibility with both NGINX and Traefik
+The STAC browser uses its own ingress so path rewriting does not strip the browser prefix. The pod receives `SB_pathPrefix` from `browser.ingress.path`. On Traefik, a redirect middleware handles bare `/browser` → `/browser/` before the pod is ready.
 
-The browser-specific ingress is automatically configured when browser is enabled:
 ```yaml
 browser:
   enabled: true
   ingress:
     enabled: true  # Can be disabled independently
+    path: "/browser"
 ```
 
 ### Custom Ingress Solutions
