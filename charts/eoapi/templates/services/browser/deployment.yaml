@@ -41,13 +41,14 @@ spec:
               {{- if .Values.browser.authConfig }}
               value: {{ .Values.browser.authConfig | toJson | quote }}
               {{- else }}
+              {{- $browserIngress := .Values.browser.ingress | default dict }}
               value: |-
                 {
                   "type": "openIdConnect",
                   "openIdConnectUrl": "{{ .Values.browser.oidcDiscoveryUrl }}",
                   "oidcConfig": {
                     "client_id": "{{ .Values.browser.oidcClientId | default "test-client" }}",
-                    "redirect_uri": "{{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}{{ .Values.browser.ingress.path | default "/browser" | trimSuffix "/" }}/auth"
+                    "redirect_uri": "{{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}{{ $browserIngress.path | default "/browser" | trimSuffix "/" }}/auth"
                   }
                 }
               {{- end }}

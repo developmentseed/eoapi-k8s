@@ -5,7 +5,7 @@
   (dict "key" "vector")
   (dict "key" "multidim")
   (dict "key" "browser" "defaultPath" "/browser" "skipStripPrefix" true)
-  (dict "key" "mockOidcServer" "config" .Values.testing.mockOidcServer)
+  (dict "key" "mockOidcServer" "defaultPath" "/mock-oidc" "config" .Values.testing.mockOidcServer)
 -}}
 {{- $prefixes := list -}}
 
@@ -14,7 +14,8 @@
   {{- if and $service $service.enabled (or (not $service.ingress) $service.ingress.enabled) }}
     {{- $stripPath := not (or .skipStripPrefix (and .usesAuthProxy (index $.Values "stac-auth-proxy" "enabled"))) }}
     {{- if $stripPath }}
-      {{- $path := $service.ingress.path | default .defaultPath }}
+      {{- $ingress := $service.ingress | default dict }}
+      {{- $path := $ingress.path | default .defaultPath }}
       {{- if $path }}
         {{- $prefixes = append $prefixes $path }}
       {{- end }}
@@ -42,7 +43,8 @@ spec:
        Keep this condition in sync with the router annotation in ingress.yaml. */}}
 {{- $browser := .Values.browser }}
 {{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) }}
-{{- $browserPath := trimSuffix "/" ($browser.ingress.path | default "/browser") }}
+{{- $browserIngress := $browser.ingress | default dict }}
+{{- $browserPath := trimSuffix "/" ($browserIngress.path | default "/browser") }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

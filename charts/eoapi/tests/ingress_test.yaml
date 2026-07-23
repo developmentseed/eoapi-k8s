@@ -405,6 +405,29 @@ tests:
             cert-manager.io/cluster-issuer: "letsencrypt-prod"
             nginx.ingress.kubernetes.io/rate-limit: "100"
 
+  - it: "mockOidcServer without ingress block falls back to default path"
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      testing.mockOidcServer.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/mock-oidc(/|$)(.*)"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-mock-oidc-server
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
+
   - it: "traefik entrypoints coexist with custom annotations"
     template: templates/networking/ingress.yaml
     set:
