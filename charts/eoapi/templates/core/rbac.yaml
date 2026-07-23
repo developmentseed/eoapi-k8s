@@ -1,4 +1,4 @@
-{{- if .Values.apiServices }}
+{{- if and .Values.rbac.create .Values.apiServices }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
