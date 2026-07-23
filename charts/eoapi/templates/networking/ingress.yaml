@@ -18,7 +18,8 @@ Helper template for generating ingress paths
 {{- range $services }}
   {{- $service := .config | default (index $root.Values .key) }}
   {{- if and $service $service.enabled (or (not $service.ingress) $service.ingress.enabled) }}
-    {{- $path := $service.ingress.path | default .defaultPath }}
+    {{- $ingress := $service.ingress | default dict }}
+    {{- $path := $ingress.path | default .defaultPath }}
     {{- $useAuthProxy := and .usesAuthProxy (index $root.Values "stac-auth-proxy" "enabled") }}
     {{- $stripPath := and (ne $path "/") (not $useAuthProxy) }}
     {{- $serviceName := .actualName | default .key }}

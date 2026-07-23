@@ -47,6 +47,26 @@ tests:
       - equal:
           path: metadata.annotations.annotation2
           value: world
+
+  - it: "stac browser service tolerates null browser.service"
+    set:
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.service: null
+    template: templates/services/browser/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+
   - it: "stac browser deployment with auth enabled"
     set:
       raster.enabled: false
@@ -108,6 +128,36 @@ tests:
               {
                 "type": "openIdConnect",
                 "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
+                "oidcConfig": {
+                  "client_id": "test-client",
+                  "redirect_uri": "http://localhost/browser/auth"
+                }
+              }
+  - it: "stac browser deployment with auth tolerates null browser.ingress"
+    set:
+      raster.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: true
+      browser.ingress: null
+      stac-auth-proxy.enabled: true
+      ingress.host: "localhost"
+      stac.ingress.path: "/stac"
+      browser.oidcClientId: "test-client"
+      browser.oidcDiscoveryUrl: "http://localhost/mock-oidc/.well-known/openid-configuration"
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SB_authConfig
+            value: |-
+              {
+                "type": "openIdConnect",
+                "openIdConnectUrl": "http://localhost/mock-oidc/.well-known/openid-configuration",
                 "oidcConfig": {
                   "client_id": "test-client",
                   "redirect_uri": "http://localhost/browser/auth"

@@ -42,7 +42,8 @@ spec:
        Keep this condition in sync with the router annotation in ingress.yaml. */}}
 {{- $browser := .Values.browser }}
 {{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) }}
-{{- $browserPath := trimSuffix "/" ($browser.ingress.path | default "/browser") }}
+{{- $browserIngress := $browser.ingress | default dict }}
+{{- $browserPath := trimSuffix "/" ($browserIngress.path | default "/browser") }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

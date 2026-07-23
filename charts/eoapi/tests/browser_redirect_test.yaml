@@ -44,6 +44,24 @@ tests:
           path: spec.redirectRegex.replacement
           value: "${1}/stac-browser/"
 
+  - it: "tolerates null browser.ingress for the redirect middleware"
+    template: templates/networking/traefik-middleware.yaml
+    set:
+      browser.enabled: true
+      browser.ingress: null
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-browser-redirect-middleware
+      - equal:
+          path: spec.redirectRegex.regex
+          value: "^(https?://[^/]+)/browser$"
+      - equal:
+          path: spec.redirectRegex.replacement
+          value: "${1}/browser/"
+
   - it: "still renders the redirect middleware for a root browser path so the router reference never dangles"
     template: templates/networking/traefik-middleware.yaml
     set:
