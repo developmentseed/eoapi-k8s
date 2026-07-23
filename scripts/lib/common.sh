@@ -82,6 +82,50 @@ check_requirements() {
     validate_tools "$@"
 }
 
+# Register HTTPS chart repos referenced by charts/eoapi/Chart.yaml.
+# helm dependency build requires these; OCI repos do not.
+# URLs must match Chart.lock repository fields exactly (including trailing slash).
+ensure_helm_chart_repos() {
+    helm repo add eoapi-k8s https://devseed.com/eoapi-k8s/ --force-update >/dev/null
+    helm repo add knative https://knative.github.io/operator --force-update >/dev/null
+    helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/ --force-update >/dev/null
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update >/dev/null
+    helm repo add grafana https://grafana.github.io/helm-charts --force-update >/dev/null
+    helm repo update eoapi-k8s knative metrics-server prometheus-community grafana >/dev/null
+}
+
+# Prefer helm dependency build when Chart.lock is present so CI/local
+# installs resolve the same locked subchart versions. Fall back to update
+# only when no lockfile exists (first-time / incomplete checkout).
+ensure_chart_dependencies() {
+    local chart_path="${1:-}"
+
+    if [[ -z "$chart_path" ]]; then
+        log_error "Chart path required for ensure_chart_dependencies"
+        return 1
+    fi
+
+    log_debug "Ensuring Helm chart repositories are configured..."
+    if ! ensure_helm_chart_repos; then
+        log_warn "Helm repo setup failed, continuing anyway..."
+    fi
+
+    if [[ -f "$chart_path/Chart.lock" ]]; then
+        log_debug "Building Helm chart dependencies from Chart.lock..."
+        if ! helm dependency build "$chart_path" &>/dev/null; then
+            log_warn "Helm dependency build failed, continuing anyway..."
+            return 1
+        fi
+    else
+        log_debug "Updating Helm chart dependencies (no Chart.lock)..."
+        if ! helm dependency update "$chart_path" &>/dev/null; then
+            log_warn "Helm dependency update failed, continuing anyway..."
+            return 1
+        fi
+    fi
+    return 0
+}
+
 validate_cluster() {
     if ! kubectl cluster-info >/dev/null 2>&1; then
         log_error "Cannot connect to Kubernetes cluster"

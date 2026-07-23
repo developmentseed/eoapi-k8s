@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  HELM_VERSION: latest
+  HELM_VERSION: v3.18.3
   PGO_VERSION: "5.8.6"
 
 jobs:
@@ -42,8 +42,14 @@ jobs:
 
       - name: Run Helm unit tests
         run: |
-          helm dependency update charts/eoapi
-          helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
+          helm repo add eoapi-k8s https://devseed.com/eoapi-k8s/
+          helm repo add knative https://knative.github.io/operator
+          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+          helm dependency build charts/eoapi
+          helm plugin install https://github.com/helm-unittest/helm-unittest
           helm unittest charts/eoapi -f 'tests/*_test.yaml' -f 'tests/*_tests.yaml' --color
 
       - name: Test gitSha injection script
