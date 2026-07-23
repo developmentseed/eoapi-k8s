@@ -20,6 +20,14 @@ serviceAccount:
   annotations: {}
   labels: {}
 
+#######################
+# RBAC
+#######################
+# rbac.create controls whether Role, RoleBinding, ClusterRole, and
+# ClusterRoleBinding resources are created. Independent of serviceAccount.create.
+rbac:
+  create: true
+
 ######################
 # SERVICE & INGRESS
 ######################

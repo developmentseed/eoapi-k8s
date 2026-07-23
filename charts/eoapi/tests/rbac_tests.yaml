@@ -1,0 +1,89 @@
+suite: rbac.create toggle
+templates:
+  - templates/_helpers/core.tpl
+  - templates/core/rbac.yaml
+  - templates/core/service-account.yaml
+tests:
+  - it: creates Role and RoleBinding by default when apiServices is set
+    template: templates/core/rbac.yaml
+    set:
+      apiServices:
+        - stac
+      knative:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+      - documentIndex: 0
+        equal:
+          path: kind
+          value: Role
+      - documentIndex: 1
+        equal:
+          path: kind
+          value: RoleBinding
+
+  - it: creates ClusterRole resources when knative is enabled
+    template: templates/core/rbac.yaml
+    set:
+      apiServices:
+        - stac
+      knative:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 4
+      - documentIndex: 0
+        equal:
+          path: kind
+          value: Role
+      - documentIndex: 1
+        equal:
+          path: kind
+          value: ClusterRole
+      - documentIndex: 2
+        equal:
+          path: kind
+          value: ClusterRoleBinding
+      - documentIndex: 3
+        equal:
+          path: kind
+          value: RoleBinding
+
+  - it: skips all RBAC resources when rbac.create is false
+    template: templates/core/rbac.yaml
+    set:
+      rbac:
+        create: false
+      apiServices:
+        - stac
+      knative:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: still creates ServiceAccount when rbac.create is false
+    template: templates/core/service-account.yaml
+    set:
+      rbac:
+        create: false
+      serviceAccount:
+        create: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: ServiceAccount
+
+  - it: skips ServiceAccount when serviceAccount.create is false even if rbac.create is true
+    template: templates/core/service-account.yaml
+    set:
+      rbac:
+        create: true
+      serviceAccount:
+        create: false
+    asserts:
+      - hasDocuments:
+          count: 0

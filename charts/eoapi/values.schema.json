@@ -36,6 +36,17 @@
         }
       }
     },
+    "rbac": {
+      "type": "object",
+      "description": "Role-based access control configuration",
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to create RBAC resources (Role, RoleBinding, ClusterRole, ClusterRoleBinding). Independent of serviceAccount.create."
+        }
+      }
+    },
     "service": {
       "type": "object",
       "required": [
