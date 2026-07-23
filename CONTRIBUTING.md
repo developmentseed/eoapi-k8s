@@ -53,6 +53,8 @@ See [`scripts/README.md`](scripts/README.md) for the complete CLI reference.
 
 ## Pull Request Guidelines
 
+PRs are squashed on merge. The PR title becomes the commit message on `main`, so keep it accurate and in Conventional Commits format.
+
 ### Before Submitting
 
 1. **Test thoroughly**
