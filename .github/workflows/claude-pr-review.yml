@@ -1,0 +1,39 @@
+name: Claude Auto Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    # Skip when a PR touches workflow files: the action can't validate/run
+    # against modified workflows and fails with "401 Unauthorized - Workflow
+    # validation failed".
+    paths-ignore:
+      - '.github/workflows/**'
+
+jobs:
+  review:
+    uses: developmentseed/.github/.github/workflows/claude-pr-review.yml@main
+    # All inputs are optional:
+    # with:
+    #   ponytail: false            # drop the over-engineering pass
+    #   plugins: |                 # install your own plugins...
+    #     my-plugin@my-marketplace
+    #   plugin_marketplaces: |
+    #     https://github.com/my-org/my-marketplace.git
+    #   extra_instructions: |      # ...and tell the reviewer to use them
+    #     Also apply the my-plugin review skill.
+    #   show_cost: false           # hide the cost footer on the comment
+    #   model: claude-opus-4-8     # review model (default: Claude Code default)
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    # Picks up the org-level CLAUDE_CODE_OAUTH_TOKEN secret (create with
+    # `claude setup-token`; see
+    # https://github.com/developmentseed/.github#claude-pr-review).
+    # To use a different token for this repo, either add a repo-level
+    # secret with the same name (it shadows the org secret), or replace
+    # `inherit` with an explicit mapping:
+    #   secrets:
+    #     CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.MY_OTHER_TOKEN }}
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
