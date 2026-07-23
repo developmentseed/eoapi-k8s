@@ -10,7 +10,6 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: eoapi-cloudevents-sink
-  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: cloudevents-sink

@@ -10,7 +10,6 @@ apiVersion: sources.knative.dev/v1
 kind: SinkBinding
 metadata:
   name: eoapi-notifier-sink-binding
-  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: sink-binding

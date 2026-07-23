@@ -3,7 +3,6 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Release.Name }}-knative-init
-  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: knative-init
