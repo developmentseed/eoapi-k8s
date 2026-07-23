@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.15.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.14.1...v0.15.0) (2026-07-23)
+
+
+### Added
+
+* add rbac.create toggle for optional RBAC resources ([#573](https://github.com/developmentseed/eoapi-k8s/issues/573)). ([dcfc688](https://github.com/developmentseed/eoapi-k8s/commit/dcfc688828058c35ffb7947f2b5b3f66c843cf83))
+
+
+### Fixed
+
+* make chart images configurable and pin floating tags ([#575](https://github.com/developmentseed/eoapi-k8s/issues/575)) ([80b8e77](https://github.com/developmentseed/eoapi-k8s/commit/80b8e770c353466c76d6891d215027af8ff2235e))
+* omit redundant Release.Namespace from resource metadata ([#572](https://github.com/developmentseed/eoapi-k8s/issues/572)). ([d493e68](https://github.com/developmentseed/eoapi-k8s/commit/d493e6864be2aa182949c2895c3515776d18e675))
+
+
+### Maintenance
+
+* commit Chart.lock and build dependencies from it ([#574](https://github.com/developmentseed/eoapi-k8s/issues/574)). ([2586185](https://github.com/developmentseed/eoapi-k8s/commit/25861859bfbca9ff282ff3fecc874e8853c4e8a8))
+
 ## [0.14.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.14.0...v0.14.1) (2026-07-23)
 
 
