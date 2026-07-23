@@ -73,7 +73,7 @@
             "nginx",
             "traefik"
           ],
-          "description": "Ingress controller class name"
+          "description": "Supported ingress controller class name (NGINX or Traefik only)"
         },
         "entrypoints": {
           "type": "string",
@@ -108,18 +108,6 @@
             "secretName": {
               "type": "string",
               "description": "TLS secret name"
-            },
-            "certManager": {
-              "type": "boolean",
-              "description": "Use cert-manager for TLS"
-            },
-            "certManagerIssuer": {
-              "type": "string",
-              "description": "cert-manager issuer to use"
-            },
-            "certManagerEmail": {
-              "type": "string",
-              "description": "Email address for cert-manager"
             }
           }
         }
@@ -569,6 +557,10 @@
             "enabled": {
               "type": "boolean",
               "description": "Enable ingress for browser"
+            },
+            "path": {
+              "type": "string",
+              "description": "Ingress path prefix for the browser service"
             }
           }
         },
@@ -791,6 +783,28 @@
             },
             "image": {
               "$ref": "#/definitions/containerImage"
+            },
+            "ingress": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Expose mock OIDC server via unified ingress"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Ingress path prefix for the mock OIDC server"
+                }
+              }
+            },
+            "service": {
+              "type": "object",
+              "properties": {
+                "port": {
+                  "type": "integer",
+                  "description": "Service port for the mock OIDC server"
+                }
+              }
             }
           }
         }
@@ -920,6 +934,10 @@
             "enabled": {
               "type": "boolean",
               "description": "Enable ingress for this service"
+            },
+            "path": {
+              "type": "string",
+              "description": "Ingress path prefix for this service"
             }
           }
         },
