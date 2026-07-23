@@ -1,8 +1,10 @@
 suite: traefik strip-prefix middleware
 templates:
+  - templates/_helpers/networking.tpl
   - templates/networking/traefik-middleware.yaml
 tests:
   - it: "traefik strip-prefix middleware renders enabled service prefixes"
+    template: templates/networking/traefik-middleware.yaml
     set:
       ingress.className: "traefik"
       stac.enabled: true
@@ -24,6 +26,7 @@ tests:
             - /multidim
 
   - it: "excludes auth-proxied stac from strip-prefix prefixes"
+    template: templates/networking/traefik-middleware.yaml
     set:
       ingress.className: "traefik"
       stac.enabled: true

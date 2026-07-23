@@ -1,8 +1,10 @@
 suite: unified ingress tests
 templates:
+  - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
 tests:
   - it: "should not create ingress when all services disabled"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -18,6 +20,7 @@ tests:
           count: 0
 
   - it: "stac-only deployment at root path with nginx"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -47,6 +50,7 @@ tests:
           value: RELEASE-NAME-stac
 
   - it: "stac-only deployment at root path with traefik"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "traefik"
@@ -71,6 +75,7 @@ tests:
           value: "traefik"
 
   - it: "vector ingress with nginx controller"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
       ingress.annotations:
@@ -102,6 +107,7 @@ tests:
           value: "nginx"
 
   - it: "raster ingress with traefik controller"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "traefik"
       ingress.host: "eoapi.local"
@@ -131,6 +137,7 @@ tests:
           value: "eoapi.local"
 
   - it: "traefik ingress emits entrypoints when configured"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "traefik"
       ingress.entrypoints: "websecure"
@@ -150,6 +157,7 @@ tests:
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
   - it: "traefik ingress quotes entrypoints annotation values"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "traefik"
       ingress.entrypoints: "true"
@@ -169,6 +177,7 @@ tests:
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
   - it: "traefik ingress annotations override configured entrypoints"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "traefik"
       ingress.entrypoints: "websecure"
@@ -190,6 +199,7 @@ tests:
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
   - it: "all services enabled with custom paths"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
       raster.enabled: true
@@ -221,6 +231,7 @@ tests:
           value: "ImplementationSpecific"
 
   - it: "multiple hosts with services"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
       ingress.hosts:
@@ -251,6 +262,7 @@ tests:
           value: "/vector(/|$)(.*)"
 
   - it: "tls enabled with multiple hosts"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
       ingress.hosts:
@@ -277,6 +289,7 @@ tests:
           value: "eoapi-tls"
 
   - it: "single host with tls"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
       ingress.host: "api.eoapi.dev"
@@ -301,6 +314,7 @@ tests:
           value: "eoapi-tls"
 
   - it: "stac with auth proxy enabled"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -320,6 +334,7 @@ tests:
           value: RELEASE-NAME-stac-auth-proxy
 
   - it: "browser with default path"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -340,6 +355,7 @@ tests:
           value: RELEASE-NAME-browser
 
   - it: "docServer creates root path entry"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -360,6 +376,7 @@ tests:
           value: RELEASE-NAME-doc-server
 
   - it: "mockOidcServer with custom path"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -383,6 +400,7 @@ tests:
           value: RELEASE-NAME-mock-oidc-server
 
   - it: "custom annotations preserved"
+    template: templates/networking/ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: "nginx"
@@ -429,6 +447,7 @@ tests:
             traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
   - it: "traefik chart middlewares win over user router.middlewares annotation"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "traefik"
       ingress.annotations:
@@ -445,6 +464,7 @@ tests:
           value: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
 
   - it: "nginx chart rewrite annotations win over user rewrite-target/use-regex"
+    template: templates/networking/ingress.yaml
     set:
       ingress.className: "nginx"
       ingress.annotations:

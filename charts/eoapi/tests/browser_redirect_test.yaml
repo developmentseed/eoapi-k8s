@@ -1,5 +1,6 @@
 suite: browser bare-path redirect middleware
 templates:
+  - templates/_helpers/networking.tpl
   - templates/networking/traefik-middleware.yaml
   - templates/networking/ingress.yaml
 set:
