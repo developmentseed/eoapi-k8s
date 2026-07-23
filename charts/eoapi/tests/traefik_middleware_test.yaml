@@ -1,0 +1,41 @@
+suite: traefik strip-prefix middleware
+templates:
+  - templates/networking/traefik-middleware.yaml
+tests:
+  - it: "traefik strip-prefix middleware renders enabled service prefixes"
+    set:
+      ingress.className: "traefik"
+      stac.enabled: true
+      raster.enabled: true
+      vector.enabled: false
+      multidim.enabled: true
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Middleware
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-strip-prefix-middleware
+      - equal:
+          path: spec.stripPrefix.prefixes
+          value:
+            - /stac
+            - /raster
+            - /multidim
+
+  - it: "excludes auth-proxied stac from strip-prefix prefixes"
+    set:
+      ingress.className: "traefik"
+      stac.enabled: true
+      stac-auth-proxy.enabled: true
+      raster.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Middleware
+      - equal:
+          path: spec.stripPrefix.prefixes
+          value:
+            - /raster
