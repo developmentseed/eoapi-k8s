@@ -404,3 +404,103 @@ tests:
             nginx.ingress.kubernetes.io/use-regex: "true"
             cert-manager.io/cluster-issuer: "letsencrypt-prod"
             nginx.ingress.kubernetes.io/rate-limit: "100"
+
+  - it: "traefik entrypoints coexist with custom annotations"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: "traefik"
+      ingress.entrypoints: "websecure"
+      ingress.annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      ingress.host: "eoapi.local"
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.annotations
+          value:
+            traefik.ingress.kubernetes.io/router.entrypoints: websecure
+            cert-manager.io/cluster-issuer: "letsencrypt-prod"
+            traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd
+
+  - it: "docServer honors ingress.rootPath"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      ingress.rootPath: "docs"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: true
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/docs"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-doc-server
+
+  - it: "should not create ingress when ingress is disabled"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: false
+      raster.enabled: true
+      stac.enabled: true
+      vector.enabled: true
+      browser.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "should omit raster from ingress when raster ingress is disabled"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: true
+      raster.ingress.enabled: false
+      stac.enabled: true
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/stac(/|$)(.*)"
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: "/raster(/|$)(.*)"
+
+  - it: "multidim ingress with traefik controller"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.className: "traefik"
+      ingress.host: "eoapi.local"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: true
+      browser.enabled: false
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/multidim"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-multidim
+      - equal:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
+          value: "NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd"
