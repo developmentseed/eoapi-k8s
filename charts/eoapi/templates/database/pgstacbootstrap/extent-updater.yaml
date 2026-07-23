@@ -25,8 +25,8 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: extent-updater
-            image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
-            imagePullPolicy: IfNotPresent
+            image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.image }}
+            imagePullPolicy: {{ .Values.pgstacBootstrap.image.pullPolicy | default "IfNotPresent" }}
             command:
               - "/bin/sh"
               - "-c"

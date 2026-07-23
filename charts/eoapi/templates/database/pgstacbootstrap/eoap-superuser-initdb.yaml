@@ -22,7 +22,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: pgstac-eoapiuser-permissions
-          image: {{ .Values.pgstacBootstrap.image.name }}:{{ .Values.pgstacBootstrap.image.tag }}
+          image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.image }}
+          imagePullPolicy: {{ .Values.pgstacBootstrap.image.pullPolicy | default "IfNotPresent" }}
           command:
             - "/bin/sh"
             - "-c"

@@ -1,0 +1,57 @@
+suite: container image configuration
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/services.tpl
+  - templates/_helpers/database.tpl
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+  - templates/services/doc-server.yaml
+  - templates/core/cloudevents-sink.yaml
+  - templates/core/knative-init.yaml
+  - templates/testing/deployment.yaml
+tests:
+  - it: stac deployment uses default image and pullPolicy
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/stac-utils/stac-fastapi-pgstac:6.3.1
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: stac deployment honors image override and Always pullPolicy
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac:
+        enabled: true
+        image:
+          name: example.com/stac
+          tag: custom
+          pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/stac:custom
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: doc-server uses pinned nginx image
+    template: templates/services/doc-server.yaml
+    set:
+      docServer:
+        enabled: true
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginxinc/nginx-unprivileged:1.27.4-alpine
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent

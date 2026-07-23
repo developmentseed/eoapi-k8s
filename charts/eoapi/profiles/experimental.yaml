@@ -386,8 +386,8 @@ testing:
     enabled: true
     replicaCount: 1
     image:
-      repository: ghcr.io/alukach/mock-oidc-server
-      tag: latest
+      name: ghcr.io/alukach/mock-oidc-server
+      digest: sha256:5972adac0b6e3a094ea043be0f1851c65e3fd54e17a546f0b71dedd17c7a2d6a
       pullPolicy: IfNotPresent
     port: 8888
     clientId: "test-client"
