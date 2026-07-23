@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.14.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.14.0...v0.14.1) (2026-07-23)
+
+
+### Fixed
+
+* **docs:** updated release information. ([#571](https://github.com/developmentseed/eoapi-k8s/issues/571)) ([693cdb6](https://github.com/developmentseed/eoapi-k8s/commit/693cdb67cc7e1625220bd8cd143a256159abaf99))
+
+
+### Maintenance
+
+* bump minimal version of kubernetes to 1.32 ([#567](https://github.com/developmentseed/eoapi-k8s/issues/567)) ([be183e7](https://github.com/developmentseed/eoapi-k8s/commit/be183e78a152f55f1781ee76498bea875ba07a8c))
+* **deps:** updated actions/checkout digest to 3d3c42e ([#564](https://github.com/developmentseed/eoapi-k8s/issues/564)) ([d70a976](https://github.com/developmentseed/eoapi-k8s/commit/d70a97623edc33e0ff68237adae9f5b1892de6e8))
+* **deps:** updated helm release prometheus to 29.18.0. ([#565](https://github.com/developmentseed/eoapi-k8s/issues/565)) ([5d83768](https://github.com/developmentseed/eoapi-k8s/commit/5d83768feef31c479c4fc976f038a7e489427912))
+* **deps:** updated helm release prometheus to 29.19.0. ([#570](https://github.com/developmentseed/eoapi-k8s/issues/570)) ([88d305d](https://github.com/developmentseed/eoapi-k8s/commit/88d305d103a1c0d56fb7c785f14efed8c9cd27ff))
+
 ## [0.14.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.13.4...v0.14.0) (2026-07-20)
 
 
