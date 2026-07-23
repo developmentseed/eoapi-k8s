@@ -723,6 +723,12 @@ testing:
       # No version tags published; pin by digest (refresh when upgrading the image).
       digest: sha256:5972adac0b6e3a094ea043be0f1851c65e3fd54e17a546f0b71dedd17c7a2d6a
       pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 8080
+    ingress:
+      enabled: true
+      path: "/mock-oidc"
 
 ######################
 # KNATIVE

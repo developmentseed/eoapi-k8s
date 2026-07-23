@@ -800,6 +800,10 @@
             "service": {
               "type": "object",
               "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Kubernetes Service type for the mock OIDC server"
+                },
                 "port": {
                   "type": "integer",
                   "description": "Service port for the mock OIDC server"
