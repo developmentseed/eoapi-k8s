@@ -22,6 +22,6 @@ dependencies:
   version: 10.5.15
 - name: stac-auth-proxy
   repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
-  version: 1.1.1
-digest: sha256:e604e1c8f992e4b4ee2345bed8f76db5118eb8f0921ffc27fb593acc53add6b8
-generated: "2026-07-23T17:30:58.114133185+02:00"
+  version: 1.2.0
+digest: sha256:3c3d32cb3db545c780ccdd78f382a291ad223dd47f9cb9d70b8a2c52c9622897
+generated: "2026-07-23T22:24:50.299965139Z"
