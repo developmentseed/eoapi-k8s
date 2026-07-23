@@ -7,7 +7,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "eoapi.fullname" . }}-mock-oidc-server
-  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
     app.kubernetes.io/component: mock-oidc-server

@@ -27,7 +27,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: {{ .Release.Name }}-strip-prefix-middleware
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-ingress
 spec:
@@ -49,7 +48,6 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: {{ .Release.Name }}-browser-redirect-middleware
-  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-ingress
 spec:
