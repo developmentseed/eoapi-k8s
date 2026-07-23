@@ -325,7 +325,6 @@ autoscaling:
 ingress:
   enabled: true
   className: "nginx"
-  pathType: "Prefix"
   host: "localhost"
   tls:
     enabled: false
