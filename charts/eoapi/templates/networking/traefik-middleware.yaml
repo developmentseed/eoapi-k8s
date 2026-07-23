@@ -1,6 +1,6 @@
 {{- if and .Values.ingress.enabled (eq .Values.ingress.className "traefik") }}
-{{- $prefixes := include "eoapi.traefikStripPrefixes" . | fromJsonArray -}}
-{{- if $prefixes }}
+{{- $flags := include "eoapi.ingressFlags" . | fromJson -}}
+{{- if not (empty $flags.stripPrefixes) }}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -10,7 +10,7 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      {{- range $prefixes }}
+      {{- range $flags.stripPrefixes }}
       - {{ . }}
       {{- end }}
 {{- end }}
