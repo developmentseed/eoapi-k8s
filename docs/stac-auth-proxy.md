@@ -50,6 +50,7 @@ stac-auth-proxy:
     OIDC_DISCOVERY_INTERNAL_URL: "https://your-auth-provider.com/.well-known/openid-configuration"
     ALLOWED_JWT_AUDIENCES: "https://your-api-audience.com"  # Recommended: should match the audience configured in your identity provider for this API.
     ROOT_PATH: "/stac"
+    ROOT_PATH_SKIP_PREFIXES: "/raster,/vector,/browser,/multidim"
 ```
 
 For complete configuration options, see the [stac-auth-proxy configuration documentation](https://developmentseed.org/stac-auth-proxy/user-guide/configuration).
@@ -132,3 +133,9 @@ stac-auth-proxy manages the `/stac` prefix and forwards requests without it to t
 ```
 Client: /stac/collections → Proxy: /collections → STAC service receives: /collections
 ```
+
+### `ROOT_PATH_SKIP_PREFIXES`
+
+When rewriting `links` in STAC JSON responses (items, collections, search, …), the proxy adds `/stac` to same-host hrefs. That also catches links to other apps on the same host (`/raster/...` → `/stac/raster/...`). List those apps' path prefixes here so their hrefs stay untouched.
+
+This chart defaults to `/raster,/vector,/browser,/multidim`. Update if you change a service `ingress.path`. See [upstream docs](https://developmentseed.org/stac-auth-proxy/user-guide/configuration/#root_path_skip_prefixes).
