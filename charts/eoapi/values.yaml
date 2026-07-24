@@ -485,7 +485,7 @@ stac:
 stac-auth-proxy:
   enabled: false
   image:
-    tag: "v1.1.0"
+    tag: "v1.2.0"
   ingress:
     enabled: false  # Handled by main eoapi ingress
   service:
@@ -516,6 +516,8 @@ stac-auth-proxy:
     # http://localhost:8081/... for an oauth2-proxy sidecar; set to your OIDC service when testing)
     # UPSTREAM_URL must be set to "http://<release-name>-stac:8080" (required)
     ROOT_PATH: "/stac"
+    # Skip ROOT_PATH rewrite for these prefixes in STAC response links
+    ROOT_PATH_SKIP_PREFIXES: "/raster,/vector,/browser,/multidim"
     OVERRIDE_HOST: "false"
     #
     # Authentication filters settings:
