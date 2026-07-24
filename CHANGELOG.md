@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.15.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.15.0...v0.15.1) (2026-07-24)
+
+
+### Fixed
+
+* keep chart rewrite and middleware annotations above user overrides ([#581](https://github.com/developmentseed/eoapi-k8s/issues/581)) ([eff2fae](https://github.com/developmentseed/eoapi-k8s/commit/eff2fae15999eec313401e31cb9e86b83af693df))
+
+
+### Changed
+
+* extract unified ingress helpers. ([#546](https://github.com/developmentseed/eoapi-k8s/issues/546)) ([47f6762](https://github.com/developmentseed/eoapi-k8s/commit/47f6762ea0216e8533d38a911b17ff61d5fe2d31))
+
+
+### Maintenance
+
+* **deps:** updated docker/login-action digest to 06fb636 ([#583](https://github.com/developmentseed/eoapi-k8s/issues/583)) ([4026bd9](https://github.com/developmentseed/eoapi-k8s/commit/4026bd9298d1b4c25c879ba3d3096d093fbc4efe))
+* **deps:** updated ghcr.io/developmentseed/tipg docker tag to v1.5.0 ([#584](https://github.com/developmentseed/eoapi-k8s/issues/584)) ([f052a2b](https://github.com/developmentseed/eoapi-k8s/commit/f052a2b035390a9e9fd5fde8890849a0cd2b06f1))
+* **deps:** updated stac-auth-proxy docker tag to v1.2.0 ([#585](https://github.com/developmentseed/eoapi-k8s/issues/585)) ([48834da](https://github.com/developmentseed/eoapi-k8s/commit/48834da259273a3260e6ea78cd196453eb8cde56))
+* **docs:** introduce stac-auth-proxy ROOT_PATH_SKIP_PREFIXES. ([#587](https://github.com/developmentseed/eoapi-k8s/issues/587)) ([fe63966](https://github.com/developmentseed/eoapi-k8s/commit/fe6396615a8d68a6e44e77e6eb4a06bde070e601))
+* drop unused ingress pathType and cert-manager schema ([#578](https://github.com/developmentseed/eoapi-k8s/issues/578)) ([bcb48e7](https://github.com/developmentseed/eoapi-k8s/commit/bcb48e768c1d2b2a46497c1dbeee5f173dc66921))
+
+
+### Other
+
+* cover ingress disable paths and traefik strip-prefix edges ([#579](https://github.com/developmentseed/eoapi-k8s/issues/579)) ([339e41d](https://github.com/developmentseed/eoapi-k8s/commit/339e41d774c1c10646ca4bca97e6d8d640ce9aa6))
+
 ## [0.15.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.14.1...v0.15.0) (2026-07-23)
 
 
