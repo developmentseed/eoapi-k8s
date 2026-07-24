@@ -1,20 +1,23 @@
 suite: browser bare-path redirect middleware
 templates:
   - templates/_helpers/networking.tpl
-  - templates/networking/traefik-middleware.yaml
+  - templates/networking/browser-ingress.yaml
   - templates/networking/ingress.yaml
+  - templates/networking/traefik-middleware.yaml
 set:
   ingress.enabled: true
-  ingress.className: traefik
   ingress.host: eoapi.local
   stac.enabled: false
   raster.enabled: false
   vector.enabled: false
   multidim.enabled: false
+  docServer.enabled: false
+
 tests:
   - it: "redirects the browser bare path to its trailing-slash form on traefik"
     template: templates/networking/traefik-middleware.yaml
     set:
+      ingress.className: traefik
       browser.enabled: true
     asserts:
       - hasDocuments:
@@ -35,24 +38,16 @@ tests:
   - it: "honours a custom browser ingress path"
     template: templates/networking/traefik-middleware.yaml
     set:
+      ingress.className: traefik
       browser.enabled: true
-      browser.ingress.path: "/stac-browser"
+      browser.ingress.path: "/stac.browser"
     asserts:
       - equal:
           path: spec.redirectRegex.regex
-          value: "^(https?://[^/]+)/stac-browser$"
+          value: "^(https?://[^/]+)/stac.browser$"
       - equal:
           path: spec.redirectRegex.replacement
-          value: "${1}/stac-browser/"
-
-  - it: "still renders the redirect middleware for a root browser path so the router reference never dangles"
-    template: templates/networking/traefik-middleware.yaml
-    set:
-      browser.enabled: true
-      browser.ingress.path: "/"
-    asserts:
-      - hasDocuments:
-          count: 1
+          value: "${1}/stac.browser/"
 
   - it: "creates no traefik middleware on the nginx controller"
     template: templates/networking/traefik-middleware.yaml
@@ -63,21 +58,60 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: "chains the browser redirect middleware onto the traefik router annotation"
-    template: templates/networking/ingress.yaml
+  - it: "strips nginx rewrite annotations from the browser ingress"
+    template: templates/networking/browser-ingress.yaml
     set:
-      stac.enabled: true
+      ingress.className: nginx
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      browser.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/browser"
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/use-regex"]
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod
+
+  - it: "chains the browser redirect middleware onto the traefik browser ingress"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: traefik
       browser.enabled: true
     asserts:
       - equal:
           path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
-          value: "NAMESPACE-RELEASE-NAME-strip-prefix-middleware@kubernetescrd,NAMESPACE-RELEASE-NAME-browser-redirect-middleware@kubernetescrd"
+          value: "NAMESPACE-RELEASE-NAME-browser-redirect-middleware@kubernetescrd"
 
-  - it: "omits the browser redirect from the annotation when the browser is disabled"
+  - it: "creates the browser ingress when browser is the only enabled service"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: traefik
+      browser.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.labels.app
+          value: RELEASE-NAME-browser-ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/browser"
+
+  - it: "omits the browser redirect from the main ingress when other services are enabled"
     template: templates/networking/ingress.yaml
     set:
+      ingress.className: traefik
       stac.enabled: true
-      browser.enabled: false
+      browser.enabled: true
     asserts:
       - equal:
           path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]

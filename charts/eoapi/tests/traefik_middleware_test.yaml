@@ -2,6 +2,7 @@ suite: traefik strip-prefix middleware
 templates:
   - templates/_helpers/networking.tpl
   - templates/networking/traefik-middleware.yaml
+
 tests:
   - it: "traefik strip-prefix middleware renders enabled service prefixes"
     template: templates/networking/traefik-middleware.yaml
@@ -42,3 +43,16 @@ tests:
           path: spec.stripPrefix.prefixes
           value:
             - /raster
+  - it: "renders no strip-prefix middleware when no path needs stripping"
+    template: templates/networking/traefik-middleware.yaml
+    set:
+      ingress.className: "traefik"
+      stac.enabled: true
+      stac.ingress.path: "/"
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

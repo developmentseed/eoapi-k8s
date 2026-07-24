@@ -2,6 +2,7 @@ suite: unified ingress tests
 templates:
   - templates/_helpers/networking.tpl
   - templates/networking/ingress.yaml
+
 tests:
   - it: "should not create ingress when all services disabled"
     template: templates/networking/ingress.yaml
@@ -73,6 +74,8 @@ tests:
       - equal:
           path: spec.ingressClassName
           value: "traefik"
+      - notExists:
+          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]
 
   - it: "vector ingress with nginx controller"
     template: templates/networking/ingress.yaml
@@ -223,12 +226,10 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[2].path
           value: "/features(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[3].path
-          value: "/browser(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[0].pathType
-          value: "ImplementationSpecific"
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: "/browser"
 
   - it: "multiple hosts with services"
     template: templates/networking/ingress.yaml
@@ -313,47 +314,6 @@ tests:
           path: spec.tls[0].secretName
           value: "eoapi-tls"
 
-  - it: "stac with auth proxy enabled"
-    template: templates/networking/ingress.yaml
-    set:
-      ingress.enabled: true
-      ingress.className: "nginx"
-      raster.enabled: false
-      stac.enabled: true
-      stac.ingress.enabled: true
-      stac.ingress.path: "/stac"
-      stac-auth-proxy.enabled: true
-      vector.enabled: false
-      multidim.enabled: false
-      browser.enabled: false
-    asserts:
-      - isKind:
-          of: Ingress
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
-          value: RELEASE-NAME-stac-auth-proxy
-
-  - it: "browser with default path"
-    template: templates/networking/ingress.yaml
-    set:
-      ingress.enabled: true
-      ingress.className: "nginx"
-      raster.enabled: false
-      stac.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
-      browser.enabled: true
-      browser.ingress.enabled: true
-    asserts:
-      - isKind:
-          of: Ingress
-      - equal:
-          path: spec.rules[0].http.paths[0].path
-          value: "/browser(/|$)(.*)"
-      - equal:
-          path: spec.rules[0].http.paths[0].backend.service.name
-          value: RELEASE-NAME-browser
-
   - it: "docServer creates root path entry"
     template: templates/networking/ingress.yaml
     set:
@@ -398,6 +358,30 @@ tests:
       - equal:
           path: spec.rules[0].http.paths[0].backend.service.name
           value: RELEASE-NAME-mock-oidc-server
+
+  - it: "mockOidcServer without ingress block falls back to default path"
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: "nginx"
+      raster.enabled: false
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      testing.mockOidcServer.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/mock-oidc(/|$)(.*)"
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-mock-oidc-server
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
 
   - it: "custom annotations preserved"
     template: templates/networking/ingress.yaml

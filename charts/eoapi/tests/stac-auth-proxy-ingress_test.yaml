@@ -1,11 +1,13 @@
 suite: test ingress routing without stripPrefix middleware
 templates:
   - templates/_helpers/networking.tpl
+  - templates/networking/auth-proxy-ingress.yaml
+  - templates/networking/browser-ingress.yaml
   - templates/networking/ingress.yaml
 
 tests:
-  - it: should route ingress to stac-auth-proxy when enabled
-    template: templates/networking/ingress.yaml
+  - it: should route auth-proxy on rewrite-free ingress when enabled on nginx
+    template: templates/networking/auth-proxy-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
@@ -15,6 +17,9 @@ tests:
       stac-auth-proxy.enabled: true
       service.port: 8080
     asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-auth-proxy-ingress
       - contains:
           path: spec.rules[0].http.paths
           content:
@@ -25,6 +30,29 @@ tests:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/use-regex"]
+
+  - it: should omit auth-proxy path from main nginx ingress
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.path: "/stac"
+      stac-auth-proxy.enabled: true
+      raster.enabled: true
+      service.port: 8080
+    asserts:
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /stac
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+          value: /$2
 
   - it: should route ingress directly to stac when auth-proxy is disabled
     template: templates/networking/ingress.yaml
@@ -48,71 +76,30 @@ tests:
                 port:
                   number: 8080
 
-  - it: should not create ingress when both stac and browser are disabled
-    template: templates/networking/ingress.yaml
-    set:
-      ingress.enabled: true
-      stac.enabled: false
-      browser.enabled: false
-      stac-auth-proxy.enabled: true
-      raster.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
-      docServer.enabled: false
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: should route correctly with experimental profile
-    template: templates/networking/ingress.yaml
-    values:
-      - ../profiles/experimental.yaml
-    set:
-      ingress.enabled: true
-    asserts:
-      - contains:
-          path: spec.rules[0].http.paths
-          content:
-            pathType: Prefix
-            path: /stac
-            backend:
-              service:
-                name: RELEASE-NAME-stac-auth-proxy
-                port:
-                  number: 8080
-
-  - it: should route ingress to browser
-    template: templates/networking/ingress.yaml
-    set:
-      ingress.enabled: true
-      ingress.className: nginx
-      browser.enabled: true
-      stac.enabled: false
-      raster.enabled: false
-      vector.enabled: false
-      multidim.enabled: false
-    asserts:
-      - contains:
-          path: spec.rules[0].http.paths
-          content:
-            pathType: ImplementationSpecific
-            path: /browser(/|$)(.*)
-            backend:
-              service:
-                name: RELEASE-NAME-browser
-                port:
-                  number: 8080
-
-  - it: should include both stac and browser when both enabled
-    template: templates/networking/ingress.yaml
+  - it: should not create auth-proxy ingress when auth-proxy is disabled
+    template: templates/networking/auth-proxy-ingress.yaml
     set:
       ingress.enabled: true
       ingress.className: nginx
       stac.enabled: true
-      stac.ingress.enabled: true
+      stac-auth-proxy.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should keep auth-proxy on main ingress for traefik
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: traefik
+      stac.enabled: true
       stac.ingress.path: "/stac"
       stac-auth-proxy.enabled: true
-      browser.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+      browser.enabled: false
+      docServer.enabled: false
       service.port: 8080
     asserts:
       - contains:
@@ -125,13 +112,36 @@ tests:
                 name: RELEASE-NAME-stac-auth-proxy
                 port:
                   number: 8080
-      - contains:
+
+  - it: should not create auth-proxy ingress for traefik
+    template: templates/networking/auth-proxy-ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: traefik
+      stac.enabled: true
+      stac-auth-proxy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should omit auth-proxy and browser from main nginx ingress when both enabled
+    template: templates/networking/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+      stac.enabled: true
+      stac.ingress.enabled: true
+      stac.ingress.path: "/stac"
+      stac-auth-proxy.enabled: true
+      browser.enabled: true
+      raster.enabled: true
+      service.port: 8080
+    asserts:
+      - notContains:
           path: spec.rules[0].http.paths
           content:
-            pathType: ImplementationSpecific
-            path: /browser(/|$)(.*)
-            backend:
-              service:
-                name: RELEASE-NAME-browser
-                port:
-                  number: 8080
+            path: /stac
+      - notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /browser

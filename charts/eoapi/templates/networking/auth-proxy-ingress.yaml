@@ -1,0 +1,4 @@
+{{- $flags := include "eoapi.ingressFlags" . | fromJson -}}
+{{- if and .Values.ingress.enabled $flags.passthroughIngress }}
+{{- include "eoapi.ingressManifest" (dict "root" . "suffix" "auth-proxy-ingress" "variant" "auth-proxy" "pathsTemplate" "eoapi.apiIngressPaths" "pathsMode" "passthrough") }}
+{{- end }}
