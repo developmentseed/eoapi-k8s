@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.15.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.15.0...v0.15.1) (2026-08-24)
+
+
+### Fixed
+
+* keep chart rewrite and middleware annotations above user overrides ([#581](https://github.com/developmentseed/eoapi-k8s/issues/581)) ([eff2fae](https://github.com/developmentseed/eoapi-k8s/commit/eff2fae15999eec313401e31cb9e86b83af693df))
+
+
+### Changed
+
+* extract unified ingress helpers. ([#546](https://github.com/developmentseed/eoapi-k8s/issues/546)) ([47f6762](https://github.com/developmentseed/eoapi-k8s/commit/47f6762ea0216e8533d38a911b17ff61d5fe2d31))
+
+
+### Maintenance
+
+* **deps:** bump docker/login-action from 4.5.0 to 4.5.1 in the minor-and-patch group ([#589](https://github.com/developmentseed/eoapi-k8s/issues/589)) ([02293cf](https://github.com/developmentseed/eoapi-k8s/commit/02293cfc340e61ffced7ca1598a197cbdcc4c2bf))
+* **deps:** updated docker/login-action digest to 06fb636 ([#583](https://github.com/developmentseed/eoapi-k8s/issues/583)) ([4026bd9](https://github.com/developmentseed/eoapi-k8s/commit/4026bd9298d1b4c25c879ba3d3096d093fbc4efe))
+* **deps:** updated docker/login-action digest to dbcb813 ([#588](https://github.com/developmentseed/eoapi-k8s/issues/588)) ([10e3add](https://github.com/developmentseed/eoapi-k8s/commit/10e3add108490bef7e53a1ee2e72df04f01e5131))
+* **deps:** updated docker/setup-buildx-action digest to 37fe631 ([#595](https://github.com/developmentseed/eoapi-k8s/issues/595)) ([9996b56](https://github.com/developmentseed/eoapi-k8s/commit/9996b562020e393662c0f9457bc2b8ab55cb85a1))
+* **deps:** updated ghcr.io/developmentseed/tipg docker tag to v1.5.0 ([#584](https://github.com/developmentseed/eoapi-k8s/issues/584)) ([f052a2b](https://github.com/developmentseed/eoapi-k8s/commit/f052a2b035390a9e9fd5fde8890849a0cd2b06f1))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v3.0.2 ([#591](https://github.com/developmentseed/eoapi-k8s/issues/591)) ([0508233](https://github.com/developmentseed/eoapi-k8s/commit/0508233786ccc52fb1707b9c6c5fffaf1d5f4bc4))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v3.1.0 ([#592](https://github.com/developmentseed/eoapi-k8s/issues/592)) ([101a55f](https://github.com/developmentseed/eoapi-k8s/commit/101a55f4d46cc00706849f75915ccbd10ae65f22))
+* **deps:** updated helm release knative-operator to v1.23.0. ([#594](https://github.com/developmentseed/eoapi-k8s/issues/594)) ([eea941c](https://github.com/developmentseed/eoapi-k8s/commit/eea941c41df42a11aa2c5e22874ed5fc86685315))
+* **deps:** updated helm release metrics-server to 3.14.0. ([#596](https://github.com/developmentseed/eoapi-k8s/issues/596)) ([9092ec0](https://github.com/developmentseed/eoapi-k8s/commit/9092ec0b274c0c12ee9e49564ecb4d171084447d))
+* **deps:** updated helm release prometheus to 29.27.0. ([#590](https://github.com/developmentseed/eoapi-k8s/issues/590)) ([8fbbd42](https://github.com/developmentseed/eoapi-k8s/commit/8fbbd42ea7b286e1d7a7b818f8cb5d4e8a443039))
+* **deps:** updated stac-auth-proxy docker tag to v1.2.0 ([#585](https://github.com/developmentseed/eoapi-k8s/issues/585)) ([48834da](https://github.com/developmentseed/eoapi-k8s/commit/48834da259273a3260e6ea78cd196453eb8cde56))
+* **docs:** introduce stac-auth-proxy ROOT_PATH_SKIP_PREFIXES. ([#587](https://github.com/developmentseed/eoapi-k8s/issues/587)) ([fe63966](https://github.com/developmentseed/eoapi-k8s/commit/fe6396615a8d68a6e44e77e6eb4a06bde070e601))
+* drop unused ingress pathType and cert-manager schema ([#578](https://github.com/developmentseed/eoapi-k8s/issues/578)) ([bcb48e7](https://github.com/developmentseed/eoapi-k8s/commit/bcb48e768c1d2b2a46497c1dbeee5f173dc66921))
+
+
+### Other
+
+* cover ingress disable paths and traefik strip-prefix edges ([#579](https://github.com/developmentseed/eoapi-k8s/issues/579)) ([339e41d](https://github.com/developmentseed/eoapi-k8s/commit/339e41d774c1c10646ca4bca97e6d8d640ce9aa6))
+
 ## [0.15.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.14.1...v0.15.0) (2026-07-23)
 
 
