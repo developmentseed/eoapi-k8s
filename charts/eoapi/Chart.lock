@@ -10,7 +10,7 @@ dependencies:
   version: v1.23.0
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
-  version: 3.13.1
+  version: 3.14.0
 - name: prometheus
   repository: https://prometheus-community.github.io/helm-charts
   version: 29.19.0
@@ -23,5 +23,5 @@ dependencies:
 - name: stac-auth-proxy
   repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
   version: 1.2.0
-digest: sha256:d4a084059345172e9d2cc5b6d6ba77f905e8470382fd1c6e88a07ca8b6a07168
-generated: "2026-08-18T22:13:50.822119994Z"
+digest: sha256:fddcb41be8cfa3fbfdb8bff0ac57401c83316ed1c18eadf83aca25acbd1381c4
+generated: "2026-08-24T08:52:03.520176376Z"
