@@ -56,8 +56,7 @@
       "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "matchPackageNames": [
         "/ghcr.io/developmentseed/tipg/",
-        "/ghcr.io/developmentseed/titiler-md-demo/",
-        "/ghcr.io/developmentseed/eoapi-k8s/stac-browser/"
+        "/ghcr.io/developmentseed/titiler-md-demo/"
       ],
       "automerge": false,
       "platformAutomerge": false,
