@@ -8,15 +8,8 @@
 {{- $_ := set $annotations "nginx.ingress.kubernetes.io/rewrite-target" "/$2" -}}
 {{- $_ := set $annotations "nginx.ingress.kubernetes.io/use-regex" "true" -}}
 {{- end }}
-{{- if eq .Values.ingress.className "traefik" }}
-{{- /* strip-prefix always; also chain the browser bare-path redirect when the browser ingress is on.
-       Keep this condition in sync with the redirect Middleware in traefik-middleware.yaml. */}}
-{{- $mwPrefix := printf "%s-%s" .Release.Namespace .Release.Name }}
-{{- $middlewares := list (printf "%s-strip-prefix-middleware@kubernetescrd" $mwPrefix) }}
-{{- if include "eoapi.browserRedirectEnabled" . | trim }}
-{{- $middlewares = append $middlewares (printf "%s-browser-redirect-middleware@kubernetescrd" $mwPrefix) }}
-{{- end }}
-{{- $_ := set $annotations "traefik.ingress.kubernetes.io/router.middlewares" (join "," $middlewares) -}}
+{{- if and (eq .Values.ingress.className "traefik") (include "eoapi.traefikStripPrefixes" . | fromJsonArray) }}
+{{- $_ := set $annotations "traefik.ingress.kubernetes.io/router.middlewares" (printf "%s-%s-strip-prefix-middleware@kubernetescrd" .Release.Namespace .Release.Name) -}}
 {{- end }}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
 apiVersion: networking.k8s.io/v1

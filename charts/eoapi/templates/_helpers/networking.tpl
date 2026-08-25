@@ -90,11 +90,3 @@ Return the configured browser ingress path without trailing slash.
 {{- define "eoapi.browserIngressPath" -}}
 {{- trimSuffix "/" ((((.Values.browser).ingress).path) | default "/browser") | default "/" -}}
 {{- end -}}
-
-{{/*
-Return true when the Traefik bare-path redirect middleware is needed.
-*/}}
-{{- define "eoapi.browserRedirectEnabled" -}}
-{{- $browser := .Values.browser -}}
-{{- if and $browser $browser.enabled (or (not $browser.ingress) $browser.ingress.enabled) -}}true{{- end -}}
-{{- end -}}

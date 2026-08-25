@@ -26,6 +26,9 @@ spec:
           ports:
           - containerPort: 8080
           env:
+            {{- $browserPath := include "eoapi.browserIngressPath" . }}
+            - name: SB_pathPrefix
+              value: {{ ternary "/" (printf "%s/" $browserPath) (eq $browserPath "/") | quote }}
             - name: SB_catalogUrl
               value: {{ .Values.browser.catalogUrl | default (printf "%s://%s%s" (ternary "https" "http" .Values.ingress.tls.enabled) .Values.ingress.host .Values.stac.ingress.path) | quote }}
             {{- if .Values.browser.catalogTitle }}

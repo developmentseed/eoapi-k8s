@@ -1,6 +1,7 @@
 suite: stac browser service tests
 templates:
   - templates/_helpers/core.tpl
+  - templates/_helpers/networking.tpl
   - templates/services/browser/deployment.yaml
   - templates/services/browser/service.yaml
 tests:
@@ -341,12 +342,15 @@ tests:
       # the built-in env renders first; extraEnv is appended after it (additive, not a replacement)
       - equal:
           path: spec.template.spec.containers[0].env[0].name
-          value: SB_catalogUrl
+          value: SB_pathPrefix
       - equal:
           path: spec.template.spec.containers[0].env[1].name
+          value: SB_catalogUrl
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
           value: SB_itemsPerPage
       - equal:
-          path: spec.template.spec.containers[0].env[1].value
+          path: spec.template.spec.containers[0].env[2].value
           value: "60"
   - it: "stac browser deployment renders no extra env when browser.extraEnv is unset"
     set:
@@ -359,7 +363,7 @@ tests:
     asserts:
       - isKind:
           of: Deployment
-      # default extraEnv ([]) adds nothing — only the built-in SB_catalogUrl remains
+      # default extraEnv ([]) adds nothing — only the built-in SB_pathPrefix and SB_catalogUrl remain
       - lengthEqual:
           path: spec.template.spec.containers[0].env
-          count: 1
+          count: 2

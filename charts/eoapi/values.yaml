@@ -617,9 +617,8 @@ vector:
 browser:
   enabled: true
   image:
-    # Patched eoapi image (runtime SB_pathPrefix); built from upstream v4.0.1 + patches/stac-browser/
-    name: ghcr.io/developmentseed/eoapi-k8s/stac-browser
-    tag: 4.0.1-eoapi.1
+    name: ghcr.io/radiantearth/stac-browser
+    tag: "5.0.0"
     pullPolicy: IfNotPresent
   service:
     port: 8080
