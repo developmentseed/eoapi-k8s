@@ -179,6 +179,33 @@ detect_namespace() {
         -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null || echo "eoapi"
 }
 
+# Find the raster pod (used for pypgstac/psql access to PgSTAC) in a namespace,
+# trying multiple label patterns for compatibility across chart versions.
+# Prints the pod name on stdout; returns 1 (with no output) if none is found.
+find_raster_pod() {
+    local namespace="$1"
+    local patterns=(
+        "app=raster-eoapi"
+        "app.kubernetes.io/name=raster"
+        "app.kubernetes.io/component=raster"
+    )
+
+    local pod
+    for pattern in "${patterns[@]}"; do
+        pod=$(kubectl get pods -n "$namespace" -l "$pattern" -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
+        if [ -n "$pod" ]; then
+            log_info "Found raster pod: $pod (pattern: $pattern)" >&2
+            echo "$pod"
+            return 0
+        fi
+    done
+
+    log_error "Could not find raster pod in namespace: $namespace" >&2
+    log_error "Available pods:" >&2
+    kubectl get pods -n "$namespace" -o name 2>/dev/null >&2 || true
+    return 1
+}
+
 wait_for_pods() {
     local namespace="$1"
     local selector="$2"
@@ -475,7 +502,7 @@ validate_python_with_requirements() {
 export -f log_info log_success log_warn log_error log_debug
 export -f command_exists validate_tools check_requirements validate_cluster
 export -f is_ci validate_namespace get_base_url
-export -f detect_release_name detect_namespace
+export -f detect_release_name detect_namespace find_raster_pod
 export -f wait_for_pods validate_eoapi_deployment validate_autoscaling_environment
 export -f preflight_deploy preflight_ingest preflight_test
 export -f validate_python_environment install_python_requirements validate_python_with_requirements

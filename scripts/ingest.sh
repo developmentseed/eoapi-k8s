@@ -28,29 +28,8 @@ fi
 FOUND_NAMESPACE=$(detect_namespace)
 log_info "Using namespace: $FOUND_NAMESPACE"
 
-# Find raster pod using multiple patterns
-EOAPI_POD_RASTER=""
-PATTERNS=(
-    "app=raster-eoapi"
-    "app.kubernetes.io/name=raster"
-    "app.kubernetes.io/component=raster"
-)
-
-for pattern in "${PATTERNS[@]}"; do
-    EOAPI_POD_RASTER=$(kubectl get pods -n "$FOUND_NAMESPACE" -l "$pattern" -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
-    if [ -n "$EOAPI_POD_RASTER" ]; then
-        log_info "Found raster pod: $EOAPI_POD_RASTER (pattern: $pattern)"
-        break
-    fi
-done
-
-# Check if the pod was found
-if [ -z "$EOAPI_POD_RASTER" ]; then
-    log_error "Could not find raster pod in namespace: $FOUND_NAMESPACE"
-    log_error "Available pods:"
-    kubectl get pods -n "$FOUND_NAMESPACE" -o name 2>/dev/null || true
-    exit 1
-fi
+# Find raster pod
+EOAPI_POD_RASTER=$(find_raster_pod "$FOUND_NAMESPACE") || exit 1
 
 # Validate pod is ready
 log_info "Validating pod readiness..."

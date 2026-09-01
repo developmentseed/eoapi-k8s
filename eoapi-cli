@@ -18,6 +18,7 @@ readonly COMMANDS=(
     "test"
     "load"
     "ingest"
+    "export"
     "docs"
 )
 
@@ -41,6 +42,7 @@ COMMANDS:
     test            Run tests (helm, integration, autoscaling)
     load            Run load testing scenarios
     ingest          Load sample data into eoAPI services
+    export          Export STAC collections/items to NDJSON (e.g. for migrating to another PgSTAC)
     docs            Generate and serve documentation
 
 Use 'eoapi-cli <COMMAND> --help' for more information about a specific command.
@@ -66,6 +68,9 @@ EXAMPLES:
 
     # Ingest sample data
     eoapi-cli ingest sample-data
+
+    # Export STAC data to NDJSON (e.g. before migrating to a new PgSTAC)
+    eoapi-cli export ./stac-export
 
     # Serve documentation locally
     eoapi-cli docs serve
@@ -109,6 +114,9 @@ get_command_script() {
             ;;
         ingest)
             echo "${SCRIPTS_DIR}/ingest.sh"
+            ;;
+        export)
+            echo "${SCRIPTS_DIR}/export.sh"
             ;;
         docs)
             echo "${SCRIPTS_DIR}/docs.sh"

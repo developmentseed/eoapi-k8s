@@ -44,3 +44,37 @@ pypgstac pgready --dsn $PGADMIN_URI
 pypgstac load collections /tmp/collections.json --dsn $PGADMIN_URI --method insert_ignore
 pypgstac load items /tmp/items.json --dsn $PGADMIN_URI --method insert_ignore
 ```
+
+# Export data
+
+Execute `eoapi-cli export [OUTPUT_DIR]` to export the STAC collections and items from a PgSTAC
+database to `collections.ndjson` and `items.ndjson` in `OUTPUT_DIR` (defaults to `./stac-export`).
+This is primarily meant for migrating data between PgSTAC instances: export from an old instance,
+then load the result into a new one with `eoapi-cli ingest OUTPUT_DIR/collections.ndjson
+OUTPUT_DIR/items.ndjson`.
+
+By default, it exports from the target cluster's own database. Pass `--source-dsn` to export from
+a different PgSTAC instance instead (e.g. the old one you're migrating away from), as long as it's
+network-reachable from the cluster:
+
+```bash
+eoapi-cli export --source-dsn "postgresql://user:pass@old-pgstac-host:5432/postgis" ./stac-export
+```
+
+Use `--collection <id>` (repeatable) to export only specific collections instead of the whole
+catalog.
+
+## How it works
+
+Items are stored dehydrated in PgSTAC (fields shared with the collection are stripped out to save
+space), so a plain `SELECT * FROM items` would not produce valid, complete STAC Items. The script
+calls PgSTAC's own `pgstac.content_hydrate(items)` SQL function to reassemble full items, and
+streams the result straight out via `psql -tAc` (unaligned, tuples-only output — one JSON object
+per line, i.e. NDJSON) over `kubectl exec`.
+
+**Caveat:** `content_hydrate()`'s exact signature has changed across PgSTAC releases (and may
+change again). The script verifies the function exists on the source database before exporting and
+fails with a clear error otherwise. If you hit that error against an unusual/very old or very new
+PgSTAC version, fall back to inspecting the source database directly (`\df pgstac.*hydrate*` in
+`psql`) and adjust the export query manually — collections are stored whole and can always be
+exported directly with `select content from pgstac.collections`.
