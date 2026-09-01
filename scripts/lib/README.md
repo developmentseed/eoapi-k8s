@@ -41,7 +41,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 ### Pre-flight Checks
 
 - `preflight_deploy` - Validate deployment prerequisites
-- `preflight_ingest "namespace" "collections" "items"` - Validate ingestion inputs
+- `validate_stac_file "path"` - Validate a STAC input file (JSON or NDJSON)
 - `preflight_test "helm|integration"` - Validate test prerequisites
 
 ### Utilities

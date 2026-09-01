@@ -113,10 +113,10 @@ get_command_script() {
             echo "${SCRIPTS_DIR}/load.sh"
             ;;
         ingest)
-            echo "${SCRIPTS_DIR}/ingest.sh"
+            echo "${SCRIPTS_DIR}/data-management.sh"
             ;;
         export)
-            echo "${SCRIPTS_DIR}/export.sh"
+            echo "${SCRIPTS_DIR}/data-management.sh"
             ;;
         docs)
             echo "${SCRIPTS_DIR}/docs.sh"
@@ -145,8 +145,17 @@ execute_command() {
         chmod +x "$script_path"
     fi
 
-    # Execute the command script with remaining arguments
-    exec "$script_path" "$@"
+    # data-management.sh backs both the 'ingest' and 'export' commands and
+    # needs to know which mode to run in; every other script is invoked with
+    # just its own remaining arguments, unchanged.
+    case "$cmd" in
+        ingest|export)
+            exec "$script_path" "$cmd" "$@"
+            ;;
+        *)
+            exec "$script_path" "$@"
+            ;;
+    esac
 }
 
 main() {

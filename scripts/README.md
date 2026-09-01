@@ -7,13 +7,16 @@ This directory contains the implementation scripts for the eoAPI CLI.
 ```
 scripts/
 ├── lib/
-│   ├── common.sh    # Shared utilities (logging, validation)
-│   └── k8s.sh       # Kubernetes helper functions
-├── cluster.sh       # Cluster management (start, stop, clean, status, inspect)
-├── deployment.sh    # Deployment operations (run, debug)
-├── test.sh          # Test suites (schema, lint, unit, integration)
-├── ingest.sh        # Data ingestion
-└── docs.sh          # Documentation (generate, serve)
+│   ├── common.sh          # Shared utilities (logging, validation)
+│   └── k8s.sh             # Kubernetes helper functions
+├── raw/
+│   ├── ingest.sh          # Data ingestion (pure: psql/jq + a DSN, no kubectl)
+│   └── export.sh          # Data export to NDJSON (pure: psql + a DSN, no kubectl)
+├── cluster.sh             # Cluster management (start, stop, clean, status, inspect)
+├── deployment.sh          # Deployment operations (run, debug)
+├── test.sh                # Test suites (schema, lint, unit, integration)
+├── data-management.sh     # Kubernetes wrapper for raw/ingest.sh and raw/export.sh
+└── docs.sh                # Documentation (generate, serve)
 ```
 
 ## Usage
@@ -28,6 +31,7 @@ All scripts are accessed through the main CLI:
 ./eoapi-cli deployment run
 ./eoapi-cli test all
 ./eoapi-cli ingest collections.json items.json
+./eoapi-cli export ./stac-export
 ./eoapi-cli docs serve
 ```
 
@@ -80,10 +84,18 @@ The eoAPI CLI provides a unified interface for all operations:
 ./eoapi-cli test integration # Run integration tests
 ```
 
-### Data Ingestion
+### Data Ingestion and Export
 ```bash
 # Ingest sample data
 ./eoapi-cli ingest <collections-file> <items-file>
+
+# Export STAC data to NDJSON (e.g. before migrating to a new PgSTAC)
+./eoapi-cli export ./stac-export
+
+# Both auto-discover/port-forward the current cluster's own database by
+# default; pass --target-dsn / --source-dsn to talk to any other PgSTAC
+# database instead (see docs/manage-data.md, or scripts/raw/*.sh directly
+# for a Kubernetes-free standalone tool).
 ```
 
 ### Documentation
