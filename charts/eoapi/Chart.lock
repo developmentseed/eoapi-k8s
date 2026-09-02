@@ -7,7 +7,7 @@ dependencies:
   version: 0.1.0
 - name: knative-operator
   repository: https://knative.github.io/operator
-  version: v1.23.0
+  version: v1.23.1
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.14.0
@@ -23,5 +23,5 @@ dependencies:
 - name: stac-auth-proxy
   repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
   version: 1.2.0
-digest: sha256:90d0b50ecac09acbc6578bfeb100b4297420cb1b731ba0b9978a40fef6cba1eb
-generated: "2026-08-24T08:54:16.451117382Z"
+digest: sha256:155889771b74fc70652ffbbf92e5313bedf04a83906eb7746da3b9ffc2e0aaf8
+generated: "2026-09-02T03:15:24.458914938Z"
