@@ -247,37 +247,29 @@ preflight_deploy() {
     return 0
 }
 
-preflight_ingest() {
-    local namespace="$1"
-    local collections_file="$2"
-    local items_file="$3"
+# Validates a STAC input file: must exist, be non-empty, and contain either
+# a single JSON document (e.g. a top-level array of collections/items) or
+# NDJSON (one JSON object per line) -- the same two formats pypgstac/pgstac
+# loaders accept.
+validate_stac_file() {
+    local file="$1"
 
-    log_info "Running pre-flight checks for ingestion..."
+    if [ ! -f "$file" ]; then
+        log_error "Input file not found: $file"
+        return 1
+    fi
 
-    validate_tools kubectl || return 1
-    validate_cluster || return 1
-    validate_namespace "$namespace" || return 1
+    if [ ! -s "$file" ]; then
+        log_error "Input file is empty: $file"
+        return 1
+    fi
 
-    # Check input files
-    for file in "$collections_file" "$items_file"; do
-        if [ ! -f "$file" ]; then
-            log_error "Input file not found: $file"
-            return 1
-        fi
+    # jq's stream parsing accepts a single JSON document or NDJSON uniformly.
+    if ! jq empty "$file" >/dev/null 2>&1; then
+        log_error "Invalid JSON/NDJSON in file: $file"
+        return 1
+    fi
 
-        if [ ! -s "$file" ]; then
-            log_error "Input file is empty: $file"
-            return 1
-        fi
-
-        # Basic JSON validation
-        if ! python3 -m json.tool "$file" >/dev/null 2>&1; then
-            log_error "Invalid JSON in file: $file"
-            return 1
-        fi
-    done
-
-    log_info "✅ Pre-flight checks passed"
     return 0
 }
 
@@ -477,6 +469,6 @@ export -f command_exists validate_tools check_requirements validate_cluster
 export -f is_ci validate_namespace get_base_url
 export -f detect_release_name detect_namespace
 export -f wait_for_pods validate_eoapi_deployment validate_autoscaling_environment
-export -f preflight_deploy preflight_ingest preflight_test
+export -f preflight_deploy validate_stac_file preflight_test
 export -f validate_python_environment install_python_requirements validate_python_with_requirements
 export -f show_standard_options

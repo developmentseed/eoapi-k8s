@@ -18,6 +18,7 @@ readonly COMMANDS=(
     "test"
     "load"
     "ingest"
+    "export"
     "docs"
 )
 
@@ -41,6 +42,7 @@ COMMANDS:
     test            Run tests (helm, integration, autoscaling)
     load            Run load testing scenarios
     ingest          Load sample data into eoAPI services
+    export          Export STAC collections/items to NDJSON (e.g. for migrating to another PgSTAC)
     docs            Generate and serve documentation
 
 Use 'eoapi-cli <COMMAND> --help' for more information about a specific command.
@@ -66,6 +68,9 @@ EXAMPLES:
 
     # Ingest sample data
     eoapi-cli ingest sample-data
+
+    # Export STAC data to NDJSON (e.g. before migrating to a new PgSTAC)
+    eoapi-cli export ./stac-export
 
     # Serve documentation locally
     eoapi-cli docs serve
@@ -108,7 +113,10 @@ get_command_script() {
             echo "${SCRIPTS_DIR}/load.sh"
             ;;
         ingest)
-            echo "${SCRIPTS_DIR}/ingest.sh"
+            echo "${SCRIPTS_DIR}/data-management.sh"
+            ;;
+        export)
+            echo "${SCRIPTS_DIR}/data-management.sh"
             ;;
         docs)
             echo "${SCRIPTS_DIR}/docs.sh"
@@ -137,8 +145,17 @@ execute_command() {
         chmod +x "$script_path"
     fi
 
-    # Execute the command script with remaining arguments
-    exec "$script_path" "$@"
+    # data-management.sh backs both the 'ingest' and 'export' commands and
+    # needs to know which mode to run in; every other script is invoked with
+    # just its own remaining arguments, unchanged.
+    case "$cmd" in
+        ingest|export)
+            exec "$script_path" "$cmd" "$@"
+            ;;
+        *)
+            exec "$script_path" "$@"
+            ;;
+    esac
 }
 
 main() {
