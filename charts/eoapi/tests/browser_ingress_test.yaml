@@ -1,0 +1,51 @@
+suite: browser ingress
+templates:
+  - templates/_helpers/networking.tpl
+  - templates/networking/browser-ingress.yaml
+set:
+  ingress.enabled: true
+  ingress.host: eoapi.local
+  stac.enabled: false
+  raster.enabled: false
+  vector.enabled: false
+  multidim.enabled: false
+  docServer.enabled: false
+
+tests:
+  - it: "creates the browser ingress when browser is the only enabled service"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: traefik
+      browser.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.labels.app
+          value: RELEASE-NAME-browser-ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/browser"
+
+  - it: "strips nginx rewrite annotations from the browser ingress"
+    template: templates/networking/browser-ingress.yaml
+    set:
+      ingress.className: nginx
+      ingress.annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/use-regex: "true"
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      browser.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: "/browser"
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+      - notExists:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/use-regex"]
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod

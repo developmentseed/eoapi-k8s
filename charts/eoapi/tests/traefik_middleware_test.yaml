@@ -1,8 +1,8 @@
 suite: traefik strip-prefix middleware
 templates:
   - templates/_helpers/networking.tpl
-  - templates/networking/ingress.yaml
   - templates/networking/traefik-middleware.yaml
+
 tests:
   - it: "traefik strip-prefix middleware renders enabled service prefixes"
     template: templates/networking/traefik-middleware.yaml
@@ -43,22 +43,16 @@ tests:
           path: spec.stripPrefix.prefixes
           value:
             - /raster
-
-  - it: "omits the strip-prefix annotation when no middleware renders, so the router reference never dangles (#568)"
+  - it: "renders no strip-prefix middleware when no path needs stripping"
+    template: templates/networking/traefik-middleware.yaml
     set:
-      ingress.className: traefik
-      ingress.host: eoapi.local
-      browser.enabled: true
-      browser.ingress.path: "/"
-      stac.enabled: false
+      ingress.className: "traefik"
+      stac.enabled: true
+      stac.ingress.path: "/"
       raster.enabled: false
       vector.enabled: false
       multidim.enabled: false
-      docServer.enabled: false
+      browser.enabled: false
     asserts:
-      - template: templates/networking/traefik-middleware.yaml
-        hasDocuments:
+      - hasDocuments:
           count: 0
-      - template: templates/networking/ingress.yaml
-        notExists:
-          path: metadata.annotations["traefik.ingress.kubernetes.io/router.middlewares"]

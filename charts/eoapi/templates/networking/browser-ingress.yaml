@@ -1,0 +1,3 @@
+{{- if include "eoapi.browserIngressEnabled" . | trim }}
+{{- include "eoapi.ingressManifest" (dict "root" . "suffix" "browser-ingress" "variant" "browser" "pathsTemplate" "eoapi.browserIngressPaths") }}
+{{- end }}
