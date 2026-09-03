@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.16.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.15.2...v0.16.0) (2026-09-03)
+
+
+### Added
+
+* add pgstac export script. ([#600](https://github.com/developmentseed/eoapi-k8s/issues/600)) ([8990e6b](https://github.com/developmentseed/eoapi-k8s/commit/8990e6bbd835db61ac31060a70cb72bbbd6f8f72))
+
+
+### Changed
+
+* split browser and auth-proxy ingresses. ([#586](https://github.com/developmentseed/eoapi-k8s/issues/586)) ([b5249fd](https://github.com/developmentseed/eoapi-k8s/commit/b5249fd20aad797f1b9660266d00fd576e2e55c1))
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/developmentseed/tipg docker tag to v1.6.0 ([#603](https://github.com/developmentseed/eoapi-k8s/issues/603)) ([356c6ce](https://github.com/developmentseed/eoapi-k8s/commit/356c6ceef668a296c85fb9817566882246357aa9))
+* **deps:** updated helm release knative-operator to v1.23.1. ([#601](https://github.com/developmentseed/eoapi-k8s/issues/601)) ([a9aa125](https://github.com/developmentseed/eoapi-k8s/commit/a9aa125a5e5fea99c9a7d46ec1822aa24a56b251))
+
 ## [0.15.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.15.1...v0.15.2) (2026-08-25)
 
 
