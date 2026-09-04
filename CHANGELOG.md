@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.0...v0.16.1) (2026-09-04)
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/developmentseed/tipg docker tag to v1.6.1 ([#604](https://github.com/developmentseed/eoapi-k8s/issues/604)) ([72cf6ad](https://github.com/developmentseed/eoapi-k8s/commit/72cf6ad949103538b7349029c6f3405206849477))
+
 ## [0.16.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.15.2...v0.16.0) (2026-09-03)
 
 
