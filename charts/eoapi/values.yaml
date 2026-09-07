@@ -618,7 +618,7 @@ browser:
   enabled: true
   image:
     name: ghcr.io/radiantearth/stac-browser
-    tag: "5.0.0"
+    tag: "5.1.0"
     pullPolicy: IfNotPresent
   service:
     port: 8080
