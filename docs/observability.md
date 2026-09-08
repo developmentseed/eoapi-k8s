@@ -142,14 +142,54 @@ When prometheus-adapter and nginx ingress are both enabled, these custom metrics
 - Ingress must use specific hostnames (not wildcard patterns)
 - prometheus-adapter must be configured to expose these metrics
 
+### Application Metrics
+
+The `raster` (titiler-pgstac), `vector` (tipg), and `stac` (stac-fastapi-pgstac)
+services can natively expose a Prometheus metrics endpoint with request-count and
+latency histograms broken down by a low-cardinality `operation` label (e.g.
+`tiles`, `search`, `list_items`). This is opt-in
+per service and requires `monitoring.prometheus.enabled=true` for Prometheus to
+discover and scrape the endpoint:
+
+```yaml
+monitoring:
+  prometheus:
+    enabled: true
+
+raster:
+  metrics:
+    enabled: true  # exposes titiler_pgstac_http_requests_total, titiler_pgstac_http_request_duration_seconds at /metrics
+
+vector:
+  metrics:
+    enabled: true  # exposes tipg_http_requests_total, tipg_http_request_duration_seconds at /metrics
+
+stac:
+  metrics:
+    enabled: true  # exposes generic http_requests_total, http_request_duration_seconds at /_mgmt/metrics
+```
+
+`stac`'s metrics require `stac-fastapi-pgstac>=7.0.0` (the chart's pinned tag);
+unlike raster/vector, its metric names are unprefixed, matching
+`stac-fastapi-api`'s shared implementation.
+
+`stac-auth-proxy` (when `stac-auth-proxy.enabled=true`) exposes its own
+`/_mgmt/metrics` endpoint by default — no toggle needed — with generic
+`http_requests_total` / `http_request_duration_seconds` metrics. It's scraped via
+a dedicated `prometheus.extraScrapeConfigs` entry rather than pod annotations,
+since the vendored `stac-auth-proxy` subchart doesn't yet expose a
+`prometheus.io/scrape` annotation hook.
+
 ## Pre-built Dashboards
 
 The `eoapi-observability` chart provides ready-to-use dashboards:
 
-### eoAPI Services Dashboard
+### eoAPI Services Dashboards
+Per-service dashboards (raster, vector, stac, stac-auth-proxy) backed by the
+[application metrics](#application-metrics) above, when enabled:
 - Request rates per service
 - Response times and error rates
-- Traffic patterns by endpoint
+- Traffic patterns by operation
 
 ### Infrastructure Dashboard
 - CPU usage rate by pod

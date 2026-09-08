@@ -1,0 +1,131 @@
+suite: application metrics tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/services.tpl
+  - templates/services/raster/deployment.yaml
+  - templates/services/raster/configmap.yaml
+  - templates/services/vector/deployment.yaml
+  - templates/services/vector/configmap.yaml
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+tests:
+  - it: "raster metrics disabled by default"
+    set:
+      raster.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TITILER_PGSTAC_API_METRICS_ENABLED
+            value: "true"
+
+  - it: "raster metrics enabled adds env var and scrape annotations"
+    set:
+      raster.enabled: true
+      raster.metrics.enabled: true
+      stac.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "8080"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/path"]
+          value: "/metrics"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TITILER_PGSTAC_API_METRICS_ENABLED
+            value: "true"
+
+  - it: "vector metrics disabled by default"
+    set:
+      vector.enabled: true
+      stac.enabled: false
+      raster.enabled: false
+      multidim.enabled: false
+    template: templates/services/vector/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TIPG_ENABLE_METRICS
+            value: "true"
+
+  - it: "vector metrics enabled adds env var and scrape annotations"
+    set:
+      vector.enabled: true
+      vector.metrics.enabled: true
+      stac.enabled: false
+      raster.enabled: false
+      multidim.enabled: false
+    template: templates/services/vector/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "8080"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/path"]
+          value: "/metrics"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TIPG_ENABLE_METRICS
+            value: "true"
+
+  - it: "stac metrics disabled by default"
+    set:
+      stac.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENABLE_METRICS
+            value: "true"
+
+  - it: "stac metrics enabled adds env var and scrape annotations"
+    set:
+      stac.enabled: true
+      stac.metrics.enabled: true
+      raster.enabled: false
+      vector.enabled: false
+      multidim.enabled: false
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "8080"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/path"]
+          value: "/_mgmt/metrics"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENABLE_METRICS
+            value: "true"

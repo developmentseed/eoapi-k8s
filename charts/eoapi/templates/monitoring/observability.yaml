@@ -8,4 +8,12 @@ metadata:
 data:
   kubernetes.json: |-
 {{ .Files.Get "data/dashboards/eoAPI-Dashboard.json" | indent 4 }}
+  raster.json: |-
+{{ .Files.Get "data/dashboards/eoAPI-Raster.json" | indent 4 }}
+  vector.json: |-
+{{ .Files.Get "data/dashboards/eoAPI-Vector.json" | indent 4 }}
+  stac.json: |-
+{{ .Files.Get "data/dashboards/eoAPI-Stac.json" | indent 4 }}
+  stac-auth-proxy.json: |-
+{{ .Files.Get "data/dashboards/eoAPI-StacAuthProxy.json" | indent 4 }}
 {{- end }}
