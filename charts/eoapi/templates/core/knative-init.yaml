@@ -20,14 +20,18 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
+      {{- with .Values.knative.jobs.init.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: knative-init
         image: {{ include "eoapi.containerImage" .Values.knative.jobs.init.image }}
         imagePullPolicy: {{ .Values.knative.jobs.init.image.pullPolicy | default "IfNotPresent" }}
+        {{- with .Values.knative.jobs.init.securityContext }}
         securityContext:
-          runAsNonRoot: true
-          runAsUser: 65534
-          runAsGroup: 65534
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command:
         - /bin/sh
         - -c

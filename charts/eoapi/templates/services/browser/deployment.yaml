@@ -19,10 +19,18 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- with .Values.browser.settings.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: browser
           image: {{ include "eoapi.containerImage" .Values.browser.image }}
           imagePullPolicy: {{ .Values.browser.image.pullPolicy | default "IfNotPresent" }}
+          {{- with .Values.browser.settings.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
           - containerPort: 8080
           env:

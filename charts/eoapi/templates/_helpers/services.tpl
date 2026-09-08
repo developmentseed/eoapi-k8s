@@ -45,10 +45,10 @@ initContainers:
 - name: wait-for-pgstac-jobs
   image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.waitImage }}
   imagePullPolicy: {{ .Values.pgstacBootstrap.waitImage.pullPolicy | default "IfNotPresent" }}
+  {{- with .Values.pgstacBootstrap.settings.initContainerSecurityContext }}
   securityContext:
-    runAsNonRoot: true
-    runAsUser: 65534
-    runAsGroup: 65534
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   env:
   {{- include "eoapi.commonEnvVars" (dict "service" "init" "root" .) | nindent 2 }}
   resources:
