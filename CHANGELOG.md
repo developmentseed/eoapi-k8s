@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.16.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.0...v0.16.1) (2026-09-10)
+
+
+### Fixed
+
+* chart version mismatch with 6.4.0 ([57c2630](https://github.com/developmentseed/eoapi-k8s/commit/57c26300dfe00fdd4ab1b8e608b71434185c2064))
+* export script fetch in batches. ([#611](https://github.com/developmentseed/eoapi-k8s/issues/611)) ([048f6da](https://github.com/developmentseed/eoapi-k8s/commit/048f6daf49d823448c018aaa9681cac742fd8205))
+* security context. ([#609](https://github.com/developmentseed/eoapi-k8s/issues/609)) ([041e3a4](https://github.com/developmentseed/eoapi-k8s/commit/041e3a4d274ddc2f03956145fd2a03197e61376b))
+* use uvicorn factory pattern for stac-fastapi-pgstac 6.4.0 ([380cb54](https://github.com/developmentseed/eoapi-k8s/commit/380cb54aca4b56e794781c1250e23de026847a83))
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/developmentseed/tipg docker tag to v1.6.1 ([#604](https://github.com/developmentseed/eoapi-k8s/issues/604)) ([72cf6ad](https://github.com/developmentseed/eoapi-k8s/commit/72cf6ad949103538b7349029c6f3405206849477))
+* **deps:** updated ghcr.io/radiantearth/stac-browser docker tag to v5.1.0 ([#607](https://github.com/developmentseed/eoapi-k8s/issues/607)) ([b384843](https://github.com/developmentseed/eoapi-k8s/commit/b3848436e1a67e83febe66fb1f2baffa27da231a))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.4.0 ([#610](https://github.com/developmentseed/eoapi-k8s/issues/610)) ([52c4e27](https://github.com/developmentseed/eoapi-k8s/commit/52c4e27e31512a141923ded7e686735136eda138))
+* **deps:** updated helm release prometheus to 29.27.2. ([#606](https://github.com/developmentseed/eoapi-k8s/issues/606)) ([7c8d098](https://github.com/developmentseed/eoapi-k8s/commit/7c8d098bf29646dc3b30844e9e3004f76c7d0c51))
+
 ## [0.16.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.15.2...v0.16.0) (2026-09-03)
 
 
