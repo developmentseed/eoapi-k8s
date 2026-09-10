@@ -476,7 +476,8 @@ stac:
     pullPolicy: IfNotPresent
   command:
     - "uvicorn"
-    - "stac_fastapi.pgstac.app:app"
+    - "stac_fastapi.pgstac.app:create_app"
+    - "--factory"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
