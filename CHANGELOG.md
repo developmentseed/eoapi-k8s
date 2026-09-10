@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.1...v0.16.2) (2026-09-10)
+
+
+### Fixed
+
+* add hook-delete-policy annotation to pgstacBootstrap jobs in argocd preset ([#612](https://github.com/developmentseed/eoapi-k8s/issues/612)) ([4be280d](https://github.com/developmentseed/eoapi-k8s/commit/4be280db915b6f2e56377b6cbd8dc2ead36d8177))
+
 ## [0.16.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.0...v0.16.1) (2026-09-10)
 
 
