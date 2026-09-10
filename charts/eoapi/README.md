@@ -169,6 +169,49 @@ raster:
         memory: "8Gi"
 ```
 
+### Security Context
+
+This chart defaults to `{}` for `securityContext` (container-level) and
+`podSecurityContext` (pod-level) everywhere, so upgrading doesn't change
+existing deployments. Set them per workload to run on CIS/PSA-hardened
+clusters (non-root execution, `RuntimeDefault` seccomp, no privilege
+escalation, dropped capabilities):
+
+```yaml
+# Example hardened configuration in your values override
+stac:
+  settings:
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      fsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      allowPrivilegeEscalation: false
+      # verify per image: some images need a writable path (e.g. via
+      # extraVolumes/extraVolumeMounts) before enabling this
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+```
+
+The same `securityContext`/`podSecurityContext` keys are available under
+`raster.settings`, `vector.settings`, `multidim.settings`, `browser.settings`,
+`docServer.settings`, `pgstacBootstrap.settings` (shared by all pgstac Jobs
+and CronJobs: migrate, load-samples, load-queryables, superuser-init-db,
+extent-updater, queue-processor), `pgstacBootstrap.settings.initContainerSecurityContext`
+(container-level only, for the `wait-for-pgstac-jobs` init container),
+`knative.jobs.init`, `knative.cloudEventsSink`, and `testing.mockOidcServer`
+(test infrastructure only).
+
+Two container-level defaults are pre-populated (not empty) to preserve this
+chart's historical behavior: `pgstacBootstrap.settings.initContainerSecurityContext`
+and `knative.jobs.init.securityContext` both default to
+`{runAsNonRoot: true, runAsUser: 65534, runAsGroup: 65534}`.
+
 ### Database Options
 
 1. Integrated PostgreSQL Operator:
