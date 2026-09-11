@@ -104,3 +104,27 @@ format treats backslash as its own escape character, which can corrupt JSON stri
 contain backslash sequences. Instead it streams one `insert into pgstac.items_staging_ignore
 (content) values ('<escaped>'::jsonb);` statement per record through a single `psql -f -` session,
 inside one transaction.
+
+# Shipped sample data (`pgstac-load-samples`)
+
+When `pgstacBootstrap.settings.loadSamples` is `true`, the chart's `{release}-pgstac-load-samples`
+Helm hook job loads the fixtures in `charts/eoapi/data/initdb/samples/` (the
+`noaa-emergency-response` collection and its `noaa-eri-nashville2020` items) with `pypgstac load
+--method upsert`. This job runs on both `post-install` and `post-upgrade`, and unlike
+`scripts/raw/ingest.sh`'s "insert, ignore duplicates" semantics above, `upsert` deliberately
+overwrites any existing row with matching `id` on every upgrade. That's what lets a future fix to
+the shipped sample JSON (for example, adding a STAC field a newer `stac-fastapi-pgstac` started
+requiring) actually reach clusters that already loaded the sample data in an earlier install —
+`insert_ignore` would silently skip already-populated rows forever. The trade-off: any local edits
+made directly to the sample collection/items in the database (rather than through the chart) are
+overwritten the next time this job runs.
+
+**Upgrade note:** prior to this change, `pgstac-load-samples` used `--method insert_ignore`, so
+clusters that installed the chart before the fixtures were corrected (see the `type: Collection`
+field added to `noaa-emergency-response.json`) kept the stale, un-corrected row forever — the job
+ran successfully on every subsequent upgrade but never touched the already-existing row. Switching
+the load method to `upsert` only takes effect going forward: it does not retroactively repair rows
+that were already skipped by `insert_ignore` in the past. A cluster in that state needs one
+`post-upgrade` run of this job on a chart version that includes this fix (i.e. after upgrading past
+this change) for the sample collection/items to be corrected. If you disabled `loadSamples` or
+deleted the sample collection, this does not apply.

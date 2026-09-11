@@ -129,12 +129,22 @@ spec:
               # Database connection configured through standard PG* environment variables
               # Environment variables are already set by the container
 
-              # Load sample data
+              # Load sample data.
+              #
+              # NOTE: uses --method upsert, not insert_ignore. This job runs on both
+              # post-install and post-upgrade, and the shipped sample fixtures are only
+              # ever overwritten by this chart itself (never user-edited in place), so
+              # re-syncing them on every upgrade is intentional: it's how a future fix to
+              # noaa-emergency-response.json / noaa-eri-nashville2020.json (e.g. a missing
+              # required STAC field) reaches clusters that already loaded the sample data
+              # in a previous install. insert_ignore would silently skip such fixes on
+              # already-populated rows forever. See docs/manage-data.md for the caveat
+              # this creates for clusters that installed the chart before this change.
               echo "Loading sample collections..."
-              pypgstac load collections /opt/data/noaa-emergency-response.json --method insert_ignore
+              pypgstac load collections /opt/data/noaa-emergency-response.json --method upsert
 
               echo "Loading sample items..."
-              pypgstac load items /opt/data/noaa-eri-nashville2020.json --method insert_ignore
+              pypgstac load items /opt/data/noaa-eri-nashville2020.json --method upsert
 
               echo "Running custom SQL..."
               psql -f /opt/sql/initdb.sql
