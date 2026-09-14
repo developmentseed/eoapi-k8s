@@ -353,6 +353,18 @@
               "type": "object",
               "description": "Resource requirements"
             },
+            "securityContext": {
+              "type": "object",
+              "description": "Container-level securityContext shared by all pgstacBootstrap Jobs/CronJobs (migrate, load-samples, load-queryables, superuser-init-db, extent-updater, queue-processor)"
+            },
+            "podSecurityContext": {
+              "type": "object",
+              "description": "Pod-level securityContext shared by all pgstacBootstrap Jobs/CronJobs"
+            },
+            "initContainerSecurityContext": {
+              "type": "object",
+              "description": "Container-level securityContext for the wait-for-pgstac-jobs init container injected into the stac/raster/vector/multidim Deployments"
+            },
             "pgstacSettings": {
               "type": "object",
               "description": "PgSTAC database configuration settings",
@@ -570,6 +582,14 @@
             "resources": {
               "type": "object",
               "description": "Resource requirements for browser"
+            },
+            "securityContext": {
+              "type": "object",
+              "description": "Container-level securityContext for the browser container"
+            },
+            "podSecurityContext": {
+              "type": "object",
+              "description": "Pod-level securityContext for the browser Deployment"
             }
           }
         }
@@ -597,6 +617,14 @@
             "resources": {
               "type": "object",
               "description": "Resource requirements for doc server"
+            },
+            "securityContext": {
+              "type": "object",
+              "description": "Container-level securityContext for the doc-server container"
+            },
+            "podSecurityContext": {
+              "type": "object",
+              "description": "Pod-level securityContext for the doc-server Deployment"
             }
           }
         }
@@ -805,6 +833,14 @@
                   "description": "Service port for the mock OIDC server"
                 }
               }
+            },
+            "securityContext": {
+              "type": "object",
+              "description": "Container-level securityContext for the mock OIDC server container"
+            },
+            "podSecurityContext": {
+              "type": "object",
+              "description": "Pod-level securityContext for the mock OIDC server Deployment"
             }
           }
         }
@@ -827,6 +863,18 @@
             },
             "image": {
               "$ref": "#/definitions/containerImage"
+            },
+            "resources": {
+              "type": "object",
+              "description": "Resource requirements for the cloudevents-sink container"
+            },
+            "securityContext": {
+              "type": "object",
+              "description": "Container-level securityContext for the cloudevents-sink container"
+            },
+            "podSecurityContext": {
+              "type": "object",
+              "description": "Pod-level securityContext for the cloudevents-sink Knative Service"
             }
           }
         },
@@ -838,6 +886,14 @@
               "properties": {
                 "image": {
                   "$ref": "#/definitions/containerImage"
+                },
+                "securityContext": {
+                  "type": "object",
+                  "description": "Container-level securityContext for the knative-init container"
+                },
+                "podSecurityContext": {
+                  "type": "object",
+                  "description": "Pod-level securityContext for the knative-init Job"
                 }
               }
             }
@@ -1024,6 +1080,14 @@
             "envVars": {
               "type": "object",
               "description": "Environment variables"
+            },
+            "securityContext": {
+              "type": "object",
+              "description": "Container-level securityContext for this service's container"
+            },
+            "podSecurityContext": {
+              "type": "object",
+              "description": "Pod-level securityContext for this service's Deployment"
             }
           }
         }

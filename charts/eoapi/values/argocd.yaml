@@ -42,12 +42,16 @@ pgstacBootstrap:
     pgstacSuperuserInitDb:
       annotations:
         argocd.argoproj.io/hook: "Sync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     pgstacMigrate:
       annotations:
         argocd.argoproj.io/hook: "Sync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     pgstacLoadSamples:
       annotations:
         argocd.argoproj.io/hook: "Sync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
     pgstacLoadQueryables:
       annotations:
         argocd.argoproj.io/hook: "Sync"
+        argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"

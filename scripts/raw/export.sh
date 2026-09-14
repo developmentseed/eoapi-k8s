@@ -122,6 +122,7 @@ if ! psql -q -v ON_ERROR_STOP=1 "$DSN" -f - <<SQL
 \pset format unaligned
 select (count(*) > 0) as hydrate_ok from pg_proc where pronamespace = 'pgstac'::regnamespace and proname = 'content_hydrate' \gset
 \if :hydrate_ok
+\set FETCH_COUNT 5000
 \o '${COLLECTIONS_FILE_ESC}'
 ${COLLECTIONS_QUERY};
 \o '${ITEMS_FILE_ESC}'

@@ -1,0 +1,311 @@
+suite: security context tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/services.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/networking.tpl
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+  - templates/services/raster/deployment.yaml
+  - templates/services/raster/configmap.yaml
+  - templates/services/vector/deployment.yaml
+  - templates/services/vector/configmap.yaml
+  - templates/services/multidim/deployment.yaml
+  - templates/services/multidim/configmap.yaml
+  - templates/services/browser/deployment.yaml
+  - templates/services/doc-server.yaml
+  - templates/testing/deployment.yaml
+  - templates/core/knative-init.yaml
+  - templates/core/cloudevents-sink.yaml
+  - templates/database/pgstacbootstrap/job.yaml
+  - templates/database/pgstacbootstrap/eoap-superuser-initdb.yaml
+  - templates/database/pgstacbootstrap/extent-updater.yaml
+  - templates/database/pgstacbootstrap/queue-processor.yaml
+set:
+  pgstacBootstrap:
+    enabled: true
+  multidim:
+    enabled: true
+tests:
+  - it: securityContext and podSecurityContext are absent by default
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+      - notExists:
+          path: spec.template.spec.securityContext
+
+  - it: browser securityContext and podSecurityContext are absent by default
+    template: templates/services/browser/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+      - notExists:
+          path: spec.template.spec.securityContext
+
+  - it: doc-server securityContext and podSecurityContext are absent by default
+    template: templates/services/doc-server.yaml
+    documentIndex: 1
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+      - notExists:
+          path: spec.template.spec.securityContext
+
+  - it: cloudevents-sink securityContext and podSecurityContext are absent by default
+    set:
+      knative:
+        enabled: true
+        cloudEventsSink:
+          enabled: true
+      eoapi-notifier:
+        enabled: true
+        outputs:
+          - type: cloudevents
+    template: templates/core/cloudevents-sink.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+      - notExists:
+          path: spec.template.spec.securityContext
+
+  - it: wait-for-pgstac-jobs init container keeps its historical default securityContext
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: wait-for-pgstac-jobs
+      - equal:
+          path: spec.template.spec.initContainers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+
+  - it: knative-init keeps its historical default securityContext
+    set:
+      knative.enabled: true
+    template: templates/core/knative-init.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+      - notExists:
+          path: spec.template.spec.securityContext
+
+  - it: stac accepts a hardened securityContext and podSecurityContext override
+    set:
+      stac.settings.securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      stac.settings.podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+
+  - it: vector accepts a hardened securityContext and podSecurityContext override
+    set:
+      vector.settings.securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      vector.settings.podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+    template: templates/services/vector/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+
+  - it: mockOidcServer securityContext and podSecurityContext are absent by default
+    set:
+      testing.mockOidcServer.enabled: true
+    template: templates/testing/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+      - notExists:
+          path: spec.template.spec.securityContext
+
+  - it: mockOidcServer accepts a securityContext and podSecurityContext override
+    set:
+      testing.mockOidcServer.enabled: true
+      testing.mockOidcServer.securityContext:
+        allowPrivilegeEscalation: false
+      testing.mockOidcServer.podSecurityContext:
+        runAsNonRoot: true
+    template: templates/testing/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+
+  - it: pgstacBootstrap.settings.securityContext applies to the pgstac-migrate job
+    set:
+      pgstacBootstrap.settings.securityContext:
+        allowPrivilegeEscalation: false
+      pgstacBootstrap.settings.podSecurityContext:
+        runAsNonRoot: true
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-migrate
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+
+  - it: pgstacBootstrap.settings.securityContext applies to the extent-updater cronjob
+    set:
+      pgstacBootstrap.settings.pgstacSettings.update_collection_extent: "false"
+      pgstacBootstrap.settings.securityContext:
+        allowPrivilegeEscalation: false
+      pgstacBootstrap.settings.podSecurityContext:
+        runAsNonRoot: true
+    template: templates/database/pgstacbootstrap/extent-updater.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+
+  - it: pgstacBootstrap.settings.securityContext applies to the queue-processor cronjob
+    set:
+      pgstacBootstrap.settings.pgstacSettings.use_queue: "true"
+      pgstacBootstrap.settings.securityContext:
+        allowPrivilegeEscalation: false
+      pgstacBootstrap.settings.podSecurityContext:
+        runAsNonRoot: true
+    template: templates/database/pgstacbootstrap/queue-processor.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+
+  - it: initContainerSecurityContext overrides independently of pgstacBootstrap.settings.securityContext
+    set:
+      pgstacBootstrap.settings.securityContext:
+        allowPrivilegeEscalation: false
+      pgstacBootstrap.settings.initContainerSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+    template: templates/services/stac/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+      # the stac container itself doesn't consume pgstacBootstrap.settings.securityContext
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext
+
+  - it: knative.jobs.init.securityContext and podSecurityContext are overridable
+    set:
+      knative.enabled: true
+      knative.jobs.init.securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      knative.jobs.init.podSecurityContext:
+        fsGroup: 1000
+    template: templates/core/knative-init.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            fsGroup: 1000
+
+  - it: knative.cloudEventsSink.securityContext and podSecurityContext are overridable
+    set:
+      knative:
+        enabled: true
+        cloudEventsSink:
+          enabled: true
+          securityContext:
+            allowPrivilegeEscalation: false
+          podSecurityContext:
+            runAsNonRoot: true
+      eoapi-notifier:
+        enabled: true
+        outputs:
+          - type: cloudevents
+    template: templates/core/cloudevents-sink.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true

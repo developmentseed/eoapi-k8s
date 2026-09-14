@@ -25,8 +25,8 @@ annotations:
     - stac
     - raster
     - vector
-version: 0.16.0
-appVersion: 6.3.1
+version: 0.16.2
+appVersion: 6.4.0
 dependencies:
   - name: postgrescluster
     version: 5.8.6
@@ -45,7 +45,7 @@ dependencies:
     repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: monitoring.metricsServer.enabled
   - name: prometheus
-    version: 29.27.2
+    version: 29.29.0
     repository: https://prometheus-community.github.io/helm-charts
     condition: monitoring.prometheus.enabled
   - name: prometheus-adapter

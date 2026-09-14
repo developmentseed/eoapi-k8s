@@ -97,6 +97,10 @@ spec:
           - containerPort: {{ .Values.service.port }}
         resources:
           {{- toYaml .Values.stac.settings.resources | nindent 10 }}
+        {{- with .Values.stac.settings.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         env:
           {{- include "eoapi.postgresqlEnv" . | nindent 10 }}
           {{- include "eoapi.commonEnvVars" (dict "service" "stac" "root" .) | nindent 10 }}
@@ -116,6 +120,10 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
+      {{- with .Values.stac.settings.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.stac.settings.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

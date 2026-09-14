@@ -285,6 +285,19 @@ pgstacBootstrap:
     envVars:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
+    # Container securityContext applied to all pgstacBootstrap Jobs/CronJobs
+    # (pgstac-migrate, pgstac-load-samples, pgstac-load-queryables,
+    # pgstac-superuser-init-db, pgstac-extent-updater, pgstac-queue-processor)
+    securityContext: {}
+    # Pod-level securityContext applied to the same set of Jobs/CronJobs
+    podSecurityContext: {}
+    # Container securityContext for the `wait-for-pgstac-jobs` init container
+    # injected into the stac/raster/vector/multidim Deployments. Defaults
+    # preserve this chart's historical (previously hardcoded) behavior.
+    initContainerSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
 
 ######################
 # API SERVICES
@@ -336,6 +349,8 @@ raster:
     extraEnvFrom: []
     extraVolumeMounts: []
     extraVolumes: []
+    securityContext: {}
+    podSecurityContext: {}
     envVars:
       ##############
       # titiler
@@ -402,6 +417,8 @@ multidim:
     extraEnvFrom: []
     extraVolumeMounts: []
     extraVolumes: []
+    securityContext: {}
+    podSecurityContext: {}
     envVars:
       ##############
       # titiler
@@ -455,11 +472,12 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 6.3.1
+    tag: 6.4.0
     pullPolicy: IfNotPresent
   command:
     - "uvicorn"
-    - "stac_fastapi.pgstac.app:app"
+    - "stac_fastapi.pgstac.app:create_app"
+    - "--factory"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
   settings:
@@ -468,6 +486,8 @@ stac:
     extraEnvFrom: []
     extraVolumeMounts: []
     extraVolumes: []
+    securityContext: {}
+    podSecurityContext: {}
     envVars:
       ##############
       # uvicorn
@@ -593,6 +613,8 @@ vector:
     extraEnvFrom: []
     extraVolumeMounts: []
     extraVolumes: []
+    securityContext: {}
+    podSecurityContext: {}
     envVars:
       ##############
       # tipg
@@ -618,7 +640,7 @@ browser:
   enabled: true
   image:
     name: ghcr.io/radiantearth/stac-browser
-    tag: "5.0.0"
+    tag: "5.1.0"
     pullPolicy: IfNotPresent
   service:
     port: 8080
@@ -656,6 +678,8 @@ browser:
   settings:
     labels: {}
     resources: {}
+    securityContext: {}
+    podSecurityContext: {}
 
 docServer:
   enabled: true
@@ -666,6 +690,8 @@ docServer:
     pullPolicy: IfNotPresent
   settings:
     resources: {}
+    securityContext: {}
+    podSecurityContext: {}
 
 ######################
 # NOTIFICATIONS
@@ -724,6 +750,8 @@ testing:
       # No version tags published; pin by digest (refresh when upgrading the image).
       digest: sha256:5972adac0b6e3a094ea043be0f1851c65e3fd54e17a546f0b71dedd17c7a2d6a
       pullPolicy: IfNotPresent
+    securityContext: {}
+    podSecurityContext: {}
 
 ######################
 # KNATIVE
@@ -746,6 +774,8 @@ knative:
       digest: sha256:ec6672b354dc9db37b221ee76fea62147d0450028208aa964011f685b1e0a3e3
       pullPolicy: IfNotPresent
     resources: {}
+    securityContext: {}
+    podSecurityContext: {}
     service:
       annotations:
         helm.sh/hook: "post-install,post-upgrade"
@@ -766,6 +796,12 @@ knative:
         helm.sh/hook: "post-install,post-upgrade"
         helm.sh/hook-weight: "0"
         helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+      # Preserves this chart's historical (previously hardcoded) behavior.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+      podSecurityContext: {}
 
 # Knative operator sub-chart configuration
 knative-operator:

@@ -23,6 +23,10 @@ spec:
             app.kubernetes.io/component: pgstac-extents
         spec:
           restartPolicy: OnFailure
+          {{- with .Values.pgstacBootstrap.settings.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           containers:
           - name: extent-updater
             image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.image }}
@@ -41,6 +45,10 @@ spec:
               requests:
                 cpu: "256m"
                 memory: "512Mi"
+            {{- with .Values.pgstacBootstrap.settings.securityContext }}
+            securityContext:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

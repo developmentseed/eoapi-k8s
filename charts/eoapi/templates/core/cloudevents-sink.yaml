@@ -27,10 +27,18 @@ spec:
         {{- include "eoapi.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: cloudevents-sink
     spec:
+      {{- with .Values.knative.cloudEventsSink.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: cloudevents-sink
         image: {{ include "eoapi.containerImage" .Values.knative.cloudEventsSink.image }}
         imagePullPolicy: {{ .Values.knative.cloudEventsSink.image.pullPolicy | default "IfNotPresent" }}
+        {{- with .Values.knative.cloudEventsSink.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         ports:
         - containerPort: 8080
         env:
