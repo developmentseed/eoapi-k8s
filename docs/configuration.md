@@ -313,6 +313,19 @@ raster:
       requestRate: "100000m"
 ```
 
+### Raster Alternate Assets
+
+Some STAC catalogs publish cloud-optimized asset hrefs under an `alternate` key (see the [STAC Alternate Assets extension](https://github.com/stac-extensions/alternate-assets)) instead of, or in addition to, an asset's main `href` (e.g. a public HTTPS href alongside an `alternate.s3` href for direct/requester-pays S3 access). titiler-pgstac's underlying reader ([rio-tiler](https://github.com/cogeotiff/rio-tiler)) can be configured to prefer one of these alternate hrefs, when present, over the main href via the `RIO_TILER_STAC_ALTERNATE_KEY` environment variable, set through `raster.settings.envVars`:
+
+```yaml
+raster:
+  settings:
+    envVars:
+      RIO_TILER_STAC_ALTERNATE_KEY: "s3"
+```
+
+Assets without a matching `alternate` entry keep using their main `href`.
+
 ## STAC Browser
 
 | **Values Key** | **Description** | **Default** | **Choices** |
