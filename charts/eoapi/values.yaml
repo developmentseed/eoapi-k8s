@@ -213,11 +213,17 @@ pgstacBootstrap:
         helm.sh/hook: "post-install,post-upgrade"
         helm.sh/hook-weight: "-3"
         helm.sh/hook-delete-policy: "before-hook-creation"
+    pgstacAnalyze:
+      annotations:
+        helm.sh/hook: "post-install,post-upgrade"
+        helm.sh/hook-weight: "-2"
+        helm.sh/hook-delete-policy: "before-hook-creation"
 
 
   settings:
     # General configuration options
-    loadSamples: true      # Set to false to disable sample data loading
+    loadSamples: true
+    analyzeAfterBootstrap: true
 
     # Queryables configuration
     # List of queryables configurations to load using pypgstac load-queryables
@@ -286,7 +292,7 @@ pgstacBootstrap:
       # toggle to "false" if you don't want fixtures default loaded
       LOAD_FIXTURES: "true"
     # Container securityContext applied to all pgstacBootstrap Jobs/CronJobs
-    # (pgstac-migrate, pgstac-load-samples, pgstac-load-queryables,
+    # (pgstac-migrate, pgstac-load-samples, pgstac-load-queryables, pgstac-analyze,
     # pgstac-superuser-init-db, pgstac-extent-updater, pgstac-queue-processor)
     securityContext: {}
     # Pod-level securityContext applied to the same set of Jobs/CronJobs

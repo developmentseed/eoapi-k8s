@@ -292,3 +292,67 @@ spec:
       {{- end }}
   backoffLimit: 3
 {{- end }}
+
+{{- if and .Values.pgstacBootstrap.enabled .Values.pgstacBootstrap.settings.analyzeAfterBootstrap }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-pgstac-analyze
+  labels:
+    app: {{ .Release.Name }}-pgstac-analyze
+  {{- with .Values.pgstacBootstrap.jobs.pgstacAnalyze.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-pgstac-analyze
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pgstac-analyze
+          image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.image }}
+          imagePullPolicy: {{ .Values.pgstacBootstrap.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - "/bin/sh"
+            - "-c"
+          args:
+            - |
+              # Exit immediately if a command exits with a non-zero status
+              set -e
+
+              # Database connection configured through standard PG* environment variables
+              # Environment variables are already set by the container
+
+              echo "Waiting for database to be ready..."
+              pypgstac pgready
+
+              echo "Analyzing database..."
+              psql -c "ANALYZE;"
+
+              echo "Analyze complete"
+          resources:
+            {{- toYaml .Values.pgstacBootstrap.settings.resources | nindent 12 }}
+          {{- with .Values.pgstacBootstrap.settings.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
+      {{- with .Values.pgstacBootstrap.settings.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pgstacBootstrap.settings.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pgstacBootstrap.settings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  backoffLimit: 1
+{{- end }}
