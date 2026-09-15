@@ -140,6 +140,7 @@ pgstacBootstrap:
 | `ingress.className` | Ingress controller class | `nginx` |
 | `browser.enabled` | Enable STAC Browser interface | `true` |
 | `pgstacBootstrap.enabled` | Enable database initialization | `true` |
+| `pgstacBootstrap.settings.analyzeAfterBootstrap` | Run `ANALYZE` after bootstrap so freshly (re)built indexes get planner statistics immediately | `true` |
 | `notifications.sources.pgstac` | Enable PostgreSQL notification triggers for STAC item changes | `false` |
 
 ### Resource Configuration
@@ -201,7 +202,7 @@ stac:
 The same `securityContext`/`podSecurityContext` keys are available under
 `raster.settings`, `vector.settings`, `multidim.settings`, `browser.settings`,
 `docServer.settings`, `pgstacBootstrap.settings` (shared by all pgstac Jobs
-and CronJobs: migrate, load-samples, load-queryables, superuser-init-db,
+and CronJobs: migrate, load-samples, load-queryables, analyze, superuser-init-db,
 extent-updater, queue-processor), `pgstacBootstrap.settings.initContainerSecurityContext`
 (container-level only, for the `wait-for-pgstac-jobs` init container),
 `knative.jobs.init`, `knative.cloudEventsSink`, and `testing.mockOidcServer`

@@ -1,0 +1,86 @@
+suite: pgstac post-bootstrap ANALYZE job tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/database/pgstacbootstrap/job.yaml
+tests:
+  - it: should create the analyze job by default
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables: []
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-analyze
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "-2"
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: 'psql -c "ANALYZE;"'
+
+  - it: should render the analyze job last regardless of which other jobs are enabled
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: true
+          queryables:
+            - name: "common-queryables.json"
+              file: "data/initdb/queryables/test-queryables.json"
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 3
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-analyze
+
+  - it: should NOT create the analyze job when analyzeAfterBootstrap is false
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables: []
+          analyzeAfterBootstrap: false
+    template: templates/database/pgstacbootstrap/job.yaml
+    asserts:
+      - hasDocuments:
+          count: 1  # only pgstac-migrate
+
+  - it: should NOT create the analyze job when pgstacBootstrap is disabled
+    set:
+      pgstacBootstrap:
+        enabled: false
+    template: templates/database/pgstacbootstrap/job.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set correct resources on the analyze job
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          loadSamples: false
+          queryables: []
+          resources:
+            limits:
+              cpu: "256m"
+              memory: "512Mi"
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "256m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "512Mi"
