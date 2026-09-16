@@ -370,6 +370,7 @@ raster:
       PYTHONWARNINGS: "ignore"
       VSI_CACHE: "TRUE"
       VSI_CACHE_SIZE: "5000000"  # 5 MB (per file-handle)
+      RIO_TILER_STAC_ALTERNATE_KEY: ""
       ##############
       # uvicorn
       ##############
