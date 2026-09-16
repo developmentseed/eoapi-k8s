@@ -17,7 +17,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/stac-utils/stac-fastapi-pgstac:6.4.0
+          value: ghcr.io/stac-utils/stac-fastapi-pgstac:6.4.1
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
