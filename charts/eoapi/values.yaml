@@ -479,7 +479,7 @@ stac:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/stac-fastapi-pgstac
-    tag: 6.4.1
+    tag: 7.0.0
     pullPolicy: IfNotPresent
   command:
     - "uvicorn"
