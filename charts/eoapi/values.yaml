@@ -342,7 +342,7 @@ raster:
       requestRate: 100000m
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: 3.1.0
+    tag: 3.2.0
     pullPolicy: IfNotPresent
   command:
     - "uvicorn"
