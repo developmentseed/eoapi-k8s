@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.16.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.2...v0.16.3) (2026-09-17)
+
+
+### Fixed
+
+* add analyze pgstacbootstrap job. ([#622](https://github.com/developmentseed/eoapi-k8s/issues/622)) ([64efcb4](https://github.com/developmentseed/eoapi-k8s/commit/64efcb414abbcc292a47081e95c7f52b9cc59b47))
+* added servicemonitor support. ([#628](https://github.com/developmentseed/eoapi-k8s/issues/628)) ([2b24c3a](https://github.com/developmentseed/eoapi-k8s/commit/2b24c3afc916e44531eb28d57120b2984f871b51))
+* expose RIO_TILER_STAC_ALTERNATE_KEY for raster service ([#623](https://github.com/developmentseed/eoapi-k8s/issues/623)) ([e326da5](https://github.com/developmentseed/eoapi-k8s/commit/e326da5376d8fc5db8e97ffcc865fb873ed8587a))
+* wire in stac-fastapi-pgstac metrics support. ([#627](https://github.com/developmentseed/eoapi-k8s/issues/627)) ([dff04e0](https://github.com/developmentseed/eoapi-k8s/commit/dff04e0da949365c83a7b0467fd7e85992f448eb))
+
+
+### Maintenance
+
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v6.4.1 ([#624](https://github.com/developmentseed/eoapi-k8s/issues/624)) ([d138d2b](https://github.com/developmentseed/eoapi-k8s/commit/d138d2b3d9da6128e6f98b4527b911af73e4b19c))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v7 ([#626](https://github.com/developmentseed/eoapi-k8s/issues/626)) ([26a2c7e](https://github.com/developmentseed/eoapi-k8s/commit/26a2c7e7a0428328c253faafbb861a8eb6fabf1f))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v3.2.0 ([#625](https://github.com/developmentseed/eoapi-k8s/issues/625)) ([5db359e](https://github.com/developmentseed/eoapi-k8s/commit/5db359e724c0f8015ea8beec7262b7f78a94729b))
+* **deps:** updated helm release prometheus to 29.28.0. ([#614](https://github.com/developmentseed/eoapi-k8s/issues/614)) ([ac652d4](https://github.com/developmentseed/eoapi-k8s/commit/ac652d40efd9063de18b26e2efc42bd922747a08))
+* **deps:** updated helm release prometheus to 29.29.0. ([#617](https://github.com/developmentseed/eoapi-k8s/issues/617)) ([78c5f3c](https://github.com/developmentseed/eoapi-k8s/commit/78c5f3c4d3067377320b00b5e7828adf50348b01))
+* **deps:** updated helm release prometheus to 29.30.0. ([#619](https://github.com/developmentseed/eoapi-k8s/issues/619)) ([07b1007](https://github.com/developmentseed/eoapi-k8s/commit/07b1007c991da33ba67f7a5b6ba6171567c98616))
+
 ## [0.16.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.1...v0.16.2) (2026-09-10)
 
 
