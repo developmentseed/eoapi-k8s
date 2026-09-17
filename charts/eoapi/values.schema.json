@@ -1003,6 +1003,23 @@
             "enabled": {
               "type": "boolean",
               "description": "Enable the service's native Prometheus /metrics endpoint (requires monitoring.prometheus.enabled to be scraped)"
+            },
+            "serviceMonitor": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Create a prometheus-operator ServiceMonitor for this service (requires the ServiceMonitor CRD and metrics.enabled)"
+                },
+                "interval": {
+                  "type": "string",
+                  "description": "Scrape interval, e.g. 30s"
+                },
+                "additionalLabels": {
+                  "type": "object",
+                  "description": "Extra labels to match the cluster's Prometheus CR serviceMonitorSelector"
+                }
+              }
             }
           }
         },

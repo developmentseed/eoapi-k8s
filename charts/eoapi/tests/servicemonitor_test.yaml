@@ -1,0 +1,141 @@
+suite: prometheus-operator ServiceMonitor tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/services/raster/servicemonitor.yaml
+  - templates/services/vector/servicemonitor.yaml
+  - templates/services/stac/servicemonitor.yaml
+  - templates/core/stac-auth-proxy-servicemonitor.yaml
+tests:
+  - it: "raster: disabled by default even with the CRD present"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      raster.enabled: true
+    template: templates/services/raster/servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "raster: serviceMonitor.enabled without metrics.enabled stays skipped"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      raster.enabled: true
+      raster.metrics.serviceMonitor.enabled: true
+    template: templates/services/raster/servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "raster: enabled but CRD absent is skipped, not an error"
+    set:
+      raster.enabled: true
+      raster.metrics.enabled: true
+      raster.metrics.serviceMonitor.enabled: true
+    template: templates/services/raster/servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "raster: enabled with the CRD present renders selector, port, path and interval"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      raster.enabled: true
+      raster.metrics.enabled: true
+      raster.metrics.serviceMonitor.enabled: true
+      raster.metrics.serviceMonitor.interval: 15s
+      raster.metrics.serviceMonitor.additionalLabels:
+        release: prometheus
+    template: templates/services/raster/servicemonitor.yaml
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: RELEASE-NAME-raster
+      - equal:
+          path: spec.endpoints[0].port
+          value: http
+      - equal:
+          path: spec.endpoints[0].path
+          value: /metrics
+      - equal:
+          path: spec.endpoints[0].interval
+          value: 15s
+      - equal:
+          path: metadata.labels.release
+          value: prometheus
+
+  - it: "vector: enabled with the CRD present renders correctly"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      vector.enabled: true
+      vector.metrics.enabled: true
+      vector.metrics.serviceMonitor.enabled: true
+    template: templates/services/vector/servicemonitor.yaml
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: RELEASE-NAME-vector
+      - equal:
+          path: spec.endpoints[0].port
+          value: http
+      - equal:
+          path: spec.endpoints[0].path
+          value: /metrics
+
+  - it: "stac: enabled with the CRD present scrapes /_mgmt/metrics"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      stac.enabled: true
+      stac.metrics.enabled: true
+      stac.metrics.serviceMonitor.enabled: true
+    template: templates/services/stac/servicemonitor.yaml
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: RELEASE-NAME-stac
+      - equal:
+          path: spec.endpoints[0].path
+          value: /_mgmt/metrics
+
+  - it: "stac-auth-proxy: disabled by default even with the CRD present"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      stac-auth-proxy.enabled: true
+    template: templates/core/stac-auth-proxy-servicemonitor.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: "stac-auth-proxy: enabled with the CRD present scrapes the rooted metrics path"
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/ServiceMonitor
+    set:
+      stac-auth-proxy.enabled: true
+      stac-auth-proxy.serviceMonitor.enabled: true
+    template: templates/core/stac-auth-proxy-servicemonitor.yaml
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: stac-auth-proxy
+      - equal:
+          path: spec.endpoints[0].path
+          value: /stac/_mgmt/metrics

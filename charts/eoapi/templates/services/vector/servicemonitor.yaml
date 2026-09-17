@@ -1,0 +1,20 @@
+{{- if and .Values.vector.enabled .Values.vector.metrics.enabled .Values.vector.metrics.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-vector
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vector
+    {{- with .Values.vector.metrics.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-vector
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.vector.metrics.serviceMonitor.interval }}
+{{- end }}

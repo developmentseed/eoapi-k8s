@@ -185,6 +185,33 @@ a dedicated `prometheus.extraScrapeConfigs` entry rather than pod annotations,
 since the vendored `stac-auth-proxy` subchart doesn't yet expose a
 `prometheus.io/scrape` annotation hook.
 
+### Prometheus Operator (ServiceMonitor)
+
+Clusters running [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator)
+(rather than, or alongside, this chart's bundled `monitoring.prometheus`) don't
+discover targets via `prometheus.io/scrape` annotations — their `Prometheus`
+custom resource only picks up `ServiceMonitor` objects matching its
+`serviceMonitorSelector`. Each service above has a matching
+`metrics.serviceMonitor` toggle (`stac-auth-proxy.serviceMonitor` for the proxy)
+that creates one, gated on the `ServiceMonitor` CRD actually being installed:
+
+```yaml
+raster:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      # Match your Prometheus CR's serviceMonitorSelector, e.g. for kube-prometheus-stack:
+      additionalLabels:
+        release: prometheus
+```
+
+Without a matching label, most prometheus-operator installs will silently ignore
+the `ServiceMonitor` — check your `Prometheus` CR's `spec.serviceMonitorSelector`
+for the expected label. This is independent of `monitoring.prometheus.enabled`:
+you can use either mechanism, or both.
+
 ## Pre-built Dashboards
 
 The `eoapi-observability` chart provides ready-to-use dashboards:
