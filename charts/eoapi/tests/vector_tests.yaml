@@ -78,6 +78,9 @@ tests:
           path: metadata.labels.app
           pattern: ^RELEASE-NAME-vector$
       - equal:
+          path: spec.ports[0].name
+          value: http
+      - equal:
           path: metadata.annotations.annotation1
           value: hello
       - equal:

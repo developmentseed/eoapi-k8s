@@ -1,0 +1,22 @@
+{{- $stacAuthProxy := index .Values "stac-auth-proxy" }}
+{{- if and $stacAuthProxy.enabled $stacAuthProxy.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-stac-auth-proxy
+  labels:
+    {{- include "eoapi.labels" . | nindent 4 }}
+    app.kubernetes.io/component: stac-auth-proxy
+    {{- with $stacAuthProxy.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: stac-auth-proxy
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  endpoints:
+    - port: http
+      path: /stac/_mgmt/metrics
+      interval: {{ $stacAuthProxy.serviceMonitor.interval }}
+{{- end }}

@@ -323,6 +323,11 @@ raster:
   # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      additionalLabels: {}  # match your Prometheus CR's serviceMonitorSelector
   autoscaling:
     # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
@@ -464,6 +469,11 @@ stac:
   # Exposes GET /_mgmt/metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      additionalLabels: {}  # match your Prometheus CR's serviceMonitorSelector
   autoscaling:
     # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
@@ -525,6 +535,11 @@ stac-auth-proxy:
     enabled: false  # Handled by main eoapi ingress
   service:
     port: 8080
+  # For prometheus-operator clusters (metrics are on by default here, unlike raster/vector/stac)
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    additionalLabels: {}
   # Production-oriented defaults; override per cluster. Low CPU limits cause throttling under load.
   resources:
     requests:
@@ -596,6 +611,11 @@ vector:
   # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      additionalLabels: {}  # match your Prometheus CR's serviceMonitorSelector
   autoscaling:
     # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
