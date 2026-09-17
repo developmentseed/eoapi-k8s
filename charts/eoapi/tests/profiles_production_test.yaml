@@ -3,6 +3,8 @@ templates:
   - templates/_helpers/services.tpl
   - templates/services/stac/hpa.yaml
   - templates/services/raster/hpa.yaml
+  - charts/grafana/templates/service.yaml
+  - charts/grafana/templates/pvc.yaml
 tests:
   - it: production profile enables stac HPA with adapter metric names
     values:
@@ -32,3 +34,29 @@ tests:
       - equal:
           path: spec.metrics[1].pods.metric.name
           value: nginx_ingress_controller_requests_rate_raster_eoapi
+
+  - it: "production profile's grafana overrides reach the grafana sub-chart"
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: charts/grafana/templates/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: "production profile enables grafana persistence with the configured size"
+    values:
+      - ../profiles/production.yaml
+    set:
+      gitSha: ABC123
+    template: charts/grafana/templates/pvc.yaml
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: spec.resources.requests.storage
+          value: 10Gi

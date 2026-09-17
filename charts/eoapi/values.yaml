@@ -852,26 +852,33 @@ monitoring:
 # Grafana dashboards and visualization (requires monitoring.prometheus.enabled=true)
 observability:
   grafana:
+    # Only the Chart.yaml dependency condition; subchart values go in `grafana:` below.
     enabled: false
-    persistence:
-      enabled: false
-    service:
-      type: LoadBalancer
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-        service.beta.kubernetes.io/aws-load-balancer-internal: "false"
-    resources: {}
-    datasources:
-      datasources.yaml:
-        apiVersion: 1
-        datasources:
-          - name: Prometheus
-            type: prometheus
-            url: "http://{{ .Release.Name }}-prometheus-server"
-            access: proxy
-            isDefault: true
-    dashboardsConfigMaps:
-      default: "{{ .Release.Name }}-dashboards"
+
+# Grafana sub-chart configuration, passed directly to the grafana subchart
+grafana:
+  persistence:
+    enabled: false
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+  resources: {}
+  sidecar:
+    dashboards:
+      enabled: true
+      label: eoapi_dashboard
+      labelValue: "1"
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: "http://{{ .Release.Name }}-prometheus-server"
+          access: proxy
+          isDefault: true
 
 # Metrics Server sub-chart configuration
 # These values are passed directly to the metrics-server sub-chart

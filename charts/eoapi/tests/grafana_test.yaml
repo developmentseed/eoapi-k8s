@@ -1,0 +1,28 @@
+suite: grafana sub-chart wiring tests
+templates:
+  - charts/grafana/templates/deployment.yaml
+  - charts/grafana/templates/configmap.yaml
+tests:
+  - it: "default values wire the dashboard sidecar into the grafana sub-chart"
+    set:
+      observability.grafana.enabled: true
+      gitSha: ABC123
+    template: charts/grafana/templates/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: grafana-sc-dashboard
+
+  - it: "default values wire the Prometheus datasource into the grafana sub-chart"
+    set:
+      observability.grafana.enabled: true
+      gitSha: ABC123
+    template: charts/grafana/templates/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["datasources.yaml"]
+          pattern: "prometheus-server"

@@ -88,15 +88,20 @@ prometheus:
 
 #### Observability Chart Configuration
 
+`observability.grafana.enabled` is only the on/off switch (it's the `condition` on
+the `grafana` dependency in `Chart.yaml`); actual subchart configuration -
+persistence, service type, resources, datasources - must go under the top-level
+`grafana:` key instead, matching the dependency name:
+
 ```yaml
+observability:
+  grafana:
+    enabled: true
+
 # Basic Grafana setup
 grafana:
-  enabled: true
   service:
     type: LoadBalancer
-
-# Connect to external Prometheus (if not using eoapi's Prometheus)
-prometheusUrl: "http://prometheus.monitoring.svc.cluster.local"
 
 # Production Grafana configuration
 grafana:
