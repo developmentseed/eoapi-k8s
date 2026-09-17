@@ -290,28 +290,29 @@ prometheus:
 observability:
   grafana:
     enabled: true
-    persistence:
-      enabled: false
-    service:
-      type: ClusterIP
-    resources:
-      limits:
-        cpu: "100m"
-        memory: "200Mi"
-      requests:
-        cpu: "50m"
-        memory: "100Mi"
-    datasources:
-      datasources.yaml:
-        apiVersion: 1
-        datasources:
-          - name: Prometheus
-            type: prometheus
-            url: "http://{{ .Release.Name }}-prometheus-server"
-            access: proxy
-            isDefault: true
-    dashboardsConfigMaps:
-      default: "{{ .Release.Name }}-dashboards"
+
+# Grafana sub-chart configuration (observability.grafana.enabled above is just the condition flag)
+grafana:
+  persistence:
+    enabled: false
+  service:
+    type: ClusterIP
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "200Mi"
+    requests:
+      cpu: "50m"
+      memory: "100Mi"
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: "http://{{ .Release.Name }}-prometheus-server"
+          access: proxy
+          isDefault: true
 
 ######################
 # AUTOSCALING

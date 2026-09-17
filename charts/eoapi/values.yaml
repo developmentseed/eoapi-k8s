@@ -319,6 +319,10 @@ raster:
   ingress:
     enabled: true  # Control ingress specifically for raster service
     path: "/raster"  # Configurable path prefix for the raster service
+  # Native titiler-pgstac Prometheus metrics (https://github.com/developmentseed/eoAPI/issues/193).
+  # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
+  metrics:
+    enabled: false
   autoscaling:
     # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
@@ -456,6 +460,10 @@ stac:
   ingress:
     enabled: true  # Control ingress specifically for stac service
     path: "/stac"  # Configurable path prefix for the stac service
+  # Native stac-fastapi-pgstac Prometheus metrics (https://github.com/developmentseed/eoAPI/issues/193).
+  # Exposes GET /_mgmt/metrics; requires monitoring.prometheus.enabled=true to be scraped.
+  metrics:
+    enabled: false
   autoscaling:
     # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
@@ -584,6 +592,10 @@ vector:
   ingress:
     enabled: true  # Control ingress specifically for vector service
     path: "/vector"  # Configurable path prefix for the vector service
+  # Native tipg Prometheus metrics (https://github.com/developmentseed/eoAPI/issues/193).
+  # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
+  metrics:
+    enabled: false
   autoscaling:
     # NOTE: to have autoscaling working you'll need to enable monitoring
     # see ../../../docs/autoscaling.md for more information
@@ -840,26 +852,33 @@ monitoring:
 # Grafana dashboards and visualization (requires monitoring.prometheus.enabled=true)
 observability:
   grafana:
+    # Only the Chart.yaml dependency condition; subchart values go in `grafana:` below.
     enabled: false
-    persistence:
-      enabled: false
-    service:
-      type: LoadBalancer
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-        service.beta.kubernetes.io/aws-load-balancer-internal: "false"
-    resources: {}
-    datasources:
-      datasources.yaml:
-        apiVersion: 1
-        datasources:
-          - name: Prometheus
-            type: prometheus
-            url: "http://{{ .Release.Name }}-prometheus-server"
-            access: proxy
-            isDefault: true
-    dashboardsConfigMaps:
-      default: "{{ .Release.Name }}-dashboards"
+
+# Grafana sub-chart configuration, passed directly to the grafana subchart
+grafana:
+  persistence:
+    enabled: false
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-internal: "false"
+  resources: {}
+  sidecar:
+    dashboards:
+      enabled: true
+      label: eoapi_dashboard
+      labelValue: "1"
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: "http://{{ .Release.Name }}-prometheus-server"
+          access: proxy
+          isDefault: true
 
 # Metrics Server sub-chart configuration
 # These values are passed directly to the metrics-server sub-chart
@@ -882,6 +901,27 @@ prometheus:
   server:
     service:
       type: ClusterIP  # Internal service, no external exposure by default
+  # Scrapes the stac-auth-proxy pod directly by pod label, since the vendored
+  # stac-auth-proxy subchart doesn't expose a prometheus.io/scrape annotation hook.
+  # No-op (zero matched targets) when stac-auth-proxy.enabled=false.
+  # Metrics endpoint is on by default since stac-auth-proxy v1.2.0
+  # (https://github.com/developmentseed/eoAPI/issues/193); the path is prefixed
+  # with stac-auth-proxy.env.ROOT_PATH because RemoveRootPathMiddleware strips it
+  # from incoming requests before routing. Port 8000 is the subchart's hardcoded
+  # containerPort (its own values.service.port only affects the k8s Service, not
+  # the pod) - keep this in sync if the vendored chart ever changes it.
+  extraScrapeConfigs: |
+    - job_name: stac-auth-proxy
+      metrics_path: /stac/_mgmt/metrics
+      kubernetes_sd_configs:
+        - role: pod
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+          action: keep
+          regex: stac-auth-proxy
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          action: keep
+          regex: "8000"
 
 # Prometheus Adapter sub-chart configuration
 # These values are passed directly to the prometheus-adapter sub-chart.

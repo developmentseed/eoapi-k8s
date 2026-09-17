@@ -31,6 +31,11 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/services/stac/configmap.yaml") . | sha256sum }}
+        {{- if .Values.stac.metrics.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.port }}"
+        prometheus.io/path: "/_mgmt/metrics"
+        {{- end }}
       labels:
         {{- include "eoapi.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: stac
@@ -104,6 +109,10 @@ spec:
         env:
           {{- include "eoapi.postgresqlEnv" . | nindent 10 }}
           {{- include "eoapi.commonEnvVars" (dict "service" "stac" "root" .) | nindent 10 }}
+          {{- if .Values.stac.metrics.enabled }}
+          - name: ENABLE_METRICS
+            value: "true"
+          {{- end }}
         envFrom:
           - configMapRef:
               name: {{ .Release.Name }}-stac-envvar-configmap
