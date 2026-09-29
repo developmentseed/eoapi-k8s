@@ -13,6 +13,7 @@
     "azure.md": { "title": "Azure AKS Setup", "slug": "azure" },
     "manage-data.md": { "title": "Data Management", "slug": "manage-data" },
     "autoscaling.md": { "title": "Autoscaling & Monitoring", "slug": "autoscaling" },
+    "observability.md": { "title": "Observability", "slug": "observability" },
     "stac-auth-proxy.md": { "title": "STAC Auth Proxy", "slug": "stac-auth-proxy" },
     "release.md": { "title": "Release Workflow", "slug": "release" },
     "README.md": { "title": "Documentation Guide", "slug": "docs-readme" }
@@ -40,7 +41,8 @@
       "title": "Operations",
       "children": [
         { "title": "Data Management", "file": "manage-data.md" },
-        { "title": "Autoscaling & Monitoring", "file": "autoscaling.md" }
+        { "title": "Autoscaling & Monitoring", "file": "autoscaling.md" },
+        { "title": "Observability", "file": "observability.md" }
       ]
     },
     {
