@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.16.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.3...v0.16.4) (2026-09-29)
+
+
+### Fixed
+
+* **docs:** included observability docs in rendering. ([eba8dba](https://github.com/developmentseed/eoapi-k8s/commit/eba8dba4abf09a985c17103fabde67dc40887118))
+
+
+### Maintenance
+
+* **deps:** updated helm release prometheus to 29.30.2. ([#629](https://github.com/developmentseed/eoapi-k8s/issues/629)) ([1eda716](https://github.com/developmentseed/eoapi-k8s/commit/1eda71672e06533be63764b6904b8579fbfce722))
+* **deps:** updated helm release prometheus to 29.33.0. ([#631](https://github.com/developmentseed/eoapi-k8s/issues/631)) ([e54b841](https://github.com/developmentseed/eoapi-k8s/commit/e54b841ae00016de3f19caa41a1296ce7b99716c))
+* **deps:** updated helm release prometheus to 29.33.1. ([#633](https://github.com/developmentseed/eoapi-k8s/issues/633)) ([76e83fe](https://github.com/developmentseed/eoapi-k8s/commit/76e83feb396059a44d79ce1eb2c763cab3786f88))
+* **deps:** updated helm release prometheus to 29.35.0. ([#634](https://github.com/developmentseed/eoapi-k8s/issues/634)) ([cf23fc6](https://github.com/developmentseed/eoapi-k8s/commit/cf23fc6bc356198143d221a9b881bfb5622fd1c8))
+
 ## [0.16.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.2...v0.16.3) (2026-09-17)
 
 
