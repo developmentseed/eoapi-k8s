@@ -9,6 +9,7 @@ templates:
   - templates/core/cloudevents-sink.yaml
   - templates/core/knative-init.yaml
   - templates/testing/deployment.yaml
+  - templates/database/pgstacbootstrap/job.yaml
 tests:
   - it: stac deployment uses default image and pullPolicy
     template: templates/services/stac/deployment.yaml
@@ -52,6 +53,20 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: nginxinc/nginx-unprivileged:1.27.4-alpine
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: pgstac-migrate job uses digest-pinned pgstac image by default
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pgstac-migrate
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/stac-utils/pgstac-pypgstac:v0.9.12@sha256:672faad776b55afe15fadb27589c390c4fc93de5bc73e8889d2c29a600c5dba4
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent

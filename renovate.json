@@ -104,7 +104,7 @@
       "description": "Update container image tags in Helm values files",
       "managerFilePatterns": ["/charts/.+/values\\.ya?ml$/"],
       "matchStrings": [
-        "(?<depName>ghcr\\.io/[^\\s]+?)\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
+        "(?<depName>ghcr\\.io/[^\\s]+?)\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\\s\"'@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
       ],
       "datasourceTemplate": "docker",
       "registryUrlTemplate": "https://ghcr.io",
