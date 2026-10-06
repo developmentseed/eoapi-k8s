@@ -42,14 +42,14 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-pgstac-analyze
 
-  - it: should NOT create the analyze job when analyzeAfterBootstrap is false
+  - it: should NOT create the analyze job when analyze is scheduled
     set:
       pgstacBootstrap:
         enabled: true
         settings:
           loadSamples: false
           queryables: []
-          analyzeAfterBootstrap: false
+          analyze: scheduled
     template: templates/database/pgstacbootstrap/job.yaml
     asserts:
       - hasDocuments:
@@ -84,3 +84,18 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: "512Mi"
+
+  - it: should append extraEnv to every bootstrap job
+    set:
+      pgstacBootstrap:
+        settings:
+          extraEnv:
+            - name: PGOPTIONS
+              value: "-c statement_timeout=0"
+    template: templates/database/pgstacbootstrap/job.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PGOPTIONS
+            value: "-c statement_timeout=0"

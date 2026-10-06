@@ -341,6 +341,27 @@
               "type": "boolean",
               "description": "Load sample data"
             },
+            "analyze": {
+              "type": "string",
+              "enum": [
+                "off",
+                "afterBootstrap",
+                "scheduled",
+                "both"
+              ],
+              "default": "afterBootstrap",
+              "description": "When to run ANALYZE"
+            },
+            "extraEnv": {
+              "type": "array",
+              "description": "Extra env vars for pgstac Jobs/CronJobs",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name"
+                ]
+              }
+            },
             "user": {
               "type": "string",
               "description": "Database user"
@@ -355,7 +376,7 @@
             },
             "securityContext": {
               "type": "object",
-              "description": "Container-level securityContext shared by all pgstacBootstrap Jobs/CronJobs (migrate, load-samples, load-queryables, superuser-init-db, extent-updater, queue-processor)"
+              "description": "Container-level securityContext shared by all pgstacBootstrap Jobs/CronJobs (migrate, load-samples, load-queryables, superuser-init-db, maintenance, queue-processor)"
             },
             "podSecurityContext": {
               "type": "object",
@@ -387,10 +408,11 @@
                   "type": "string",
                   "enum": [
                     "true",
-                    "false"
+                    "false",
+                    "scheduled"
                   ],
                   "default": "true",
-                  "description": "Auto-update collection extents when items are added/modified"
+                  "description": "Update collection extents on item writes (true), never (false), or via the maintenance CronJob (scheduled)"
                 },
                 "context": {
                   "type": "string",
@@ -427,17 +449,41 @@
                   "type": "string",
                   "default": "0 * * * *",
                   "description": "Cron schedule for processing queued queries"
+                },
+                "activeDeadlineSeconds": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "Maximum runtime per run in seconds"
+                },
+                "resources": {
+                  "type": "object",
+                  "description": "Resource requirements"
                 }
               }
             },
-            "extentUpdater": {
+            "maintenance": {
               "type": "object",
-              "description": "Extent updater CronJob configuration (active when update_collection_extent is false)",
+              "description": "Maintenance CronJob configuration",
               "properties": {
                 "schedule": {
                   "type": "string",
                   "default": "0 2 * * *",
-                  "description": "Cron schedule for updating collection extents"
+                  "description": "Cron schedule"
+                },
+                "activeDeadlineSeconds": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "Maximum runtime per run in seconds"
+                },
+                "resources": {
+                  "type": "object",
+                  "description": "Resource requirements"
                 }
               }
             },

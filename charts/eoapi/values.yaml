@@ -223,7 +223,8 @@ pgstacBootstrap:
   settings:
     # General configuration options
     loadSamples: true
-    analyzeAfterBootstrap: true
+    # ANALYZE: "off", "afterBootstrap" (hook), "scheduled" (maintenance CronJob) or "both"
+    analyze: "afterBootstrap"
 
     # Queryables configuration
     # List of queryables configurations to load using pypgstac load-queryables
@@ -258,7 +259,7 @@ pgstacBootstrap:
       use_queue: "false"                 # Enable/disable query queue mechanism
 
       # Collection extent management
-      update_collection_extent: "true"   # Auto-update collection extents when items are added/modified
+      update_collection_extent: "true"   # "true" (on item writes), "false" or "scheduled" (maintenance CronJob)
 
       # Context configuration for search results
       context: "off"                     # Context mode: "on", "off", or "auto" (pgSTAC default: off)
@@ -269,10 +270,32 @@ pgstacBootstrap:
     # Queue processing configuration (only used when use_queue is "true")
     queueProcessor:
       schedule: "0 * * * *"               # Run every hour
+      activeDeadlineSeconds: null
+      resources:
+        limits:
+          cpu: "256m"
+          memory: "512Mi"
+        requests:
+          cpu: "128m"
+          memory: "256Mi"
 
-    # Extent updater configuration (only used when update_collection_extent is "false")
-    extentUpdater:
+    # Maintenance CronJob (used when update_collection_extent is "scheduled" or analyze is "scheduled"/"both")
+    maintenance:
       schedule: "0 2 * * *"               # Run daily at 2 AM
+      activeDeadlineSeconds: null
+      resources:
+        limits:
+          cpu: "512m"
+          memory: "1024Mi"
+        requests:
+          cpu: "256m"
+          memory: "512Mi"
+
+    # Extra env vars for pgstac Jobs/CronJobs (not the API services)
+    extraEnv: []
+    # extraEnv:
+    #   - name: PGOPTIONS
+    #     value: "-c statement_timeout=0"
 
     # Wait configuration for init containers waiting for pgstac jobs
     # These parameters control how long services wait for pgstac migration jobs to complete
@@ -293,7 +316,7 @@ pgstacBootstrap:
       LOAD_FIXTURES: "true"
     # Container securityContext applied to all pgstacBootstrap Jobs/CronJobs
     # (pgstac-migrate, pgstac-load-samples, pgstac-load-queryables, pgstac-analyze,
-    # pgstac-superuser-init-db, pgstac-extent-updater, pgstac-queue-processor)
+    # pgstac-superuser-init-db, pgstac-maintenance, pgstac-queue-processor)
     securityContext: {}
     # Pod-level securityContext applied to the same set of Jobs/CronJobs
     podSecurityContext: {}

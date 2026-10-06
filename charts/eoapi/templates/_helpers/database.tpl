@@ -12,6 +12,16 @@ PostgreSQL environment variables based on the configured type
 {{- end }}
 
 {{/*
+Environment for pgstacBootstrap Jobs/CronJobs: PostgreSQL env plus settings.extraEnv
+*/}}
+{{- define "eoapi.pgstacBootstrapEnv" -}}
+{{- include "eoapi.postgresqlEnv" . }}
+{{- with .Values.pgstacBootstrap.settings.extraEnv }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
 PostgreSQL cluster secrets
 */}}
 {{- define "eoapi.postgresclusterSecrets" -}}

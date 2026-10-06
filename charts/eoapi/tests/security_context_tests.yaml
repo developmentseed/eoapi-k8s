@@ -19,7 +19,7 @@ templates:
   - templates/core/cloudevents-sink.yaml
   - templates/database/pgstacbootstrap/job.yaml
   - templates/database/pgstacbootstrap/eoap-superuser-initdb.yaml
-  - templates/database/pgstacbootstrap/extent-updater.yaml
+  - templates/database/pgstacbootstrap/maintenance.yaml
   - templates/database/pgstacbootstrap/queue-processor.yaml
 set:
   pgstacBootstrap:
@@ -207,14 +207,14 @@ tests:
           value:
             runAsNonRoot: true
 
-  - it: pgstacBootstrap.settings.securityContext applies to the extent-updater cronjob
+  - it: pgstacBootstrap.settings.securityContext applies to the maintenance cronjob
     set:
-      pgstacBootstrap.settings.pgstacSettings.update_collection_extent: "false"
+      pgstacBootstrap.settings.pgstacSettings.update_collection_extent: "scheduled"
       pgstacBootstrap.settings.securityContext:
         allowPrivilegeEscalation: false
       pgstacBootstrap.settings.podSecurityContext:
         runAsNonRoot: true
-    template: templates/database/pgstacbootstrap/extent-updater.yaml
+    template: templates/database/pgstacbootstrap/maintenance.yaml
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].securityContext

@@ -1,54 +1,60 @@
 {{- if .Values.pgstacBootstrap.enabled }}
-{{- if .Values.pgstacBootstrap.settings.pgstacSettings }}
-{{- if eq (default "false" .Values.pgstacBootstrap.settings.pgstacSettings.update_collection_extent) "false" }}
+{{- $extents := eq .Values.pgstacBootstrap.settings.pgstacSettings.update_collection_extent "scheduled" }}
+{{- $analyze := has .Values.pgstacBootstrap.settings.analyze (list "scheduled" "both") }}
+{{- if or $extents $analyze }}
+{{- $maintenance := .Values.pgstacBootstrap.settings.maintenance }}
 ---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ .Release.Name }}-pgstac-extent-updater
+  name: {{ .Release.Name }}-pgstac-maintenance
   labels:
     {{- include "eoapi.labels" . | nindent 4 }}
-    app.kubernetes.io/component: pgstac-extents
+    app.kubernetes.io/component: pgstac-maintenance
 spec:
-  schedule: {{ .Values.pgstacBootstrap.settings.extentUpdater.schedule | quote }}
+  schedule: {{ $maintenance.schedule | quote }}
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 1
+      {{- with $maintenance.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
       template:
         metadata:
           labels:
             {{- include "eoapi.labels" . | nindent 12 }}
-            app.kubernetes.io/component: pgstac-extents
+            app.kubernetes.io/component: pgstac-maintenance
         spec:
-          restartPolicy: OnFailure
+          restartPolicy: Never
           {{- with .Values.pgstacBootstrap.settings.podSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           containers:
-          - name: extent-updater
+          - name: maintenance
             image: {{ include "eoapi.containerImage" .Values.pgstacBootstrap.image }}
             imagePullPolicy: {{ .Values.pgstacBootstrap.image.pullPolicy | default "IfNotPresent" }}
             command:
               - "/bin/sh"
               - "-c"
               - |
+                set -e
+                {{- if $extents }}
                 psql -c "SELECT update_collection_extents();"
+                {{- end }}
+                {{- if $analyze }}
+                psql -c "ANALYZE;"
+                {{- end }}
             env:
-              {{- include "eoapi.postgresqlEnv" . | nindent 14 }}
+              {{- include "eoapi.pgstacBootstrapEnv" . | nindent 14 }}
             resources:
-              limits:
-                cpu: "512m"
-                memory: "1024Mi"
-              requests:
-                cpu: "256m"
-                memory: "512Mi"
+              {{- toYaml $maintenance.resources | nindent 14 }}
             {{- with .Values.pgstacBootstrap.settings.securityContext }}
             securityContext:
               {{- toYaml . | nindent 14 }}
             {{- end }}
-{{- end }}
 {{- end }}
 {{- end }}
