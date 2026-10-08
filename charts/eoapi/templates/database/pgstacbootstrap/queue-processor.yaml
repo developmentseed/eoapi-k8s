@@ -39,7 +39,7 @@ spec:
               - "/bin/sh"
               - "-c"
               - |
-                psql -c "CALL pgstac.run_queued_queries();"
+                psql -c "SET search_path TO pgstac, public" -c "CALL pgstac.run_queued_queries();"
             env:
               {{- include "eoapi.pgstacBootstrapEnv" . | nindent 14 }}
             resources:
