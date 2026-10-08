@@ -43,7 +43,7 @@ spec:
               - |
                 set -e
                 {{- if $extents }}
-                psql -c "SELECT update_collection_extents();"
+                psql -c "SELECT pgstac.update_collection_extents();"
                 {{- end }}
                 {{- if $analyze }}
                 psql -c "ANALYZE;"
