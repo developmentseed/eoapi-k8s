@@ -101,9 +101,10 @@ tests:
       - equal:
           path: spec.schedule
           value: "*/15 * * * *"
-      - matchRegex:
+      - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
-          pattern: "CALL run_queued_queries\\(\\);"
+          value: |
+            psql -c "CALL pgstac.run_queued_queries();"
 
   # Maintenance Tests
   - it: should create maintenance when update_collection_extent is scheduled
@@ -132,7 +133,7 @@ tests:
           path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
           value: |
             set -e
-            psql -c "SELECT update_collection_extents();"
+            psql -c "SELECT pgstac.update_collection_extents();"
 
   - it: should NOT create maintenance when update_collection_extent is false
     set:
@@ -169,7 +170,7 @@ tests:
           path: spec.jobTemplate.spec.template.spec.containers[0].command[2]
           value: |
             set -e
-            psql -c "SELECT update_collection_extents();"
+            psql -c "SELECT pgstac.update_collection_extents();"
             psql -c "ANALYZE;"
       - equal:
           path: spec.jobTemplate.spec.activeDeadlineSeconds
