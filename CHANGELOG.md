@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.1...v0.17.2) (2026-10-08)
+
+
+### Fixed
+
+* **pgstac:** set search_path in maintenance and queue-processor psql sessions ([#645](https://github.com/developmentseed/eoapi-k8s/issues/645)) ([6a9c763](https://github.com/developmentseed/eoapi-k8s/commit/6a9c7634e92fe9f77351453638edcf1f84c69eb7))
+
 ## [0.17.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.0...v0.17.1) (2026-10-08)
 
 
