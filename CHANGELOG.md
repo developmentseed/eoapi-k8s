@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.17.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.4...v0.17.0) (2026-10-08)
+
+
+### Added
+
+* **pgstac:** add scheduled maintenance service ([#637](https://github.com/developmentseed/eoapi-k8s/issues/637)) ([aa53926](https://github.com/developmentseed/eoapi-k8s/commit/aa53926e083e00126d86a5a144db7a3369eb4ef8))
+
+
+### Maintenance
+
+* **deps:** updated actions/setup-node digest to 949feb2 ([#642](https://github.com/developmentseed/eoapi-k8s/issues/642)) ([6a7e9f8](https://github.com/developmentseed/eoapi-k8s/commit/6a7e9f8c6f5529dcf9c6ee1d5f7d863d28cc41ce))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v7.1.0 ([#638](https://github.com/developmentseed/eoapi-k8s/issues/638)) ([4635e4c](https://github.com/developmentseed/eoapi-k8s/commit/4635e4c636f5cdfbe7aa2fcc75e00cca448e7fc0))
+* **deps:** updated helm release prometheus to 29.36.0. ([#641](https://github.com/developmentseed/eoapi-k8s/issues/641)) ([2877eb9](https://github.com/developmentseed/eoapi-k8s/commit/2877eb98923e232fcb6a7c839b15c41b3f6f64bf))
+* **deps:** updated stac-auth-proxy docker tag to v1.3.0 ([#639](https://github.com/developmentseed/eoapi-k8s/issues/639)) ([fdb78b4](https://github.com/developmentseed/eoapi-k8s/commit/fdb78b431c5427cbec556acffac8422b359ea407))
+
 ## [0.16.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.3...v0.16.4) (2026-10-05)
 
 
