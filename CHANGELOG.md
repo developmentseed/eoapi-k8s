@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.0...v0.17.1) (2026-10-08)
+
+
+### Fixed
+
+* **pgstac:** maintenance job failing for roles without pgstac in search_path ([#643](https://github.com/developmentseed/eoapi-k8s/issues/643)) ([a43029a](https://github.com/developmentseed/eoapi-k8s/commit/a43029ae025ebb1cf0ab36563cc7600750537c85))
+
 ## [0.17.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.16.4...v0.17.0) (2026-10-08)
 
 
