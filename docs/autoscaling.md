@@ -150,7 +150,7 @@ and on schedules, often when the APIs are also busy:
 | pgSTAC bootstrap + migrate jobs (`pgstacBootstrap`) | Every install/upgrade | A few, short-lived |
 | pgSTAC post-install/upgrade hooks | Every install/upgrade | A few, short-lived |
 | `queueProcessor` CronJob | When `pgstacSettings.use_queue: "true"` | A few, on schedule |
-| `extentUpdater` CronJob | When `pgstacSettings.update_collection_extent: "false"` | A few, on schedule |
+| `maintenance` CronJob | When `update_collection_extent: "scheduled"` or `analyze: scheduled\|both` | A few, on schedule |
 | `eoapi-notifier` | When enabled | 1+ persistent (`LISTEN`) |
 
 Also reserve rolling-update headroom: during a Deployment rollout Kubernetes starts new pods before

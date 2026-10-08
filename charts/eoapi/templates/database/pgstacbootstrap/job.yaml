@@ -75,7 +75,7 @@ spec:
             - mountPath: /opt/settings
               name: {{ .Release.Name }}-pgstac-settings-volume
           env:
-            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
+            {{- include "eoapi.pgstacBootstrapEnv" . | nindent 12 }}
       volumes:
         - name: {{ .Release.Name }}-pgstac-settings-volume
           configMap:
@@ -152,7 +152,7 @@ spec:
             - mountPath: /opt/data
               name: {{ .Release.Name }}-initdb-json-volume
           env:
-            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
+            {{- include "eoapi.pgstacBootstrapEnv" . | nindent 12 }}
       volumes:
         - name: {{ .Release.Name }}-initdb-sql-volume
           configMap:
@@ -255,7 +255,7 @@ spec:
             {{- end }}
             {{- end }}
           env:
-            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
+            {{- include "eoapi.pgstacBootstrapEnv" . | nindent 12 }}
       volumes:
         {{- $hasFileBasedQueryables := false }}
         {{- range $config := .Values.pgstacBootstrap.settings.queryables }}
@@ -293,7 +293,7 @@ spec:
   backoffLimit: 3
 {{- end }}
 
-{{- if and .Values.pgstacBootstrap.enabled .Values.pgstacBootstrap.settings.analyzeAfterBootstrap }}
+{{- if and .Values.pgstacBootstrap.enabled (has .Values.pgstacBootstrap.settings.analyze (list "afterBootstrap" "both")) }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -341,7 +341,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
-            {{- include "eoapi.postgresqlEnv" . | nindent 12 }}
+            {{- include "eoapi.pgstacBootstrapEnv" . | nindent 12 }}
       {{- with .Values.pgstacBootstrap.settings.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

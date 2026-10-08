@@ -10,7 +10,7 @@ INSERT INTO pgstac.pgstac_settings (name, value) VALUES ('use_queue', '{{ .Value
 
 -- Collection extent management
 DELETE FROM pgstac.pgstac_settings WHERE name = 'update_collection_extent';
-INSERT INTO pgstac.pgstac_settings (name, value) VALUES ('update_collection_extent', '{{ .Values.pgstacBootstrap.settings.pgstacSettings.update_collection_extent }}');
+INSERT INTO pgstac.pgstac_settings (name, value) VALUES ('update_collection_extent', '{{ .Values.pgstacBootstrap.settings.pgstacSettings.update_collection_extent | replace "scheduled" "false" }}');
 
 -- Context settings
 DELETE FROM pgstac.pgstac_settings WHERE name = 'context';

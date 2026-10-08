@@ -16,13 +16,17 @@ spec:
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 1
+      {{- with .Values.pgstacBootstrap.settings.queueProcessor.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
       template:
         metadata:
           labels:
             {{- include "eoapi.labels" . | nindent 12 }}
             app.kubernetes.io/component: pgstac-queue
         spec:
-          restartPolicy: OnFailure
+          restartPolicy: Never
           {{- with .Values.pgstacBootstrap.settings.podSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -37,14 +41,9 @@ spec:
               - |
                 psql -c "CALL run_queued_queries();"
             env:
-              {{- include "eoapi.postgresqlEnv" . | nindent 14 }}
+              {{- include "eoapi.pgstacBootstrapEnv" . | nindent 14 }}
             resources:
-              limits:
-                cpu: "256m"
-                memory: "512Mi"
-              requests:
-                cpu: "128m"
-                memory: "256Mi"
+              {{- toYaml .Values.pgstacBootstrap.settings.queueProcessor.resources | nindent 14 }}
             {{- with .Values.pgstacBootstrap.settings.securityContext }}
             securityContext:
               {{- toYaml . | nindent 14 }}

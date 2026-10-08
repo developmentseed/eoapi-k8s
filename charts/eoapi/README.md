@@ -140,7 +140,8 @@ pgstacBootstrap:
 | `ingress.className` | Ingress controller class | `nginx` |
 | `browser.enabled` | Enable STAC Browser interface | `true` |
 | `pgstacBootstrap.enabled` | Enable database initialization | `true` |
-| `pgstacBootstrap.settings.analyzeAfterBootstrap` | Run `ANALYZE` after bootstrap so freshly (re)built indexes get planner statistics immediately | `true` |
+| `pgstacBootstrap.settings.analyze` | When to run `ANALYZE`: `off`, `afterBootstrap`, `scheduled` or `both` | `afterBootstrap` |
+| `pgstacBootstrap.settings.extraEnv` | Extra env vars for pgstac Jobs/CronJobs, e.g. `PGOPTIONS` | `[]` |
 | `notifications.sources.pgstac` | Enable PostgreSQL notification triggers for STAC item changes | `false` |
 
 ### Resource Configuration
@@ -203,7 +204,7 @@ The same `securityContext`/`podSecurityContext` keys are available under
 `raster.settings`, `vector.settings`, `multidim.settings`, `browser.settings`,
 `docServer.settings`, `pgstacBootstrap.settings` (shared by all pgstac Jobs
 and CronJobs: migrate, load-samples, load-queryables, analyze, superuser-init-db,
-extent-updater, queue-processor), `pgstacBootstrap.settings.initContainerSecurityContext`
+maintenance, queue-processor), `pgstacBootstrap.settings.initContainerSecurityContext`
 (container-level only, for the `wait-for-pgstac-jobs` init container),
 `knative.jobs.init`, `knative.cloudEventsSink`, and `testing.mockOidcServer`
 (test infrastructure only).
