@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.17.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.2...v0.17.3) (2026-10-09)
+
+
+### Maintenance
+
+* add repository to stac-auth-proxy in values.yaml ([#649](https://github.com/developmentseed/eoapi-k8s/issues/649)) ([d46a31a](https://github.com/developmentseed/eoapi-k8s/commit/d46a31af58d83466154a1a5b9cd2e0b7658152b1))
+* **deps:** updated helm release prometheus to 29.36.1. ([#647](https://github.com/developmentseed/eoapi-k8s/issues/647)) ([4cd2f1d](https://github.com/developmentseed/eoapi-k8s/commit/4cd2f1d186963ea980e18d182ec3a3bda635b5bc))
+
 ## [0.17.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.1...v0.17.2) (2026-10-08)
 
 
