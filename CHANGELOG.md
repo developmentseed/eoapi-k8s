@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.17.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.3...v0.17.4) (2026-10-16)
+
+
+### Maintenance
+
+* **deps:** updated actions/create-github-app-token action to v3.3.0. ([#652](https://github.com/developmentseed/eoapi-k8s/issues/652)) ([df13e66](https://github.com/developmentseed/eoapi-k8s/commit/df13e665045fc3cc5ae81a7108e91f2f48e06828))
+* **deps:** updated helm release prometheus to 29.36.2. ([#653](https://github.com/developmentseed/eoapi-k8s/issues/653)) ([e82cbe2](https://github.com/developmentseed/eoapi-k8s/commit/e82cbe28fb8ffad0796b1655ae4a00808c2198fd))
+* **deps:** updated helm release prometheus to 29.37.0. ([#654](https://github.com/developmentseed/eoapi-k8s/issues/654)) ([1116ccf](https://github.com/developmentseed/eoapi-k8s/commit/1116ccf6068fd049e93a187c84bb40122c4352d2))
+* **deps:** updated python to 3.15.0. ([#650](https://github.com/developmentseed/eoapi-k8s/issues/650)) ([97f8cd5](https://github.com/developmentseed/eoapi-k8s/commit/97f8cd5c4b06aab0f8bcd9f528d19c662a11964c))
+
 ## [0.17.3](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.2...v0.17.3) (2026-10-09)
 
 
