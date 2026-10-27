@@ -554,7 +554,7 @@ stac-auth-proxy:
   enabled: false
   image:
     repository: ghcr.io/developmentseed/stac-auth-proxy
-    tag: "v1.3.0"
+    tag: "v1.3.1"
   ingress:
     enabled: false  # Handled by main eoapi ingress
   service:
