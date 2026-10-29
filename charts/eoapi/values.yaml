@@ -162,7 +162,7 @@ pgstacBootstrap:
   enabled: true
   image:
     name: ghcr.io/stac-utils/pgstac-pypgstac
-    tag: v0.9.12@sha256:672faad776b55afe15fadb27589c390c4fc93de5bc73e8889d2c29a600c5dba4
+    tag: v0.10.0@sha256:b7d0a6caf9a51717ca78fe871b6615ae1b2004de725e700209c21de3e4b40701
     pullPolicy: IfNotPresent
   # kubectl image used by service initContainers waiting on pgstac jobs
   waitImage:
