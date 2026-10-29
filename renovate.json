@@ -39,7 +39,6 @@
     },
     {
       "description": "STAC ecosystem container images - individual PRs",
-      "matchManagers": ["helm-values"],
       "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "matchPackageNames": [
         "/ghcr.io/stac-utils/pgstac-pypgstac/",
@@ -48,11 +47,10 @@
       ],
       "automerge": false,
       "platformAutomerge": false,
-      "labels": ["dependencies", "container-images", "stac"]
+      "addLabels": ["container-images", "stac"]
     },
     {
       "description": "Development Seed container images - individual PRs",
-      "matchManagers": ["helm-values"],
       "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "matchPackageNames": [
         "/ghcr.io/developmentseed/tipg/",
@@ -60,11 +58,44 @@
       ],
       "automerge": false,
       "platformAutomerge": false,
-      "labels": ["dependencies", "container-images", "developmentseed"]
+      "addLabels": ["container-images", "developmentseed"]
+    },
+    {
+      "description": "stac-auth-proxy subchart (Chart.yaml) and its image override (values.yaml) in one PR",
+      "matchDepNames": ["stac-auth-proxy", "ghcr.io/developmentseed/stac-auth-proxy"],
+      "groupName": "stac-auth-proxy",
+      "separateMinorPatch": false
+    },
+    {
+      "description": "PGO operator: bump the vendored charts/postgrescluster (same version) in the same PR, so approve from the Dependency Dashboard",
+      "matchDepNames": ["pgo"],
+      "dependencyDashboardApproval": true,
+      "addLabels": ["manual-review"]
+    },
+    {
+      "description": "Hold pgstac on 0.9: #635 rolled back from the breaking v0.10.0 and titiler-pgstac 3.2.0 supports pgstac >=0.9,<0.10. Lift together with titiler-pgstac",
+      "matchPackageNames": ["ghcr.io/stac-utils/pgstac-pypgstac"],
+      "allowedVersions": "/^v0\\.9\\./"
+    },
+    {
+      "description": "Offer each kubectl minor separately, so a one-minor step can be approved",
+      "matchPackageNames": ["alpine/kubectl"],
+      "separateMultipleMinor": true
+    },
+    {
+      "description": "nginx: one PR per new version, not a patch PR plus a minor PR",
+      "matchPackageNames": ["nginxinc/nginx-unprivileged"],
+      "separateMinorPatch": false
+    },
+    {
+      "description": "kubectl must stay within one minor of the cluster (chart kubeVersion >=1.32): minor/major bumps need approval",
+      "matchPackageNames": ["alpine/kubectl"],
+      "matchUpdateTypes": ["minor", "major"],
+      "dependencyDashboardApproval": true
     },
     {
       "description": "Patch updates - no automerge, individual PRs",
-      "matchManagers": ["helm-values"],
+      "matchManagers": ["custom.regex", "helm-values"],
       "matchUpdateTypes": ["patch"],
       "matchPackageNames": [
         "/ghcr.io/stac-utils/*/",
@@ -90,6 +121,20 @@
       "platformAutomerge": false,
       "labels": ["dependencies", "major-update", "manual-review"],
       "reviewers": ["@maintainers"]
+    },
+    {
+      "description": "GitHub Actions: one grouped PR a week (replaces the removed Dependabot config). Last, so the generic schedule rules above do not override it",
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["action", "workflow"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "github-actions",
+      "schedule": ["before 5am on monday"],
+      "updateNotScheduled": false
+    },
+    {
+      "description": "Keep the Actions group in one branch (separateMinorPatch cannot share a rule with matchUpdateTypes)",
+      "matchManagers": ["github-actions"],
+      "separateMinorPatch": false
     }
   ],
   "helm-values": {
@@ -101,14 +146,35 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update container image tags in Helm values files",
-      "managerFilePatterns": ["/charts/.+/values\\.ya?ml$/"],
+      "description": "Update container image tags in Helm values files (image.name + image.tag, any registry)",
+      "managerFilePatterns": ["/^charts/[^/]+/values\\.ya?ml$/"],
       "matchStrings": [
-        "(?<depName>ghcr\\.io/[^\\s]+?)\\s*\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\\s\"'@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
+        "(?:^|\\n)\\s*name:\\s*[\"']?(?<depName>[a-z0-9.-]+(?:/[a-z0-9._-]+)+)[\"']?[ \\t]*(?:#[^\\n]*)?\\r?\\n\\s*tag:\\s*[\"']?(?<currentValue>[^\\s\"'@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\"']?"
       ],
       "datasourceTemplate": "docker",
-      "registryUrlTemplate": "https://ghcr.io",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "PGO version used by CI and scripts/deployment.sh; PGO selects the Crunchy Postgres, PgBouncer and pgBackRest images",
+      "managerFilePatterns": [
+        "/^scripts/deployment\\.sh$/",
+        "/^\\.github/workflows/ci\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "PGO_VERSION(?::\\s*|=\"\\$\\{PGO_VERSION:-)\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "pgo",
+      "packageNameTemplate": "registry.developers.crunchydata.com/crunchydata/pgo",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Chart appVersion follows the stac-fastapi-pgstac image tag (ci.yml checks they match), so both move in one PR",
+      "managerFilePatterns": ["/^charts/eoapi/Chart\\.yaml$/"],
+      "matchStrings": ["\\nappVersion:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"],
+      "depNameTemplate": "ghcr.io/stac-utils/stac-fastapi-pgstac",
+      "datasourceTemplate": "docker"
     }
   ],
 
