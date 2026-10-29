@@ -123,7 +123,7 @@
       "reviewers": ["@maintainers"]
     },
     {
-      "description": "GitHub Actions: one grouped PR a week (replaces the removed Dependabot config). Last, so the generic schedule rules above do not override it",
+      "description": "GitHub Actions: one grouped PR a week for actions and reusable workflows (replaces the removed Dependabot config); runtime versions such as python-version keep their own PRs. Last, so the generic schedule rules above do not override it",
       "matchManagers": ["github-actions"],
       "matchDepTypes": ["action", "workflow"],
       "matchUpdateTypes": ["minor", "patch", "digest"],
@@ -134,6 +134,7 @@
     {
       "description": "Keep the Actions group in one branch (separateMinorPatch cannot share a rule with matchUpdateTypes)",
       "matchManagers": ["github-actions"],
+      "matchDepTypes": ["action", "workflow"],
       "separateMinorPatch": false
     }
   ],
@@ -174,7 +175,8 @@
       "managerFilePatterns": ["/^charts/eoapi/Chart\\.yaml$/"],
       "matchStrings": ["\\nappVersion:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"],
       "depNameTemplate": "ghcr.io/stac-utils/stac-fastapi-pgstac",
-      "datasourceTemplate": "docker"
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
 
