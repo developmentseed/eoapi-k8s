@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.17.5](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.4...v0.17.5) (2026-10-29)
+
+
+### Maintenance
+
+* **deps:** bump actions/setup-python from 7.0.0 to 7.1.0 in the minor-and-patch group ([#660](https://github.com/developmentseed/eoapi-k8s/issues/660)) ([9d555b0](https://github.com/developmentseed/eoapi-k8s/commit/9d555b0ed2b56320d986b93375cc761f753c261f))
+* **deps:** updated actions/setup-python action to v7.1.0. ([#656](https://github.com/developmentseed/eoapi-k8s/issues/656)) ([be43909](https://github.com/developmentseed/eoapi-k8s/commit/be43909f4ded174bb0fd77bbf406a844afbff823))
+* **deps:** updated helm release prometheus to 29.39.0. ([#659](https://github.com/developmentseed/eoapi-k8s/issues/659)) ([953e547](https://github.com/developmentseed/eoapi-k8s/commit/953e54776703d379b547b7bea43964c6fd24fa78))
+* **deps:** updated helm/chart-releaser-action action to v1.8.0. ([#662](https://github.com/developmentseed/eoapi-k8s/issues/662)) ([6982743](https://github.com/developmentseed/eoapi-k8s/commit/6982743622b8fd4f3e6e315a8a9d4a5e58b453bd))
+* **deps:** updated node to 26.13.0. ([#663](https://github.com/developmentseed/eoapi-k8s/issues/663)) ([03be1df](https://github.com/developmentseed/eoapi-k8s/commit/03be1df143a9e0e52f36f8cfab0e2c58a3c806ee))
+
 ## [0.17.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.3...v0.17.4) (2026-10-27)
 
 
