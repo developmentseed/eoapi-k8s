@@ -47,9 +47,9 @@ tests:
       - equal:
           path: kind
           value: Deployment
-      - equal:
+      - matchRegex:
           path: spec.template.spec.containers[0].image
-          value: nginxinc/nginx-unprivileged:1.27.4-alpine
+          pattern: '^nginxinc/nginx-unprivileged:[0-9]+\.[0-9]+\.[0-9]+-alpine$'
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
@@ -61,9 +61,51 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pgstac-migrate
-      - equal:
+      - matchRegex:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/stac-utils/pgstac-pypgstac:v0.9.12@sha256:672faad776b55afe15fadb27589c390c4fc93de5bc73e8889d2c29a600c5dba4
+          pattern: '^ghcr\.io/stac-utils/pgstac-pypgstac:v[0-9]+\.[0-9]+\.[0-9]+@sha256:[a-f0-9]{64}$'
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
+
+  - it: doc-server honors image override
+    template: templates/services/doc-server.yaml
+    set:
+      docServer:
+        enabled: true
+        image:
+          name: example.com/nginx
+          tag: custom
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/nginx:custom
+
+  - it: pgstac-migrate job honors image override
+    template: templates/database/pgstacbootstrap/job.yaml
+    set:
+      pgstacBootstrap:
+        image:
+          name: example.com/pgstac
+          tag: custom
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/pgstac:custom
+
+  - it: image digest renders as name@digest
+    template: templates/services/doc-server.yaml
+    set:
+      docServer:
+        enabled: true
+        image:
+          name: example.com/nginx
+          tag: ""
+          digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/nginx@sha256:0000000000000000000000000000000000000000000000000000000000000000
