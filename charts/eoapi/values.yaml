@@ -167,7 +167,7 @@ pgstacBootstrap:
   # kubectl image used by service initContainers waiting on pgstac jobs
   waitImage:
     name: alpine/kubectl
-    tag: "1.34.1"
+    tag: "1.34.2"
     pullPolicy: IfNotPresent
   configMaps:
     pgstacSettings:
@@ -853,7 +853,7 @@ knative:
     init:
       image:
         name: alpine/kubectl
-        tag: "1.34.1"
+        tag: "1.34.2"
         pullPolicy: IfNotPresent
       annotations:
         helm.sh/hook: "post-install,post-upgrade"
