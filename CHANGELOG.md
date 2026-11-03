@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.17.5](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.4...v0.17.5) (2026-11-03)
+
+
+### Maintenance
+
+* **deps:** bump actions/setup-python from 7.0.0 to 7.1.0 in the minor-and-patch group ([#660](https://github.com/developmentseed/eoapi-k8s/issues/660)) ([9d555b0](https://github.com/developmentseed/eoapi-k8s/commit/9d555b0ed2b56320d986b93375cc761f753c261f))
+* **deps:** bump the pip group across 1 directory with 3 updates ([#665](https://github.com/developmentseed/eoapi-k8s/issues/665)) ([9f656b7](https://github.com/developmentseed/eoapi-k8s/commit/9f656b7b1e3a1bc93d7d6aba39afdf3f653fa87b))
+* **deps:** let Renovate track the chart's versioned images ([#666](https://github.com/developmentseed/eoapi-k8s/issues/666)) ([f0163f3](https://github.com/developmentseed/eoapi-k8s/commit/f0163f34b2590901f8ca1b77f5b01612a00e4418))
+* **deps:** updated actions/setup-python action to v7.1.0. ([#656](https://github.com/developmentseed/eoapi-k8s/issues/656)) ([be43909](https://github.com/developmentseed/eoapi-k8s/commit/be43909f4ded174bb0fd77bbf406a844afbff823))
+* **deps:** updated alpine/kubectl docker tag to v1.34.2 ([#671](https://github.com/developmentseed/eoapi-k8s/issues/671)) ([b6efb24](https://github.com/developmentseed/eoapi-k8s/commit/b6efb24c40c79e6e7db41e4d42298d36eb811cb8))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v7.2.0 ([#661](https://github.com/developmentseed/eoapi-k8s/issues/661)) ([d7d651c](https://github.com/developmentseed/eoapi-k8s/commit/d7d651c238337c3770d72342e04007acb83e970a))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v7.2.1 ([#672](https://github.com/developmentseed/eoapi-k8s/issues/672)) ([c2ab003](https://github.com/developmentseed/eoapi-k8s/commit/c2ab0037f1374c6226391d8199b82554ffa04d14))
+* **deps:** updated helm release knative-operator to v1.24.0. ([#669](https://github.com/developmentseed/eoapi-k8s/issues/669)) ([75d677d](https://github.com/developmentseed/eoapi-k8s/commit/75d677d16ea9a36c30e7681b6c824caf18c33271))
+* **deps:** updated helm release prometheus to 29.39.0. ([#659](https://github.com/developmentseed/eoapi-k8s/issues/659)) ([953e547](https://github.com/developmentseed/eoapi-k8s/commit/953e54776703d379b547b7bea43964c6fd24fa78))
+* **deps:** updated helm release prometheus to 29.40.3. ([#668](https://github.com/developmentseed/eoapi-k8s/issues/668)) ([9b3117c](https://github.com/developmentseed/eoapi-k8s/commit/9b3117c4d4ff5602a8c71f409c5da45019afdb37))
+* **deps:** updated helm/chart-releaser-action action to v1.8.0. ([#662](https://github.com/developmentseed/eoapi-k8s/issues/662)) ([6982743](https://github.com/developmentseed/eoapi-k8s/commit/6982743622b8fd4f3e6e315a8a9d4a5e58b453bd))
+* **deps:** updated helm/chart-releaser-action action to v1.9.0. ([#670](https://github.com/developmentseed/eoapi-k8s/issues/670)) ([8b7c4c4](https://github.com/developmentseed/eoapi-k8s/commit/8b7c4c457a36579078d8f3b2cbca6c5a36a91bfb))
+* **deps:** updated nginxinc/nginx-unprivileged docker tag to v1.31.7 ([#673](https://github.com/developmentseed/eoapi-k8s/issues/673)) ([3c0fe17](https://github.com/developmentseed/eoapi-k8s/commit/3c0fe1706e2bf64cb6485cf996211e0cf00337de))
+* **deps:** updated node to 26.13.0. ([#663](https://github.com/developmentseed/eoapi-k8s/issues/663)) ([03be1df](https://github.com/developmentseed/eoapi-k8s/commit/03be1df143a9e0e52f36f8cfab0e2c58a3c806ee))
+
 ## [0.17.4](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.3...v0.17.4) (2026-10-27)
 
 
