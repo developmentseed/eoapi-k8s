@@ -49,7 +49,7 @@ tests:
           value: Deployment
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: '^nginxinc/nginx-unprivileged:[0-9]+\.[0-9]+\.[0-9]+-alpine$'
+          pattern: '^docker\.io/nginx/nginx-unprivileged:[0-9]+\.[0-9]+\.[0-9]+-alpine-slim@sha256:[a-f0-9]{64}$'
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent

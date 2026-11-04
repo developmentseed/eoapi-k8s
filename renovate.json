@@ -84,7 +84,7 @@
     },
     {
       "description": "nginx: one PR per new version, not a patch PR plus a minor PR",
-      "matchPackageNames": ["nginxinc/nginx-unprivileged"],
+      "matchPackageNames": ["docker.io/nginx/nginx-unprivileged"],
       "separateMinorPatch": false
     },
     {
