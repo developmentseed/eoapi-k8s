@@ -85,3 +85,11 @@ Uses name + tag, or name@digest when digest is set.
 {{- printf "%s:%s" .name (required "image.tag is required when digest is unset" .tag) -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Render a value as JSON inside a single-quoted shell word, escaping embedded
+single quotes. Python Fire (used by pypgstac) parses the JSON array into a list.
+*/}}
+{{- define "eoapi.shellJsonArg" -}}
+{{- . | toJson | replace "'" "'\\''" | squote -}}
+{{- end -}}

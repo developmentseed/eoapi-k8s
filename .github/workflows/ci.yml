@@ -55,6 +55,9 @@ jobs:
       - name: Test gitSha injection script
         run: ./eoapi-cli test gitsha
 
+      - name: Test load-queryables job rendering
+        run: ./eoapi-cli test queryables
+
       - name: Check container images for root user
         run: ./eoapi-cli test images
 

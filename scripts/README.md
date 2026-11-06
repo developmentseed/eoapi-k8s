@@ -81,6 +81,7 @@ The eoAPI CLI provides a unified interface for all operations:
 ./eoapi-cli test schema      # Validate Helm chart schema
 ./eoapi-cli test lint        # Run Helm lint
 ./eoapi-cli test unit        # Run Helm unit tests
+./eoapi-cli test queryables  # Run rendered load-queryables script with a stub pypgstac
 ./eoapi-cli test integration # Run integration tests
 ```
 
