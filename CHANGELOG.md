@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.17.6](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.5...v0.17.6) (2026-11-06)
+
+
+### Fixed
+
+* **helm:** per-collection queryables in pgstac-load-queryables ([#677](https://github.com/developmentseed/eoapi-k8s/issues/677)) ([5efa287](https://github.com/developmentseed/eoapi-k8s/commit/5efa2874ef4b0f1faa80354f341c53e2d2b84be2))
+
+
+### Maintenance
+
+* **deps:** updated helm release prometheus-adapter to 5.4.0. ([#674](https://github.com/developmentseed/eoapi-k8s/issues/674)) ([3e00141](https://github.com/developmentseed/eoapi-k8s/commit/3e001416a94c6eac63fe66b30b75f4f2867bd485))
+
 ## [0.17.5](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.4...v0.17.5) (2026-11-03)
 
 
