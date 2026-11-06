@@ -155,7 +155,7 @@ tests:
           pattern: '--delete-missing'
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
-          pattern: '--index-fields platform,instruments'
+          pattern: "--index-fields '\\[\"platform\",\"instruments\"\\]'"
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
           pattern: '"/opt/queryables/common-queryables.json"'
@@ -220,7 +220,7 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
-          pattern: '--index-fields custom:field1'
+          pattern: "--index-fields '\\[\"custom:field1\"\\]'"
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
           pattern: '"/opt/queryables/custom-queryables.json"'
@@ -342,13 +342,48 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
-          pattern: '--collection-ids'
+          pattern: "--collection-ids '\\[\"collection-1\",\"collection-2\"\\]' \\\\\n"
+
+  # Regression: comments inside the line continuation ended the command early,
+  # and --collection-ids was rendered as over-escaped (invalid) JSON.
+  - it: should render a single load-queryables command with all optional parameters
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "q.json"
+              configMapRef:
+                name: my-queryables
+                key: queryables.json
+              collections: ["openaerialmap"]
+              indexFields: ["oam:owner_id"]
+              deleteMissing: true
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
-          pattern: 'collection-1'
+          pattern: "pypgstac load-queryables \\\\\n *--delete-missing \\\\\n *--collection-ids '\\[\"openaerialmap\"\\]' \\\\\n *--index-fields '\\[\"oam:owner_id\"\\]' \\\\\n *\"/opt/queryables/q.json\"\n"
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: '\\\n *#'
+
+  - it: should shell-quote collection IDs containing single quotes and spaces
+    set:
+      pgstacBootstrap:
+        enabled: true
+        settings:
+          queryables:
+            - name: "q.json"
+              file: "data/initdb/queryables/test-queryables.json"
+              collections: ["it's a test"]
+    template: templates/database/pgstacbootstrap/job.yaml
+    documentIndex: 2
+    asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].args[0]
-          pattern: 'collection-2'
+          pattern: "--collection-ids '\\[\"it'\\\\''s a test\"\\]' \\\\\n"
 
   - it: should work without optional parameters
     set:

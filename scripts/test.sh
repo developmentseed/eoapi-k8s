@@ -27,6 +27,7 @@ COMMANDS:
     unit            Run Helm unit tests
     images          Check container images for root user
     gitsha          Test gitSha injection script
+    queryables      Run rendered load-queryables script with a stub pypgstac
     integration     Run integration tests with pytest
     notification    Run notification tests with database access
     all             Run all tests
@@ -136,6 +137,14 @@ test_gitsha() {
     "${SCRIPT_DIR}/test/gitsha.sh"
 }
 
+test_queryables() {
+    log_info "Testing load-queryables job rendering..."
+
+    check_requirements helm yq || return 1
+
+    "${SCRIPT_DIR}/test/queryables.sh"
+}
+
 test_integration() {
     local pytest_args="${1:-}"
     export NAMESPACE="$NAMESPACE"
@@ -163,6 +172,7 @@ test_all() {
     test_lint || ((failed++))
     test_unit || ((failed++))
     test_gitsha || ((failed++))
+    test_queryables || ((failed++))
     test_images || ((failed++))
 
     if validate_cluster 2>/dev/null; then
@@ -208,7 +218,7 @@ main() {
                 pytest_args="$2"
                 shift 2
                 ;;
-            schema|lint|unit|images|gitsha|notification|integration|all)
+            schema|lint|unit|images|gitsha|queryables|notification|integration|all)
                 command="$1"
                 shift
                 ;;
@@ -237,6 +247,9 @@ main() {
             ;;
         gitsha)
             test_gitsha
+            ;;
+        queryables)
+            test_queryables
             ;;
         integration)
             test_integration "$pytest_args"
