@@ -170,6 +170,17 @@ jobs:
           limit-severities-for-sarif: true
           output: trivy.sarif
 
+      - name: Label alerts with Trivy's severity (Security tab trial)
+        if: always() && github.event_name != 'pull_request' && hashFiles('trivy.sarif') != ''
+        run: |
+          # GitHub labels alerts from the CVSS score; clamp it into the band of Trivy's severity
+          jq '(.runs[].tool.driver.rules[].properties) |= (
+                (.tags // [] | if index("CRITICAL") then [9.0, 10.0] elif index("HIGH") then [7.0, 8.9] else null end) as $band
+                | if $band then .["security-severity"] =
+                    ([[(.["security-severity"] // "0" | tonumber), $band[0]] | max, $band[1]] | min | tostring)
+                  else . end)' trivy.sarif > labelled.sarif
+          mv labelled.sarif trivy.sarif
+
       - name: Upload SARIF (Security tab trial)
         if: always() && github.event_name != 'pull_request' && hashFiles('trivy.sarif') != ''
         uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
