@@ -39,3 +39,18 @@ Day-to-day local/CI workflows use `helm dependency build` against the lockfile. 
 ## Postgrescluster
 
 When `charts/postgrescluster/Chart.yaml` version changes on `main`, a separate workflow packages and publishes that chart automatically. No release PR is required.
+
+## Image scan
+
+`.github/workflows/image-scan.yml` scans every image the chart can deploy with [Trivy](https://trivy.dev/): every Monday, on demand, and on the release-please PR. A red check means an image has a fixable HIGH or CRITICAL vulnerability. Fix it at the source (a release of that image, then a tag bump here) before releasing. Other pull requests only check the image list.
+
+- **Image list.** The workflow renders the chart (every optional component on, plus the experimental and production profiles) and the database images PGO picks, then compares their repositories with `.github/image-scan-repos.txt`. A PR that adds or drops an image, including a new `*.enabled` component, updates that file.
+- **Exceptions** last at most 30 days and say why:
+  - images built in `developmentseed` or `stac-utils`: one entry per finding in `.trivyignore.yaml`, with `expired_at` and a factual `statement`;
+  - a third-party image whose vendor has no fixed image yet: `report-only until YYYY-MM-DD: <reason>` on its line in `image-scan-repos.txt`. Its findings still print.
+  - busybox has no package database, so Trivy cannot scan it; re-date its line each month.
+- **"Are we affected by X?"** Each scan keeps the image's SBOM for 90 days. Download them with `gh run download <run-id> -R developmentseed/eoapi-k8s`, then `grep -il <package> sbom-*/sbom.cdx.json`, or run `trivy sbom` on each file to look for an advisory ID. The SBOMs describe the tags pinned at that commit.
+- **Blind spots.** A green run does not mean "not affected". Trivy does not see runtimes installed from tarballs, bundled JavaScript, or binaries without package metadata. The scan fails an image whose SBOM has no packages, or whose Wolfi packages lost their source names.
+- **Security tab.** Scheduled and manual runs also list the same findings under Security > Code scanning, one category per image (`image:<repository>`), labelled with Trivy's severity.
+
+The release-PR check is not a required check yet. It becomes one once a release PR passes it.

@@ -136,6 +136,12 @@
       "matchManagers": ["github-actions"],
       "matchDepTypes": ["action", "workflow"],
       "separateMinorPatch": false
+    },
+    {
+      "description": "Scanner actions (image-scan.yml): wait 14 days before adopting a new release",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["aquasecurity/*"],
+      "minimumReleaseAge": "14 days"
     }
   ],
   "helm-values": {

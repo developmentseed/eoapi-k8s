@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write # trial: Trivy SARIF in the Security tab
+      security-events: write # Trivy SARIF in the Security tab
     strategy:
       fail-fast: false
       max-parallel: 6
@@ -157,8 +157,9 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: ${{ matrix.gate && '1' || '0' }}
+          trivyignores: ${{ hashFiles('.trivyignore.yaml') != '' && '.trivyignore.yaml' || '' }}
 
-      - name: SARIF (Security tab trial)
+      - name: SARIF for the Security tab
         if: always() && github.event_name != 'pull_request' && hashFiles('sbom.cdx.json') != ''
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -169,8 +170,9 @@ jobs:
           format: sarif
           limit-severities-for-sarif: true
           output: trivy.sarif
+          trivyignores: ${{ hashFiles('.trivyignore.yaml') != '' && '.trivyignore.yaml' || '' }}
 
-      - name: Label alerts with Trivy's severity (Security tab trial)
+      - name: Label alerts with Trivy's severity
         if: always() && github.event_name != 'pull_request' && hashFiles('trivy.sarif') != ''
         run: |
           # GitHub labels alerts from the CVSS score; clamp it into the band of Trivy's severity
@@ -181,7 +183,7 @@ jobs:
                   else . end)' trivy.sarif > labelled.sarif
           mv labelled.sarif trivy.sarif
 
-      - name: Upload SARIF (Security tab trial)
+      - name: Upload SARIF
         if: always() && github.event_name != 'pull_request' && hashFiles('trivy.sarif') != ''
         uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
