@@ -50,7 +50,7 @@ When `charts/postgrescluster/Chart.yaml` version changes on `main`, a separate w
   - a third-party image whose vendor has no fixed image yet: `report-only until YYYY-MM-DD: <reason>` on its line in `image-scan-repos.txt`. Its findings still print.
   - busybox has no package database, so Trivy cannot scan it; re-date its line each month.
 - **"Are we affected by X?"** Each scan keeps the image's SBOM for 90 days. Download them with `gh run download <run-id> -R developmentseed/eoapi-k8s`, then `grep -il <package> sbom-*/sbom.cdx.json`, or run `trivy sbom` on each file to look for an advisory ID. The SBOMs describe the tags pinned at that commit.
-- **Blind spots.** A green run does not mean "not affected". Trivy does not see runtimes installed from tarballs, bundled JavaScript, or binaries without package metadata. The scan fails an image whose SBOM has no packages, or whose Wolfi packages lost their source names.
+- **Blind spots.** A green run does not mean "not affected". Trivy does not see runtimes installed from tarballs, bundled JavaScript, or binaries without package metadata. The scan fails an image whose SBOM has no packages, or whose Wolfi packages lost their source names; that loss is intermittent, so re-run the job.
 - **Security tab.** Scheduled and manual runs also list the same findings under Security > Code scanning, one category per image (`image:<repository>`), labelled with Trivy's severity.
 
 The release-PR check is not a required check yet. It becomes one once a release PR passes it.
