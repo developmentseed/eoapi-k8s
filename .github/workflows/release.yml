@@ -35,7 +35,7 @@ jobs:
           git fetch --tags
           if git rev-parse "postgrescluster-${{ steps.version.outputs.version }}" >/dev/null 2>&1; then echo "skip=true" >> $GITHUB_OUTPUT; else echo "skip=false" >> $GITHUB_OUTPUT; fi
 
-      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5
         if: steps.skip.outputs.skip == 'false'
         with:
           version: ${{ env.HELM_VERSION }}
