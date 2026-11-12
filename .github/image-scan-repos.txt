@@ -1,0 +1,30 @@
+# Image repositories the chart can deploy, checked by .github/workflows/image-scan.yml.
+# The workflow fails when this list and the rendered chart differ: update it in the PR that adds or drops an image.
+# Every image fails the scan on a fixable HIGH/CRITICAL finding. A third-party image whose vendor has
+# not shipped a fix may add "report-only until YYYY-MM-DD: <reason>", at most 30 days out.
+alpine/kubectl
+docker.io/grafana/grafana
+docker.io/library/busybox report-only until 2026-12-10: no package database, so Trivy cannot scan it (Grafana's init container)
+gcr.io/knative-releases/knative.dev/operator/cmd/operator
+gcr.io/knative-releases/knative.dev/operator/cmd/webhook
+ghcr.io/developmentseed/eoapi-notifier
+ghcr.io/developmentseed/stac-auth-proxy
+ghcr.io/developmentseed/tipg
+ghcr.io/developmentseed/titiler-md-demo
+ghcr.io/radiantearth/stac-browser
+ghcr.io/stac-utils/pgstac-pypgstac
+ghcr.io/stac-utils/stac-fastapi-pgstac
+ghcr.io/stac-utils/titiler-pgstac
+nginxinc/nginx-unprivileged
+quay.io/kiwigrid/k8s-sidecar
+quay.io/prometheus-operator/prometheus-config-reloader
+quay.io/prometheus/node-exporter
+quay.io/prometheus/prometheus
+registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest
+registry.developers.crunchydata.com/crunchydata/crunchy-pgbouncer
+registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter
+registry.developers.crunchydata.com/crunchydata/crunchy-postgres-gis
+registry.developers.crunchydata.com/crunchydata/postgres-operator
+registry.k8s.io/kube-state-metrics/kube-state-metrics
+registry.k8s.io/metrics-server/metrics-server
+registry.k8s.io/prometheus-adapter/prometheus-adapter

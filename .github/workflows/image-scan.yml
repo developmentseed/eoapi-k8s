@@ -1,0 +1,199 @@
+name: Image scan
+
+# Scans every image the chart can deploy and fails on fixable HIGH/CRITICAL vulnerabilities:
+# weekly, on demand, and on the release-please PR. Other PRs only check the image list.
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
+
+permissions: {}
+
+env:
+  HELM_VERSION: v3.18.3
+  IMAGE_LIST: .github/image-scan-repos.txt
+
+jobs:
+  list:
+    name: List images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Build chart dependencies
+        run: |
+          helm repo add eoapi-k8s https://devseed.com/eoapi-k8s/
+          helm repo add knative https://knative.github.io/operator
+          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm dependency build charts/eoapi
+
+      - name: List images
+        id: list
+        run: |
+          set -euo pipefail
+          oidc=https://dummy.example.com/.well-known/openid-configuration
+          render() {
+            helm template eoapi charts/eoapi --skip-tests \
+              --set stac-auth-proxy.env.OIDC_DISCOVERY_URL=$oidc \
+              --set stac-auth-proxy.env.OIDC_DISCOVERY_INTERNAL_URL=$oidc "$@"
+          }
+          pgo=$(sed -n 's/^ *PGO_VERSION: "\([0-9.]*\)"$/\1/p' .github/workflows/ci.yml)
+          {
+            # Every optional component turned on, then both profiles
+            render --set stac-auth-proxy.enabled=true --set eoapi-notifier.enabled=true \
+              --set multidim.enabled=true --set postgrescluster.backupsEnabled=true
+            render -f charts/eoapi/profiles/experimental.yaml
+            render -f charts/eoapi/profiles/production.yaml
+            # PGO is installed separately and picks the database images
+            helm template pgo oci://registry.developers.crunchydata.com/crunchydata/pgo \
+              --version "$pgo" --set disable_check_for_upgrades=true
+          } | yq -o json -I0 '.' > docs.jsonl
+
+          jq -r '.. | .image? // empty | strings | select(. != "")' docs.jsonl > refs.txt
+          # An unset or empty image in a PostgresCluster means PGO picks it from its RELATED_IMAGE_* env
+          jq -r 'def unset: (.image // "") == "";
+            select(.kind == "PostgresCluster") | .spec |
+            (select(unset) | "RELATED_IMAGE_POSTGRES_\(.postgresVersion)" + (if .postGISVersion then "_GIS_\(.postGISVersion)" else "" end)),
+            (select(.proxy.pgBouncer and (.proxy.pgBouncer | unset)) | "RELATED_IMAGE_PGBOUNCER"),
+            (select(.backups.pgbackrest and (.backups.pgbackrest | unset)) | "RELATED_IMAGE_PGBACKREST"),
+            (select(.monitoring.pgmonitor.exporter and (.monitoring.pgmonitor.exporter | unset)) | "RELATED_IMAGE_PGEXPORTER")' docs.jsonl |
+          sort -u | while read -r key; do
+            jq -re --arg k "$key" 'select(.kind == "Deployment") | .. | objects | select(.name? == $k) | .value' docs.jsonl ||
+              { echo "::error::PGO $pgo has no $key"; exit 1; }
+          done >> refs.txt
+
+          # Same test-image filter as scripts/test/images.sh
+          grep -v -E '/mock|mock-|-mock|sample|/bats/|bats:' refs.txt | sort -u > images.txt
+          sed -E 's/@sha256:[0-9a-f]+$//; s/:[^/:]+$//' images.txt | sort -u > repos.txt
+          grep -v -E '^(#|$)' "$IMAGE_LIST" | cut -d' ' -f1 | sort > listed.txt
+          if ! diff listed.txt repos.txt; then
+            echo "::error file=$IMAGE_LIST::The chart's image repositories changed (< only in $IMAGE_LIST, > only in the render). Update $IMAGE_LIST in this PR."
+            exit 1
+          fi
+          if grep -E '^ghcr\.io/(developmentseed|stac-utils)/[^ ]+ report-only' "$IMAGE_LIST"; then
+            echo "::error file=$IMAGE_LIST::Images we build cannot be report-only. Add dated per-finding entries to .trivyignore.yaml instead."
+            exit 1
+          fi
+
+          today=$(date -u +%F)
+          while read -r ref; do
+            repo=$(sed -E 's/@sha256:[0-9a-f]+$//; s/:[^/:]+$//' <<<"$ref")
+            until_date=$(awk -v r="$repo" '$1 == r && $2 == "report-only" { sub(/:$/, "", $4); print $4 }' "$IMAGE_LIST")
+            gate=true
+            if [[ -n "$until_date" && ! "$until_date" < "$today" ]]; then gate=false
+            elif [[ -n "$until_date" ]]; then echo "::warning file=$IMAGE_LIST::$repo: report-only expired on $until_date" >&2
+            fi
+            jq -nc --arg ref "$ref" --arg repo "$repo" --argjson gate "$gate" \
+              '{$ref, $repo, $gate, slug: ($repo | gsub("[/:@]"; "_"))}'
+          done < images.txt | jq -sc . > matrix.json
+          echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+          jq -r '"\(length) images; report-only: \(map(select(.gate | not).repo) | join(", "))"' matrix.json
+
+  scan:
+    name: Scan ${{ matrix.repo }}
+    needs: list
+    if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Trivy SARIF in the Security tab
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include: ${{ fromJSON(needs.list.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: SBOM
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.ref }}
+          format: cyclonedx
+          output: sbom.cdx.json
+
+      - name: Check Trivy saw the packages
+        env:
+          REF: ${{ matrix.ref }}
+          GATE: ${{ matrix.gate }}
+        run: |
+          # Zero packages, or Wolfi packages without their source names, would read as clean
+          problem=
+          if ! jq -e '[.components[]? | select(.type == "library")] | length > 0' sbom.cdx.json > /dev/null; then
+            problem="no packages found"
+          elif jq -e '[.components[]? | select(.purl // "" | startswith("pkg:apk/wolfi/"))] as $w
+              | ($w | length) >= 5 and all($w[]; . as $c
+                | [.properties[]? | select(.name == "aquasecurity:trivy:SrcName" and .value != $c.name)] | length == 0)' \
+              sbom.cdx.json > /dev/null; then
+            problem="Wolfi packages lost their source names"
+          fi
+          if [ -n "$problem" ]; then
+            if [ "$GATE" = true ]; then echo "::error::$REF: $problem"; exit 1; fi
+            echo "::warning::$REF: $problem"
+          fi
+
+      - name: Fixable HIGH/CRITICAL
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: sbom
+          scan-ref: sbom.cdx.json
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: ${{ matrix.gate && '1' || '0' }}
+          trivyignores: ${{ hashFiles('.trivyignore.yaml') != '' && '.trivyignore.yaml' || '' }}
+
+      - name: SARIF for the Security tab
+        if: always() && github.event_name != 'pull_request' && hashFiles('sbom.cdx.json') != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: sbom
+          scan-ref: sbom.cdx.json
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          limit-severities-for-sarif: true
+          output: trivy.sarif
+          trivyignores: ${{ hashFiles('.trivyignore.yaml') != '' && '.trivyignore.yaml' || '' }}
+
+      - name: Label alerts with Trivy's severity
+        if: always() && github.event_name != 'pull_request' && hashFiles('trivy.sarif') != ''
+        run: |
+          # GitHub labels alerts from the CVSS score; clamp it into the band of Trivy's severity
+          jq '(.runs[].tool.driver.rules[].properties) |= (
+                (.tags // [] | if index("CRITICAL") then [9.0, 10.0] elif index("HIGH") then [7.0, 8.9] else null end) as $band
+                | if $band then .["security-severity"] =
+                    ([[(.["security-severity"] // "0" | tonumber), $band[0]] | max, $band[1]] | min | tostring)
+                  else . end)' trivy.sarif > labelled.sarif
+          mv labelled.sarif trivy.sarif
+
+      - name: Upload SARIF
+        if: always() && github.event_name != 'pull_request' && hashFiles('trivy.sarif') != ''
+        uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: trivy.sarif
+          category: image:${{ matrix.repo }}
+
+      - name: Keep the SBOM
+        if: always() && hashFiles('sbom.cdx.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-${{ github.sha }}-${{ matrix.slug }}
+          path: sbom.cdx.json
+          retention-days: 90
