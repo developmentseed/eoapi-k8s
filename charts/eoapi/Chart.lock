@@ -16,12 +16,12 @@ dependencies:
   version: 29.47.2
 - name: prometheus-adapter
   repository: https://prometheus-community.github.io/helm-charts
-  version: 5.4.0
+  version: 5.4.1
 - name: grafana
   repository: https://grafana.github.io/helm-charts
   version: 10.5.15
 - name: stac-auth-proxy
   repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
   version: 1.3.1
-digest: sha256:89aa7eecee160ff6cfc42d4c36fd0b24a68d27a5bb33dc80147092029a34b5ae
-generated: "2026-11-11T20:37:02.900562569Z"
+digest: sha256:0663db9441f582c2c205357014428396a41f0d47f156a0b12e94e2d597ad36e7
+generated: "2026-11-12T23:06:55.2992736Z"
