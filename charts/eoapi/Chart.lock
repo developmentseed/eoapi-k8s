@@ -4,7 +4,7 @@ dependencies:
   version: 5.8.6
 - name: eoapi-notifier
   repository: oci://ghcr.io/developmentseed/charts
-  version: 0.1.0
+  version: 0.1.1
 - name: knative-operator
   repository: https://knative.github.io/operator
   version: v1.24.0
@@ -23,5 +23,5 @@ dependencies:
 - name: stac-auth-proxy
   repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
   version: 1.3.1
-digest: sha256:0663db9441f582c2c205357014428396a41f0d47f156a0b12e94e2d597ad36e7
-generated: "2026-11-12T23:06:55.2992736Z"
+digest: sha256:6345cabcb878aff4baf4a282ced10a5c9e7a6bf1efcefaa5ee24ae6799819c73
+generated: "2026-11-12T23:16:48.89443882Z"
