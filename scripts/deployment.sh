@@ -14,7 +14,7 @@ source "${SCRIPT_DIR}/lib/k8s.sh"
 # Defaults
 RELEASE_NAME="${RELEASE_NAME:-eoapi}"
 NAMESPACE="${NAMESPACE:-eoapi}"
-readonly PGO_VERSION="${PGO_VERSION:-5.8.6}"
+readonly PGO_VERSION="${PGO_VERSION:-6.0.3}"
 TIMEOUT="${TIMEOUT:-6m}"
 LOCAL_PROFILE="${LOCAL_PROFILE:-}"
 # Global array for custom values files

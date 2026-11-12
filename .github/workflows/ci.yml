@@ -8,7 +8,7 @@ on:
 
 env:
   HELM_VERSION: v3.18.3
-  PGO_VERSION: "5.8.6"
+  PGO_VERSION: "6.0.3"
 
 jobs:
   fast-checks:
