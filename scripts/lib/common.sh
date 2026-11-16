@@ -90,8 +90,8 @@ ensure_helm_chart_repos() {
     helm repo add knative https://knative.github.io/operator --force-update >/dev/null
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/ --force-update >/dev/null
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update >/dev/null
-    helm repo add grafana https://grafana.github.io/helm-charts --force-update >/dev/null
-    helm repo update eoapi-k8s knative metrics-server prometheus-community grafana >/dev/null
+    helm repo add grafana-community https://grafana-community.github.io/helm-charts --force-update >/dev/null
+    helm repo update eoapi-k8s knative metrics-server prometheus-community grafana-community >/dev/null
 }
 
 # Prefer helm dependency build when Chart.lock is present so CI/local
