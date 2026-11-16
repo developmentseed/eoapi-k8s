@@ -54,7 +54,7 @@
       "schedule": ["after 10pm every weekday", "before 5am every weekday"],
       "matchPackageNames": [
         "/ghcr.io/developmentseed/tipg/",
-        "/ghcr.io/developmentseed/titiler-md-demo/"
+        "/^ghcr.io/developmentseed/titiler$/"
       ],
       "automerge": false,
       "platformAutomerge": false,
