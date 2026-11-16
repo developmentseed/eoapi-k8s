@@ -748,8 +748,8 @@ docServer:
   enabled: true
   redirectTo: ""  # When set, root path redirects here instead of showing the landing page (e.g. "/browser/")
   image:
-    name: nginxinc/nginx-unprivileged
-    tag: "1.31.7-alpine"
+    name: nginx/nginx-unprivileged
+    tag: "1.31.8-alpine-slim"
     pullPolicy: IfNotPresent
   settings:
     resources: {}
