@@ -903,6 +903,9 @@ observability:
 grafana:
   persistence:
     enabled: false
+  # fsGroup already makes the volume writable; enable only for storage that ignores it (e.g. NFS)
+  initChownData:
+    enabled: false
   service:
     type: LoadBalancer
     annotations:

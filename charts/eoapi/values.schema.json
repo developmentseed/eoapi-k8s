@@ -1020,6 +1020,23 @@
         }
       },
       "additionalProperties": true
+    },
+    "grafana": {
+      "type": "object",
+      "description": "Values passed to the grafana Helm sub-chart",
+      "properties": {
+        "initChownData": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Run the sub-chart's root busybox init container that chowns /var/lib/grafana when persistence is on; only needed for storage that ignores fsGroup"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
     }
   },
   "definitions": {

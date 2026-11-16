@@ -26,3 +26,16 @@ tests:
       - matchRegex:
           path: data["datasources.yaml"]
           pattern: "prometheus-server"
+
+  - it: "grafana persistence relies on fsGroup, not the root busybox chown init container"
+    set:
+      observability.grafana.enabled: true
+      grafana.persistence.enabled: true
+      gitSha: ABC123
+    template: charts/grafana/templates/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[?(@.name == "init-chown-data")]
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 472
