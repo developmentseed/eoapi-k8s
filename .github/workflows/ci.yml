@@ -46,7 +46,7 @@ jobs:
           helm repo add knative https://knative.github.io/operator
           helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add grafana-community https://grafana-community.github.io/helm-charts
           helm repo update
           helm dependency build charts/eoapi
           helm plugin install https://github.com/helm-unittest/helm-unittest

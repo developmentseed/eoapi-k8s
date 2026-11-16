@@ -111,7 +111,7 @@ grafana:
   resources:
     limits:
       cpu: 200m
-      memory: 400Mi
+      memory: 512Mi
     requests:
       cpu: 50m
       memory: 200Mi
@@ -287,7 +287,7 @@ Minimum resource requirements (actual usage varies by cluster size and metrics v
 
 | Component | CPU | Memory | Purpose |
 |-----------|-----|---------|----------|
-| grafana | 100m | 200Mi | Visualization |
+| grafana | 100m | 512Mi | Visualization |
 
 ## Operations
 

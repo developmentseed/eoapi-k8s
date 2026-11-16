@@ -150,7 +150,8 @@ grafana:
   resources:
     limits:
       cpu: "200m"
-      memory: "256Mi"
+      # Grafana 13 peaks around 440Mi at startup; 384Mi or less gets OOM-killed
+      memory: "512Mi"
     requests:
       cpu: "100m"
       memory: "128Mi"
