@@ -85,3 +85,144 @@ tests:
       - equal:
           path: metadata.annotations.annotation2
           value: world
+
+  - it: "raster pgstac backend is the default"
+    set:
+      raster.enabled: true
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/stac-utils/titiler-pgstac:3.2.1
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: titiler.pgstac.main:app
+      - exists:
+          path: spec.template.spec.initContainers
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PGHOST
+          any: true
+
+  - it: "raster stacapi backend drops database access"
+    set:
+      raster.enabled: true
+      raster.backend: stacapi
+      raster.metrics.enabled: true
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/developmentseed/titiler-stacapi:2.1.2
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: titiler.stacapi.main:app
+      - notExists:
+          path: spec.template.spec.initContainers
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PGHOST
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TITILER_PGSTAC_API_METRICS_ENABLED
+          any: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TITILER_STACAPI_STAC_API_URL
+            value: http://RELEASE-NAME-stac:8080
+
+  - it: "raster stacapi backend uses stac-auth-proxy when enabled"
+    set:
+      raster.enabled: true
+      raster.backend: stacapi
+      stac-auth-proxy.enabled: true
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TITILER_STACAPI_STAC_API_URL
+            value: http://RELEASE-NAME-stac-auth-proxy:8080/stac
+
+  - it: "raster stacapi backend uses an explicit STAC API URL"
+    set:
+      raster.enabled: true
+      raster.backend: stacapi
+      stac-auth-proxy.enabled: true
+      raster.stacapi.stacApiUrl: https://stac.example.org
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TITILER_STACAPI_STAC_API_URL
+            value: https://stac.example.org
+
+  - it: "raster stacapi envVars override settings.envVars"
+    set:
+      raster.enabled: true
+      raster.backend: stacapi
+      raster.settings.envVars.WEB_CONCURRENCY: "4"
+      raster.stacapi.envVars:
+        WEB_CONCURRENCY: "2"
+        TITILER_STACAPI_API_CACHECONTROL: "private, no-store"
+    template: templates/services/raster/configmap.yaml
+    asserts:
+      - equal:
+          path: data.WEB_CONCURRENCY
+          value: "2"
+      - equal:
+          path: data.TITILER_STACAPI_API_CACHECONTROL
+          value: "private, no-store"
+      - equal:
+          path: data.GDAL_HTTP_MULTIPLEX
+          value: "YES"
+
+  - it: "raster stacapi envVars are ignored for pgstac"
+    set:
+      raster.enabled: true
+      raster.stacapi.envVars:
+        TITILER_STACAPI_API_CACHECONTROL: "private, no-store"
+    template: templates/services/raster/configmap.yaml
+    asserts:
+      - notExists:
+          path: data.TITILER_STACAPI_API_CACHECONTROL
+
+  - it: "raster credentials Secret mounts for both backends"
+    set:
+      raster.enabled: true
+      raster.backend: stacapi
+      raster.settings.envSecrets:
+        - raster-oidc-client
+      raster.settings.extraVolumes:
+        - name: storage-credentials
+          secret:
+            secretName: raster-storage-credentials
+      raster.settings.extraVolumeMounts:
+        - name: storage-credentials
+          mountPath: /etc/raster/credentials
+          readOnly: true
+    template: templates/services/raster/deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: raster-oidc-client
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: storage-credentials
+            secret:
+              secretName: raster-storage-credentials
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: storage-credentials
+            mountPath: /etc/raster/credentials
+            readOnly: true

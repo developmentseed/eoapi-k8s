@@ -1,4 +1,6 @@
 {{- if .Values.raster.enabled }}
+{{- $stacapi := eq .Values.raster.backend "stacapi" }}
+{{- $r := ternary .Values.raster.stacapi .Values.raster $stacapi }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,13 +46,15 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- if not $stacapi }}
       {{- include "eoapi.pgstacInitContainers" . | nindent 6 }}
+      {{- end }}
       containers:
-      - image: {{ include "eoapi.containerImage" .Values.raster.image }}
-        imagePullPolicy: {{ .Values.raster.image.pullPolicy | default "IfNotPresent" }}
+      - image: {{ include "eoapi.containerImage" $r.image }}
+        imagePullPolicy: {{ $r.image.pullPolicy | default "IfNotPresent" }}
         name: raster
         command:
-          {{- toYaml .Values.raster.command | nindent 10 }}
+          {{- toYaml $r.command | nindent 10 }}
           {{- if (and (.Values.ingress.className) (or (eq .Values.ingress.className "nginx") (eq .Values.ingress.className "traefik"))) }}
           - "--proxy-headers"
           - "--forwarded-allow-ips=*"
@@ -99,9 +103,14 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         env:
+          {{- if $stacapi }}
+          - name: TITILER_STACAPI_STAC_API_URL
+            value: {{ include "eoapi.raster.stacApiUrl" . | quote }}
+          {{- else }}
           {{- include "eoapi.postgresqlEnv" . | nindent 10 }}
+          {{- end }}
           {{- include "eoapi.commonEnvVars" (dict "service" "raster" "root" .) | nindent 10 }}
-          {{- if .Values.raster.metrics.enabled }}
+          {{- if and .Values.raster.metrics.enabled (not $stacapi) }}
           - name: TITILER_PGSTAC_API_METRICS_ENABLED
             value: "true"
           {{- end }}

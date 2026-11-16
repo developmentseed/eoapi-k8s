@@ -4,7 +4,11 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-raster-envvar-configmap
 data:
-  {{- range $envKey, $envValue := .Values.raster.settings.envVars }}
+  {{- $envVars := .Values.raster.settings.envVars }}
+  {{- if eq .Values.raster.backend "stacapi" }}
+  {{- $envVars = merge (deepCopy .Values.raster.stacapi.envVars) $envVars }}
+  {{- end }}
+  {{- range $envKey, $envValue := $envVars }}
   {{ upper $envKey }}: {{ $envValue | quote }}
   {{- end }}
 {{- end }}

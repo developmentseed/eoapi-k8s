@@ -583,7 +583,50 @@
       "description": "List of API services to enable"
     },
     "raster": {
-      "$ref": "#/definitions/apiService"
+      "allOf": [
+        {
+          "$ref": "#/definitions/apiService"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "type": "string",
+              "enum": [
+                "pgstac",
+                "stacapi"
+              ],
+              "default": "pgstac",
+              "description": "Raster backend: titiler-pgstac (database) or titiler-stacapi (STAC API)"
+            },
+            "stacapi": {
+              "type": "object",
+              "description": "Settings used when backend is stacapi",
+              "properties": {
+                "image": {
+                  "$ref": "#/definitions/containerImage"
+                },
+                "command": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Container command for titiler-stacapi"
+                },
+                "stacApiUrl": {
+                  "type": "string",
+                  "description": "STAC API URL; empty uses stac-auth-proxy if enabled, otherwise the in-cluster stac service"
+                },
+                "envVars": {
+                  "type": "object",
+                  "description": "Environment variables used when backend is stacapi; override settings.envVars on key conflicts"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
     },
     "multidim": {
       "$ref": "#/definitions/apiService"
