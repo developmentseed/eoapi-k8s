@@ -903,6 +903,11 @@ observability:
 grafana:
   persistence:
     enabled: false
+  # Skip the subchart's root busybox init container that chowns /var/lib/grafana
+  # when persistence is on: the pod's fsGroup (472) already makes the volume
+  # writable. Set true only for storage that ignores fsGroup (e.g. NFS).
+  initChownData:
+    enabled: false
   service:
     type: LoadBalancer
     annotations:
