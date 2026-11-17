@@ -378,7 +378,15 @@ raster:
 Caveats:
 
 - The mosaic `/searches` endpoints only exist with `pgstac`.
-- `/multidim` keeps reading from pgstac and does not check access. Disable it if it must not expose private data.
+- `/multidim` reads any Zarr URL it is given and does not check access. Disable it if it must not expose private data.
+
+### Multidim
+
+`multidim` (off by default) serves `/multidim` with [titiler.xarray](https://github.com/developmentseed/titiler/tree/main/src/titiler/xarray), using the `ghcr.io/developmentseed/titiler` image. Chart 0.18.0 replaced `titiler-md-demo` with it, and the API changed:
+
+- Only Zarr is supported. NetCDF (`.nc`) URLs return an error.
+- Pick a time step with `sel=time=<value>`, or `sel=time=nearest::<value>` for the closest one. The old `datetime=` parameter is ignored without an error, and a request without `sel` returns every time step as a separate band.
+- `/variables` is now `/dataset/keys`.
 
 ## STAC Browser
 
