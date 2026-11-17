@@ -28,6 +28,20 @@ Helper function for common environment variables
 {{- end -}}
 
 {{/*
+STAC API URL for raster.backend=stacapi: explicit value, else stac-auth-proxy (which serves under its ROOT_PATH) if enabled, else the stac service
+*/}}
+{{- define "eoapi.raster.stacApiUrl" -}}
+{{- if .Values.raster.stacapi.stacApiUrl -}}
+{{- .Values.raster.stacapi.stacApiUrl -}}
+{{- else if index .Values "stac-auth-proxy" "enabled" -}}
+{{- $proxy := index .Values "stac-auth-proxy" -}}
+{{- printf "http://%s-stac-auth-proxy:%v%s" .Release.Name $proxy.service.port ($proxy.env.ROOT_PATH | default "") -}}
+{{- else -}}
+{{- printf "http://%s-stac:%v" .Release.Name .Values.service.port -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return prometheus-adapter custom metric name for request-rate HPA per service.
 Canonical source for name.as in prometheus-adapter.rules.custom (values.yaml).
 Validated at render time by eoapi.validateHpaAdapterMetricAlignment.

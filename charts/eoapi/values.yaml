@@ -372,6 +372,10 @@ raster:
       # so when the average unit among these pods is <requestRate>/1000 then scale
       # you can watch the actual/target in real time using `kubectl get hpa/<name>`
       requestRate: 100000m
+  # Raster backend: "pgstac" reads items from the database (titiler-pgstac),
+  # "stacapi" reads them through a STAC API (titiler-stacapi), e.g. via stac-auth-proxy.
+  # See docs/configuration.md#raster-backend-and-storage-credentials
+  backend: pgstac
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
     tag: 3.2.1
@@ -381,6 +385,21 @@ raster:
     - "titiler.pgstac.main:app"
     - "--host=$(HOST)"
     - "--port=$(PORT)"
+  # Used instead of image/command above when backend: stacapi
+  stacapi:
+    image:
+      name: ghcr.io/developmentseed/titiler-stacapi
+      tag: 2.1.2
+      pullPolicy: IfNotPresent
+    command:
+      - "uvicorn"
+      - "titiler.stacapi.main:app"
+      - "--host=$(HOST)"
+      - "--port=$(PORT)"
+    # Empty: stac-auth-proxy if enabled, otherwise the in-cluster stac service
+    stacApiUrl: ""
+    # Override settings.envVars on key conflicts, e.g. TITILER_STACAPI_API_CACHECONTROL
+    envVars: {}
   settings:
     labels: {}
     resources: {}

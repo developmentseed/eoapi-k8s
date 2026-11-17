@@ -340,6 +340,46 @@ raster:
 
 Assets without a matching `alternate` entry keep using their main `href`.
 
+### Raster Backend and Storage Credentials
+
+`raster.backend` selects how the raster service finds items:
+
+- `pgstac` (default): [titiler-pgstac](https://github.com/stac-utils/titiler-pgstac) reads items from the database.
+- `stacapi`: [titiler-stacapi](https://github.com/developmentseed/titiler-stacapi) reads items through a STAC API. The raster pod gets no database credentials and no pgstac init container. If `stac-auth-proxy` is enabled, requests go through it, so the catalog's access rules also apply to raster.
+
+```yaml
+raster:
+  backend: stacapi
+  stacapi:
+    stacApiUrl: ""  # default: stac-auth-proxy if enabled, otherwise the in-cluster stac service
+    envVars:
+      TITILER_STACAPI_API_CACHECONTROL: "private, no-store"  # tiles may be user-specific
+```
+
+Use `raster.stacapi.image` and `raster.stacapi.command` to run a custom titiler-stacapi app, for example one that forwards the caller's `Authorization` header. `raster.stacapi.envVars` overrides `raster.settings.envVars`. `raster.metrics.enabled` has no effect with `stacapi`, because titiler-stacapi has no native `/metrics` endpoint.
+
+Storage credentials for private buckets work with either backend. Mount a Secret as a whole volume, without `subPath`, so rotated keys reach running pods. Use `envSecrets` for credentials that the app reads from environment variables:
+
+```yaml
+raster:
+  settings:
+    envSecrets:
+      - raster-oidc-client
+    extraVolumes:
+      - name: storage-credentials
+        secret:
+          secretName: raster-storage-credentials
+    extraVolumeMounts:
+      - name: storage-credentials
+        mountPath: /etc/raster/credentials
+        readOnly: true
+```
+
+Caveats:
+
+- The mosaic `/searches` endpoints only exist with `pgstac`.
+- `/multidim` keeps reading from pgstac and does not check access. Disable it if it must not expose private data.
+
 ## STAC Browser
 
 | **Values Key** | **Description** | **Default** | **Choices** |
