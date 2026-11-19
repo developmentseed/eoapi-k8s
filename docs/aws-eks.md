@@ -1,6 +1,6 @@
 ---
 title: "AWS EKS Setup"
-description: "Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and NGINX ingress"
+description: "Complete EKS cluster setup with OIDC, node autoscaling, EBS CSI, and Traefik ingress"
 external_links:
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
@@ -16,7 +16,7 @@ external_links:
 
 This is a verbose walkthrough. It uses `eksctl` and assumes you already have an AWS account, have the [eksctl prerequisites installed](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) including `eksctl` and `helm`.
 
-If you're familiar with Terraform and would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform
+If you're familiar with Terraform and would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform. It installs the retired ingress-nginx controller, so replace that with Traefik as described [below](#ingress).
 
 
 ## Table of Contents:
@@ -24,7 +24,7 @@ If you're familiar with Terraform and would like an IaC choice that is more ters
 2. [Make sure EKS Cluster has OIDC Provider](#check-oidc)
 3. [Install Node Autoscaling](#node-autoscaler)
 4. [Install EBS CSI Add-on](#ebs-addon)
-5. [Install NGINX Ingress Controller](#nginx-ingress)
+5. [Install the Ingress Controller](#ingress)
 
 ---
 
@@ -176,45 +176,44 @@ a sample application to make sure it dynamically mounts an EBS volume
 
 ---
 
-## Install Nginx Ingress Controller <a name="nginx-ingress"></a>
+## Install the Ingress Controller <a name="ingress"></a>
 
-Please look through the [Nginx Docs](https://github.com/kubernetes/ingress-nginx) to verify nothing has changed below. There are multiple ways to provision and configure. Below is the simplest we found:
+We use Traefik: the community ingress-nginx controller was retired in March 2026 and its repository is archived. To move a cluster that already runs ingress-nginx, see [Unified Ingress](unified-ingress.md#existing-ingress-nginx-clusters).
 
-   ```sh
-   helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-   kubectl create namespace ingress-nginx
-   helm upgrade -i ingress-nginx \
-       ingress-nginx/ingress-nginx \
-       --set controller.service.type=LoadBalancer \
-       --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb" \
-       --set controller.service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-scheme"="internet-facing" \
-       --namespace ingress-nginx
-
-   # helm delete ingress-nginx -n ingress-nginx
-   ```
-
-Depending on what NGINX functionality you need you might also want to configure `kind: ConfigMap` as [talked about on their docs](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/).
-Below we enable gzip by patching `use-gzip` into the `ConfigMap`:
+Install Traefik behind an NLB with the repository's [`traefik-values.yaml`](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/traefik-values.yaml):
 
    ```sh
-   kubectl get cm  | grep ingress-nginx | cut -d' ' -f1 | xargs -I{} kubectl patch cm/{} --type merge -p '{"data":{"use-gzip":"true"}}'
+   curl -fsSLO https://raw.githubusercontent.com/developmentseed/eoapi-k8s/main/docs/traefik-values.yaml
+   helm upgrade --install traefik traefik \
+       --repo https://traefik.github.io/charts --version 42.4.1 \
+       --namespace traefik --create-namespace \
+       -f traefik-values.yaml \
+       --set-string service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-type"="nlb" \
+       --set-string service.annotations."service\.beta\.kubernetes\.io/aws-load-balancer-scheme"="internet-facing"
 
-   # kubectl get cm --all-namespaces| grep ingress-nginx-controller | awk '{print $1 " " $2}' | while read ns cm; do kubectl patch cm -n $ns $cm --type merge -p '{"data":{"use-gzip":"true"}}'; done
-
-   kubectl get deploy --all-namespaces | grep ingress-nginx-conto | cut -d' ' -f1 | xargs -I{} kubectl rollout restart deploy/{}
-
-   # kubectl get deploy --all-namespaces| grep ingress-nginx-controller | awk '{print $1 " " $2}' | while read ns deploy; do kubectl rollout restart deploy/$deploy -n $ns; done
+   # helm delete traefik -n traefik
    ```
+
+The values file redirects HTTP to HTTPS and sends HSTS, as ingress-nginx did. See [Unified Ingress](unified-ingress.md#traefik-ingress-controller) for the other differences, such as compression.
+
+Then set the ingress class in the `config.yaml` you pass to [`helm install`](./helm-install.md). Because of the redirect, serve eoAPI over TLS, for example with a certificate from [cert-manager](unified-ingress.md#setting-up-tls-with-cert-manager):
+
+   ```yaml
+   ingress:
+     className: "traefik"
+     host: "eoapi.example.com"
+     tls:
+       enabled: true
+   ```
+
+If you enable autoscaling, use `type: "cpu"`: request-rate autoscaling reads ingress-nginx metrics (see [Autoscaling](autoscaling.md)).
 
 Assert that things are set up correctly:
 
    ```sh
-   kubectl get deploy,pod,svc --all-namespaces | grep nginx
+   kubectl -n traefik get deploy,pod,svc
 
-   # deployment.apps/nginx-ingress-nginx-controller   1/1     1            1           2d17h
-   # pod/nginx-ingress-nginx-controller-76d7f6f4d5-g6fkv   1/1     Running   0          27h
-   # service/nginx-ingress-nginx-controller             LoadBalancer   10.100.36.152    eoapi-k8s-553d3ea234b-3eef2e6e61e5d161.elb.us-west-1.amazonaws.com   80:30342/TCP,443:30742/TCP   2d17h
-   # service/nginx-ingress-nginx-controller-admission   ClusterIP      10.100.34.22     <none>                                                                          443/TCP                      2d17h
+   # The traefik Service is a LoadBalancer with an *.elb.<region>.amazonaws.com EXTERNAL-IP
    ```
 
 ---

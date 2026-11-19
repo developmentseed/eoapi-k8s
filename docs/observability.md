@@ -147,6 +147,9 @@ When prometheus-adapter and nginx ingress are both enabled, these custom metrics
 - Ingress must use specific hostnames (not wildcard patterns)
 - prometheus-adapter must be configured to expose these metrics
 
+These metrics come from ingress-nginx. Traefik, including its Ingress NGINX provider, does not produce
+them, so with Traefik use CPU autoscaling (see [Autoscaling](autoscaling.md)).
+
 ### Application Metrics
 
 The `raster` (titiler-pgstac), `vector` (tipg), and `stac` (stac-fastapi-pgstac)

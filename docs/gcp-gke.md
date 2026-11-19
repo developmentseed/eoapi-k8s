@@ -1,6 +1,6 @@
 ---
 title: "GCP GKE Setup"
-description: "GKE cluster creation with CSI driver, NGINX ingress, and cert-manager"
+description: "GKE cluster creation with CSI driver, Traefik ingress, and cert-manager"
 external_links:
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
@@ -16,14 +16,14 @@ external_links:
 
 This is a verbose walkthrough. It uses `gcloud` and assumes you already have an GCP account and project where you want to run eoapi. We also assume that you have some prerequisites installed including `gcloud`, `kubectl` and `helm`.
 
-If you're familiar with Terraform and would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform
+If you're familiar with Terraform and would like an IaC choice that is more terse consider setting up your cluster with that: https://github.com/developmentseed/eoapi-k8s-terraform. It installs the retired ingress-nginx controller, so replace that with Traefik as described [below](#install-the-ingress-controller).
 
 # Table of Contents
 - [Pre-requisites](#pre-requisites)
 - [Enable GKE API](#enable-gke-api)
 - [Create GKE k8s Cluster](#create-gke-k8s-cluster)
 - [Enable CSI Driver](#enable-csi-driver)
-- [Install NGINX Ingress Controller](#install-nginx-ingress-controller)
+- [Install the Ingress Controller](#install-the-ingress-controller)
 - [Install Cert Manager](#install-cert-manager)
 
 
@@ -95,18 +95,35 @@ NAME                                        STATUS   ROLES    AGE   VERSION
 gke-eoapi-test-default-pool-94a2b7e7-vg4f   Ready    <none>   5m   v1.31.5-gke.1233000
 ```
 
-# Install NGINX Ingress Controller
+# Install the Ingress Controller
 
-NGINX Ingress Controller can be installed through `helm` using the following command:
+We use Traefik: the community ingress-nginx controller was retired in March 2026 and its repository is archived. To move a cluster that already runs ingress-nginx, see [Unified Ingress](unified-ingress.md#existing-ingress-nginx-clusters).
+
+Install Traefik with the repository's [`traefik-values.yaml`](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/traefik-values.yaml):
 ```
 kubectl create ns eoapi
 
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --namespace eoapi
+curl -fsSLO https://raw.githubusercontent.com/developmentseed/eoapi-k8s/main/docs/traefik-values.yaml
+helm upgrade --install traefik traefik \
+  --repo https://traefik.github.io/charts --version 42.4.1 \
+  --namespace traefik --create-namespace \
+  -f traefik-values.yaml
 ```
 
-See the [NGINX Ingress Controller docs](https://kubernetes.github.io/ingress-nginx/deploy/) for more details and configuration options.
+The values file redirects HTTP to HTTPS and sends HSTS, as ingress-nginx did. See [Unified Ingress](unified-ingress.md#traefik-ingress-controller) for the other differences.
+
+Then set the ingress class in the `config.yaml` you pass to [`helm install`](./helm-install.md). Because of the redirect, serve eoAPI over TLS with a certificate from cert-manager (next section):
+```yaml
+ingress:
+  className: "traefik"
+  host: "eoapi.example.com"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+```
+
+If you enable autoscaling, use `type: "cpu"`: request-rate autoscaling reads ingress-nginx metrics (see [Autoscaling](autoscaling.md)).
 
 # Install Cert Manager
 
@@ -122,6 +139,8 @@ helm upgrade --install cert-manager jetstack/cert-manager \
   --version v1.12.0 \
   --set installCRDs=true
 ```
+
+Then create a ClusterIssuer whose HTTP-01 solver uses `ingressClassName: traefik`, as shown in [Unified Ingress](unified-ingress.md#setting-up-tls-with-cert-manager).
 
 Now we are ready to install eoapi. See the [eoapi installation instructions](./helm-install.md) for more details.
 
