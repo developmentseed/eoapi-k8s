@@ -72,6 +72,20 @@ WARNING: external/shared PostgreSQL + autoscaling
 {{- end }}
 {{- end }}
 
+{{- if and .Values.ingress.enabled (eq .Values.ingress.className "nginx") }}
+
+WARNING: ingress.className=nginx
+  The community ingress-nginx controller (kubernetes/ingress-nginx) was retired in March 2026
+  and gets no more security fixes, including for the nginx vulnerabilities disclosed in
+  November 2026. Plan a move to Traefik:
+  - new installs: set ingress.className=traefik (see docs/unified-ingress.md);
+  - existing clusters: Traefik's Kubernetes Ingress NGINX provider can serve the "nginx"
+    class with your current annotations. If you already run it, ignore this warning.
+  Request-rate autoscaling needs ingress-nginx metrics: with Traefik use autoscaling.type=cpu.
+
+  See https://doc.traefik.io/traefik/migrate/nginx-to-traefik/
+{{- end }}
+
 To verify the deployment status:
   $ kubectl get pods -n {{ .Release.Namespace }}
 
