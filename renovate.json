@@ -106,7 +106,7 @@
       "labels": ["dependencies", "patch"]
     },
     {
-      "description": "Image patch releases often carry security fixes that Renovate cannot detect for docker: open them whenever Renovate runs. After the per-image rules that set the night schedule, since later rules win; chart dependencies (helmv3) keep it",
+      "description": "Image patch updates (often security fixes) at any time. Keep below the per-image rules that set the night schedule",
       "matchManagers": ["custom.regex", "helm-values"],
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["patch"],
