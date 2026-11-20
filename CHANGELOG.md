@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.18.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.6...v0.18.0) (2026-11-20)
+
+
+### Added
+
+* support titiler-stacapi alongside titiler-pgstac. ([#700](https://github.com/developmentseed/eoapi-k8s/issues/700)) ([cd92778](https://github.com/developmentseed/eoapi-k8s/commit/cd92778618370b60aac6dd2de0573b3746800a68))
+
+
+### Fixed
+
+* **deps:** move pgstac-pypgstac to v0.10.1 ([#707](https://github.com/developmentseed/eoapi-k8s/issues/707)) ([8fb24a0](https://github.com/developmentseed/eoapi-k8s/commit/8fb24a0671257684a76d685bd87d696c9fb46cc0))
+* **deps:** pin titiler-md-demo to its slim image ([#687](https://github.com/developmentseed/eoapi-k8s/issues/687)) ([74f2b18](https://github.com/developmentseed/eoapi-k8s/commit/74f2b18a8cb9d7fa8294a6c4c4f8c9f9bd2619da))
+* **helm:** move grafana to the maintained grafana-community chart ([#698](https://github.com/developmentseed/eoapi-k8s/issues/698)) ([06697f2](https://github.com/developmentseed/eoapi-k8s/commit/06697f244c2f8265cde2b0ec484d34dd6cd3efd0))
+* **helm:** move the doc server to nginx 1.31.9 and warn on className nginx ([#709](https://github.com/developmentseed/eoapi-k8s/issues/709)) ([d32f6cb](https://github.com/developmentseed/eoapi-k8s/commit/d32f6cbda21917e29ca228e5516c758eb05bdf03))
+* switch to genuine titiler for multidim support. ([#701](https://github.com/developmentseed/eoapi-k8s/issues/701)) ([be60368](https://github.com/developmentseed/eoapi-k8s/commit/be6036812414300093f20d4cef94ae7db08ff72e))
+* **values:** disable grafana's busybox chown init container ([#699](https://github.com/developmentseed/eoapi-k8s/issues/699)) ([7a600fc](https://github.com/developmentseed/eoapi-k8s/commit/7a600fc2ec4d1721204184d3d012d6b29b68fe0c))
+* **values:** move doc-server off the frozen nginxinc/ image namespace ([#697](https://github.com/developmentseed/eoapi-k8s/issues/697)) ([92eabfa](https://github.com/developmentseed/eoapi-k8s/commit/92eabfa91dc42b176db432095f5ac1714a4ad41b))
+
+
+### Maintenance
+
+* **deps:** let Renovate open image patch PRs outside the night window ([#710](https://github.com/developmentseed/eoapi-k8s/issues/710)) ([b642a29](https://github.com/developmentseed/eoapi-k8s/commit/b642a29af99d39b09f0d6e54cf9a06452508303a))
+* **deps:** updated alpine/kubectl docker tag to v1.37.2 ([#690](https://github.com/developmentseed/eoapi-k8s/issues/690)) ([e95405a](https://github.com/developmentseed/eoapi-k8s/commit/e95405a2a6aff7b36e49457988441ad1a66f7d62))
+* **deps:** updated amannn/action-semantic-pull-request digest to 2252a14 ([#680](https://github.com/developmentseed/eoapi-k8s/issues/680)) ([bad24ba](https://github.com/developmentseed/eoapi-k8s/commit/bad24ba51ac50d11981cc0e2744d0f77240aefd7))
+* **deps:** updated azure/setup-helm digest to 2f5e7bc ([#689](https://github.com/developmentseed/eoapi-k8s/issues/689)) ([7bad162](https://github.com/developmentseed/eoapi-k8s/commit/7bad16260be359a8b8256505fa7b12cc46bc1695))
+* **deps:** updated eoapi-notifier docker tag to v0.1.1 ([#692](https://github.com/developmentseed/eoapi-k8s/issues/692)) ([f38701d](https://github.com/developmentseed/eoapi-k8s/commit/f38701de14797510da625b1b931d86c441003189))
+* **deps:** updated ghcr.io/developmentseed/titiler-stacapi docker tag to v2.2.0 ([#705](https://github.com/developmentseed/eoapi-k8s/issues/705)) ([30a038a](https://github.com/developmentseed/eoapi-k8s/commit/30a038adca2ab130523f8f4177290eba5135a994))
+* **deps:** updated ghcr.io/radiantearth/stac-browser docker tag to v5.2.0 ([#683](https://github.com/developmentseed/eoapi-k8s/issues/683)) ([60a390d](https://github.com/developmentseed/eoapi-k8s/commit/60a390d28b35c7b36cff471fd59e8b97da46cf3d))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v7.2.2 ([#693](https://github.com/developmentseed/eoapi-k8s/issues/693)) ([4735581](https://github.com/developmentseed/eoapi-k8s/commit/4735581abf1538e3fe3d89ee3d367be04fb029a0))
+* **deps:** updated ghcr.io/stac-utils/stac-fastapi-pgstac docker tag to v7.3.0 ([#716](https://github.com/developmentseed/eoapi-k8s/issues/716)) ([121c526](https://github.com/developmentseed/eoapi-k8s/commit/121c5263f30cedcafc67e348bdc7aea8fd66e6b7))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v3.2.1 ([#694](https://github.com/developmentseed/eoapi-k8s/issues/694)) ([116d111](https://github.com/developmentseed/eoapi-k8s/commit/116d111ccc6f9cf6e2e09046d867379971f78b8c))
+* **deps:** updated ghcr.io/stac-utils/titiler-pgstac docker tag to v3.2.2 ([#714](https://github.com/developmentseed/eoapi-k8s/issues/714)) ([13e6f7d](https://github.com/developmentseed/eoapi-k8s/commit/13e6f7dbd282c7d6007b0aa94f7c9394e437128f))
+* **deps:** updated helm release grafana to 14.4.2. ([#702](https://github.com/developmentseed/eoapi-k8s/issues/702)) ([8cef5f8](https://github.com/developmentseed/eoapi-k8s/commit/8cef5f8205b40e5d76950671ce1d1591312f6eda))
+* **deps:** updated helm release grafana to 14.5.0. ([#706](https://github.com/developmentseed/eoapi-k8s/issues/706)) ([fa223b2](https://github.com/developmentseed/eoapi-k8s/commit/fa223b2b5fd7159414b06a2e2ef1db5d6c8ed418))
+* **deps:** updated helm release prometheus to 29.45.1. ([#678](https://github.com/developmentseed/eoapi-k8s/issues/678)) ([89fb17e](https://github.com/developmentseed/eoapi-k8s/commit/89fb17e339eecf87ae5e177f18288146f8dd5805))
+* **deps:** updated helm release prometheus to 29.45.2. ([#682](https://github.com/developmentseed/eoapi-k8s/issues/682)) ([f21750e](https://github.com/developmentseed/eoapi-k8s/commit/f21750e2bdc0f0e8d4ec0f9b951162681406a4cf))
+* **deps:** updated helm release prometheus to 29.47.0. ([#684](https://github.com/developmentseed/eoapi-k8s/issues/684)) ([0830551](https://github.com/developmentseed/eoapi-k8s/commit/08305510a170ad322cb7bf535475178115bad3c8))
+* **deps:** updated helm release prometheus to 29.47.2. ([#688](https://github.com/developmentseed/eoapi-k8s/issues/688)) ([116a865](https://github.com/developmentseed/eoapi-k8s/commit/116a8658de61b825bcf0e76de1adc0463cb705d0))
+* **deps:** updated helm release prometheus-adapter to 5.4.1. ([#695](https://github.com/developmentseed/eoapi-k8s/issues/695)) ([2d049e3](https://github.com/developmentseed/eoapi-k8s/commit/2d049e30ea843c89b94b4aa2880ad07f735d7bd9))
+* **deps:** updated helm release prometheus-adapter to 5.4.2. ([#696](https://github.com/developmentseed/eoapi-k8s/issues/696)) ([a61e6a3](https://github.com/developmentseed/eoapi-k8s/commit/a61e6a38692fe67f11b9f8e3552313d59a5a4372))
+* **deps:** updated nginx/nginx-unprivileged docker tag to v1.31.9 ([#715](https://github.com/developmentseed/eoapi-k8s/issues/715)) ([00f0160](https://github.com/developmentseed/eoapi-k8s/commit/00f01604168ebd833cdb5e81b456dab3418d37ac))
+* **deps:** updated pgo docker tag to v6 ([#691](https://github.com/developmentseed/eoapi-k8s/issues/691)) ([0dcc25e](https://github.com/developmentseed/eoapi-k8s/commit/0dcc25e6225f79b83107bd337d79b7d9505cedb7))
+* **deps:** updated stac-auth-proxy to v1.4.0 ([#717](https://github.com/developmentseed/eoapi-k8s/issues/717)) ([b868648](https://github.com/developmentseed/eoapi-k8s/commit/b8686488b009fe93da6d6737dacfe027584afbe1))
+
+
+### Other
+
+* explain the multidim API change after the switch to titiler.xarray ([#704](https://github.com/developmentseed/eoapi-k8s/issues/704)) ([fd41d24](https://github.com/developmentseed/eoapi-k8s/commit/fd41d242ae6d472bf659ad238a3fc00a4aebdddc))
+
 ## [0.17.6](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.5...v0.17.6) (2026-11-06)
 
 
