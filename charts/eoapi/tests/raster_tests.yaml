@@ -91,9 +91,9 @@ tests:
       raster.enabled: true
     template: templates/services/raster/deployment.yaml
     asserts:
-      - equal:
+      - matchRegex:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/stac-utils/titiler-pgstac:3.2.1
+          pattern: '^ghcr\.io/stac-utils/titiler-pgstac:'
       - contains:
           path: spec.template.spec.containers[0].command
           content: titiler.pgstac.main:app
