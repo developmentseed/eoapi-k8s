@@ -1,0 +1,22 @@
+suite: NOTES.txt tests
+templates:
+  - templates/NOTES.txt
+tests:
+  - it: warns about the retired ingress-nginx controller with the default className
+    asserts:
+      - matchRegexRaw:
+          pattern: "WARNING: ingress.className=nginx"
+
+  - it: does not warn with className traefik
+    set:
+      ingress.className: traefik
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "ingress-nginx"
+
+  - it: does not warn when the ingress is disabled
+    set:
+      ingress.enabled: false
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "ingress-nginx"
