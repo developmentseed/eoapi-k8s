@@ -101,6 +101,13 @@
       "labels": ["dependencies", "patch"]
     },
     {
+      "description": "Image patch updates (often security fixes) at any time. Keep below the per-image rules that set the night schedule",
+      "matchManagers": ["custom.regex", "helm-values"],
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["patch"],
+      "schedule": ["at any time"]
+    },
+    {
       "description": "Minor updates - individual PRs",
       "matchUpdateTypes": ["minor"],
       "schedule": ["after 10pm every weekday", "before 5am every weekday"],
