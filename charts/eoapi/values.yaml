@@ -378,7 +378,7 @@ raster:
   backend: pgstac
   image:
     name: ghcr.io/stac-utils/titiler-pgstac
-    tag: 3.2.1
+    tag: 3.2.2
     pullPolicy: IfNotPresent
   command:
     - "uvicorn"
