@@ -19,9 +19,9 @@ dependencies:
   version: 5.4.2
 - name: grafana
   repository: https://grafana-community.github.io/helm-charts
-  version: 14.4.2
+  version: 14.5.0
 - name: stac-auth-proxy
   repository: oci://ghcr.io/developmentseed/stac-auth-proxy/charts
   version: 1.4.0
-digest: sha256:9e0a2a83197006e67e0f5c51e22ab9a8ffc74a7f9081e3fef013854e5459a2e4
-generated: "2026-11-20T04:23:23.765649384Z"
+digest: sha256:b5f42632cf8ffc0a3594bc317909cb9f0e6c467a3c445003317546ce8ca9ce0d
+generated: "2026-11-20T14:34:15.931624369Z"
