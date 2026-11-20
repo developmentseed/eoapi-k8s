@@ -17,7 +17,7 @@
       "description": "Datetime"
     },
     "geometry": {
-      "$ref": "https://geojson.org/schema/Feature.json",
+      "$ref": "https://geojson.org/schema/Feature.json#/properties/geometry",
       "title": "Item Geometry",
       "description": "Item Geometry"
     },

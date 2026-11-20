@@ -246,6 +246,15 @@ kubectl create configmap my-queryables-cm \
 
 The queryables will be automatically loaded during the PgSTAC bootstrap process.
 
+### Upgrading from pgstac 0.9
+
+The `pgstac-migrate` post-upgrade hook moves an existing 0.9.x database to the 0.10.x schema. The migration only goes forward:
+
+- Back up the database first and check that you can restore it. The 0.9.x bootstrap jobs fail or rewrite queryables against a 0.10 database.
+- Saved searches (`pgstac.searches`, used by titiler-pgstac mosaics) are re-checked against pgstac 0.10's stricter CQL2. Tile requests for a search whose filter 0.10 rejects return HTTP 500, so test them on a migrated copy first.
+- Paging links issued before the upgrade return an error; clients restart from the first page.
+- If the upgrade fails or times out, run `SELECT pgstac.get_version();` before rolling back. If it reports 0.10.x, restore the backup rather than rolling back.
+
 ### ArgoCD Integration
 
 For ArgoCD deployments, See the [ArgoCD Integration Guide](argocd.md) for detailed configuration and best practices.

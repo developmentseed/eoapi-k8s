@@ -73,11 +73,6 @@
       "addLabels": ["manual-review"]
     },
     {
-      "description": "Hold pgstac on 0.9: #635 rolled back from the breaking v0.10.0 and titiler-pgstac 3.2.0 supports pgstac >=0.9,<0.10. Lift together with titiler-pgstac",
-      "matchPackageNames": ["ghcr.io/stac-utils/pgstac-pypgstac"],
-      "allowedVersions": "/^v0\\.9\\./"
-    },
-    {
       "description": "Offer each kubectl minor separately, so a one-minor step can be approved",
       "matchPackageNames": ["alpine/kubectl"],
       "separateMultipleMinor": true
