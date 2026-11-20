@@ -1,0 +1,40 @@
+# Values for the Traefik Helm chart (https://github.com/traefik/traefik-helm-chart), version 42.4.1.
+# They keep the behaviour ingress-nginx had by default. See unified-ingress.md for how to install them.
+
+global:
+  # Drop request headers whose name aliases another one (X_Forwarded_For for X-Forwarded-For), on every entry point
+  aliasHeadersStrategy: delete
+
+ports:
+  web:
+    http:
+      # Redirect HTTP to HTTPS
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    http:
+      # Send HSTS on HTTPS responses (middleware defined below)
+      middlewares:
+        - hsts@file
+      # Answer 400 to an encoded NUL (%00) in the path
+      encodedCharacters:
+        allowEncodedNullCharacter: false
+
+providers:
+  file:
+    enabled: true
+    content:
+      http:
+        middlewares:
+          hsts:
+            headers:
+              stsSeconds: 31536000
+              stsIncludeSubdomains: true
+  # Set enabled to true on clusters that keep `ingress.className: "nginx"`
+  kubernetesIngressNGINX:
+    enabled: false
+    publishService:
+      enabled: true
