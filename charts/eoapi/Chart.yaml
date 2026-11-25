@@ -25,7 +25,7 @@ annotations:
     - stac
     - raster
     - vector
-version: 0.17.6
+version: 0.18.0
 appVersion: 7.4.0
 dependencies:
   - name: postgrescluster
