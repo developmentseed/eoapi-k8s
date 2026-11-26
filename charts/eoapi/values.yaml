@@ -346,6 +346,9 @@ raster:
   # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    # Share one PROMETHEUS_MULTIPROC_DIR (emptyDir) across the uvicorn workers so a scrape sums them all.
+    # Drops the per-process process_*/python_* series. Skipped if settings.envVars sets PROMETHEUS_MULTIPROC_DIR.
+    multiprocess: true
     # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
     serviceMonitor:
       enabled: false
@@ -511,6 +514,9 @@ stac:
   # Exposes GET /_mgmt/metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    # Share one PROMETHEUS_MULTIPROC_DIR (emptyDir) across the uvicorn workers so a scrape sums them all.
+    # Drops the per-process process_*/python_* series. Skipped if settings.envVars sets PROMETHEUS_MULTIPROC_DIR.
+    multiprocess: true
     # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
     serviceMonitor:
       enabled: false
@@ -654,6 +660,9 @@ vector:
   # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    # Share one PROMETHEUS_MULTIPROC_DIR (emptyDir) across the uvicorn workers so a scrape sums them all.
+    # Drops the per-process process_*/python_* series. Skipped if settings.envVars sets PROMETHEUS_MULTIPROC_DIR.
+    multiprocess: true
     # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
     serviceMonitor:
       enabled: false

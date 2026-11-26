@@ -1110,6 +1110,10 @@
               "type": "boolean",
               "description": "Enable the service's native Prometheus /metrics endpoint (requires monitoring.prometheus.enabled to be scraped)"
             },
+            "multiprocess": {
+              "type": "boolean",
+              "description": "With metrics.enabled, set PROMETHEUS_MULTIPROC_DIR on an emptyDir so a scrape aggregates all uvicorn workers (skipped if settings.envVars sets PROMETHEUS_MULTIPROC_DIR)"
+            },
             "serviceMonitor": {
               "type": "object",
               "properties": {
