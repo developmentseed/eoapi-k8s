@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.18.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.18.0...v0.18.1) (2026-11-26)
+
+
+### Fixed
+
+* **titiler-stacapi:** metrics. ([#731](https://github.com/developmentseed/eoapi-k8s/issues/731)) ([e8ae94e](https://github.com/developmentseed/eoapi-k8s/commit/e8ae94eec182a6ce7f5b030fac4d2effffddb41c))
+
+
+### Maintenance
+
+* **deps:** updated helm release grafana to 14.6.1. ([#728](https://github.com/developmentseed/eoapi-k8s/issues/728)) ([7553767](https://github.com/developmentseed/eoapi-k8s/commit/7553767ccd8a19ecabceceb36bf0337f763744f1))
+
 ## [0.18.0](https://github.com/developmentseed/eoapi-k8s/compare/v0.17.6...v0.18.0) (2026-11-25)
 
 
