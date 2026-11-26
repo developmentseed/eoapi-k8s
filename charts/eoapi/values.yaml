@@ -389,7 +389,7 @@ raster:
   stacapi:
     image:
       name: ghcr.io/developmentseed/titiler-stacapi
-      tag: 2.2.0
+      tag: 2.3.0
       pullPolicy: IfNotPresent
     command:
       - "uvicorn"

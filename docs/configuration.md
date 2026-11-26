@@ -365,7 +365,7 @@ raster:
       TITILER_STACAPI_API_CACHECONTROL: "private, no-store"  # tiles may be user-specific
 ```
 
-Use `raster.stacapi.image` and `raster.stacapi.command` to run a custom titiler-stacapi app, for example one that forwards the caller's `Authorization` header. `raster.stacapi.envVars` overrides `raster.settings.envVars`. `raster.metrics.enabled` has no effect with `stacapi`, because titiler-stacapi has no native `/metrics` endpoint.
+Use `raster.stacapi.image` and `raster.stacapi.command` to run a custom titiler-stacapi app, for example one that forwards the caller's `Authorization` header. `raster.stacapi.envVars` overrides `raster.settings.envVars`. `raster.metrics.enabled` works with `stacapi` too (titiler-stacapi 2.3.0 or later).
 
 Storage credentials for private buckets work with either backend. Mount a Secret as a whole volume, without `subPath`, so rotated keys reach running pods. Use `envSecrets` for credentials that the app reads from environment variables:
 

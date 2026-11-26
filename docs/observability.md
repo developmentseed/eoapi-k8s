@@ -164,6 +164,7 @@ monitoring:
 raster:
   metrics:
     enabled: true  # exposes titiler_pgstac_http_requests_total, titiler_pgstac_http_request_duration_seconds at /metrics
+    # with backend: stacapi, the names are titiler_stacapi_http_requests_total, titiler_stacapi_http_request_duration_seconds
 
 vector:
   metrics:

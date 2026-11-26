@@ -156,7 +156,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))",
+          "expr": "sum(rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))",
           "refId": "A"
         }
       ],
@@ -218,7 +218,7 @@
       },
       "targets": [
         {
-          "expr": "100 * (sum(rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\", status=\"4xx\"}[5m])) or on() vector(0)) / clamp_min(sum(rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])), 0.001)",
+          "expr": "100 * (sum(rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\", status=\"4xx\"}[5m])) or on() vector(0)) / clamp_min(sum(rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])), 0.001)",
           "refId": "A"
         }
       ],
@@ -280,7 +280,7 @@
       },
       "targets": [
         {
-          "expr": "100 * (sum(rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\", status=\"5xx\"}[5m])) or on() vector(0)) / clamp_min(sum(rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])), 0.001)",
+          "expr": "100 * (sum(rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\", status=\"5xx\"}[5m])) or on() vector(0)) / clamp_min(sum(rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])), 0.001)",
           "refId": "A"
         }
       ],
@@ -331,7 +331,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(titiler_pgstac_http_request_duration_seconds_bucket{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_request_duration_seconds_bucket\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
           "refId": "A"
         }
       ],
@@ -422,7 +422,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (status) (rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))",
+          "expr": "sum by (status) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
@@ -467,7 +467,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (operation) (rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\", status=~\"4xx|5xx\"}[5m])) or (0 * sum by (operation) (rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
+          "expr": "sum by (operation) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\", status=~\"4xx|5xx\"}[5m])) or (0 * sum by (operation) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
           "legendFormat": "{{operation}}",
           "refId": "A"
         }
@@ -512,7 +512,7 @@
       },
       "targets": [
         {
-          "expr": "topk(10, histogram_quantile(0.95, sum by (operation, le) (rate(titiler_pgstac_http_request_duration_seconds_bucket{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))))",
+          "expr": "topk(10, histogram_quantile(0.95, sum by (operation, le) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_request_duration_seconds_bucket\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))))",
           "legendFormat": "{{operation}}",
           "refId": "A"
         }
@@ -573,7 +573,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (operation) (rate(titiler_pgstac_http_requests_total{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))",
+          "expr": "sum by (operation) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_requests_total\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m]))",
           "legendFormat": "{{operation}}",
           "refId": "A"
         }
@@ -618,12 +618,12 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(titiler_pgstac_http_request_duration_seconds_bucket{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_request_duration_seconds_bucket\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(titiler_pgstac_http_request_duration_seconds_bucket{app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate({__name__=~\"titiler_(pgstac|stacapi)_http_request_duration_seconds_bucket\", app_kubernetes_io_component=\"raster\", operation!=\"\"}[5m])))",
           "legendFormat": "p95",
           "refId": "B"
         }

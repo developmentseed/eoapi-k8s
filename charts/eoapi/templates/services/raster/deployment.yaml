@@ -110,8 +110,8 @@ spec:
           {{- include "eoapi.postgresqlEnv" . | nindent 10 }}
           {{- end }}
           {{- include "eoapi.commonEnvVars" (dict "service" "raster" "root" .) | nindent 10 }}
-          {{- if and .Values.raster.metrics.enabled (not $stacapi) }}
-          - name: TITILER_PGSTAC_API_METRICS_ENABLED
+          {{- if .Values.raster.metrics.enabled }}
+          - name: {{ ternary "TITILER_STACAPI_API_METRICS_ENABLED" "TITILER_PGSTAC_API_METRICS_ENABLED" $stacapi }}
             value: "true"
           {{- end }}
         envFrom:
