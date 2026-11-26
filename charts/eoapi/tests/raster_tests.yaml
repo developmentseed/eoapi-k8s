@@ -133,6 +133,11 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
+            name: TITILER_STACAPI_API_METRICS_ENABLED
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
             name: TITILER_STACAPI_STAC_API_URL
             value: http://RELEASE-NAME-stac:8080
 

@@ -3,6 +3,7 @@
 import os
 
 import httpx
+import pytest
 
 # better timeouts
 timeout = httpx.Timeout(15.0, connect=60.0)
@@ -10,6 +11,14 @@ if bool(os.getenv("IGNORE_SSL_VERIFICATION", False)):
     client = httpx.Client(timeout=timeout, verify=False)
 else:
     client = httpx.Client(timeout=timeout)
+
+
+@pytest.fixture(scope="module")
+def pgstac_backend(raster_endpoint: str) -> None:
+    """Skip tests that need titiler-pgstac routes (e.g. /searches)."""
+    title = client.get(f"{raster_endpoint}/api").json()["info"]["title"]
+    if "stacapi" in title.lower():
+        pytest.skip("raster backend is not titiler-pgstac")
 
 
 def test_raster_api(raster_endpoint: str) -> None:
@@ -21,6 +30,7 @@ def test_raster_api(raster_endpoint: str) -> None:
     assert resp.headers["content-type"] == "application/json"
 
 
+@pytest.mark.usefixtures("pgstac_backend")
 def test_mosaic_api(raster_endpoint: str) -> None:
     """test mosaic."""
     query = {
@@ -63,6 +73,7 @@ def test_mosaic_api(raster_endpoint: str) -> None:
     assert "content-encoding" not in resp.headers
 
 
+@pytest.mark.usefixtures("pgstac_backend")
 def test_mosaic_collection_api(raster_endpoint: str) -> None:
     """test mosaic collection."""
     resp = client.get(
@@ -93,6 +104,7 @@ def test_mosaic_collection_api(raster_endpoint: str) -> None:
     assert "content-encoding" not in resp.headers
 
 
+@pytest.mark.usefixtures("pgstac_backend")
 def test_mosaic_search(raster_endpoint: str) -> None:
     """test mosaic."""
     # register some fake mosaic
