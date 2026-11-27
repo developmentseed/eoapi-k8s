@@ -28,11 +28,8 @@ Helper function for common environment variables
 {{- end -}}
 
 {{/*
-prometheus_client multiprocess mode: without it each uvicorn worker (WEB_CONCURRENCY) keeps its own
-registry and a scrape returns one worker's counters. Steps back when the user sets
-PROMETHEUS_MULTIPROC_DIR in settings.envVars. No wipe needed: the emptyDir is new per pod, and
-after a container restart the counters and histograms carry on from the old files.
-Call with dict "service" <key> "root" $ "enabled" <metrics on> "part" "env"|"volumeMount"|"volume".
+Share PROMETHEUS_MULTIPROC_DIR across uvicorn workers so a scrape sums them all.
+Skipped if settings.envVars sets it. part: env | volumeMount | volume.
 */}}
 {{- define "eoapi.metricsMultiproc" -}}
 {{- $svc := index .root.Values .service -}}

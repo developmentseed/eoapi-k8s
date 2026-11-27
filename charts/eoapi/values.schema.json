@@ -1112,7 +1112,7 @@
             },
             "multiprocess": {
               "type": "boolean",
-              "description": "With metrics.enabled, set PROMETHEUS_MULTIPROC_DIR on an emptyDir so a scrape aggregates all uvicorn workers (skipped if settings.envVars sets PROMETHEUS_MULTIPROC_DIR)"
+              "description": "Sum all uvicorn workers in a scrape via PROMETHEUS_MULTIPROC_DIR on an emptyDir"
             },
             "serviceMonitor": {
               "type": "object",

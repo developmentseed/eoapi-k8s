@@ -178,17 +178,12 @@ stac:
 unlike raster/vector, its metric names are unprefixed, matching
 `stac-fastapi-api`'s shared implementation.
 
-These services run several uvicorn workers (`WEB_CONCURRENCY`), and each worker
-counts only its own requests. With `metrics.enabled`, the chart therefore sets
-`PROMETHEUS_MULTIPROC_DIR` to a per-pod `emptyDir`, so every scrape sums all
-workers. Multiprocess mode drops the per-process `process_*` and `python_*`
-series. The emptyDir survives container restarts, so counters carry on instead
-of resetting, which `rate()` handles either way. Set `metrics.multiprocess: false`
-to turn this off. If you set `PROMETHEUS_MULTIPROC_DIR` in `settings.envVars`,
-the chart adds nothing and you provide the directory
-(`extraVolumes` and `extraVolumeMounts`).
-Setting it via `extraEnvFrom` or `envSecrets` is not detected: use
-`metrics.multiprocess: false` with those.
+These services run several uvicorn workers. With `metrics.enabled`, the chart
+sets `PROMETHEUS_MULTIPROC_DIR` on an `emptyDir` so a scrape sums all workers;
+the `process_*` and `python_*` series are then dropped. Set
+`metrics.multiprocess: false` to turn it off. If you set
+`PROMETHEUS_MULTIPROC_DIR` in `settings.envVars`, provide the volume yourself
+(setting it via `extraEnvFrom` or `envSecrets` is not detected).
 
 `stac-auth-proxy` (when `stac-auth-proxy.enabled=true`) exposes its own
 `/_mgmt/metrics` endpoint by default — no toggle needed — with generic
