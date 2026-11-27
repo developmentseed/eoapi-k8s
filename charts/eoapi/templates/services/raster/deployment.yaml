@@ -114,6 +114,8 @@ spec:
           - name: {{ ternary "TITILER_STACAPI_API_METRICS_ENABLED" "TITILER_PGSTAC_API_METRICS_ENABLED" $stacapi }}
             value: "true"
           {{- end }}
+          {{- $mp := dict "service" "raster" "root" . "enabled" (and .Values.raster.metrics.enabled (not $stacapi)) }}
+          {{- include "eoapi.metricsMultiproc" (set $mp "part" "env") | nindent 10 }}
         envFrom:
           - configMapRef:
               name: {{ .Release.Name }}-raster-envvar-configmap
@@ -121,14 +123,19 @@ spec:
           {{- toYaml .Values.raster.settings.extraEnvFrom | nindent 10 }}
           {{- end }}
         {{- include "eoapi.mountServiceSecrets" (dict "service" "raster" "root" .) | nindent 10 }}
-        {{- with .Values.raster.settings.extraVolumeMounts }}
+        {{- $mpMount := include "eoapi.metricsMultiproc" (set $mp "part" "volumeMount") }}
+        {{- if or .Values.raster.settings.extraVolumeMounts $mpMount }}
         volumeMounts:
+          {{- with .Values.raster.settings.extraVolumeMounts }}
           {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- $mpMount | nindent 10 }}
         {{- end }}
       volumes:
         {{- with .Values.raster.settings.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- include "eoapi.metricsMultiproc" (set $mp "part" "volume") | nindent 8 }}
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
       {{- with .Values.raster.settings.podSecurityContext }}
       securityContext:

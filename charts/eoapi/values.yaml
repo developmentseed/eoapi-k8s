@@ -346,6 +346,7 @@ raster:
   # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    multiprocess: true  # sum all uvicorn workers in a scrape (drops process_*/python_* series)
     # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
     serviceMonitor:
       enabled: false
@@ -511,6 +512,7 @@ stac:
   # Exposes GET /_mgmt/metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    multiprocess: true  # sum all uvicorn workers in a scrape (drops process_*/python_* series)
     # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
     serviceMonitor:
       enabled: false
@@ -654,6 +656,7 @@ vector:
   # Exposes GET /metrics; requires monitoring.prometheus.enabled=true to be scraped.
   metrics:
     enabled: false
+    multiprocess: true  # sum all uvicorn workers in a scrape (drops process_*/python_* series)
     # For prometheus-operator clusters, as an alternative to prometheus.io/scrape above
     serviceMonitor:
       enabled: false

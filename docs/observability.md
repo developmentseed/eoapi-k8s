@@ -179,6 +179,13 @@ stac:
 unlike raster/vector, its metric names are unprefixed, matching
 `stac-fastapi-api`'s shared implementation.
 
+These services run several uvicorn workers. With `metrics.enabled`, the chart
+sets `PROMETHEUS_MULTIPROC_DIR` on an `emptyDir` so a scrape sums all workers;
+the `process_*` and `python_*` series are then dropped. Set
+`metrics.multiprocess: false` to turn it off. If you set
+`PROMETHEUS_MULTIPROC_DIR` in `settings.envVars`, provide the volume yourself
+(setting it via `extraEnvFrom` or `envSecrets` is not detected).
+
 `stac-auth-proxy` (when `stac-auth-proxy.enabled=true`) exposes its own
 `/_mgmt/metrics` endpoint by default — no toggle needed — with generic
 `http_requests_total` / `http_request_duration_seconds` metrics. It's scraped via

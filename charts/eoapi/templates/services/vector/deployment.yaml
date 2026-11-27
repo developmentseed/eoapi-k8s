@@ -105,6 +105,8 @@ spec:
           - name: TIPG_ENABLE_METRICS
             value: "true"
           {{- end }}
+          {{- $mp := dict "service" "vector" "root" . "enabled" .Values.vector.metrics.enabled }}
+          {{- include "eoapi.metricsMultiproc" (set $mp "part" "env") | nindent 10 }}
         envFrom:
           - configMapRef:
               name: {{ .Release.Name }}-vector-envvar-configmap
@@ -112,14 +114,19 @@ spec:
           {{- toYaml .Values.vector.settings.extraEnvFrom | nindent 10 }}
           {{- end }}
         {{- include "eoapi.mountServiceSecrets" (dict "service" "vector" "root" .) | nindent 10 }}
-        {{- with .Values.vector.settings.extraVolumeMounts }}
+        {{- $mpMount := include "eoapi.metricsMultiproc" (set $mp "part" "volumeMount") }}
+        {{- if or .Values.vector.settings.extraVolumeMounts $mpMount }}
         volumeMounts:
+          {{- with .Values.vector.settings.extraVolumeMounts }}
           {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- $mpMount | nindent 10 }}
         {{- end }}
       volumes:
         {{- with .Values.vector.settings.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- include "eoapi.metricsMultiproc" (set $mp "part" "volume") | nindent 8 }}
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
       {{- with .Values.vector.settings.podSecurityContext }}
       securityContext:

@@ -113,6 +113,8 @@ spec:
           - name: ENABLE_METRICS
             value: "true"
           {{- end }}
+          {{- $mp := dict "service" "stac" "root" . "enabled" .Values.stac.metrics.enabled }}
+          {{- include "eoapi.metricsMultiproc" (set $mp "part" "env") | nindent 10 }}
         envFrom:
           - configMapRef:
               name: {{ .Release.Name }}-stac-envvar-configmap
@@ -120,14 +122,19 @@ spec:
           {{- toYaml .Values.stac.settings.extraEnvFrom | nindent 10 }}
           {{- end }}
         {{- include "eoapi.mountServiceSecrets" (dict "service" "stac" "root" .) | nindent 10 }}
-        {{- with .Values.stac.settings.extraVolumeMounts }}
+        {{- $mpMount := include "eoapi.metricsMultiproc" (set $mp "part" "volumeMount") }}
+        {{- if or .Values.stac.settings.extraVolumeMounts $mpMount }}
         volumeMounts:
+          {{- with .Values.stac.settings.extraVolumeMounts }}
           {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- $mpMount | nindent 10 }}
         {{- end }}
       volumes:
         {{- with .Values.stac.settings.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- include "eoapi.metricsMultiproc" (set $mp "part" "volume") | nindent 8 }}
       serviceAccountName: {{ include "eoapi.serviceAccountName" . }}
       {{- with .Values.stac.settings.podSecurityContext }}
       securityContext:

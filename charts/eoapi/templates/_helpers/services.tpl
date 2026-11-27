@@ -28,6 +28,28 @@ Helper function for common environment variables
 {{- end -}}
 
 {{/*
+Share PROMETHEUS_MULTIPROC_DIR across uvicorn workers so a scrape sums them all.
+Skipped if settings.envVars sets it. part: env | volumeMount | volume.
+*/}}
+{{- define "eoapi.metricsMultiproc" -}}
+{{- $svc := index .root.Values .service -}}
+{{- $userSet := false -}}
+{{- range $k, $_ := $svc.settings.envVars }}{{ if eq (upper $k) "PROMETHEUS_MULTIPROC_DIR" }}{{ $userSet = true }}{{ end }}{{ end -}}
+{{- if and .enabled (ne (toString $svc.metrics.multiprocess) "false") (not $userSet) -}}
+{{- if eq .part "env" }}
+- name: PROMETHEUS_MULTIPROC_DIR
+  value: /tmp/prometheus-multiproc
+{{- else if eq .part "volumeMount" }}
+- name: prometheus-multiproc
+  mountPath: /tmp/prometheus-multiproc
+{{- else if eq .part "volume" }}
+- name: prometheus-multiproc
+  emptyDir: {}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
 STAC API URL for raster.backend=stacapi: explicit value, else stac-auth-proxy (which serves under its ROOT_PATH) if enabled, else the stac service
 */}}
 {{- define "eoapi.raster.stacApiUrl" -}}

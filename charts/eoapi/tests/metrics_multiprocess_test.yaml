@@ -1,0 +1,142 @@
+suite: metrics multiprocess mode tests
+templates:
+  - templates/_helpers/core.tpl
+  - templates/_helpers/database.tpl
+  - templates/_helpers/services.tpl
+  - templates/services/raster/deployment.yaml
+  - templates/services/raster/configmap.yaml
+  - templates/services/vector/deployment.yaml
+  - templates/services/vector/configmap.yaml
+  - templates/services/stac/deployment.yaml
+  - templates/services/stac/configmap.yaml
+tests:
+  - it: "stac metrics on: workers share PROMETHEUS_MULTIPROC_DIR on an emptyDir"
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac.metrics.enabled: true
+    asserts: &present
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content: {name: PROMETHEUS_MULTIPROC_DIR, value: /tmp/prometheus-multiproc}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content: {name: prometheus-multiproc, mountPath: /tmp/prometheus-multiproc}
+      - contains:
+          path: spec.template.spec.volumes
+          content: {name: prometheus-multiproc, emptyDir: {}}
+
+  - it: "raster metrics on: workers share PROMETHEUS_MULTIPROC_DIR on an emptyDir"
+    template: templates/services/raster/deployment.yaml
+    set:
+      raster.metrics.enabled: true
+    asserts: *present
+
+  - it: "vector metrics on: workers share PROMETHEUS_MULTIPROC_DIR on an emptyDir"
+    template: templates/services/vector/deployment.yaml
+    set:
+      vector.metrics.enabled: true
+    asserts: *present
+
+  - it: "stac metrics off: no multiprocess env, mount or volume"
+    template: templates/services/stac/deployment.yaml
+    asserts: &absent
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content: {name: PROMETHEUS_MULTIPROC_DIR}
+          any: true
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts
+      - equal:
+          path: spec.template.spec.volumes
+          value: null
+
+  - it: "raster metrics off: no multiprocess env, mount or volume"
+    template: templates/services/raster/deployment.yaml
+    asserts: *absent
+
+  - it: "vector metrics off: no multiprocess env, mount or volume"
+    template: templates/services/vector/deployment.yaml
+    asserts: *absent
+
+  - it: "raster stacapi backend: no metrics, so no multiprocess dir"
+    template: templates/services/raster/deployment.yaml
+    set:
+      raster.backend: stacapi
+      raster.metrics.enabled: true
+    asserts: *absent
+
+  - it: "stac metrics.multiprocess false opts out"
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac.metrics.enabled: true
+      stac.metrics.multiprocess: false
+    asserts: *absent
+
+  - it: "raster metrics.multiprocess false opts out"
+    template: templates/services/raster/deployment.yaml
+    set:
+      raster.metrics.enabled: true
+      raster.metrics.multiprocess: false
+    asserts: *absent
+
+  - it: "vector metrics.multiprocess false opts out"
+    template: templates/services/vector/deployment.yaml
+    set:
+      vector.metrics.enabled: true
+      vector.metrics.multiprocess: false
+    asserts: *absent
+
+  - it: "missing metrics.multiprocess key (values from an older chart, --reuse-values) keeps it on"
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac.metrics.enabled: true
+      stac.metrics.multiprocess: null
+    asserts: *present
+
+  - it: "PROMETHEUS_MULTIPROC_DIR in settings.envVars wins: the chart adds nothing"
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac.metrics.enabled: true
+      stac.settings.envVars.PROMETHEUS_MULTIPROC_DIR: /custom
+    asserts: *absent
+
+  - it: "settings.envVars key is matched case-insensitively, like the configmap's upper"
+    template: templates/services/vector/deployment.yaml
+    set:
+      vector.metrics.enabled: true
+      vector.settings.envVars.prometheus_multiproc_dir: /custom
+    asserts: *absent
+
+  - it: "stac user extraVolumes and extraVolumeMounts are kept next to the multiprocess ones"
+    template: templates/services/stac/deployment.yaml
+    set:
+      stac.metrics.enabled: true
+      stac.settings.extraVolumeMounts: [{name: x, mountPath: /x}]
+      stac.settings.extraVolumes: [{name: x, emptyDir: {}}]
+    asserts: &merged
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - {name: x, mountPath: /x}
+            - {name: prometheus-multiproc, mountPath: /tmp/prometheus-multiproc}
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - {name: x, emptyDir: {}}
+            - {name: prometheus-multiproc, emptyDir: {}}
+
+  - it: "raster user extraVolumes and extraVolumeMounts are kept next to the multiprocess ones"
+    template: templates/services/raster/deployment.yaml
+    set:
+      raster.metrics.enabled: true
+      raster.settings.extraVolumeMounts: [{name: x, mountPath: /x}]
+      raster.settings.extraVolumes: [{name: x, emptyDir: {}}]
+    asserts: *merged
+
+  - it: "vector user extraVolumes and extraVolumeMounts are kept next to the multiprocess ones"
+    template: templates/services/vector/deployment.yaml
+    set:
+      vector.metrics.enabled: true
+      vector.settings.extraVolumeMounts: [{name: x, mountPath: /x}]
+      vector.settings.extraVolumes: [{name: x, emptyDir: {}}]
+    asserts: *merged
