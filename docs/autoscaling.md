@@ -26,6 +26,13 @@ monitoring:
     enabled: true   # Required for CPU scaling
 ```
 
+> **With Traefik, use `type: "cpu"`.** Request-rate scaling (`requestRate`, the chart default, and
+> `both`) reads ingress-nginx's request metrics. With `ingress.className: "traefik"` the chart refuses
+> these types. Behind Traefik's Ingress NGINX provider (`className: "nginx"`) the metrics do not exist:
+> `requestRate` never scales and `both` never scales down. This includes the
+> [production profile](https://github.com/developmentseed/eoapi-k8s/blob/main/charts/eoapi/profiles/production.yaml), which uses `both`. Request-rate
+> scaling without ingress-nginx is discussed in [#703](https://github.com/developmentseed/eoapi-k8s/issues/703).
+
 ## Configuration
 
 ### Basic Autoscaling

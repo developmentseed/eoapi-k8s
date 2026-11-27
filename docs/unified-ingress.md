@@ -4,10 +4,10 @@ description: "NGINX and Traefik ingress setup with TLS and cert-manager integrat
 external_links:
   - name: "eoapi-k8s Repository"
     url: "https://github.com/developmentseed/eoapi-k8s"
-  - name: "NGINX Ingress Controller"
-    url: "https://kubernetes.github.io/ingress-nginx/"
   - name: "Traefik Documentation"
     url: "https://doc.traefik.io/traefik/"
+  - name: "Migrate from Ingress NGINX to Traefik"
+    url: "https://doc.traefik.io/traefik/migrate/nginx-to-traefik/"
   - name: "cert-manager"
     url: "https://cert-manager.io/"
 ---
@@ -95,19 +95,21 @@ All services use `pathType: Prefix` and handle their own path prefixes internall
 
 ### Ingress Controller Support
 
-The unified ingress works with **any** Kubernetes ingress controller:
-
-#### NGINX Ingress Controller
-
-```yaml
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/enable-cors: "true"
-```
+The unified ingress works with **any** Kubernetes ingress controller. We recommend Traefik: the community [ingress-nginx](https://github.com/kubernetes/ingress-nginx) controller was retired in March 2026 and its repository is archived.
 
 #### Traefik Ingress Controller
+
+Install Traefik with [`traefik-values.yaml`](https://github.com/developmentseed/eoapi-k8s/blob/main/docs/traefik-values.yaml). It keeps the behaviour ingress-nginx had by default: it redirects HTTP to HTTPS, sends HSTS, drops request headers whose name aliases another one (`X_Forwarded_For`) and answers 400 to an encoded NUL (`%00`) in the path.
+
+```sh
+curl -fsSLO https://raw.githubusercontent.com/developmentseed/eoapi-k8s/main/docs/traefik-values.yaml
+helm upgrade --install traefik traefik \
+  --repo https://traefik.github.io/charts --version 42.4.1 \
+  --namespace traefik --create-namespace \
+  -f traefik-values.yaml
+```
+
+Then set the class in your eoAPI values:
 
 ```yaml
 ingress:
@@ -123,11 +125,97 @@ ingress:
 ```
 
 If you set the same annotation via `ingress.annotations`, it overrides `ingress.entrypoints`
-because user annotations are rendered after the chart defaults. Only path-rewrite annotations
-are chart-owned and always win over `ingress.annotations`:
-`nginx.ingress.kubernetes.io/rewrite-target`, `nginx.ingress.kubernetes.io/use-regex`, and
-`traefik.ingress.kubernetes.io/router.middlewares`. Setting those keys in `ingress.annotations`
-has no effect.
+because user annotations are rendered after the chart defaults. The NGINX path-rewrite annotations
+are chart-owned: `nginx.ingress.kubernetes.io/rewrite-target` and
+`nginx.ingress.kubernetes.io/use-regex` in `ingress.annotations` have no effect.
+`traefik.ingress.kubernetes.io/router.middlewares` is merged instead: the chart appends its
+strip-prefix middleware to yours, so your middlewares run first.
+
+Coming from ingress-nginx, note that:
+
+- Every HTTP request is redirected to HTTPS, not only those for Ingresses with TLS, so set `ingress.host` and `ingress.tls` ([cert-manager](#setting-up-tls-with-cert-manager) can issue the certificate).
+- The Traefik chart makes `traefik` the default IngressClass, and Traefik also serves Ingresses that set no class. On clusters with other ingress controllers, review the chart's `ingressClass.isDefaultClass` and `providers.kubernetesIngress.ingressClass` values.
+- `nginx.ingress.kubernetes.io/*` annotations have no effect.
+- ingress-nginx's default 1 MiB request body limit is gone. Traefik's [buffering middleware](https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/buffering/) can set one.
+- Compression (`use-gzip` in ingress-nginx) needs Traefik's [compress middleware](https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/compress/).
+- Request-rate autoscaling reads ingress-nginx metrics: use `type: "cpu"` (see [Autoscaling](autoscaling.md)).
+
+#### Existing ingress-nginx clusters
+
+With `className: "nginx"` the chart rewrites paths through `nginx.ingress.kubernetes.io/*` annotations. Serve them with Traefik's [Ingress NGINX provider](https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-ingress-nginx/) rather than ingress-nginx: it reads [most of these annotations](https://doc.traefik.io/traefik/reference/routing-configuration/kubernetes/ingress-nginx/), so existing clusters keep their class and their own `ingress.annotations`. F5's NGINX Ingress Controller ignores these annotations, so the chart's path rewriting does not work with it.
+
+```yaml
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.example.com"
+```
+
+`enable-cors` behaves differently under Traefik: without `cors-allow-origin`, Traefik answers with the request's `Origin` and `Access-Control-Allow-Credentials: true`, where ingress-nginx answered `*`. Set `cors-allow-origin` to the origins you expect, as above.
+
+The provider serves Ingresses whose IngressClass has `controller: k8s.io/ingress-nginx`. The ingress-nginx chart creates the `nginx` IngressClass; the Traefik chart does not. To move a cluster from ingress-nginx to Traefik without an outage:
+
+1. Keep the `nginx` IngressClass when ingress-nginx is uninstalled. Helm reads this policy from its release, so `kubectl annotate` does not work. Keep your installed chart version (`helm list -n ingress-nginx`):
+
+   ```sh
+   helm upgrade ingress-nginx ingress-nginx \
+     --repo https://kubernetes.github.io/ingress-nginx \
+     --namespace ingress-nginx --reuse-values \
+     --version <installed chart version> \
+     --set-json 'controller.ingressClassResource.annotations={"helm.sh/resource-policy": "keep"}'
+   ```
+
+   Then check that `kubectl describe ingressclass nginx` shows the annotation. If ingress-nginx was not installed with Helm, leave this IngressClass out of what you delete in step 4. You can re-create it with:
+
+   ```sh
+   kubectl apply -f - <<EOF
+   apiVersion: networking.k8s.io/v1
+   kind: IngressClass
+   metadata:
+     name: nginx
+   spec:
+     controller: k8s.io/ingress-nginx
+   EOF
+   ```
+
+2. Install Traefik next to ingress-nginx with the provider enabled. While both run, Traefik must not write the Ingress status, or the two controllers keep overwriting each other's address:
+
+   ```sh
+   helm upgrade --install traefik traefik \
+     --repo https://traefik.github.io/charts --version 42.4.1 \
+     --namespace traefik --create-namespace \
+     -f traefik-values.yaml \
+     --set providers.kubernetesIngressNGINX.enabled=true \
+     --set providers.kubernetesIngressNGINX.publishService.enabled=false
+   ```
+
+   Check eoAPI through Traefik's load balancer before moving traffic, for example with `curl --connect-to <host>:443:<traefik-address>:443 https://<host>/stac`. Traefik redirects every HTTP request to HTTPS, including Ingresses without TLS that ingress-nginx served over plain HTTP.
+
+3. Set autoscaling to `type: "cpu"` (see [Autoscaling](autoscaling.md)), then point your DNS records at Traefik's load balancer (`kubectl -n traefik get svc traefik`). Keep ingress-nginx running until clients stop using its address.
+
+   If external-dns manages these records, it reads them from the Ingress status, which still shows ingress-nginx's address. Make ingress-nginx publish Traefik's address instead:
+
+   ```sh
+   helm upgrade ingress-nginx ingress-nginx \
+     --repo https://kubernetes.github.io/ingress-nginx \
+     --namespace ingress-nginx --reuse-values \
+     --version <installed chart version> \
+     --set controller.publishService.pathOverride=traefik/traefik
+   ```
+
+4. Uninstall ingress-nginx, then let Traefik write the Ingress status, which external-dns and Argo CD read:
+
+   ```sh
+   helm uninstall ingress-nginx --namespace ingress-nginx
+   helm upgrade traefik traefik \
+     --repo https://traefik.github.io/charts --version 42.4.1 \
+     --namespace traefik --reuse-values \
+     --set providers.kubernetesIngressNGINX.publishService.enabled=true
+   ```
+
+Traefik's [migration guide](https://doc.traefik.io/traefik/migrate/nginx-to-traefik/) covers these steps in more detail. You can switch to `className: "traefik"` later, once your own `nginx.ingress.kubernetes.io/*` annotations have Traefik equivalents. Switch your cert-manager issuer to `ingressClassName: traefik` at the same time, or certificate renewals fail.
 
 ### Path Handling Details
 
@@ -203,7 +291,7 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx  # or traefik, depending on your setup
+          ingressClassName: traefik  # the ingress.className of your eoAPI release
 ```
 
 3. After testing with staging, create the production issuer:
@@ -221,14 +309,14 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx  # or traefik, depending on your setup
+          ingressClassName: traefik  # the ingress.className of your eoAPI release
 ```
 
 4. Configure your eoAPI ingress to use cert-manager:
 ```yaml
 ingress:
   enabled: true
-  className: "nginx"  # or "traefik"
+  className: "traefik"
   host: "eoapi.example.com"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
