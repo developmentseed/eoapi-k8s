@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.2](https://github.com/developmentseed/eoapi-k8s/compare/v0.18.1...v0.18.2) (2026-11-27)
+
+
+### Maintenance
+
+* **deps:** updated helm release prometheus to 31.0.0. ([#732](https://github.com/developmentseed/eoapi-k8s/issues/732)) ([69a50d9](https://github.com/developmentseed/eoapi-k8s/commit/69a50d90212f905dea9fc38894a2fbeb5bac17b4))
+
 ## [0.18.1](https://github.com/developmentseed/eoapi-k8s/compare/v0.18.0...v0.18.1) (2026-11-26)
 
 
